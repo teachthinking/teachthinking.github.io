@@ -31,7 +31,7 @@
       margin: auto;
       /* position:absolute; */
       min-width: 100%;
-      border-radius: 10px;
+      border-radius: 5px;
       /* position:absolute; */
       position: fixed;
       float: right;
@@ -51,12 +51,12 @@
       position: absolute;
       /* right: 0; 
           bottom: 0;
-          min-width: 60%; 
-          min-height: 60%;
-          width: 60%; 
+          min-width: 100%; 
+          min-height: 100%;
+          width: auto; 
           height: auto;  */
       float: inline-start;
-      border-radius: 10px;
+      border-radius: 5px;
       z-index: 1;
       margin: auto;
       /* background-size: cover;
@@ -306,7 +306,7 @@
 
       // convenience function to setup a webcam
       const flip = true; // whether to flip the webcam
-      webcam = new tmImage.Webcam(200, 200, flip); // width, height
+      webcam = new tmImage.Webcam(150, 150, flip); // width, height
       await webcam.setup({
         facingMode: "user"
       }); // use "user" to use front-cam on mobile phones
