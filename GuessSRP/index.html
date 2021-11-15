@@ -102,7 +102,7 @@
       <h2 class="winner">模型讀取中...</h2>
       <div class="hands">
         <img class="player-hand" src="./images/rock.png" alt="" />
-        <img class="computer-hand" src="./images/rock.png" alt="" />
+        <img class="computer-hand" src="./images/rock2.png" alt="" />
       </div>
       <div class="options">
         <button class="decide" id="decide" disabled>出拳！</button>
@@ -190,7 +190,7 @@
             const computerChoice = computerOptions[computerNumber];
 
             playerHand.src = `./images/rock.png`;
-            computerHand.src = `./images/rock.png`;
+            computerHand.src = `./images/rock2.png`;
 
             winner.textContent = "剪刀、石頭...布！";
             setTimeout(() => {
@@ -199,7 +199,7 @@
                 compareHands(playerChoice, computerChoice);
                 //Update Images
                 playerHand.src = `./images/${playerChoice}.png`;
-                computerHand.src = `./images/${computerChoice}.png`;
+                computerHand.src = `./images/${computerChoice}2.png`;
               } else {
                 winner.textContent = "請再試一次"
               }
