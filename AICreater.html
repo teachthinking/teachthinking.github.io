@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>花壇國中AIoT中心(生成式AI太空探索之旅)</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            margin: 20px; 
+            background-color: black; 
+            color: white;
+            background-image: url("bg.png");
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .container { max-width: 500px; margin: auto; }
+        select, button, input { margin: 10px; padding: 5px; }
+        #imageContainer img { max-width: 100%; height: auto; margin-top: 10px; }
+        input { width: 80%; padding: 5px; }
+        button { background-color: gray; color: white; border: none; padding: 10px; cursor: pointer; }
+        button:hover { background-color: darkgray; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>生成式AI太空探索之旅</h1>
+
+        <h2>AI創世紀：外星生物創造者</h2>
+        <label for="planetSelect">選擇行星：</label>
+        <select id="planetSelect">
+            <option value="Unknown Planet">未知的星球 (Unknown Planet)</option>
+            <option value="Mercury">水星 (Mercury)</option>
+            <option value="Venus">金星 (Venus)</option>
+            <option value="Mars">火星 (Mars)</option>
+            <option value="Jupiter">木星 (Jupiter)</option>
+            <option value="Saturn">土星 (Saturn)</option>
+            <option value="Uranus">天王星 (Uranus)</option>
+            <option value="Neptune">海王星 (Neptune)</option>
+            <option value="Pluto">冥王星 (Pluto)</option>
+
+        </select>
+        
+        <br>
+        
+        <label for="biologySelect">選擇生物類別：</label>
+        <select id="biologySelect">
+            <option value="Unknown Creature">未知的生物 (Unknown Creature)</option>
+            <option value="Alien">外星人 (Alien)</option>
+            <option value="Bacteria">細菌 (Bacteria)</option>
+            <option value="Insects">昆蟲 (Insects)</option>
+            <option value="Fish">魚類 (Fish)</option>
+            <option value="Amphibians">兩棲類 (Amphibians)</option>
+            <option value="Reptiles">爬行類 (Reptiles)</option>
+            <option value="Birds">鳥類 (Birds)</option>
+            <option value="Mammals">哺乳類 (Mammals)</option>
+            <option value="Plants">植物 (Plants)</option>
+        </select>
+        
+        <br>
+        
+        <button onclick="generateImagePrompt()">生成描述</button>
+        
+        <br>
+        
+        <input type="text" id="promptText" readonly>
+        <button onclick="copyPrompt()">複製內容</button>
+        
+        <br>
+        
+        <a href="https://raphael.app/zh-Hant" target="_blank"><button>前往 Raphael</button></a>
+        
+        <div id="imageContainer"></div>
+        <a href="https://sites.google.com/chc.edu.tw/aiot/%E9%A6%96%E9%A0%81?authuser=0" style="color:white;"> <h3>花壇國中AIoT中心</h3></a>
+    </div>
+
+    <script>
+        function generateImagePrompt() {
+            const planet = document.getElementById("planetSelect").value;
+            const biology = document.getElementById("biologySelect").value;
+            const promptText = `Create a ${biology} from ${planet}.`;
+            
+            document.getElementById("promptText").value = promptText;
+        }
+
+        function copyPrompt() {
+            const promptInput = document.getElementById("promptText");
+            promptInput.select();
+            document.execCommand("copy");
+            alert("內容已複製！");
+        }
+    </script>
+</body>
+</html>
