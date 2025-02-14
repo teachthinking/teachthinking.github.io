@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>花壇國中AIoTl中心：生成式AI太空探索之旅</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url('bg.png') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: rgba(30, 30, 30, 0.85); /* 深色透明背景 */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+            width: 90%;
+            max-width: 500px;
+            color: white;
+        }
+        select, button, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        select {
+            background: #2a2a2a;
+            color: white;
+            border: 1px solid #444;
+        }
+        button {
+            background: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .link-button {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+            padding: 10px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .link-button:hover {
+            background: #218838;
+        }
+        textarea {
+            background: #2a2a2a;
+            color: white;
+            border: 1px solid #444;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <center><h2>AI創世紀：行星地貌與外星生物提示詞產生器</h2>
+        <h3>  <a href="https://sites.google.com/chc.edu.tw/aiot/%E9%A6%96%E9%A0%81?authuser=0" style="color:white;"> <h3>花壇國中AIoT中心</h3></a></center>
+
+        <label for="planet">選擇星球 (Choose a planet):</label>
+        <select id="planet">
+            <option>未知的星球 (Unknown Planet)</option>
+            <option>火星 (Mars)</option>
+            <option>土星 (Saturn)</option>
+            <option>木星 (Jupiter)</option>
+            <option>金星 (Venus)</option>
+            <option>水星 (Mercury)</option>
+            <option>海王星 (Neptune)</option>
+            <option>天王星 (Uranus)</option>
+          <!--  <option>地球 (Earth)</option>  -->
+            <option>冥王星 (Pluto)</option>
+        </select>
+
+        <label for="terrain">選擇地貌 (Choose a terrain):</label>
+        <select id="terrain">
+            <option>覆蓋著堅硬的岩石 (Rocky Surface) </option>
+            <option>由濃厚的氣體組成 (Gaseous Clouds) </option>
+            <option>廣闊的冰雪覆蓋地形 (Ice Fields) </option>
+            <option>活躍的火山與熔岩 (Volcanic Terrain) </option>
+        </select>
+
+        <label for="atmosphere">選擇大氣顏色 (Choose an atmosphere color):</label>
+        <select id="atmosphere">
+            <option>紅色 (Red) </option>
+            <option>藍色 (Blue) </option>
+            <option>綠色 (Green) </option>
+            <option>黃色 (Yellow) </option>
+        </select>
+
+        <label for="bioType">選擇生物類型 (Choose a biological type):</label>
+        <select id="bioType">
+            <option>未知的生物 (Unknown Creature) </option>
+            <option>外星人 (Alien) </option>
+            <option>細菌 (Bacteria) </option>
+            <option>魚類 (Fish) </option>
+            <option>爬行類 (Reptile) </option>
+            <option>哺乳類 (Mammal) </option>
+            <option>鳥類 (Bird) </option>
+        </select>
+
+        <label for="bioFeature">選擇生物特徵 (Choose a biological feature):</label>
+        <select id="bioFeature">
+            <option>生物發光 (Bioluminescent) </option>
+            <option>多眼 (Multiple Eyes) </option>
+            <option>外骨骼 (Exoskeleton) </option>
+            <option>鰓 (Gills) </option>
+            <option>翅膀 (Wings) </option>
+        </select>
+
+        <button onclick="generatePrompt()">產生提示詞(Generate Prompt)</button>
+
+        <label for="prompt">Generated Prompt (English):</label>
+        <textarea id="prompt" readonly rows="4"></textarea>
+
+        <button onclick="copyToClipboard()">複製提示詞(Copy Prompt)</button>
+
+        <a href="https://raphael.app/zh-Hant" class="link-button" target="_blank">Go to Raphael AI</a>
+    </div>
+
+    <script>
+        function generatePrompt() {
+            const planet = document.getElementById("planet").value.split(" (")[1].replace(")", "");
+            const terrain = document.getElementById("terrain").value.split(" (")[1].replace(")", "");
+            const atmosphere = document.getElementById("atmosphere").value.split(" (")[1].replace(")", "");
+            const bioType = document.getElementById("bioType").value.split(" (")[1].replace(")", "");
+            const bioFeature = document.getElementById("bioFeature").value.split(" (")[1].replace(")", "");
+
+            const prompt = `A ${bioType} with ${bioFeature}, living on ${planet} with ${terrain} under a ${atmosphere} sky.`;
+            document.getElementById("prompt").value = prompt;
+        }
+
+        function copyToClipboard() {
+            const promptText = document.getElementById("prompt");
+            promptText.select();
+            document.execCommand("copy");
+            alert("提示詞已複製!");
+        }
+    </script>
+
+</body>
+</html>
