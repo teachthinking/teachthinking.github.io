@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多功能線上計時器</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="timer-container">
+        <h1>多功能線上計時器</h1>
+
+        <div class="mode-switch">
+            <button id="stopwatch-btn" class="active">碼錶</button>
+            <button id="countdown-btn">倒數計時</button>
+        </div>
+
+        <div class="display-area">
+            <span id="hours">00</span>:<span id="minutes">00</span>:<span id="seconds">00</span>
+        </div>
+
+        <div id="countdown-settings" class="hidden">
+            <input type="number" id="countdown-minutes" min="0" value="0"> 分鐘
+            <input type="number" id="countdown-seconds" min="0" value="0"> 秒
+        </div>
+
+        <div class="controls">
+            <button id="start-btn">開始</button>
+            <button id="pause-btn" class="hidden">暫停</button>
+            <button id="reset-btn">重設</button>
+        </div>
+        
+       <div center>
+           <h1> 進行活動：<input type="text" id="annotation-input" placeholder="在這裡註記活動名稱..." autocomplete="off"></h1>
+            <button id="mark-btn" class="hidden">標記</button>
+        </div>
+
+
+        <div class="history-area">
+            <h2>歷史紀錄</h2>
+            <ul id="history-list"></ul>
+            <button id="export-btn" class="hidden">匯出紀錄</button>
+        </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
