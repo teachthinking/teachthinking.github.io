@@ -224,15 +224,15 @@
             <p>輸入三組數字，分別代表**下卦**、**上卦**和**變爻**。<br>(例如：123、456、789)</p>
             <div class="input-group">
                 <label for="num1">下卦數字: </label>
-                <input type="number" id="num1" value="123">
+                <input type="number" id="num1">
             </div>
             <div class="input-group">
                 <label for="num2">上卦數字: </label>
-                <input type="number" id="num2" value="456">
+                <input type="number" id="num2">
             </div>
             <div class="input-group">
                 <label for="num3">動爻數字: </label>
-                <input type="number" id="num3" value="789">
+                <input type="number" id="num3">
             </div>
             <button id="manualGuaBtn">生成卦象</button>
         </div>
@@ -255,6 +255,13 @@
     </div>
 
     <script>
+        // 在程式載入時隨機產生預設數字
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('num1').value = Math.floor(Math.random() * 999) + 100;
+            document.getElementById('num2').value = Math.floor(Math.random() * 999) + 100;
+            document.getElementById('num3').value = Math.floor(Math.random() * 999) + 100;
+        });
+
         const guaTable = [
             null,       // 0
             [1, 1, 1],  // 1 乾
@@ -355,7 +362,7 @@
             const upperNum = Math.floor(Math.random() * 999) + 1;
             const lowerNum = Math.floor(Math.random() * 999) + 1;
             const changeNum = Math.floor(Math.random() * 999) + 1;
-            // 隨機卜卦仍使用舊的順序，因為沒有嚴格的定義
+            // 隨機卜卦使用舊的順序，因為沒有嚴格的定義
             generateGua(upperNum, lowerNum, changeNum);
         });
 
@@ -368,7 +375,7 @@
                 alert('請輸入大於0的數字。');
                 return;
             }
-            // 根據新順序呼叫 generateGua
+            // 根據新順序呼叫 generateGua (num1 = 下卦, num2 = 上卦)
             generateGua(num1, num2, num3);
         });
     </script>
