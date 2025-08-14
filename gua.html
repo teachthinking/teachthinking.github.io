@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>線上卜卦</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #result {
+            margin-top: 30px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #guaImage {
+            font-family: monospace;
+            font-size: 30px;
+            line-height: 1.5;
+            margin: 20px 0;
+            white-space: pre; /* 保留空白字符 */
+        }
+
+        #explanationLink {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        #explanationLink:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>線上卜卦程式</h1>
+        <button id="drawGuaBtn">開始卜卦</button>
+
+        <div id="result" class="hidden">
+            <h2 id="guaName"></h2>
+            <div id="guaImage"></div>
+            <a id="explanationLink" href="#" target="_blank">點此查看卦象解釋</a>
+        </div>
+    </div>
+
+    <script>
+        // 64個卦象的資料庫，格式為：
+        // "卦象編號": [[爻的組合，由下而上], "卦象名稱"]
+        // 陽爻為 1，陰爻為 0
+        const guaData = {
+            1: [[1, 1, 1, 1, 1, 1], "乾為天"],
+            2: [[0, 0, 0, 0, 0, 0], "坤為地"],
+            3: [[0, 1, 0, 0, 0, 1], "山水蒙"],
+            4: [[1, 0, 0, 0, 1, 0], "水雷屯"],
+            5: [[1, 1, 1, 0, 1, 0], "水天需"],
+            6: [[0, 1, 0, 1, 1, 1], "天水訟"],
+            7: [[0, 0, 0, 0, 1, 0], "地水師"],
+            8: [[0, 1, 0, 0, 0, 0], "水地比"],
+            9: [[1, 1, 1, 0, 1, 1], "風天小畜"],
+            10: [[1, 1, 0, 1, 1, 1], "天澤履"],
+            11: [[0, 0, 0, 1, 1, 1], "地天泰"],
+            12: [[1, 1, 1, 0, 0, 0], "天地否"],
+            13: [[1, 0, 1, 1, 1, 1], "天火同人"],
+            14: [[1, 1, 1, 1, 0, 1], "火天大有"],
+            15: [[0, 0, 0, 1, 0, 0], "地山謙"],
+            16: [[0, 0, 1, 0, 0, 0], "雷地豫"],
+            17: [[0, 1, 1, 0, 0, 1], "澤雷隨"],
+            18: [[1, 0, 0, 1, 1, 0], "山風蠱"],
+            19: [[0, 0, 1, 1, 1, 0], "地澤臨"],
+            20: [[0, 1, 1, 1, 0, 0], "風地觀"],
+            21: [[1, 0, 1, 0, 1, 1], "火雷噬嗑"],
+            22: [[1, 1, 0, 1, 0, 1], "山火賁"],
+            23: [[0, 0, 0, 1, 0, 0], "山地剝"],
+            24: [[0, 0, 1, 0, 0, 0], "地雷復"],
+            25: [[1, 0, 0, 1, 1, 1], "天雷無妄"],
+            26: [[1, 1, 1, 1, 0, 0], "山天大畜"],
+            27: [[1, 0, 0, 0, 0, 1], "山雷頤"],
+            28: [[0, 1, 1, 1, 1, 0], "澤風大過"],
+            29: [[0, 1, 0, 0, 1, 0], "坎為水"],
+            30: [[1, 0, 1, 1, 0, 1], "離為火"],
+            31: [[0, 1, 1, 1, 0, 0], "澤山咸"],
+            32: [[1, 1, 0, 0, 1, 1], "雷風恆"],
+            33: [[1, 1, 1, 0, 0, 1], "天山遯"],
+            34: [[1, 1, 1, 1, 0, 0], "雷天大壯"],
+            35: [[1, 0, 1, 1, 0, 0], "火地晉"],
+            36: [[0, 0, 1, 0, 1, 0], "地火明夷"],
+            37: [[1, 0, 1, 1, 0, 1], "風火家人"],
+            38: [[1, 0, 1, 0, 1, 1], "火澤睽"],
+            39: [[0, 1, 0, 1, 0, 0], "水山蹇"],
+            40: [[0, 0, 1, 0, 1, 0], "雷水解"],
+            41: [[1, 1, 0, 0, 0, 1], "山澤損"],
+            42: [[1, 0, 0, 0, 1, 1], "風雷益"],
+            43: [[1, 1, 1, 1, 1, 0], "澤天夬"],
+            44: [[0, 1, 1, 1, 1, 1], "天風姤"],
+            45: [[0, 1, 1, 0, 0, 0], "澤地萃"],
+            46: [[0, 0, 0, 1, 1, 0], "地風升"],
+            47: [[0, 1, 1, 0, 1, 0], "澤水困"],
+            48: [[0, 1, 0, 0, 1, 1], "水風井"],
+            49: [[1, 0, 1, 1, 1, 0], "澤火革"],
+            50: [[1, 1, 0, 1, 0, 1], "火風鼎"],
+            51: [[1, 0, 0, 1, 0, 0], "震為雷"],
+            52: [[1, 0, 0, 1, 0, 0], "艮為山"],
+            53: [[1, 1, 0, 1, 0, 0], "風山漸"],
+            54: [[0, 0, 1, 0, 1, 1], "雷澤歸妹"],
+            55: [[1, 0, 1, 1, 0, 0], "雷火豐"],
+            56: [[1, 1, 0, 0, 1, 1], "火山旅"],
+            57: [[1, 1, 0, 1, 0, 0], "巽為風"],
+            58: [[0, 1, 1, 0, 1, 1], "兌為澤"],
+            59: [[0, 1, 0, 1, 0, 0], "風水渙"],
+            60: [[0, 0, 1, 1, 0, 1], "水澤節"],
+            61: [[1, 1, 0, 1, 1, 0], "風澤中孚"],
+            62: [[1, 0, 0, 0, 1, 1], "雷山小過"],
+            63: [[1, 0, 1, 0, 1, 0], "水火既濟"],
+            64: [[0, 1, 0, 1, 0, 1], "火水未濟"],
+        };
+
+        const drawGuaBtn = document.getElementById('drawGuaBtn');
+        const resultDiv = document.getElementById('result');
+        const guaNameH2 = document.getElementById('guaName');
+        const guaImageDiv = document.getElementById('guaImage');
+        const explanationLink = document.getElementById('explanationLink');
+
+        function drawGua() {
+            const guaLines = [];
+            // 隨機生成六個爻，1 為陽爻，0 為陰爻
+            for (let i = 0; i < 6; i++) {
+                guaLines.push(Math.round(Math.random()));
+            }
+
+            // 根據爻的組合找到對應的卦象
+            let guaId = null;
+            let guaName = "";
+            for (const id in guaData) {
+                // 注意：JSON.stringify 是為了比較陣列內容是否相同
+                if (JSON.stringify(guaData[id][0]) === JSON.stringify(guaLines)) {
+                    guaId = id;
+                    guaName = guaData[id][1];
+                    break;
+                }
+            }
+
+            if (guaId) {
+                guaNameH2.textContent = guaName;
+
+                let guaImageHtml = "";
+                // 爻是從下往上排的，所以要反轉陣列
+                const reversedLines = [...guaLines].reverse();
+                reversedLines.forEach(line => {
+                    guaImageHtml += line === 1 ? '———————\n' : '————　————\n';
+                });
+                guaImageDiv.textContent = guaImageHtml; // 使用 textContent 保留格式
+
+                explanationLink.href = `https://m.golla.tw/sm/64gua/${guaId}.html`;
+                resultDiv.classList.remove('hidden');
+            } else {
+                alert('卦象資料不完整，請檢查 guaData 變數。');
+            }
+        }
+
+        drawGuaBtn.addEventListener('click', drawGua);
+    </script>
+</body>
+</html>
