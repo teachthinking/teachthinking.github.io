@@ -3,65 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>線上卜卦</title>
+    <title>線上易經卜卦</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #6a11cb;
+            --secondary-color: #2575fc;
+            --card-bg-color: rgba(255, 255, 255, 0.95);
+            --text-color: #333;
+            --accent-color: #d11c1c;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
             flex-direction: column;
+            color: var(--text-color);
         }
 
         .container {
             text-align: center;
-            background-color: white;
+            background-color: var(--card-bg-color);
             padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             margin-bottom: 20px;
             width: 90%;
-            max-width: 600px;
+            max-width: 700px;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
         }
 
         h1, h2 {
-            color: #333;
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            font-size: 2rem;
+            margin-top: 30px;
         }
 
         button {
-            padding: 12px 24px;
-            font-size: 18px;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: 700;
             cursor: pointer;
-            background-color: #007bff;
+            background: linear-gradient(45deg, #FF6B6B, #F9A826);
             color: white;
             border: none;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-            margin: 5px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
         }
 
         button:hover {
-            background-color: #0056b3;
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #F9A826, #FF6B6B);
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+
+        hr {
+            width: 80%;
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0));
+            margin: 40px auto;
         }
 
         .input-group {
-            margin: 15px 0;
+            margin: 20px 0;
+            font-size: 1.1rem;
         }
         .input-group label {
-            font-size: 16px;
+            margin-right: 10px;
         }
         .input-group input {
-            width: 80px;
-            padding: 5px;
-            font-size: 16px;
+            width: 100px;
+            padding: 8px;
+            font-size: 1rem;
             text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .input-group input:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 8px rgba(37, 117, 252, 0.3);
+            outline: none;
         }
 
         #result {
             margin-top: 30px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        
+        #result.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .hidden {
@@ -70,72 +133,124 @@
 
         .gua-container {
             display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 30px;
         }
 
         .gua-box {
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+            min-width: 250px;
+        }
+
+        .gua-box h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .gua-box h2 {
+            margin: 10px 0 5px;
+            font-size: 1.8rem;
         }
 
         #guaImage, #changeGuaImage {
-            font-family: monospace;
-            font-size: 30px;
-            line-height: 1.5;
+            font-family: 'monospace';
+            font-size: 2.2rem;
+            line-height: 1.2;
             margin: 20px 0;
             white-space: pre;
-        }
-        .moving-line {
-            color: red;
-            font-weight: bold;
-        }
-        .line {
-            color: black;
-        }
-        #explanationLink {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #28a745;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background-color 0.3s;
+            color: var(--text-color);
+            font-weight: 700;
         }
 
-        #explanationLink:hover {
+        .moving-line {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+        
+        .link-group {
+            margin-top: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .link-group a {
+            padding: 15px 25px;
+            font-size: 1.1rem;
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: background-color 0.3s, transform 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        #explanationLink1 {
+            background-color: #28a745;
+        }
+        
+        #explanationLink1:hover {
             background-color: #218838;
+            transform: translateY(-2px);
+        }
+        
+        #explanationLink2 {
+            background-color: #007bff;
+        }
+        
+        #explanationLink2:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            .gua-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            .container {
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>線上卜卦程式</h1>
+        <h1>線上易經卜卦</h1>
         
         <div>
             <h2>隨機一鍵卜卦</h2>
             <button id="randomGuaBtn">開始卜卦</button>
         </div>
 
-        <hr style="width: 80%; margin: 30px auto;">
+        <hr>
 
         <div>
             <h2>手動數字卜卦</h2>
-            <p>輸入三組數字，分別代表上卦、下卦和變爻。<br>(例如：123、456、789)</p>
+            <p>輸入三組數字，分別代表**下卦**、**上卦**和**變爻**。<br>(例如：123、456、789)</p>
             <div class="input-group">
-                <label for="num1">上卦數字: </label>
-                <input type="number" id="num1" value="1">
+                <label for="num1">下卦數字: </label>
+                <input type="number" id="num1">
             </div>
             <div class="input-group">
-                <label for="num2">下卦數字: </label>
-                <input type="number" id="num2" value="2">
+                <label for="num2">上卦數字: </label>
+                <input type="number" id="num2">
             </div>
             <div class="input-group">
                 <label for="num3">動爻數字: </label>
-                <input type="number" id="num3" value="3">
+                <input type="number" id="num3">
             </div>
             <button id="manualGuaBtn">生成卦象</button>
         </div>
@@ -153,34 +268,52 @@
                     <div id="changeGuaImage"></div>
                 </div>
             </div>
-            <a id="explanationLink" href="#" target="_blank">點此查看卦象解釋</a>
+            <div class="link-group">
+                <a id="explanationLink1" href="#" target="_blank">解卦連結一 (易學網)</a>
+                <a id="explanationLink2" href="#" target="_blank">解卦連結二 (周易網)</a>
+            </div>
         </div>
     </div>
 
     <script>
+        // 在程式載入時隨機產生預設數字
+        document.addEventListener('DOMContentLoaded', () => {
+            function getRandomThreeDigit() {
+                return Math.floor(Math.random() * 900) + 100;
+            }
+            document.getElementById('num1').value = getRandomThreeDigit();
+            document.getElementById('num2').value = getRandomThreeDigit();
+            document.getElementById('num3').value = getRandomThreeDigit();
+        });
+
+        // 八卦的爻陣列，1為陽爻，0為陰爻
         const guaTable = [
-            null,       // 0
+            null,       // 0 (未用)
             [1, 1, 1],  // 1 乾
-            [0, 0, 0],  // 2 坤
-            [0, 1, 0],  // 3 震
-            [1, 0, 0],  // 4 巽
-            [1, 0, 1],  // 5 坎
-            [0, 1, 1],  // 6 離
+            [1, 1, 0],  // 2 兌
+            [1, 0, 1],  // 3 離
+            [1, 0, 0],  // 4 震
+            [0, 1, 1],  // 5 巽
+            [0, 1, 0],  // 6 坎
             [0, 0, 1],  // 7 艮
-            [1, 1, 0]   // 8 兌
+            [0, 0, 0]   // 8 坤
         ];
 
-        const guaData = {
-            1: "乾為天", 2: "天澤履", 3: "天火同人", 4: "火天大有", 5: "天風姤", 6: "天水訟", 7: "天山遯", 8: "天地否",
-            9: "澤天夬", 10: "兌為澤", 11: "澤火革", 12: "澤雷隨", 13: "澤風大過", 14: "澤水困", 15: "澤山咸", 16: "地山謙",
-            17: "火天大有", 18: "火澤睽", 19: "離為火", 20: "火雷噬嗑", 21: "火風鼎", 22: "火山旅", 23: "火地晉", 24: "地火明夷",
-            25: "震為雷", 26: "雷地豫", 27: "雷水解", 28: "雷澤歸妹", 29: "雷風恆", 30: "雷天大壯", 31: "雷火豐", 32: "雷山小過",
-            33: "風地觀", 34: "風山漸", 35: "風澤中孚", 36: "風火家人", 37: "巽為風", 38: "風雷益", 39: "風水渙", 40: "風天小畜",
-            41: "水雷屯", 42: "水地比", 43: "水山蹇", 44: "水火既濟", 45: "坎為水", 46: "水風井", 47: "水澤節", 48: "水天需",
-            49: "山地剝", 50: "山澤損", 51: "山水蒙", 52: "山火賁", 53: "山風蠱", 54: "山雷頤", 55: "艮為山", 56: "山天大畜",
-            57: "地雷復", 58: "地風升", 59: "地水師", 60: "地火明夷", 61: "地天泰", 62: "地澤臨", 63: "地山謙", 64: "坤為地",
-        };
-
+        // 64個卦象的資料庫，格式為：
+        // "卦象編號": [卦象名稱]
+        // 卦象編號是根據「上卦 * 8 + 下卦」的方式計算
+        const guaData = [
+            null,
+            "乾為天", "天澤履", "天火同人", "天雷無妄", "天風姤", "天水訟", "天山遯", "天地否",
+            "澤天夬", "兌為澤", "澤火革", "澤雷隨", "澤風大過", "澤水困", "澤山咸", "澤地萃",
+            "火天大有", "火澤睽", "離為火", "火雷噬嗑", "火風鼎", "火水未濟", "火山旅", "火地晉",
+            "雷天大壯", "雷澤歸妹", "雷火豐", "震為雷", "雷風恆", "雷水解", "雷山小過", "雷地豫",
+            "風天小畜", "風澤中孚", "風火家人", "風雷益", "巽為風", "風水渙", "風山漸", "風地觀",
+            "水天需", "水澤節", "水火既濟", "水雷屯", "水風井", "坎為水", "水山蹇", "水地比",
+            "山天大畜", "山澤損", "山火賁", "山雷頤", "山風蠱", "山水蒙", "艮為山", "山地剝",
+            "地天泰", "地澤臨", "地火明夷", "地雷復", "地風升", "地水師", "地山謙", "坤為地",
+        ];
+        
         const randomGuaBtn = document.getElementById('randomGuaBtn');
         const manualGuaBtn = document.getElementById('manualGuaBtn');
         const num1Input = document.getElementById('num1');
@@ -191,14 +324,15 @@
         const changeGuaNameH2 = document.getElementById('changeGuaName');
         const guaImageDiv = document.getElementById('guaImage');
         const changeGuaImageDiv = document.getElementById('changeGuaImage');
-        const explanationLink = document.getElementById('explanationLink');
+        const explanationLink1 = document.getElementById('explanationLink1');
+        const explanationLink2 = document.getElementById('explanationLink2');
 
-        function generateGua(upperNum, lowerNum, changeNum) {
-            let upperGuaNum = upperNum % 8;
-            if (upperGuaNum === 0) upperGuaNum = 8;
-            
+        function generateGua(lowerNum, upperNum, changeNum) {
             let lowerGuaNum = lowerNum % 8;
             if (lowerGuaNum === 0) lowerGuaNum = 8;
+            
+            let upperGuaNum = upperNum % 8;
+            if (upperGuaNum === 0) upperGuaNum = 8;
 
             let movingLine = changeNum % 6;
             if (movingLine === 0) movingLine = 6;
@@ -208,18 +342,15 @@
 
             const allLines = [...lowerGuaLines, ...upperGuaLines];
             
-            // 處理變卦
             const changeLines = [...allLines];
             const movingLineIndex = movingLine - 1;
             changeLines[movingLineIndex] = 1 - changeLines[movingLineIndex];
 
-            // 顯示本卦
             const guaId = (upperGuaNum - 1) * 8 + lowerGuaNum;
             const guaName = guaData[guaId];
             guaNameH2.textContent = guaName || '卦象資料錯誤';
             guaImageDiv.innerHTML = getGuaHtml(allLines, movingLine);
             
-            // 顯示變卦
             const changeUpperGuaNum = findGuaNum(changeLines.slice(3));
             const changeLowerGuaNum = findGuaNum(changeLines.slice(0, 3));
             const changeGuaId = (changeUpperGuaNum - 1) * 8 + changeLowerGuaNum;
@@ -227,27 +358,29 @@
             changeGuaNameH2.textContent = changeGuaName || '卦象資料錯誤';
             changeGuaImageDiv.innerHTML = getGuaHtml(changeLines);
             
-            explanationLink.href = `https://www.eee-learning.com/article/2076?title=${guaId}-${guaName}`;
+            // 更新兩個解卦連結
+            explanationLink1.href = `https://www.eee-learning.com/article/2076?title=${guaId}-${guaName}`;
+            explanationLink2.href = `https://m.zhouyi.cc/zhouyi/yijing64/${guaId}.html`;
+            
             resultDiv.classList.remove('hidden');
+            resultDiv.classList.add('visible');
         }
 
         function getGuaHtml(lines, movingLine = null) {
             let html = '';
-            // 爻從上往下顯示，所以反轉陣列
             const reversedLines = [...lines].reverse();
             reversedLines.forEach((line, index) => {
                 const lineNumber = 6 - index;
-                const lineHtml = line === 1 ? '———————' : '————　————';
+                const lineHtml = line === 1 ? '———————' : '———&nbsp;&nbsp;———'; // 使用&nbsp;修正排版
                 if (lineNumber === movingLine) {
                     html += `<span class="moving-line">${lineHtml} 變爻</span><br>`;
                 } else {
-                    html += `<span class="line">${lineHtml}</span><br>`;
+                    html += `<span>${lineHtml}</span><br>`;
                 }
             });
             return html;
         }
 
-        // 根據三爻的組合找到對應的單卦數字
         function findGuaNum(lines) {
             for (let i = 1; i <= 8; i++) {
                 if (JSON.stringify(guaTable[i]) === JSON.stringify(lines)) {
@@ -258,10 +391,10 @@
         }
 
         randomGuaBtn.addEventListener('click', () => {
-            const upperNum = Math.floor(Math.random() * 999) + 1;
-            const lowerNum = Math.floor(Math.random() * 999) + 1;
-            const changeNum = Math.floor(Math.random() * 999) + 1;
-            generateGua(upperNum, lowerNum, changeNum);
+            const num1 = Math.floor(Math.random() * 900) + 100;
+            const num2 = Math.floor(Math.random() * 900) + 100;
+            const num3 = Math.floor(Math.random() * 900) + 100;
+            generateGua(num1, num2, num3);
         });
 
         manualGuaBtn.addEventListener('click', () => {
@@ -273,7 +406,6 @@
                 alert('請輸入大於0的數字。');
                 return;
             }
-
             generateGua(num1, num2, num3);
         });
     </script>
