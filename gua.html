@@ -169,10 +169,15 @@
             color: var(--text-color);
             font-weight: 700;
         }
+        
+        /* 卦爻加粗 */
+        #guaImage span, #changeGuaImage span {
+            font-weight: 900;
+        }
 
         .moving-line {
             color: var(--accent-color);
-            font-weight: bold;
+            font-weight: 900 !important;
         }
         
         .link-group {
@@ -208,6 +213,15 @@
         
         #explanationLink2:hover {
             background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        #explanationLink3 {
+            background-color: #ff9800;
+        }
+        
+        #explanationLink3:hover {
+            background-color: #e68a00;
             transform: translateY(-2px);
         }
 
@@ -271,6 +285,7 @@
             <div class="link-group">
                 <a id="explanationLink1" href="#" target="_blank">解卦連結一 (易學網)</a>
                 <a id="explanationLink2" href="#" target="_blank">解卦連結二 (周易網)</a>
+                <a id="explanationLink3" href="#" target="_blank">解卦連結三 (Golla)</a>
             </div>
         </div>
     </div>
@@ -326,6 +341,7 @@
         const changeGuaImageDiv = document.getElementById('changeGuaImage');
         const explanationLink1 = document.getElementById('explanationLink1');
         const explanationLink2 = document.getElementById('explanationLink2');
+        const explanationLink3 = document.getElementById('explanationLink3');
 
         function generateGua(lowerNum, upperNum, changeNum) {
             let lowerGuaNum = lowerNum % 8;
@@ -358,9 +374,10 @@
             changeGuaNameH2.textContent = changeGuaName || '卦象資料錯誤';
             changeGuaImageDiv.innerHTML = getGuaHtml(changeLines);
             
-            // 更新兩個解卦連結
+            // 更新三個解卦連結
             explanationLink1.href = `https://www.eee-learning.com/article/2076?title=${guaId}-${guaName}`;
             explanationLink2.href = `https://m.zhouyi.cc/zhouyi/yijing64/${guaId}.html`;
+            explanationLink3.href = `https://m.golla.tw/sm/64gua/${guaId}/`;
             
             resultDiv.classList.remove('hidden');
             resultDiv.classList.add('visible');
