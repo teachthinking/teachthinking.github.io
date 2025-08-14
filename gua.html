@@ -23,6 +23,8 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
+            width: 90%;
+            max-width: 600px;
         }
 
         h1, h2 {
@@ -52,7 +54,7 @@
             font-size: 16px;
         }
         .input-group input {
-            width: 60px;
+            width: 80px;
             padding: 5px;
             font-size: 16px;
             text-align: center;
@@ -66,14 +68,32 @@
             display: none;
         }
 
-        #guaImage {
+        .gua-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .gua-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #guaImage, #changeGuaImage {
             font-family: monospace;
             font-size: 30px;
             line-height: 1.5;
             margin: 20px 0;
             white-space: pre;
         }
-
+        .moving-line {
+            color: red;
+            font-weight: bold;
+        }
+        .line {
+            color: black;
+        }
         #explanationLink {
             display: inline-block;
             margin-top: 20px;
@@ -103,45 +123,53 @@
         <hr style="width: 80%; margin: 30px auto;">
 
         <div>
-            <h2>手動數字卜卦 (1-8)</h2>
+            <h2>手動數字卜卦</h2>
+            <p>輸入三組數字，分別代表上卦、下卦和變爻。<br>(例如：123、456、789)</p>
             <div class="input-group">
-                <label for="num1">上卦: </label>
-                <input type="number" id="num1" min="1" max="8" value="1">
+                <label for="num1">上卦數字: </label>
+                <input type="number" id="num1" value="1">
             </div>
             <div class="input-group">
-                <label for="num2">下卦: </label>
-                <input type="number" id="num2" min="1" max="8" value="1">
+                <label for="num2">下卦數字: </label>
+                <input type="number" id="num2" value="2">
             </div>
             <div class="input-group">
-                <label for="num3">動爻: </label>
-                <input type="number" id="num3" min="1" max="6" value="1">
+                <label for="num3">動爻數字: </label>
+                <input type="number" id="num3" value="3">
             </div>
             <button id="manualGuaBtn">生成卦象</button>
         </div>
 
         <div id="result" class="hidden">
-            <h2 id="guaName"></h2>
-            <div id="guaImage"></div>
+            <div class="gua-container">
+                <div class="gua-box">
+                    <h3>本卦</h3>
+                    <h2 id="guaName"></h2>
+                    <div id="guaImage"></div>
+                </div>
+                <div class="gua-box">
+                    <h3>變卦</h3>
+                    <h2 id="changeGuaName"></h2>
+                    <div id="changeGuaImage"></div>
+                </div>
+            </div>
             <a id="explanationLink" href="#" target="_blank">點此查看卦象解釋</a>
         </div>
     </div>
 
     <script>
         const guaTable = [
-            null, // 索引 0 不用
-            [1, 1, 1], // 1 乾
-            [0, 0, 0], // 2 坤
-            [0, 1, 0], // 3 震
-            [1, 0, 0], // 4 巽
-            [1, 0, 1], // 5 坎
-            [0, 1, 1], // 6 離
-            [0, 0, 1], // 7 艮
-            [1, 1, 0]  // 8 兌
+            null,       // 0
+            [1, 1, 1],  // 1 乾
+            [0, 0, 0],  // 2 坤
+            [0, 1, 0],  // 3 震
+            [1, 0, 0],  // 4 巽
+            [1, 0, 1],  // 5 坎
+            [0, 1, 1],  // 6 離
+            [0, 0, 1],  // 7 艮
+            [1, 1, 0]   // 8 兌
         ];
 
-        // 64個卦象的資料庫，格式為：
-        // "卦象編號": [卦象名稱]
-        // 卦象編號是根據「上卦 * 8 + 下卦 - 8」的方式計算，方便與網址連結
         const guaData = {
             1: "乾為天", 2: "天澤履", 3: "天火同人", 4: "火天大有", 5: "天風姤", 6: "天水訟", 7: "天山遯", 8: "天地否",
             9: "澤天夬", 10: "兌為澤", 11: "澤火革", 12: "澤雷隨", 13: "澤風大過", 14: "澤水困", 15: "澤山咸", 16: "地山謙",
@@ -153,7 +181,6 @@
             57: "地雷復", 58: "地風升", 59: "地水師", 60: "地火明夷", 61: "地天泰", 62: "地澤臨", 63: "地山謙", 64: "坤為地",
         };
 
-
         const randomGuaBtn = document.getElementById('randomGuaBtn');
         const manualGuaBtn = document.getElementById('manualGuaBtn');
         const num1Input = document.getElementById('num1');
@@ -161,58 +188,93 @@
         const num3Input = document.getElementById('num3');
         const resultDiv = document.getElementById('result');
         const guaNameH2 = document.getElementById('guaName');
+        const changeGuaNameH2 = document.getElementById('changeGuaName');
         const guaImageDiv = document.getElementById('guaImage');
+        const changeGuaImageDiv = document.getElementById('changeGuaImage');
         const explanationLink = document.getElementById('explanationLink');
-        
-        // 生成並顯示卦象的通用函數
-        function displayGua(upperGuaNum, lowerGuaNum) {
+
+        function generateGua(upperNum, lowerNum, changeNum) {
+            let upperGuaNum = upperNum % 8;
+            if (upperGuaNum === 0) upperGuaNum = 8;
+            
+            let lowerGuaNum = lowerNum % 8;
+            if (lowerGuaNum === 0) lowerGuaNum = 8;
+
+            let movingLine = changeNum % 6;
+            if (movingLine === 0) movingLine = 6;
+            
             const upperGuaLines = guaTable[upperGuaNum];
             const lowerGuaLines = guaTable[lowerGuaNum];
+
+            const allLines = [...lowerGuaLines, ...upperGuaLines];
+            
+            // 處理變卦
+            const changeLines = [...allLines];
+            const movingLineIndex = movingLine - 1;
+            changeLines[movingLineIndex] = 1 - changeLines[movingLineIndex];
+
+            // 顯示本卦
             const guaId = (upperGuaNum - 1) * 8 + lowerGuaNum;
             const guaName = guaData[guaId];
-
-            if (!guaName) {
-                alert('卦象資料不完整，請檢查 guaData。');
-                return;
-            }
-
-            guaNameH2.textContent = guaName;
-
-            let guaImageHtml = "";
-            // 上卦的爻是從上往下顯示，下卦的爻也是，所以這裡直接組合
-            const allLines = [...upperGuaLines, ...lowerGuaLines];
-            allLines.reverse(); // 易經卦象由下往上排，所以要反轉
-
-            allLines.forEach(line => {
-                guaImageHtml += line === 1 ? '———————\n' : '————　————\n';
-            });
-            guaImageDiv.textContent = guaImageHtml;
-            explanationLink.href = `https://www.eee-learning.com/article/2076?title=${guaId}-${guaName}`;
+            guaNameH2.textContent = guaName || '卦象資料錯誤';
+            guaImageDiv.innerHTML = getGuaHtml(allLines, movingLine);
             
+            // 顯示變卦
+            const changeUpperGuaNum = findGuaNum(changeLines.slice(3));
+            const changeLowerGuaNum = findGuaNum(changeLines.slice(0, 3));
+            const changeGuaId = (changeUpperGuaNum - 1) * 8 + changeLowerGuaNum;
+            const changeGuaName = guaData[changeGuaId];
+            changeGuaNameH2.textContent = changeGuaName || '卦象資料錯誤';
+            changeGuaImageDiv.innerHTML = getGuaHtml(changeLines);
+            
+            explanationLink.href = `https://www.eee-learning.com/article/2076?title=${guaId}-${guaName}`;
             resultDiv.classList.remove('hidden');
         }
 
-        // 一鍵卜卦的邏輯
+        function getGuaHtml(lines, movingLine = null) {
+            let html = '';
+            // 爻從上往下顯示，所以反轉陣列
+            const reversedLines = [...lines].reverse();
+            reversedLines.forEach((line, index) => {
+                const lineNumber = 6 - index;
+                const lineHtml = line === 1 ? '———————' : '————　————';
+                if (lineNumber === movingLine) {
+                    html += `<span class="moving-line">${lineHtml} 變爻</span><br>`;
+                } else {
+                    html += `<span class="line">${lineHtml}</span><br>`;
+                }
+            });
+            return html;
+        }
+
+        // 根據三爻的組合找到對應的單卦數字
+        function findGuaNum(lines) {
+            for (let i = 1; i <= 8; i++) {
+                if (JSON.stringify(guaTable[i]) === JSON.stringify(lines)) {
+                    return i;
+                }
+            }
+            return null;
+        }
+
         randomGuaBtn.addEventListener('click', () => {
-            const upperGua = Math.floor(Math.random() * 8) + 1;
-            const lowerGua = Math.floor(Math.random() * 8) + 1;
-            displayGua(upperGua, lowerGua);
+            const upperNum = Math.floor(Math.random() * 999) + 1;
+            const lowerNum = Math.floor(Math.random() * 999) + 1;
+            const changeNum = Math.floor(Math.random() * 999) + 1;
+            generateGua(upperNum, lowerNum, changeNum);
         });
 
-        // 手動數字卜卦的邏輯
         manualGuaBtn.addEventListener('click', () => {
             const num1 = parseInt(num1Input.value);
             const num2 = parseInt(num2Input.value);
             const num3 = parseInt(num3Input.value);
 
-            if (isNaN(num1) || isNaN(num2) || isNaN(num3) || num1 < 1 || num1 > 8 || num2 < 1 || num2 > 8 || num3 < 1 || num3 > 6) {
-                alert('請輸入有效的數字 (上卦和下卦為 1-8，動爻為 1-6)。');
+            if (isNaN(num1) || isNaN(num2) || isNaN(num3) || num1 <= 0 || num2 <= 0 || num3 <= 0) {
+                alert('請輸入大於0的數字。');
                 return;
             }
 
-            // 在這個簡單版本中，我們只用上卦和下卦來決定卦象
-            // 如果需要考慮動爻，邏輯會更複雜，需要計算變卦
-            displayGua(num1, num2);
+            generateGua(num1, num2, num3);
         });
     </script>
 </body>
