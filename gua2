@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>線上卜卦</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+        .input-group label {
+            font-size: 16px;
+        }
+        .input-group input {
+            width: 80px;
+            padding: 5px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        #result {
+            margin-top: 30px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .gua-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .gua-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #guaImage, #changeGuaImage {
+            font-family: monospace;
+            font-size: 30px;
+            line-height: 1.5;
+            margin: 20px 0;
+            white-space: pre;
+        }
+        .moving-line {
+            color: red;
+            font-weight: bold;
+        }
+        .line {
+            color: black;
+        }
+        #explanationLink {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        #explanationLink:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>線上卜卦程式</h1>
+        
+        <div>
+            <h2>隨機一鍵卜卦</h2>
+            <button id="randomGuaBtn">開始卜卦</button>
+        </div>
+
+        <hr style="width: 80%; margin: 30px auto;">
+
+        <div>
+            <h2>手動數字卜卦</h2>
+            <p>輸入三組數字，分別代表上卦、下卦和變爻。<br>(例如：123、456、789)</p>
+            <div class="input-group">
+                <label for="num1">上卦數字: </label>
+                <input type="number" id="num1" value="1">
+            </div>
+            <div class="input-group">
+                <label for="num2">下卦數字: </label>
+                <input type="number" id="num2" value="2">
+            </div>
+            <div class="input-group">
+                <label for="num3">動爻數字: </label>
+                <input type="number" id="num3" value="3">
+            </div>
+            <button id="manualGuaBtn">生成卦象</button>
+        </div>
+
+        <div id="result" class="hidden">
+            <div class="gua-container">
+                <div class="gua-box">
+                    <h3>本卦</h3>
+                    <h2 id="guaName"></h2>
+                    <div id="guaImage"></div>
+                </div>
+                <div class="gua-box">
+                    <h3>變卦</h3>
+                    <h2 id="changeGuaName"></h2>
+                    <div id="changeGuaImage"></div>
+                </div>
+            </div>
+            <a id="explanationLink" href="#" target="_blank">點此查看卦象解釋</a>
+        </div>
+    </div>
+
+    <script>
+        const guaTable = [
+            null,       // 0
+            [1, 1, 1],  // 1 乾
+            [0, 0, 0],  // 2 坤
+            [0, 1, 0],  // 3 震
+            [1, 0, 0],  // 4 巽
+            [1, 0, 1],  // 5 坎
+            [0, 1, 1],  // 6 離
+            [0, 0, 1],  // 7 艮
+            [1, 1, 0]   // 8 兌
+        ];
+
+        const guaData = {
+            1: "乾為天", 2: "天澤履", 3: "天火同人", 4: "火天大有", 5: "天風姤", 6: "天水訟", 7: "天山遯", 8: "天地否",
+            9: "澤天夬", 10: "兌為澤", 11: "澤火革", 12: "澤雷隨", 13: "澤風大過", 14: "澤水困", 15: "澤山咸", 16: "地山謙",
+            17: "火天大有", 18: "火澤睽", 19: "離為火", 20: "火雷噬嗑", 21: "火風鼎", 22: "火山旅", 23: "火地晉", 24: "地火明夷",
+            25: "震為雷", 26: "雷地豫", 27: "雷水解", 28: "雷澤歸妹", 29: "雷風恆", 30: "雷天大壯", 31: "雷火豐", 32: "雷山小過",
+            33: "風地觀", 34: "風山漸", 35: "風澤中孚", 36: "風火家人", 37: "巽為風", 38: "風雷益", 39: "風水渙", 40: "風天小畜",
+            41: "水雷屯", 42: "水地比", 43: "水山蹇", 44: "水火既濟", 45: "坎為水", 46: "水風井", 47: "水澤節", 48: "水天需",
+            49: "山地剝", 50: "山澤損", 51: "山水蒙", 52: "山火賁", 53: "山風蠱", 54: "山雷頤", 55: "艮為山", 56: "山天大畜",
+            57: "地雷復", 58: "地風升", 59: "地水師", 60: "地火明夷", 61: "地天泰", 62: "地澤臨", 63: "地山謙", 64: "坤為地",
+        };
+
+        const randomGuaBtn = document.getElementById('randomGuaBtn');
+        const manualGuaBtn = document.getElementById('manualGuaBtn');
+        const num1Input = document.getElementById('num1');
+        const num2Input = document.getElementById('num2');
+        const num3Input = document.getElementById('num3');
+        const resultDiv = document.getElementById('result');
+        const guaNameH2 = document.getElementById('guaName');
+        const changeGuaNameH2 = document.getElementById('changeGuaName');
+        const guaImageDiv = document.getElementById('guaImage');
+        const changeGuaImageDiv = document.getElementById('changeGuaImage');
+        const explanationLink = document.getElementById('explanationLink');
+
+        function generateGua(upperNum, lowerNum, changeNum) {
+            let upperGuaNum = upperNum % 8;
+            if (upperGuaNum === 0) upperGuaNum = 8;
+            
+            let lowerGuaNum = lowerNum % 8;
+            if (lowerGuaNum === 0) lowerGuaNum = 8;
+
+            let movingLine = changeNum % 6;
+            if (movingLine === 0) movingLine = 6;
+            
+            const upperGuaLines = guaTable[upperGuaNum];
+            const lowerGuaLines = guaTable[lowerGuaNum];
+
+            const allLines = [...lowerGuaLines, ...upperGuaLines];
+            
+            // 處理變卦
+            const changeLines = [...allLines];
+            const movingLineIndex = movingLine - 1;
+            changeLines[movingLineIndex] = 1 - changeLines[movingLineIndex];
+
+            // 顯示本卦
+            const guaId = (upperGuaNum - 1) * 8 + lowerGuaNum;
+            const guaName = guaData[guaId];
+            guaNameH2.textContent = guaName || '卦象資料錯誤';
+            guaImageDiv.innerHTML = getGuaHtml(allLines, movingLine);
+            
+            // 顯示變卦
+            const changeUpperGuaNum = findGuaNum(changeLines.slice(3));
+            const changeLowerGuaNum = findGuaNum(changeLines.slice(0, 3));
+            const changeGuaId = (changeUpperGuaNum - 1) * 8 + changeLowerGuaNum;
+            const changeGuaName = guaData[changeGuaId];
+            changeGuaNameH2.textContent = changeGuaName || '卦象資料錯誤';
+            changeGuaImageDiv.innerHTML = getGuaHtml(changeLines);
+            
+            explanationLink.href = `https://www.eee-learning.com/article/2076?title=${guaId}-${guaName}`;
+            resultDiv.classList.remove('hidden');
+        }
+
+        function getGuaHtml(lines, movingLine = null) {
+            let html = '';
+            // 爻從上往下顯示，所以反轉陣列
+            const reversedLines = [...lines].reverse();
+            reversedLines.forEach((line, index) => {
+                const lineNumber = 6 - index;
+                const lineHtml = line === 1 ? '———————' : '————　————';
+                if (lineNumber === movingLine) {
+                    html += `<span class="moving-line">${lineHtml} 變爻</span><br>`;
+                } else {
+                    html += `<span class="line">${lineHtml}</span><br>`;
+                }
+            });
+            return html;
+        }
+
+        // 根據三爻的組合找到對應的單卦數字
+        function findGuaNum(lines) {
+            for (let i = 1; i <= 8; i++) {
+                if (JSON.stringify(guaTable[i]) === JSON.stringify(lines)) {
+                    return i;
+                }
+            }
+            return null;
+        }
+
+        randomGuaBtn.addEventListener('click', () => {
+            const upperNum = Math.floor(Math.random() * 999) + 1;
+            const lowerNum = Math.floor(Math.random() * 999) + 1;
+            const changeNum = Math.floor(Math.random() * 999) + 1;
+            generateGua(upperNum, lowerNum, changeNum);
+        });
+
+        manualGuaBtn.addEventListener('click', () => {
+            const num1 = parseInt(num1Input.value);
+            const num2 = parseInt(num2Input.value);
+            const num3 = parseInt(num3Input.value);
+
+            if (isNaN(num1) || isNaN(num2) || isNaN(num3) || num1 <= 0 || num2 <= 0 || num3 <= 0) {
+                alert('請輸入大於0的數字。');
+                return;
+            }
+
+            generateGua(num1, num2, num3);
+        });
+    </script>
+</body>
+</html>
