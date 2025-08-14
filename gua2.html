@@ -257,33 +257,41 @@
     <script>
         // 在程式載入時隨機產生預設數字
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('num1').value = Math.floor(Math.random() * 999) + 100;
-            document.getElementById('num2').value = Math.floor(Math.random() * 999) + 100;
-            document.getElementById('num3').value = Math.floor(Math.random() * 999) + 100;
+            function getRandomThreeDigit() {
+                return Math.floor(Math.random() * 900) + 100;
+            }
+            document.getElementById('num1').value = getRandomThreeDigit();
+            document.getElementById('num2').value = getRandomThreeDigit();
+            document.getElementById('num3').value = getRandomThreeDigit();
         });
 
+        // 八卦的爻陣列，1為陽爻，0為陰爻
         const guaTable = [
-            null,       // 0
+            null,       // 0 (未用)
             [1, 1, 1],  // 1 乾
-            [0, 0, 0],  // 2 坤
-            [0, 1, 0],  // 3 震
-            [1, 0, 0],  // 4 巽
-            [1, 0, 1],  // 5 坎
-            [0, 1, 1],  // 6 離
+            [1, 1, 0],  // 2 兌
+            [1, 0, 1],  // 3 離
+            [1, 0, 0],  // 4 震
+            [0, 1, 1],  // 5 巽
+            [0, 1, 0],  // 6 坎
             [0, 0, 1],  // 7 艮
-            [1, 1, 0]   // 8 兌
+            [0, 0, 0]   // 8 坤
         ];
 
-        const guaData = {
-            1: "乾為天", 2: "天澤履", 3: "天火同人", 4: "火天大有", 5: "天風姤", 6: "天水訟", 7: "天山遯", 8: "天地否",
-            9: "澤天夬", 10: "兌為澤", 11: "澤火革", 12: "澤雷隨", 13: "澤風大過", 14: "澤水困", 15: "澤山咸", 16: "地山謙",
-            17: "火天大有", 18: "火澤睽", 19: "離為火", 20: "火雷噬嗑", 21: "火風鼎", 22: "火山旅", 23: "火地晉", 24: "地火明夷",
-            25: "震為雷", 26: "雷地豫", 27: "雷水解", 28: "雷澤歸妹", 29: "雷風恆", 30: "雷天大壯", 31: "雷火豐", 32: "雷山小過",
-            33: "風地觀", 34: "風山漸", 35: "風澤中孚", 36: "風火家人", 37: "巽為風", 38: "風雷益", 39: "風水渙", 40: "風天小畜",
-            41: "水雷屯", 42: "水地比", 43: "水山蹇", 44: "水火既濟", 45: "坎為水", 46: "水風井", 47: "水澤節", 48: "水天需",
-            49: "山地剝", 50: "山澤損", 51: "山水蒙", 52: "山火賁", 53: "山風蠱", 54: "山雷頤", 55: "艮為山", 56: "山天大畜",
-            57: "地雷復", 58: "地風升", 59: "地水師", 60: "地火明夷", 61: "地天泰", 62: "地澤臨", 63: "地山謙", 64: "坤為地",
-        };
+        // 64個卦象的資料庫，格式為：
+        // "卦象編號": [卦象名稱]
+        // 卦象編號是根據「上卦 * 8 + 下卦」的方式計算
+        const guaData = [
+            null,
+            "乾為天", "天澤履", "天火同人", "天雷無妄", "天風姤", "天水訟", "天山遯", "天地否",
+            "澤天夬", "兌為澤", "澤火革", "澤雷隨", "澤風大過", "澤水困", "澤山咸", "澤地萃",
+            "火天大有", "火澤睽", "離為火", "火雷噬嗑", "火風鼎", "火水未濟", "火山旅", "火地晉",
+            "雷天大壯", "雷澤歸妹", "雷火豐", "震為雷", "雷風恆", "雷水解", "雷山小過", "雷地豫",
+            "風天小畜", "風澤中孚", "風火家人", "風雷益", "巽為風", "風水渙", "風山漸", "風地觀",
+            "水天需", "水澤節", "水火既濟", "水雷屯", "水風井", "坎為水", "水山蹇", "水地比",
+            "山天大畜", "山澤損", "山火賁", "山雷頤", "山風蠱", "山水蒙", "艮為山", "山地剝",
+            "地天泰", "地澤臨", "地火明夷", "地雷復", "地風升", "地水師", "地山謙", "坤為地",
+        ];
 
         const randomGuaBtn = document.getElementById('randomGuaBtn');
         const manualGuaBtn = document.getElementById('manualGuaBtn');
@@ -316,6 +324,7 @@
             const movingLineIndex = movingLine - 1;
             changeLines[movingLineIndex] = 1 - changeLines[movingLineIndex];
 
+            // 修正 guaId 的計算方式，確保與 guaData 陣列的索引對應
             const guaId = (upperGuaNum - 1) * 8 + lowerGuaNum;
             const guaName = guaData[guaId];
             guaNameH2.textContent = guaName || '卦象資料錯誤';
@@ -359,11 +368,10 @@
         }
 
         randomGuaBtn.addEventListener('click', () => {
-            const upperNum = Math.floor(Math.random() * 999) + 1;
-            const lowerNum = Math.floor(Math.random() * 999) + 1;
-            const changeNum = Math.floor(Math.random() * 999) + 1;
-            // 隨機卜卦使用舊的順序，因為沒有嚴格的定義
-            generateGua(upperNum, lowerNum, changeNum);
+            const num1 = Math.floor(Math.random() * 900) + 100;
+            const num2 = Math.floor(Math.random() * 900) + 100;
+            const num3 = Math.floor(Math.random() * 900) + 100;
+            generateGua(num1, num2, num3);
         });
 
         manualGuaBtn.addEventListener('click', () => {
@@ -375,7 +383,6 @@
                 alert('請輸入大於0的數字。');
                 return;
             }
-            // 根據新順序呼叫 generateGua (num1 = 下卦, num2 = 上卦)
             generateGua(num1, num2, num3);
         });
     </script>
