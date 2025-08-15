@@ -605,6 +605,7 @@
 
         // 根據卦象的六爻資料找出對應的 64 卦資料
         function findGuaInfo(lines) {
+            // 將六爻陣列轉換成字串，以便進行比對
             const linesStr = JSON.stringify(lines);
             for (const gua of all64Gua) {
                 if (JSON.stringify(gua.lines) === linesStr) {
@@ -618,12 +619,18 @@
         function generateGua(upperGuaNum, lowerGuaNum, movingLines) {
             const upperGuaLines = guaTable[upperGuaNum];
             const lowerGuaLines = guaTable[lowerGuaNum];
+            
+            if (!upperGuaLines || !lowerGuaLines) {
+                alert('卦象數值錯誤，請重新確認。');
+                return;
+            }
+            
             // 組合本卦六爻，從下往上：下卦 + 上卦
             const allLines = [...lowerGuaLines, ...upperGuaLines];
 
             const guaInfo = findGuaInfo(allLines);
             if (!guaInfo) {
-                alert('卦象資料錯誤，請重新輸入。');
+                alert('本卦資料錯誤，請重新輸入。');
                 return;
             }
 
@@ -632,6 +639,7 @@
             movingLines.forEach(lineNum => {
                 const index = lineNum - 1;
                 if (index >= 0 && index < 6) {
+                    // 變爻時，陰變陽 (0變1)，陽變陰 (1變0)
                     changeLines[index] = 1 - changeLines[index];
                 }
             });
