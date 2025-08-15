@@ -522,3 +522,22 @@
             [1, 0, 0],  // 4 震
             [0, 1, 1],  // 5 巽
             [0, 1, 0],  // 6 坎
+            [0, 0, 1],  // 7 艮
+            [0, 0, 0]   // 8 坤
+        ];
+
+        // 新的 64 卦資料庫，包含正確的卦序、卦名和爻象
+        const all64Gua = [
+            // 上經
+            { id: 1, name: "乾為天", lines: [...guaTable[1], ...guaTable[1]] },
+            { id: 2, name: "坤為地", lines: [...guaTable[8], ...guaTable[8]] },
+            { id: 3, name: "水雷屯", lines: [...guaTable[6], ...guaTable[4]] },
+            { id: 4, name: "山水蒙", lines: [...guaTable[7], ...guaTable[6]] },
+            { id: 5, name: "水天需", lines: [...guaTable[6], ...guaTable[1]] },
+            { id: 6, name: "天水訟", lines: [...guaTable[1], ...guaTable[6]] },
+            { id: 7, name: "地水師", lines: [...guaTable[8], ...guaTable[6]] },
+            { id: 8, name: "水地比", lines: [...guaTable[6], ...guaTable[8]] },
+            { id: 9, name: "風天小畜", lines: [...guaTable[5], ...guaTable[1]] },
+            { id: 10, name: "天澤履", lines: [...guaTable[1], ...guaTable[2]] },
+            { id: 11, name: "地天泰", lines: [...guaTable[8], ...guaTable[1]] },
+            { id: 12, name: "天地否", lines: [...gua
