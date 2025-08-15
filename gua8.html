@@ -438,7 +438,7 @@
             }
             document.getElementById('num4').value = getRandomThreeDigit();
             document.getElementById('num5').value = getRandomThreeDigit();
-            document.getElementById('num6').value = Math.floor(Math.random() * 6) + 1;
+            document.getElementById('num6').value = getRandomThreeDigit(); // 這裡修改為三位數
             document.getElementById('imageUpperNum').value = getRandomThreeDigit();
         });
 
@@ -610,9 +610,9 @@
                 huGuaImageDiv.innerHTML = '';
             }
             
-            explanationLink1.href = `https://www.eee-learning.com/article/2076?title=${guaInfo.id}-${guaInfo.name}`;
-            explanationLink2.href = `https://m.zhouyi.cc/zhouyi/yijing64/${guaInfo.id}.html`;
-            explanationLink3.href = `https://m.golla.tw/sm/64gua/${guaInfo.id}/`;
+            explanationLink1.href = `https://www.eee-learning.com/article/181`;
+            explanationLink2.href = `https://m.zhouyi.cc/zhouyi/yijing64/`;
+            explanationLink3.href = `https://m.golla.tw/sm/64gua/42256.html`;
             
             resultDiv.classList.remove('hidden');
             resultDiv.classList.add('visible');
