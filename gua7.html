@@ -504,7 +504,7 @@
             [0, 0, 0]   // 8 坤
         ];
 
-        // 新的 64 卦資料庫，包含正確的卦序、卦名和爻象
+        // 64 卦資料庫，包含正確的卦序、卦名和爻象
         const all64Gua = [
             // 上經
             { id: 1, name: "乾為天", lines: [1, 1, 1, 1, 1, 1] },
@@ -618,6 +618,7 @@
         function generateGua(upperGuaNum, lowerGuaNum, movingLines) {
             const upperGuaLines = guaTable[upperGuaNum];
             const lowerGuaLines = guaTable[lowerGuaNum];
+            // 組合本卦六爻，從下往上：下卦 + 上卦
             const allLines = [...lowerGuaLines, ...upperGuaLines];
 
             const guaInfo = findGuaInfo(allLines);
@@ -626,6 +627,7 @@
                 return;
             }
 
+            // 產生變卦的六爻
             const changeLines = [...allLines];
             movingLines.forEach(lineNum => {
                 const index = lineNum - 1;
@@ -633,6 +635,13 @@
                     changeLines[index] = 1 - changeLines[index];
                 }
             });
+
+            // 產生互卦的六爻
+            // 互卦取本卦的 2,3,4 爻為下卦，3,4,5 爻為上卦
+            const huUpperLines = [allLines[2], allLines[3], allLines[4]];
+            const huLowerLines = [allLines[1], allLines[2], allLines[3]];
+            const huLines = [...huLowerLines, ...huUpperLines];
+
 
             // 顯示本卦
             guaNameH2.textContent = `${guaInfo.id}. ${guaInfo.name}`;
@@ -649,7 +658,6 @@
             }
             
             // 顯示互卦
-            const huLines = [allLines[1], allLines[2], allLines[3], allLines[2], allLines[3], allLines[4]];
             const huGuaInfo = findGuaInfo(huLines);
             if (huGuaInfo) {
                 huGuaNameH2.textContent = `${huGuaInfo.id}. ${huGuaInfo.name}`;
@@ -659,9 +667,9 @@
                 huGuaImageDiv.innerHTML = '';
             }
             
-            explanationLink1.href = `https://www.eee-learning.com/article/181`;
-            explanationLink2.href = `https://m.zhouyi.cc/zhouyi/yijing64/`;
-            explanationLink3.href = `https://m.golla.tw/sm/64gua/42256.html`;
+            explanationLink1.href = `https://www.eee-learning.com/article/2076?title=${guaInfo.id}-${guaInfo.name}`;
+            explanationLink2.href = `https://m.zhouyi.cc/zhouyi/yijing64/${guaInfo.id}.html`;
+            explanationLink3.href = `https://m.golla.tw/sm/64gua/${guaInfo.id}/`;
             
             resultDiv.classList.remove('hidden');
             resultDiv.classList.add('visible');
