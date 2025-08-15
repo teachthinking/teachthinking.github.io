@@ -303,7 +303,7 @@
         
         <div id="manual-upper-first" class="tab-content active">
             <h2>數字取卦</h2>
-            <p>輸入三組數字，分別代表**上卦**、**下卦**和**變爻**。<br>(例如：123、456、789)</p>
+            <p>輸入三組數字，分別代表**上卦**、**下卦**和**動爻**。<br>(例如：123、456、789)</p>
             <div class="input-group">
                 <label for="num4">上卦數字: </label>
                 <input type="number" id="num4">
@@ -487,7 +487,7 @@
             }
             document.getElementById('num4').value = getRandomThreeDigit();
             document.getElementById('num5').value = getRandomThreeDigit();
-            document.getElementById('num6').value = Math.floor(Math.random() * 6) + 1;
+            document.getElementById('num6').value = getRandomThreeDigit(); // 這裡恢復成三位數
             document.getElementById('imageUpperNum').value = getRandomThreeDigit();
         });
 
@@ -638,7 +638,7 @@
 
             // 產生互卦的六爻
             // 互卦取本卦的 2,3,4 爻為下卦，3,4,5 爻為上卦
-            const huUpperLines = [allLines[2], allLines[3], allLines[4]];
+            const huUpperLines = [allLines[3], allLines[4], allLines[5]];
             const huLowerLines = [allLines[1], allLines[2], allLines[3]];
             const huLines = [...huLowerLines, ...huUpperLines];
 
