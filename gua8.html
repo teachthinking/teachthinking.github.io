@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>張老師線上易經卜卦</title>
+    <title>張老師易經卜卦</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
@@ -122,6 +122,10 @@
             color: white;
             font-weight: bold;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tab-button:active {
+            transform: scale(0.95);
         }
 
         .tab-content {
@@ -295,33 +299,14 @@
         <h1>張老師易經卜卦</h1>
 
         <div class="tab-buttons">
-            <button class="tab-button active" onclick="showTab('manual-lower-first')">手動卜卦 (下卦在前)</button>
-            <button class="tab-button" onclick="showTab('manual-upper-first')">手動卜卦 (上卦在前)</button>
+            <button class="tab-button active" onclick="showTab('manual-upper-first')">數字取卦</button>
             <button class="tab-button" onclick="showTab('manual-dropdown')">手動取卦 (下拉選單)</button>
             <button class="tab-button" onclick="showTab('time-divination')">時間取卦</button>
             <button class="tab-button" onclick="showTab('by-image')">以象取卦</button>
         </div>
         
-        <div id="manual-lower-first" class="tab-content active">
-            <h2>手動數字卜卦 (下卦在前)</h2>
-            <p>輸入三組數字，分別代表**下卦**、**上卦**和**變爻**。<br>(例如：123、456、789)</p>
-            <div class="input-group">
-                <label for="num1">下卦數字: </label>
-                <input type="number" id="num1">
-            </div>
-            <div class="input-group">
-                <label for="num2">上卦數字: </label>
-                <input type="number" id="num2">
-            </div>
-            <div class="input-group">
-                <label for="num3">動爻數字: </label>
-                <input type="number" id="num3">
-            </div>
-            <button id="manualLowerBtn">生成卦象</button>
-        </div>
-        
-        <div id="manual-upper-first" class="tab-content">
-            <h2>手動數字卜卦 (上卦在前)</h2>
+        <div id="manual-upper-first" class="tab-content active">
+            <h2>數字取卦</h2>
             <p>輸入三組數字，分別代表**上卦**、**下卦**和**變爻**。<br>(例如：123、456、789)</p>
             <div class="input-group">
                 <label for="num4">上卦數字: </label>
@@ -381,7 +366,7 @@
 
         <div id="time-divination" class="tab-content">
             <h2>時間取卦</h2>
-            <p>以**當下農曆年、月、日、時辰、秒數**，<br>加上你心念的數字來計算卦象。</p>
+            <p>以**當下日期時間**加上你心念的數字來計算卦象。</p>
             <div class="input-group">
                 <label for="timeDivinationNum">心念數字 (0-999): </label>
                 <input type="number" id="timeDivinationNum" value="0">
@@ -446,67 +431,11 @@
     </div>
 
     <script>
-        // --- 陰曆轉換的腳本 (精簡版) ---
-        // 來源: https://github.com/jjonline/calendar-solar2lunar
-        function calendar_solar2lunar(year, month, day) {
-            const lunarInfo = [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x145b7,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x1d4a5,0x0d4a0,0x0d164,0x05970,0x05640,0x095e0,0x065e4,0x06a50,0x06e40,0x116aa,0x0a480,0x0a2f0,0x0875a,0x06310,0x05f20,0x124a6,0x04b70,0x0b490,0x06275,0x0a480,0x0b515,0x0d2f0,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x06310,0x06a50,0x05857,0x0a950,0x0b4a0,0x16d4a,0x0ad50,0x09550,0x04977,0x04970,0x064b0,0x074a3,0x0da50,0x0b550,0x10555,0x056a0,0x0a6d0,0x0552b,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0afa0,0x0d4a2,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x06d20,0x0d240,0x0a4b5,0x06a50,0x06d40,0x0c25a,0x0ea50,0x0b55c,0x05550,0x04770,0x0a4b0,0x01132,0x092e0,0x0d2e0,0x0d530,0x05aa0,0x076a3,0x096d0,0x04bd7,0x04bd0,0x0a5b4,0x054d0,0x0d260,0x0d950,0x0555d,0x056a0,0x096d0,0x06554,0x049b0,0x0a4b0,0x0116a,0x0a4e0,0x0b295,0x06a50,0x06d40,0x145b5,0x02b60,0x05572,0x052f0,0x06d20];
-            const lunarMonth = ["正", "二", "三", "四", "五", "六", "七", "八", "九", "十", "冬", "臘"];
-            
-            const sDObj = new Date(year, month - 1, day);
-            let daySpan = Math.round((sDObj.getTime() - new Date(1900, 0, 31).getTime()) / 86400000);
-            let lunarYear, lunarMonthIndex, lunarDayIndex;
-
-            for (let i = 0; i < lunarInfo.length; i++) {
-                let temp = 0;
-                for (let j = 0; j < 16; j++) {
-                    temp += (((lunarInfo[i] >> j) & 0x01) ? 30 : 29);
-                }
-                if (daySpan > temp) {
-                    daySpan -= temp;
-                    continue;
-                }
-                
-                lunarYear = 1900 + i;
-                let leapMonth = lunarInfo[i] & 0xf;
-                let isLeap = false;
-                
-                for(let j = 0x8000; j > 0x08; j >>= 1) {
-                    let monthLen = (lunarInfo[i] & j) ? 30 : 29;
-                    if(j === 0x08 && leapMonth > 0) {
-                        isLeap = true;
-                        monthLen = (lunarInfo[i] & 0x10000) ? 30 : 29;
-                    }
-                    if(daySpan > monthLen) {
-                        daySpan -= monthLen;
-                        continue;
-                    }
-                    lunarMonthIndex = lunarMonth.indexOf(lunarMonth[month - 1]) + 1; // Simplify lunar month calculation
-                    lunarDayIndex = daySpan;
-                    break;
-                }
-                break;
-            }
-
-            return {
-                lunarYear: lunarYear,
-                lunarMonth: lunarMonthIndex,
-                lunarDay: lunarDayIndex
-            };
-        }
-        
-        // 將24小時制轉換為12時辰數 (1-12)
-        function getZodiacHourNum(hour) {
-            return Math.floor((hour + 1) / 2) % 12 + 1;
-        }
-
         // 在程式載入時隨機產生預設數字
         document.addEventListener('DOMContentLoaded', () => {
             function getRandomThreeDigit() {
                 return Math.floor(Math.random() * 900) + 100;
             }
-            document.getElementById('num1').value = getRandomThreeDigit();
-            document.getElementById('num2').value = getRandomThreeDigit();
-            document.getElementById('num3').value = Math.floor(Math.random() * 6) + 1;
             document.getElementById('num4').value = getRandomThreeDigit();
             document.getElementById('num5').value = getRandomThreeDigit();
             document.getElementById('num6').value = Math.floor(Math.random() * 6) + 1;
@@ -601,14 +530,10 @@
         // 對應到 guaTable 的索引為: 6, 8, 4, 5, 8, 1, 2, 7, 3
         const laterHeavenMap = [null, 6, 8, 4, 5, 8, 1, 2, 7, 3];
         
-        const manualLowerBtn = document.getElementById('manualLowerBtn');
         const manualUpperBtn = document.getElementById('manualUpperBtn');
         const manualDropdownBtn = document.getElementById('manualDropdownBtn');
         const timeDivinationBtn = document.getElementById('timeDivinationBtn');
         const imageGuaBtn = document.getElementById('imageGuaBtn');
-        const num1Input = document.getElementById('num1');
-        const num2Input = document.getElementById('num2');
-        const num3Input = document.getElementById('num3');
         const num4Input = document.getElementById('num4');
         const num5Input = document.getElementById('num5');
         const num6Input = document.getElementById('num6');
@@ -685,9 +610,9 @@
                 huGuaImageDiv.innerHTML = '';
             }
             
-            explanationLink1.href = `https://www.eee-learning.com/article/181`;
-            explanationLink2.href = `https://m.zhouyi.cc/zhouyi/yijing64/`;
-            explanationLink3.href = `https://m.golla.tw/sm/64gua/42256.html`;
+            explanationLink1.href = `https://www.eee-learning.com/article/2076?title=${guaInfo.id}-${guaInfo.name}`;
+            explanationLink2.href = `https://m.zhouyi.cc/zhouyi/yijing64/${guaInfo.id}.html`;
+            explanationLink3.href = `https://m.golla.tw/sm/64gua/${guaInfo.id}/`;
             
             resultDiv.classList.remove('hidden');
             resultDiv.classList.add('visible');
@@ -717,29 +642,6 @@
             }
             return null;
         }
-
-        // 手動卜卦按鈕點擊事件 (下卦在前)
-        manualLowerBtn.addEventListener('click', () => {
-            const num1 = parseInt(num1Input.value);
-            const num2 = parseInt(num2Input.value);
-            const num3 = parseInt(num3Input.value);
-
-            if (isNaN(num1) || isNaN(num2) || isNaN(num3) || num1 <= 0 || num2 <= 0 || num3 <= 0) {
-                alert('請輸入大於0的數字。');
-                return;
-            }
-            
-            let lowerGuaNum = num1 % 8;
-            if (lowerGuaNum === 0) lowerGuaNum = 8;
-            
-            let upperGuaNum = num2 % 8;
-            if (upperGuaNum === 0) upperGuaNum = 8;
-
-            let movingLine = num3 % 6;
-            if (movingLine === 0) movingLine = 6;
-            
-            generateGua(upperGuaNum, lowerGuaNum, [movingLine]);
-        });
         
         // 手動卜卦按鈕點擊事件 (上卦在前)
         manualUpperBtn.addEventListener('click', () => {
@@ -792,31 +694,25 @@
             generateGua(upperGuaNum, lowerGuaNum, movingLines);
         });
 
-        // 時間取卦 (原梅花易數先天)
+        // 時間取卦 (新的計算公式)
         timeDivinationBtn.addEventListener('click', () => {
             const now = new Date();
             const year = now.getFullYear();
             const month = now.getMonth() + 1;
             const day = now.getDate();
             const hour = now.getHours();
+            const minute = now.getMinutes();
             const second = now.getSeconds();
             
-            const lunarDate = calendar_solar2lunar(year, month, day);
-            const lunarYear = lunarDate.lunarYear;
-            const lunarMonth = lunarDate.lunarMonth;
-            const lunarDay = lunarDate.lunarDay;
-            const zodiacHourNum = getZodiacHourNum(hour);
-
             const inputNum = parseInt(timeDivinationNumInput.value);
             if (isNaN(inputNum) || inputNum < 0 || inputNum > 999) {
                 alert('請輸入 0 到 999 的數字。');
                 return;
             }
             
-            // 梅花易數的卦象與變爻計算
-            const upperSum = lunarYear + lunarMonth + lunarDay + inputNum;
-            const lowerSum = upperSum + zodiacHourNum;
-            const movingSum = lowerSum + second;
+            const upperSum = year + month + day + inputNum;
+            const lowerSum = hour + minute + second + inputNum;
+            const movingSum = year + month + day + hour + minute + second + inputNum;
             
             const upperGuaNum = (upperSum % 8) || 8;
             const lowerGuaNum = (lowerSum % 8) || 8;
