@@ -295,33 +295,14 @@
         <h1>張老師易經卜卦</h1>
 
         <div class="tab-buttons">
-            <button class="tab-button active" onclick="showTab('manual-lower-first')">手動卜卦 (下卦在前)</button>
-            <button class="tab-button" onclick="showTab('manual-upper-first')">手動卜卦 (上卦在前)</button>
-            <button class="tab-button" onclick="showTab('manual-dropdown')">手動取卦 (下拉選單)</button>
+            <button class="tab-button active" onclick="showTab('manual-upper-first')">數字取卦</button>
+            <button class="tab-button" onclick="showTab('manual-dropdown')">手動取卦 </button>
             <button class="tab-button" onclick="showTab('time-divination')">時間取卦</button>
             <button class="tab-button" onclick="showTab('by-image')">以象取卦</button>
         </div>
         
-        <div id="manual-lower-first" class="tab-content active">
-            <h2>手動數字卜卦 (下卦在前)</h2>
-            <p>輸入三組數字，分別代表**下卦**、**上卦**和**變爻**。<br>(例如：123、456、789)</p>
-            <div class="input-group">
-                <label for="num1">下卦數字: </label>
-                <input type="number" id="num1">
-            </div>
-            <div class="input-group">
-                <label for="num2">上卦數字: </label>
-                <input type="number" id="num2">
-            </div>
-            <div class="input-group">
-                <label for="num3">動爻數字: </label>
-                <input type="number" id="num3">
-            </div>
-            <button id="manualLowerBtn">生成卦象</button>
-        </div>
-        
-        <div id="manual-upper-first" class="tab-content">
-            <h2>手動數字卜卦 (上卦在前)</h2>
+        <div id="manual-upper-first" class="tab-content active">
+            <h2>數字取卦</h2>
             <p>輸入三組數字，分別代表**上卦**、**下卦**和**變爻**。<br>(例如：123、456、789)</p>
             <div class="input-group">
                 <label for="num4">上卦數字: </label>
@@ -339,7 +320,7 @@
         </div>
         
         <div id="manual-dropdown" class="tab-content">
-            <h2>手動取卦 (下拉選單)</h2>
+            <h2>手動取卦</h2>
             <p>透過下拉選單選擇卦象，並手動輸入變爻位置。</p>
             <div class="input-group">
                 <label for="upperGuaSelect">上卦: </label>
@@ -397,7 +378,7 @@
                 <input type="number" id="imageUpperNum">
                 <div class="tips">
                     參考：乾(金)1, 兌(金)2, 離(火)3, 震(木)4, 巽(木)5, 坎(水)6, 艮(土)7, 坤(土)8<br>
-                    例如：汽車，金色=1、手機，白色=2、電腦，紅色=3、書，綠色=4、花，藍色=5、飲料，黑色=6、石頭，棕色=7、泥土，黃色=8。
+                    例如：汽車=1、手機=2、電腦=3、書=4、花=5、飲料=6、石頭=7、泥土=8。
                 </div>
             </div>
             <div class="input-group">
@@ -504,9 +485,6 @@
             function getRandomThreeDigit() {
                 return Math.floor(Math.random() * 900) + 100;
             }
-            document.getElementById('num1').value = getRandomThreeDigit();
-            document.getElementById('num2').value = getRandomThreeDigit();
-            document.getElementById('num3').value = Math.floor(Math.random() * 6) + 1;
             document.getElementById('num4').value = getRandomThreeDigit();
             document.getElementById('num5').value = getRandomThreeDigit();
             document.getElementById('num6').value = Math.floor(Math.random() * 6) + 1;
@@ -538,336 +516,4 @@
             { id: 7, name: "地水師", lines: [...guaTable[6], ...guaTable[8]] },
             { id: 8, name: "水地比", lines: [...guaTable[8], ...guaTable[6]] },
             { id: 9, name: "風天小畜", lines: [...guaTable[1], ...guaTable[5]] },
-            { id: 10, name: "天澤履", lines: [...guaTable[2], ...guaTable[1]] },
-            { id: 11, name: "地天泰", lines: [...guaTable[1], ...guaTable[8]] },
-            { id: 12, name: "天地否", lines: [...guaTable[8], ...guaTable[1]] },
-            { id: 13, name: "天火同人", lines: [...guaTable[3], ...guaTable[1]] },
-            { id: 14, name: "火天大有", lines: [...guaTable[1], ...guaTable[3]] },
-            { id: 15, name: "地山謙", lines: [...guaTable[7], ...guaTable[8]] },
-            { id: 16, name: "雷地豫", lines: [...guaTable[8], ...guaTable[4]] },
-            { id: 17, name: "澤雷隨", lines: [...guaTable[4], ...guaTable[2]] },
-            { id: 18, name: "山風蠱", lines: [...guaTable[5], ...guaTable[7]] },
-            { id: 19, name: "地澤臨", lines: [...guaTable[2], ...guaTable[8]] },
-            { id: 20, name: "風地觀", lines: [...guaTable[8], ...guaTable[5]] },
-            { id: 21, name: "火雷噬嗑", lines: [...guaTable[4], ...guaTable[3]] },
-            { id: 22, name: "山火賁", lines: [...guaTable[3], ...guaTable[7]] },
-            { id: 23, name: "山地剝", lines: [...guaTable[8], ...guaTable[7]] },
-            { id: 24, name: "地雷復", lines: [...guaTable[4], ...guaTable[8]] },
-            { id: 25, name: "天雷無妄", lines: [...guaTable[4], ...guaTable[1]] },
-            { id: 26, name: "山天大畜", lines: [...guaTable[1], ...guaTable[7]] },
-            { id: 27, name: "山雷頤", lines: [...guaTable[4], ...guaTable[7]] },
-            { id: 28, name: "澤風大過", lines: [...guaTable[5], ...guaTable[2]] },
-            { id: 29, name: "坎為水", lines: [...guaTable[6], ...guaTable[6]] },
-            { id: 30, name: "離為火", lines: [...guaTable[3], ...guaTable[3]] },
-            // 下經
-            { id: 31, name: "澤山咸", lines: [...guaTable[7], ...guaTable[2]] },
-            { id: 32, name: "雷風恆", lines: [...guaTable[5], ...guaTable[4]] },
-            { id: 33, name: "天山遯", lines: [...guaTable[7], ...guaTable[1]] },
-            { id: 34, name: "雷天大壯", lines: [...guaTable[1], ...guaTable[4]] },
-            { id: 35, name: "火地晉", lines: [...guaTable[8], ...guaTable[3]] },
-            { id: 36, name: "地火明夷", lines: [...guaTable[3], ...guaTable[8]] },
-            { id: 37, name: "風火家人", lines: [...guaTable[3], ...guaTable[5]] },
-            { id: 38, name: "火澤睽", lines: [...guaTable[2], ...guaTable[3]] },
-            { id: 39, name: "水山蹇", lines: [...guaTable[7], ...guaTable[6]] },
-            { id: 40, name: "雷水解", lines: [...guaTable[6], ...guaTable[4]] },
-            { id: 41, name: "山澤損", lines: [...guaTable[2], ...guaTable[7]] },
-            { id: 42, name: "風雷益", lines: [...guaTable[4], ...guaTable[5]] },
-            { id: 43, name: "澤天夬", lines: [...guaTable[1], ...guaTable[2]] },
-            { id: 44, name: "天風姤", lines: [...guaTable[5], ...guaTable[1]] },
-            { id: 45, name: "澤地萃", lines: [...guaTable[8], ...guaTable[2]] },
-            { id: 46, name: "地風升", lines: [...guaTable[5], ...guaTable[8]] },
-            { id: 47, name: "澤水困", lines: [...guaTable[6], ...guaTable[2]] },
-            { id: 48, name: "水風井", lines: [...guaTable[5], ...guaTable[6]] },
-            { id: 49, name: "澤火革", lines: [...guaTable[3], ...guaTable[2]] },
-            { id: 50, name: "火風鼎", lines: [...guaTable[5], ...guaTable[3]] },
-            { id: 51, name: "震為雷", lines: [...guaTable[4], ...guaTable[4]] },
-            { id: 52, name: "艮為山", lines: [...guaTable[7], ...guaTable[7]] },
-            { id: 53, name: "風山漸", lines: [...guaTable[7], ...guaTable[5]] },
-            { id: 54, name: "雷澤歸妹", lines: [...guaTable[2], ...guaTable[4]] },
-            { id: 55, name: "雷火豐", lines: [...guaTable[3], ...guaTable[4]] },
-            { id: 56, name: "火山旅", lines: [...guaTable[7], ...guaTable[3]] },
-            { id: 57, name: "巽為風", lines: [...guaTable[5], ...guaTable[5]] },
-            { id: 58, name: "兌為澤", lines: [...guaTable[2], ...guaTable[2]] },
-            { id: 59, name: "風水渙", lines: [...guaTable[6], ...guaTable[5]] },
-            { id: 60, name: "水澤節", lines: [...guaTable[2], ...guaTable[6]] },
-            { id: 61, name: "風澤中孚", lines: [...guaTable[2], ...guaTable[5]] },
-            { id: 62, name: "雷山小過", lines: [...guaTable[7], ...guaTable[4]] },
-            { id: 63, name: "水火既濟", lines: [...guaTable[3], ...guaTable[6]] },
-            { id: 64, name: "火水未濟", lines: [...guaTable[6], ...guaTable[3]] }
-        ];
-
-        // 將 後天八卦 數字對應回 先天八卦 的陣列索引
-        // 後天八卦順序：1坎, 2坤, 3震, 4巽, 5中宮, 6乾, 7兌, 8艮, 9離
-        // 對應到 guaTable 的索引為: 6, 8, 4, 5, 8, 1, 2, 7, 3
-        const laterHeavenMap = [null, 6, 8, 4, 5, 8, 1, 2, 7, 3];
-        
-        const manualLowerBtn = document.getElementById('manualLowerBtn');
-        const manualUpperBtn = document.getElementById('manualUpperBtn');
-        const manualDropdownBtn = document.getElementById('manualDropdownBtn');
-        const timeDivinationBtn = document.getElementById('timeDivinationBtn');
-        const imageGuaBtn = document.getElementById('imageGuaBtn');
-        const num1Input = document.getElementById('num1');
-        const num2Input = document.getElementById('num2');
-        const num3Input = document.getElementById('num3');
-        const num4Input = document.getElementById('num4');
-        const num5Input = document.getElementById('num5');
-        const num6Input = document.getElementById('num6');
-        const upperGuaSelect = document.getElementById('upperGuaSelect');
-        const lowerGuaSelect = document.getElementById('lowerGuaSelect');
-        const movingLinesInput = document.getElementById('movingLinesInput');
-        const timeDivinationNumInput = document.getElementById('timeDivinationNum');
-        const imageUpperNumInput = document.getElementById('imageUpperNum');
-        const imageLowerSelect = document.getElementById('imageLowerSelect');
-        const resultDiv = document.getElementById('result');
-        const guaNameH2 = document.getElementById('guaName');
-        const changeGuaNameH2 = document.getElementById('changeGuaName');
-        const huGuaNameH2 = document.getElementById('huGuaName');
-        const guaImageDiv = document.getElementById('guaImage');
-        const changeGuaImageDiv = document.getElementById('changeGuaImage');
-        const huGuaImageDiv = document.getElementById('huGuaImage');
-        const explanationLink1 = document.getElementById('explanationLink1');
-        const explanationLink2 = document.getElementById('explanationLink2');
-        const explanationLink3 = document.getElementById('explanationLink3');
-
-        // 根據卦象的六爻資料找出對應的 64 卦資料
-        function findGuaInfo(lines) {
-            const linesStr = JSON.stringify(lines);
-            for (const gua of all64Gua) {
-                if (JSON.stringify(gua.lines) === linesStr) {
-                    return gua;
-                }
-            }
-            return null;
-        }
-
-        // 根據上卦和下卦數字生成並顯示卦象 (支援多個變爻)
-        function generateGua(upperGuaNum, lowerGuaNum, movingLines) {
-            const upperGuaLines = guaTable[upperGuaNum];
-            const lowerGuaLines = guaTable[lowerGuaNum];
-            const allLines = [...lowerGuaLines, ...upperGuaLines];
-
-            const guaInfo = findGuaInfo(allLines);
-            if (!guaInfo) {
-                alert('卦象資料錯誤，請重新輸入。');
-                return;
-            }
-
-            const changeLines = [...allLines];
-            movingLines.forEach(lineNum => {
-                const index = lineNum - 1;
-                if (index >= 0 && index < 6) {
-                    changeLines[index] = 1 - changeLines[index];
-                }
-            });
-
-            // 顯示本卦
-            guaNameH2.textContent = `${guaInfo.id}. ${guaInfo.name}`;
-            guaImageDiv.innerHTML = getGuaHtml(allLines, movingLines);
-            
-            // 顯示變卦
-            const changeGuaInfo = findGuaInfo(changeLines);
-            if (changeGuaInfo) {
-                changeGuaNameH2.textContent = `${changeGuaInfo.id}. ${changeGuaInfo.name}`;
-                changeGuaImageDiv.innerHTML = getGuaHtml(changeLines, []);
-            } else {
-                changeGuaNameH2.textContent = '變卦資料錯誤';
-                changeGuaImageDiv.innerHTML = '';
-            }
-            
-            // 顯示互卦
-            const huLines = [allLines[1], allLines[2], allLines[3], allLines[2], allLines[3], allLines[4]];
-            const huGuaInfo = findGuaInfo(huLines);
-            if (huGuaInfo) {
-                huGuaNameH2.textContent = `${huGuaInfo.id}. ${huGuaInfo.name}`;
-                huGuaImageDiv.innerHTML = getGuaHtml(huLines, []);
-            } else {
-                huGuaNameH2.textContent = '互卦資料錯誤';
-                huGuaImageDiv.innerHTML = '';
-            }
-            
-            explanationLink1.href = `https://www.eee-learning.com/article/181`;
-            explanationLink2.href = `https://m.zhouyi.cc/zhouyi/yijing64/`;
-            explanationLink3.href = `https://m.golla.tw/sm/64gua/42256.html`;
-            
-            resultDiv.classList.remove('hidden');
-            resultDiv.classList.add('visible');
-        }
-        
-        function getGuaHtml(lines, movingLines = []) {
-            let html = '';
-            const reversedLines = [...lines].reverse();
-            reversedLines.forEach((line, index) => {
-                const lineNumber = 6 - index;
-                const lineHtml = line === 1 ? '———————' : '———&nbsp;&nbsp;———';
-                if (movingLines.includes(lineNumber)) {
-                    html += `<span class="moving-line">${lineHtml} 變爻</span><br>`;
-                } else {
-                    html += `<span>${lineHtml}</span><br>`;
-                }
-            });
-            return html;
-        }
-
-        // 根據三爻陣列找出對應的八卦數字
-        function findGuaNum(lines) {
-            for (let i = 1; i <= 8; i++) {
-                if (JSON.stringify(guaTable[i]) === JSON.stringify(lines)) {
-                    return i;
-                }
-            }
-            return null;
-        }
-
-        // 手動卜卦按鈕點擊事件 (下卦在前)
-        manualLowerBtn.addEventListener('click', () => {
-            const num1 = parseInt(num1Input.value);
-            const num2 = parseInt(num2Input.value);
-            const num3 = parseInt(num3Input.value);
-
-            if (isNaN(num1) || isNaN(num2) || isNaN(num3) || num1 <= 0 || num2 <= 0 || num3 <= 0) {
-                alert('請輸入大於0的數字。');
-                return;
-            }
-            
-            let lowerGuaNum = num1 % 8;
-            if (lowerGuaNum === 0) lowerGuaNum = 8;
-            
-            let upperGuaNum = num2 % 8;
-            if (upperGuaNum === 0) upperGuaNum = 8;
-
-            let movingLine = num3 % 6;
-            if (movingLine === 0) movingLine = 6;
-            
-            generateGua(upperGuaNum, lowerGuaNum, [movingLine]);
-        });
-        
-        // 手動卜卦按鈕點擊事件 (上卦在前)
-        manualUpperBtn.addEventListener('click', () => {
-            const num1 = parseInt(num4Input.value);
-            const num2 = parseInt(num5Input.value);
-            const num3 = parseInt(num6Input.value);
-
-            if (isNaN(num1) || isNaN(num2) || isNaN(num3) || num1 <= 0 || num2 <= 0 || num3 <= 0) {
-                alert('請輸入大於0的數字。');
-                return;
-            }
-            
-            let upperGuaNum = num1 % 8;
-            if (upperGuaNum === 0) upperGuaNum = 8;
-            
-            let lowerGuaNum = num2 % 8;
-            if (lowerGuaNum === 0) lowerGuaNum = 8;
-
-            let movingLine = num3 % 6;
-            if (movingLine === 0) movingLine = 6;
-            
-            generateGua(upperGuaNum, lowerGuaNum, [movingLine]);
-        });
-        
-        // 手動取卦 (下拉選單)
-        manualDropdownBtn.addEventListener('click', () => {
-            const upperGuaNum = parseInt(upperGuaSelect.value);
-            const lowerGuaNum = parseInt(lowerGuaSelect.value);
-            const movingLinesStr = movingLinesInput.value;
-            
-            if (isNaN(upperGuaNum) || isNaN(lowerGuaNum)) {
-                alert('請選擇上卦和下卦。');
-                return;
-            }
-            
-            let movingLines = [];
-            if (movingLinesStr) {
-                movingLines = movingLinesStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 1 && n <= 6);
-                if (movingLines.length === 0 && movingLinesStr.length > 0) {
-                    alert('變爻位置格式錯誤，請輸入1到6的數字並以逗號分隔。');
-                    return;
-                }
-                const uniqueMovingLines = [...new Set(movingLines)];
-                if (uniqueMovingLines.length !== movingLines.length) {
-                    alert('變爻位置不能重複。');
-                    return;
-                }
-            }
-            
-            generateGua(upperGuaNum, lowerGuaNum, movingLines);
-        });
-
-        // 時間取卦 (原梅花易數先天)
-        timeDivinationBtn.addEventListener('click', () => {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth() + 1;
-            const day = now.getDate();
-            const hour = now.getHours();
-            const second = now.getSeconds();
-            
-            const lunarDate = calendar_solar2lunar(year, month, day);
-            const lunarYear = lunarDate.lunarYear;
-            const lunarMonth = lunarDate.lunarMonth;
-            const lunarDay = lunarDate.lunarDay;
-            const zodiacHourNum = getZodiacHourNum(hour);
-
-            const inputNum = parseInt(timeDivinationNumInput.value);
-            if (isNaN(inputNum) || inputNum < 0 || inputNum > 999) {
-                alert('請輸入 0 到 999 的數字。');
-                return;
-            }
-            
-            // 梅花易數的卦象與變爻計算
-            const upperSum = lunarYear + lunarMonth + lunarDay + inputNum;
-            const lowerSum = upperSum + zodiacHourNum;
-            const movingSum = lowerSum + second;
-            
-            const upperGuaNum = (upperSum % 8) || 8;
-            const lowerGuaNum = (lowerSum % 8) || 8;
-            const movingLine = (movingSum % 6) || 6;
-            
-            generateGua(upperGuaNum, lowerGuaNum, [movingLine]);
-        });
-        
-        // 以象取卦
-        imageGuaBtn.addEventListener('click', () => {
-            const upperNum = parseInt(imageUpperNumInput.value);
-            const lowerNum_laterHeaven = parseInt(imageLowerSelect.value);
-            
-            if (isNaN(upperNum) || upperNum <= 0) {
-                alert('請輸入有效的上卦數字（事物數量）。');
-                return;
-            }
-            
-            if (isNaN(lowerNum_laterHeaven) || lowerNum_laterHeaven <= 0) {
-                alert('請選擇下卦方位。');
-                return;
-            }
-            
-            const now = new Date();
-            const minute = now.getMinutes();
-
-            // 以象取卦的計算方式
-            const upperGuaNum = (upperNum % 8) || 8;
-            // 後天八卦方位取卦，需要將數字轉換成先天八卦的索引
-            const lowerGuaNum = laterHeavenMap[lowerNum_laterHeaven];
-            
-            const movingLine = (upperNum + lowerNum_laterHeaven + minute) % 6 || 6;
-            
-            generateGua(upperGuaNum, lowerGuaNum, [movingLine]);
-        });
-
-        // 標籤頁切換功能
-        function showTab(tabId) {
-            const tabs = document.querySelectorAll('.tab-content');
-            tabs.forEach(tab => tab.classList.remove('active'));
-            
-            const tabButtons = document.querySelectorAll('.tab-button');
-            tabButtons.forEach(button => button.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
-            
-            // 每次切換分頁時隱藏結果
-            resultDiv.classList.remove('visible');
-            resultDiv.classList.add('hidden');
-        }
-    </script>
-</body>
-</html>
+            { id: 10, name: "天澤履", lines:
