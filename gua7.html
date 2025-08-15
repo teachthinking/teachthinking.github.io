@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>張老師易經卜卦</title>
+    <title>張老師線上易經卜卦</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
@@ -295,15 +295,34 @@
         <h1>張老師易經卜卦</h1>
 
         <div class="tab-buttons">
-            <button class="tab-button active" onclick="showTab('manual-upper-first')">數字取卦</button>
+            <button class="tab-button active" onclick="showTab('manual-lower-first')">手動卜卦 (下卦在前)</button>
+            <button class="tab-button" onclick="showTab('manual-upper-first')">手動卜卦 (上卦在前)</button>
             <button class="tab-button" onclick="showTab('manual-dropdown')">手動取卦 (下拉選單)</button>
             <button class="tab-button" onclick="showTab('time-divination')">時間取卦</button>
             <button class="tab-button" onclick="showTab('by-image')">以象取卦</button>
         </div>
         
-        <div id="manual-upper-first" class="tab-content active">
-            <h2>數字取卦</h2>
-            <p>輸入三組數字，分別代表**上卦**、**下卦**和**動爻**。<br>(例如：123、456、789)</p>
+        <div id="manual-lower-first" class="tab-content active">
+            <h2>手動數字卜卦 (下卦在前)</h2>
+            <p>輸入三組數字，分別代表**下卦**、**上卦**和**變爻**。<br>(例如：123、456、789)</p>
+            <div class="input-group">
+                <label for="num1">下卦數字: </label>
+                <input type="number" id="num1">
+            </div>
+            <div class="input-group">
+                <label for="num2">上卦數字: </label>
+                <input type="number" id="num2">
+            </div>
+            <div class="input-group">
+                <label for="num3">動爻數字: </label>
+                <input type="number" id="num3">
+            </div>
+            <button id="manualLowerBtn">生成卦象</button>
+        </div>
+        
+        <div id="manual-upper-first" class="tab-content">
+            <h2>手動數字卜卦 (上卦在前)</h2>
+            <p>輸入三組數字，分別代表**上卦**、**下卦**和**變爻**。<br>(例如：123、456、789)</p>
             <div class="input-group">
                 <label for="num4">上卦數字: </label>
                 <input type="number" id="num4">
@@ -485,9 +504,12 @@
             function getRandomThreeDigit() {
                 return Math.floor(Math.random() * 900) + 100;
             }
+            document.getElementById('num1').value = getRandomThreeDigit();
+            document.getElementById('num2').value = getRandomThreeDigit();
+            document.getElementById('num3').value = Math.floor(Math.random() * 6) + 1;
             document.getElementById('num4').value = getRandomThreeDigit();
             document.getElementById('num5').value = getRandomThreeDigit();
-            document.getElementById('num6').value = getRandomThreeDigit();
+            document.getElementById('num6').value = Math.floor(Math.random() * 6) + 1;
             document.getElementById('imageUpperNum').value = getRandomThreeDigit();
         });
 
@@ -503,88 +525,90 @@
             [0, 0, 1],  // 7 艮
             [0, 0, 0]   // 8 坤
         ];
-        
-        // 64 卦資料庫，使用 Map 來確保查找的準確性
-        // key為六爻組成的字串 (例如 "111111"), value為卦名物件
-        const guaMap = new Map([
+
+        // 新的 64 卦資料庫，包含正確的卦序、卦名和爻象
+        const all64Gua = [
             // 上經
-            ['111111', { id: 1, name: "乾為天" }],
-            ['000000', { id: 2, name: "坤為地" }],
-            ['001010', { id: 3, name: "水雷屯" }],
-            ['010001', { id: 4, name: "山水蒙" }],
-            ['010111', { id: 5, name: "水天需" }],
-            ['111010', { id: 6, name: "天水訟" }],
-            ['000010', { id: 7, name: "地水師" }],
-            ['010000', { id: 8, name: "水地比" }],
-            ['011111', { id: 9, name: "風天小畜" }],
-            ['110111', { id: 10, name: "天澤履" }],
-            ['000111', { id: 11, name: "地天泰" }],
-            ['111000', { id: 12, name: "天地否" }],
-            ['101111', { id: 13, name: "天火同人" }],
-            ['111101', { id: 14, name: "火天大有" }],
-            ['000001', { id: 15, name: "地山謙" }],
-            ['001000', { id: 16, name: "雷地豫" }],
-            ['110001', { id: 17, name: "澤雷隨" }],
-            ['001011', { id: 18, name: "山風蠱" }],
-            ['000110', { id: 19, name: "地澤臨" }],
-            ['011000', { id: 20, name: "風地觀" }],
-            ['101001', { id: 21, name: "火雷噬嗑" }],
-            ['001101', { id: 22, name: "山火賁" }],
-            ['001000', { id: 23, name: "山地剝" }],
-            ['000001', { id: 24, name: "地雷復" }],
-            ['111001', { id: 25, name: "天雷無妄" }],
-            ['001111', { id: 26, name: "山天大畜" }],
-            ['001001', { id: 27, name: "山雷頤" }],
-            ['110110', { id: 28, name: "澤風大過" }],
-            ['010010', { id: 29, name: "坎為水" }],
-            ['101101', { id: 30, name: "離為火" }],
+            { id: 1, name: "乾為天", lines: [...guaTable[1], ...guaTable[1]] },
+            { id: 2, name: "坤為地", lines: [...guaTable[8], ...guaTable[8]] },
+            { id: 3, name: "水雷屯", lines: [...guaTable[6], ...guaTable[4]] },
+            { id: 4, name: "山水蒙", lines: [...guaTable[7], ...guaTable[6]] },
+            { id: 5, name: "水天需", lines: [...guaTable[6], ...guaTable[1]] },
+            { id: 6, name: "天水訟", lines: [...guaTable[1], ...guaTable[6]] },
+            { id: 7, name: "地水師", lines: [...guaTable[8], ...guaTable[6]] },
+            { id: 8, name: "水地比", lines: [...guaTable[6], ...guaTable[8]] },
+            { id: 9, name: "風天小畜", lines: [...guaTable[5], ...guaTable[1]] },
+            { id: 10, name: "天澤履", lines: [...guaTable[1], ...guaTable[2]] },
+            { id: 11, name: "地天泰", lines: [...guaTable[8], ...guaTable[1]] },
+            { id: 12, name: "天地否", lines: [...guaTable[1], ...guaTable[8]] },
+            { id: 13, name: "天火同人", lines: [...guaTable[1], ...guaTable[3]] },
+            { id: 14, name: "火天大有", lines: [...guaTable[3], ...guaTable[1]] },
+            { id: 15, name: "地山謙", lines: [...guaTable[8], ...guaTable[7]] },
+            { id: 16, name: "雷地豫", lines: [...guaTable[4], ...guaTable[8]] },
+            { id: 17, name: "澤雷隨", lines: [...guaTable[2], ...guaTable[4]] },
+            { id: 18, name: "山風蠱", lines: [...guaTable[7], ...guaTable[5]] },
+            { id: 19, name: "地澤臨", lines: [...guaTable[8], ...guaTable[2]] },
+            { id: 20, name: "風地觀", lines: [...guaTable[5], ...guaTable[8]] },
+            { id: 21, name: "火雷噬嗑", lines: [...guaTable[3], ...guaTable[4]] },
+            { id: 22, name: "山火賁", lines: [...guaTable[7], ...guaTable[3]] },
+            { id: 23, name: "山地剝", lines: [...guaTable[7], ...guaTable[8]] },
+            { id: 24, name: "地雷復", lines: [...guaTable[8], ...guaTable[4]] },
+            { id: 25, name: "天雷無妄", lines: [...guaTable[1], ...guaTable[4]] },
+            { id: 26, name: "山天大畜", lines: [...guaTable[7], ...guaTable[1]] },
+            { id: 27, name: "山雷頤", lines: [...guaTable[7], ...guaTable[4]] },
+            { id: 28, name: "澤風大過", lines: [...guaTable[2], ...guaTable[5]] },
+            { id: 29, name: "坎為水", lines: [...guaTable[6], ...guaTable[6]] },
+            { id: 30, name: "離為火", lines: [...guaTable[3], ...guaTable[3]] },
             // 下經
-            ['110001', { id: 31, name: "澤山咸" }],
-            ['001011', { id: 32, name: "雷風恆" }],
-            ['111001', { id: 33, name: "天山遯" }],
-            ['001111', { id: 34, name: "雷天大壯" }],
-            ['101000', { id: 35, name: "火地晉" }],
-            ['000101', { id: 36, name: "地火明夷" }],
-            ['011101', { id: 37, name: "風火家人" }],
-            ['101110', { id: 38, name: "火澤睽" }],
-            ['010001', { id: 39, name: "水山蹇" }],
-            ['001010', { id: 40, name: "雷水解" }],
-            ['001110', { id: 41, name: "山澤損" }],
-            ['011001', { id: 42, name: "風雷益" }],
-            ['110111', { id: 43, name: "澤天夬" }],
-            ['111011', { id: 44, name: "天風姤" }],
-            ['110000', { id: 45, name: "澤地萃" }],
-            ['000011', { id: 46, name: "地風升" }],
-            ['110010', { id: 47, name: "澤水困" }],
-            ['010011', { id: 48, name: "水風井" }],
-            ['110101', { id: 49, name: "澤火革" }],
-            ['101011', { id: 50, name: "火風鼎" }],
-            ['001001', { id: 51, name: "震為雷" }],
-            ['001001', { id: 52, name: "艮為山" }],
-            ['011001', { id: 53, name: "風山漸" }],
-            ['001110', { id: 54, name: "雷澤歸妹" }],
-            ['001101', { id: 55, name: "雷火豐" }],
-            ['101001', { id: 56, name: "火山旅" }],
-            ['011011', { id: 57, name: "巽為風" }],
-            ['110110', { id: 58, name: "兌為澤" }],
-            ['011010', { id: 59, name: "風水渙" }],
-            ['010110', { id: 60, name: "水澤節" }],
-            ['011110', { id: 61, name: "風澤中孚" }],
-            ['100001', { id: 62, name: "雷山小過" }],
-            ['010101', { id: 63, name: "水火既濟" }],
-            ['101010', { id: 64, name: "火水未濟" }],
-        ]);
-        
+            { id: 31, name: "澤山咸", lines: [...guaTable[2], ...guaTable[7]] },
+            { id: 32, name: "雷風恆", lines: [...guaTable[4], ...guaTable[5]] },
+            { id: 33, name: "天山遯", lines: [...guaTable[1], ...guaTable[7]] },
+            { id: 34, name: "雷天大壯", lines: [...guaTable[4], ...guaTable[1]] },
+            { id: 35, name: "火地晉", lines: [...guaTable[3], ...guaTable[8]] },
+            { id: 36, name: "地火明夷", lines: [...guaTable[8], ...guaTable[3]] },
+            { id: 37, name: "風火家人", lines: [...guaTable[5], ...guaTable[3]] },
+            { id: 38, name: "火澤睽", lines: [...guaTable[3], ...guaTable[2]] },
+            { id: 39, name: "水山蹇", lines: [...guaTable[6], ...guaTable[7]] },
+            { id: 40, name: "雷水解", lines: [...guaTable[4], ...guaTable[6]] },
+            { id: 41, name: "山澤損", lines: [...guaTable[7], ...guaTable[2]] },
+            { id: 42, name: "風雷益", lines: [...guaTable[5], ...guaTable[4]] },
+            { id: 43, name: "澤天夬", lines: [...guaTable[2], ...guaTable[1]] },
+            { id: 44, name: "天風姤", lines: [...guaTable[1], ...guaTable[5]] },
+            { id: 45, name: "澤地萃", lines: [...guaTable[2], ...guaTable[8]] },
+            { id: 46, name: "地風升", lines: [...guaTable[8], ...guaTable[5]] },
+            { id: 47, name: "澤水困", lines: [...guaTable[2], ...guaTable[6]] },
+            { id: 48, name: "水風井", lines: [...guaTable[6], ...guaTable[5]] },
+            { id: 49, name: "澤火革", lines: [...guaTable[2], ...guaTable[3]] },
+            { id: 50, name: "火風鼎", lines: [...guaTable[3], ...guaTable[5]] },
+            { id: 51, name: "震為雷", lines: [...guaTable[4], ...guaTable[4]] },
+            { id: 52, name: "艮為山", lines: [...guaTable[7], ...guaTable[7]] },
+            { id: 53, name: "風山漸", lines: [...guaTable[5], ...guaTable[7]] },
+            { id: 54, name: "雷澤歸妹", lines: [...guaTable[4], ...guaTable[2]] },
+            { id: 55, name: "雷火豐", lines: [...guaTable[4], ...guaTable[3]] },
+            { id: 56, name: "火山旅", lines: [...guaTable[3], ...guaTable[7]] },
+            { id: 57, name: "巽為風", lines: [...guaTable[5], ...guaTable[5]] },
+            { id: 58, name: "兌為澤", lines: [...guaTable[2], ...guaTable[2]] },
+            { id: 59, name: "風水渙", lines: [...guaTable[5], ...guaTable[6]] },
+            { id: 60, name: "水澤節", lines: [...guaTable[6], ...guaTable[2]] },
+            { id: 61, name: "風澤中孚", lines: [...guaTable[5], ...guaTable[2]] },
+            { id: 62, name: "雷山小過", lines: [...guaTable[4], ...guaTable[7]] },
+            { id: 63, name: "水火既濟", lines: [...guaTable[6], ...guaTable[3]] },
+            { id: 64, name: "火水未濟", lines: [...guaTable[3], ...guaTable[6]] }
+        ];
 
         // 將 後天八卦 數字對應回 先天八卦 的陣列索引
         // 後天八卦順序：1坎, 2坤, 3震, 4巽, 5中宮, 6乾, 7兌, 8艮, 9離
         // 對應到 guaTable 的索引為: 6, 8, 4, 5, 8, 1, 2, 7, 3
         const laterHeavenMap = [null, 6, 8, 4, 5, 8, 1, 2, 7, 3];
         
+        const manualLowerBtn = document.getElementById('manualLowerBtn');
         const manualUpperBtn = document.getElementById('manualUpperBtn');
         const manualDropdownBtn = document.getElementById('manualDropdownBtn');
         const timeDivinationBtn = document.getElementById('timeDivinationBtn');
         const imageGuaBtn = document.getElementById('imageGuaBtn');
+        const num1Input = document.getElementById('num1');
+        const num2Input = document.getElementById('num2');
+        const num3Input = document.getElementById('num3');
         const num4Input = document.getElementById('num4');
         const num5Input = document.getElementById('num5');
         const num6Input = document.getElementById('num6');
@@ -605,16 +629,15 @@
         const explanationLink2 = document.getElementById('explanationLink2');
         const explanationLink3 = document.getElementById('explanationLink3');
 
-        // 將卦爻陣列轉為唯一的字串鍵，以便查找
-        function linesToKey(lines) {
-            // 注意：這裡的順序必須是從下往上，也就是下卦 + 上卦
-            return lines.slice(0, 3).join('') + lines.slice(3, 6).join('');
-        }
-        
         // 根據卦象的六爻資料找出對應的 64 卦資料
         function findGuaInfo(lines) {
-            const linesKey = lines.join('');
-            return guaMap.get(linesKey);
+            const linesStr = JSON.stringify(lines);
+            for (const gua of all64Gua) {
+                if (JSON.stringify(gua.lines) === linesStr) {
+                    return gua;
+                }
+            }
+            return null;
         }
 
         // 根據上卦和下卦數字生成並顯示卦象 (支援多個變爻)
@@ -647,12 +670,10 @@
             });
 
             // 產生互卦的六爻
-            // 互卦取本卦的 2,3,4 爻為下卦，3,4,5 爻為上卦
-            const huUpperLines = [allLines[3], allLines[4], allLines[5]];
             const huLowerLines = [allLines[1], allLines[2], allLines[3]];
+            const huUpperLines = [allLines[2], allLines[3], allLines[4]];
             const huLines = [...huLowerLines, ...huUpperLines];
-
-
+            
             // 顯示本卦
             guaNameH2.textContent = `${guaInfo.id}. ${guaInfo.name}`;
             guaImageDiv.innerHTML = getGuaHtml(allLines, movingLines);
@@ -687,7 +708,6 @@
         
         function getGuaHtml(lines, movingLines = []) {
             let html = '';
-            // 顯示時，從最上面的爻開始
             const reversedLines = [...lines].reverse();
             reversedLines.forEach((line, index) => {
                 const lineNumber = 6 - index;
@@ -701,6 +721,29 @@
             return html;
         }
 
+        // 手動卜卦按鈕點擊事件 (下卦在前)
+        manualLowerBtn.addEventListener('click', () => {
+            const num1 = parseInt(num1Input.value);
+            const num2 = parseInt(num2Input.value);
+            const num3 = parseInt(num3Input.value);
+
+            if (isNaN(num1) || isNaN(num2) || isNaN(num3) || num1 <= 0 || num2 <= 0 || num3 <= 0) {
+                alert('請輸入大於0的數字。');
+                return;
+            }
+            
+            let lowerGuaNum = num1 % 8;
+            if (lowerGuaNum === 0) lowerGuaNum = 8;
+            
+            let upperGuaNum = num2 % 8;
+            if (upperGuaNum === 0) upperGuaNum = 8;
+
+            let movingLine = num3 % 6;
+            if (movingLine === 0) movingLine = 6;
+            
+            generateGua(upperGuaNum, lowerGuaNum, [movingLine]);
+        });
+        
         // 手動卜卦按鈕點擊事件 (上卦在前)
         manualUpperBtn.addEventListener('click', () => {
             const num1 = parseInt(num4Input.value);
