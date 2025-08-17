@@ -209,6 +209,33 @@
             margin-top: 5px;
             line-height: 1.6;
         }
+        
+        .link-group {
+            margin-top: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .link-group a {
+            padding: 15px 25px;
+            font-size: 1.1rem;
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: background-color 0.3s, transform 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        #explanationLink1 { background-color: #28a745; }
+        #explanationLink1:hover { background-color: #218838; transform: translateY(-2px); }
+        #explanationLink2 { background-color: #007bff; }
+        #explanationLink2:hover { background-color: #0056b3; transform: translateY(-2px); }
+        #explanationLink3 { background-color: #ff9800; }
+        #explanationLink3:hover { background-color: #e68a00; transform: translateY(-2px); }
+        #explanationLink4 { background-color: #800080; }
+        #explanationLink4:hover { background-color: #6a006a; transform: translateY(-2px); }
 
         .hidden {
             display: none;
@@ -254,7 +281,7 @@
                 <label for="num6">動爻數字:</label>
                 <input type="number" id="num6">
             </div>
-            <button id="manualUpperBtn" disabled>生成卦象</button>
+            <button id="manualUpperBtn">生成卦象</button>
         </div>
 
         <div id="manual-dropdown" class="tab-content">
@@ -292,7 +319,7 @@
                 <input type="text" id="movingLinesInput" placeholder="例如: 1,3,5 或 4">
                 <div class="tips">可輸入多個變爻，若無則留空。</div>
             </div>
-            <button id="manualDropdownBtn" disabled>生成卦象</button>
+            <button id="manualDropdownBtn">生成卦象</button>
         </div>
 
         <div id="time-divination" class="tab-content">
@@ -301,7 +328,7 @@
                 <label for="timeDivinationNum">心念數字 (0-999):</label>
                 <input type="number" id="timeDivinationNum" value="0">
             </div>
-            <button id="timeDivinationBtn" disabled>開始卜卦</button>
+            <button id="timeDivinationBtn">開始卜卦</button>
         </div>
 
         <div id="by-image" class="tab-content">
@@ -330,7 +357,7 @@
                 </select>
                 <div class="tips">此為後天八卦方位，會自動轉換為先天卦數。</div>
             </div>
-            <button id="imageGuaBtn" disabled>生成卦象</button>
+            <button id="imageGuaBtn">生成卦象</button>
         </div>
         
         <div id="loadingMessage">載入卦辭資料中，請稍候...</div>
@@ -356,6 +383,12 @@
             <div id="line-explanation" class="gua-box hidden">
                 <h3>動爻解釋</h3>
                 <div id="line-explanation-content"></div>
+            </div>
+            <div class="link-group">
+                <a id="explanationLink1" href="#" target="_blank">解卦連結一 (易學網)</a>
+                <a id="explanationLink2" href="#" target="_blank">解卦連結二 (周易網)</a>
+                <a id="explanationLink3" href="#" target="_blank">解卦連結三 (Golla)</a>
+                <a id="explanationLink4" href="https://zh.m.wikipedia.org/wiki/%E5%91%A8%E6%98%93%E5%85%AD%E5%8D%81%E5%9B%9B%E5%8D%A6%E5%88%97%E8%A1%A8#" target="_blank">解卦連結四 (維基百科)</a>
             </div>
         </div>
     </div>
@@ -407,7 +440,6 @@
         };
         
         const getGuaNumFromLines = (lines) => {
-            // 注意：這裡的 lines 是由下往上排列的
             for(let num in guaLines) {
                 if (JSON.stringify(guaLines[num]) === JSON.stringify(lines)) {
                     return parseInt(num);
@@ -419,7 +451,50 @@
         fetch('hexagrams_data.json')
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('無法載入卦辭資料檔案');
+                    // 如果檔案不存在，則使用內建的資料
+                    console.log("無法載入 hexagrams_data.json，使用內建資料");
+                    return {
+                        "乾為天": [
+                            { "index": 1, "text": "初九：潛龍勿用。", "meaning": "時機未到，應當潛藏實力，靜待時機。" },
+                            { "index": 2, "text": "九二：見龍在田，利見大人。", "meaning": "才能已顯現，能獲得貴人幫助。" },
+                            { "index": 3, "text": "九三：君子終日乾乾，夕惕若，厲，無咎。", "meaning": "整日勤奮努力，夜裡仍警惕，雖有危險，但能化解。" },
+                            { "index": 4, "text": "九四：或躍在淵，無咎。", "meaning": "有能力，可在進退之間選擇，沒有問題。" },
+                            { "index": 5, "text": "九五：飛龍在天，利見大人。", "meaning": "處於極佳的地位，大有作為，能得貴人相助。" },
+                            { "index": 6, "text": "上九：亢龍有悔。", "meaning": "居高位太久，不知進退，將會有災禍或後悔。" }
+                        ],
+                        "坤為地": [
+                            { "index": 1, "text": "初六：履霜堅冰至。", "meaning": "走在薄霜上，預示著堅冰將至，事態會逐漸惡化。" },
+                            { "index": 2, "text": "六二：直、方、大，不習無不利。", "meaning": "行為正直、態度端正、心胸寬廣，無須刻意學習也能順利。" },
+                            { "index": 3, "text": "六三：含章可貞。或從王事，無成有終。", "meaning": "內藏才華但表現謙遜，雖有作為但能功成身退。" },
+                            { "index": 4, "text": "六四：括囊，無咎、無譽。", "meaning": "像束緊口袋一樣不說話、不表現，雖無過失也無讚譽。" },
+                            { "index": 5, "text": "六五：黃裳，元吉。", "meaning": "內在美好且符合中道，是極為吉祥之事。" },
+                            { "index": 6, "text": "上六：戰龍於野，其血玄黃。", "meaning": "爭鬥於野外，兩敗俱傷，結果慘烈。" }
+                        ],
+                        "水雷屯": [
+                            { "index": 1, "text": "初九：磐桓，利居貞，利建侯。", "meaning": "事情剛開始，猶豫不決，適合維持正道，有利於建立事業。" },
+                            { "index": 2, "text": "六二：屯如邅如，乘馬班如。匪寇婚媾，女子貞不字，十年乃字。", "meaning": "進退兩難，猶如騎馬不前。不是強盜，而是來求婚，女子堅持正道，十年後才成功。" },
+                            { "index": 3, "text": "六三：即鹿無虞，惟入于林中，君子幾不如舍，往吝。", "meaning": "追逐沒有嚮導的鹿，只會空手而回，君子應及早放棄，前往只會陷入困境。" },
+                            { "index": 4, "text": "六四：乘馬班如，求婚媾，往吉，無不利。", "meaning": "騎馬猶豫不前，但只要主動前往求婚，會很順利，沒有任何不利。" },
+                            { "index": 5, "text": "九五：屯其膏，小貞吉，大貞凶。", "meaning": "囤積恩澤，若能保持小規模的行動則吉祥，若過於大規模則會有凶險。" },
+                            { "index": 6, "text": "上六：乘馬班如，泣血漣如。", "meaning": "猶豫不決，最終導致困境無法解脫，後悔不已、流血哭泣。" }
+                        ],
+                        "山水蒙": [
+                            { "index": 1, "text": "初六：發蒙，利用刑人，用說桎梏，以往吝。", "meaning": "開啟蒙昧，需要以嚴厲手段懲罰犯錯者，但若因此解開其束縛，之後會遭遇困難。" },
+                            { "index": 2, "text": "九二：包蒙，吉。納婦，吉。子克家。", "meaning": "包容並教導蒙昧之人，吉祥。迎娶女子，吉祥。子女能承擔家業。" },
+                            { "index": 3, "text": "六三：勿用取女，見金夫，不有躬，無攸利。", "meaning": "不要娶那個女子，因為她見到有錢人就不要自己，對任何事都不利。" },
+                            { "index": 4, "text": "六四：困蒙，吝。", "meaning": "處在蒙昧之中，進退兩難，情況不佳。" },
+                            { "index": 5, "text": "六五：童蒙，吉。", "meaning": "如童子般蒙昧，保持純真，吉祥。" },
+                            { "index": 6, "text": "上九：擊蒙，不利為寇，利禦寇。", "meaning": "擊打蒙昧之人，不利於作為強盜，有利於抵禦強盜。" }
+                        ],
+                        "天水訟": [
+                            { "index": 1, "text": "初六：不永所事，小有言，終吉。", "meaning": "爭訟不能持久，雖有小人閒話，最終吉祥。" },
+                            { "index": 2, "text": "九二：不克訟，歸而逋其邑人，三百戶，無眚。", "meaning": "打官司不能勝訴，回到家鄉避難，逃過三百戶人家的災禍，沒有問題。" },
+                            { "index": 3, "text": "六三：食舊德，貞厲，終吉。或從王事，無成。", "meaning": "享受舊有的功德，堅守正道有危險，但最終吉祥。若從事王事，不會成功。" },
+                            { "index": 4, "text": "九四：不克訟，復即命，渝安貞，吉。", "meaning": "打官司不能勝訴，回到自己的本分，改變安於現狀的態度，吉祥。" },
+                            { "index": 5, "text": "九五：訟，元吉。", "meaning": "爭訟，極為吉祥。" },
+                            { "index": 6, "text": "上九：或錫之鞶帶，終朝三褫之。", "meaning": "有人贈予腰帶，但一日之間被剝奪三次。" }
+                        ]
+                    };
                 }
                 return response.json();
             })
@@ -463,7 +538,7 @@
             return htmlLines.join('\n');
         }
 
-        // 修正後的變卦計算邏輯
+        // 修正後的變卦計算邏輯 (支援多個變爻)
         function getChangeGua(upperGuaNum, lowerGuaNum, movingLines) {
             if (movingLines.length === 0) return { guaName: '無變卦', guaImage: '' };
             
@@ -551,11 +626,21 @@
             } else {
                 lineExplanationDiv.classList.add('hidden');
             }
+            
+            // 更新外部連結
+            const guaName_pinyin = PinyinConverter.convert(guaName);
+            const guaUrl_1 = `https://www.yixue.com.tw/book/zhouyi_64/${guaName_pinyin}.html`;
+            const guaUrl_2 = `https://www.zhouyi.com.tw/64gua/${guaName_pinyin}.html`;
+            const guaUrl_3 = `https://golla.tw/book/${guaName_pinyin}/`;
+            document.getElementById('explanationLink1').href = guaUrl_1;
+            document.getElementById('explanationLink2').href = guaUrl_2;
+            document.getElementById('explanationLink3').href = guaUrl_3;
+
 
             resultDiv.classList.remove('hidden');
             resultDiv.classList.add('visible');
         }
-
+        
         // 數字取卦
         document.getElementById('manualUpperBtn').addEventListener('click', () => {
             const num4 = parseInt(document.getElementById('num4').value);
