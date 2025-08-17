@@ -379,16 +379,16 @@
             '坤乾': '地天泰', '坤兌': '地澤臨', '坤離': '地火明夷', '坤震': '地雷復', '坤巽': '地風升', '坤坎': '地水師', '坤艮': '地山謙', '坤坤': '坤為地'
         };
 
-        // 修正後的卦爻資料，從上到下定義
+        // 修正後的卦爻資料，由下往上定義
         const guaLines = {
-            1: ['---', '---', '---'],        // 乾 (Qian)
-            2: ['---', '---', '-- --'],      // 兌 (Dui)
-            3: ['---', '-- --', '---'],      // 離 (Li)
-            4: ['-- --', '---', '---'],      // 震 (Zhen)
-            5: ['---', '-- --', '-- --'],    // 巽 (Xun)
-            6: ['-- --', '---', '-- --'],    // 坎 (Kan)
-            7: ['-- --', '-- --', '---'],    // 艮 (Gen)
-            8: ['-- --', '-- --', '-- --']   // 坤 (Kun)
+            1: ['---', '---', '---'],        // 乾
+            2: ['-- --', '---', '---'],      // 兌
+            3: ['---', '-- --', '---'],      // 離
+            4: ['-- --', '-- --', '---'],    // 震
+            5: ['---', '---', '-- --'],      // 巽
+            6: ['-- --', '---', '-- --'],    // 坎
+            7: ['---', '-- --', '-- --'],    // 艮
+            8: ['-- --', '-- --', '-- --']   // 坤
         };
 
         const laterHeavenMap = {
@@ -404,6 +404,7 @@
         };
         
         const getGuaNumFromLines = (lines) => {
+            // lines 陣列由下往上
             for(let num in guaLines) {
                 if (JSON.stringify(guaLines[num]) === JSON.stringify(lines)) {
                     return parseInt(num);
@@ -442,14 +443,16 @@
             const upperLines = guaLines[upperGuaNum];
             const lowerLines = guaLines[lowerGuaNum];
             
-            // 組合為從上到下的六爻陣列
-            const allLines = [...upperLines, ...lowerLines];
+            // 組合為從下到上的六爻陣列
+            const allLines = [...lowerLines, ...upperLines];
             
             let htmlLines = [];
+            // 顯示時由上往下，所以需要反轉陣列
+            const displayLines = allLines.reverse();
             for (let i = 0; i < 6; i++) {
                 // 動爻是從下往上數，因此需要轉換索引
                 const lineNum = 6 - i;
-                const line = allLines[i];
+                const line = displayLines[i];
                 if (movingLines.includes(lineNum)) {
                     htmlLines.push(`<span class="moving-line">${line}</span>`);
                 } else {
@@ -466,20 +469,20 @@
             const upperLines = guaLines[upperGuaNum];
             const lowerLines = guaLines[lowerGuaNum];
             
-            // 正確地從上到下取得六爻陣列
-            let allLines = [...upperLines, ...lowerLines];
+            // 正確地從下到上取得六爻陣列
+            let allLines = [...lowerLines, ...upperLines];
             
             let newLines = [...allLines];
 
             movingLines.forEach(lineNum => {
-                // 變爻從下往上數，因此需要轉換成從上往下的陣列索引 (0-5)
-                const lineIndex = 6 - lineNum; 
+                // 變爻從下往上數，因此直接使用 lineNum - 1 作為索引
+                const lineIndex = lineNum - 1; 
                 newLines[lineIndex] = allLines[lineIndex] === '---' ? '-- --' : '---';
             });
             
-            // 從新的六爻陣列中，取出上卦和下卦的爻
-            const newUpperLines = newLines.slice(0, 3);
-            const newLowerLines = newLines.slice(3, 6);
+            // 從新的六爻陣列中，取出下卦和上卦的爻
+            const newLowerLines = newLines.slice(0, 3);
+            const newUpperLines = newLines.slice(3, 6);
 
             const newLowerNum = getGuaNumFromLines(newLowerLines);
             const newUpperNum = getGuaNumFromLines(newUpperLines);
@@ -497,8 +500,8 @@
             const upperLines = guaLines[upperGuaNum];
             const lowerLines = guaLines[lowerGuaNum];
             
-            // 從上到下取得六爻陣列
-            const allLines = [...upperLines, ...lowerLines];
+            // 從下到上取得六爻陣列
+            const allLines = [...lowerLines, ...upperLines];
             
             // 互卦取本卦的二、三、四爻為下卦，三、四、五爻為上卦
             const huLowerLines = allLines.slice(1, 4); 
