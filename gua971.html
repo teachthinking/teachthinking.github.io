@@ -381,14 +381,14 @@
 
         // 修正後的卦爻資料，由下往上定義
         const guaLines = {
-            1: ['---', '---', '---'],        // 乾
-            2: ['-- --', '---', '---'],      // 兌
-            3: ['---', '-- --', '---'],      // 離
-            4: ['-- --', '-- --', '---'],    // 震
-            5: ['---', '---', '-- --'],      // 巽
-            6: ['-- --', '---', '-- --'],    // 坎
-            7: ['---', '-- --', '-- --'],    // 艮
-            8: ['-- --', '-- --', '-- --']   // 坤
+            1: ['---', '---', '---'],        // 乾☰
+            2: ['-- --', '---', '---'],      // 兌☱
+            3: ['---', '-- --', '---'],      // 離☲
+            4: ['-- --', '-- --', '---'],    // 震☳
+            5: ['---', '---', '-- --'],      // 巽☴
+            6: ['-- --', '---', '-- --'],    // 坎☵
+            7: ['---', '-- --', '-- --'],    // 艮☶
+            8: ['-- --', '-- --', '-- --']   // 坤☷
         };
 
         const laterHeavenMap = {
@@ -404,7 +404,6 @@
         };
         
         const getGuaNumFromLines = (lines) => {
-            // lines 陣列由下往上
             for(let num in guaLines) {
                 if (JSON.stringify(guaLines[num]) === JSON.stringify(lines)) {
                     return parseInt(num);
@@ -438,7 +437,7 @@
             return hexagramNames[`${upperGuaName}${lowerGuaName}`];
         }
 
-        // 修正後的卦象繪製函式
+        // 繪製卦象，由下往上組合，但顯示時由上往下
         function getGuaImage(upperGuaNum, lowerGuaNum, movingLines) {
             const upperLines = guaLines[upperGuaNum];
             const lowerLines = guaLines[lowerGuaNum];
@@ -448,9 +447,8 @@
             
             let htmlLines = [];
             // 顯示時由上往下，所以需要反轉陣列
-            const displayLines = allLines.reverse();
+            const displayLines = [...allLines].reverse();
             for (let i = 0; i < 6; i++) {
-                // 動爻是從下往上數，因此需要轉換索引
                 const lineNum = 6 - i;
                 const line = displayLines[i];
                 if (movingLines.includes(lineNum)) {
@@ -462,7 +460,7 @@
             return htmlLines.join('\n');
         }
 
-        // 修正後的變卦計算邏輯
+        // 變卦計算邏輯，由下往上變動
         function getChangeGua(upperGuaNum, lowerGuaNum, movingLines) {
             if (movingLines.length === 0) return { guaName: '無變卦', guaImage: '' };
             
@@ -475,7 +473,7 @@
             let newLines = [...allLines];
 
             movingLines.forEach(lineNum => {
-                // 變爻從下往上數，因此直接使用 lineNum - 1 作為索引
+                // 變爻從下往上數，因此直接使用 lineNum - 1 作為陣列索引
                 const lineIndex = lineNum - 1; 
                 newLines[lineIndex] = allLines[lineIndex] === '---' ? '-- --' : '---';
             });
@@ -495,7 +493,7 @@
             };
         }
 
-        // 修正後的互卦計算邏輯
+        // 互卦計算邏輯
         function getHuGua(upperGuaNum, lowerGuaNum) {
             const upperLines = guaLines[upperGuaNum];
             const lowerLines = guaLines[lowerGuaNum];
