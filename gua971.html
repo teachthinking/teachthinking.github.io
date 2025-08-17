@@ -121,10 +121,21 @@
             transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
 
-        button:hover {
+        button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        #loadingMessage {
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-bottom: 1rem;
         }
 
         #result {
@@ -225,7 +236,7 @@
                 <label for="num3">動爻數字:</label>
                 <input type="number" id="num3" min="100" max="999">
             </div>
-            <button id="numberGua">卜卦</button>
+            <button id="numberGua" disabled>卜卦</button>
         </div>
 
         <div id="tab2" class="tab-content">
@@ -242,7 +253,7 @@
                 <label for="num6">數字三:</label>
                 <input type="number" id="num6" min="100" max="999">
             </div>
-            <button id="riceGua">卜卦</button>
+            <button id="riceGua" disabled>卜卦</button>
         </div>
 
         <div id="tab3" class="tab-content">
@@ -275,8 +286,10 @@
                 <label for="imageMinute">分鐘:</label>
                 <input type="number" id="imageMinute" value="34">
             </div>
-            <button id="imageGua">卜卦</button>
+            <button id="imageGua" disabled>卜卦</button>
         </div>
+        
+        <div id="loadingMessage">載入卦辭資料中，請稍候...</div>
 
         <div id="result" class="hidden">
             <h3 id="guaName"></h3>
@@ -288,6 +301,8 @@
     <script>
         let hexagramsData = {};
         const resultDiv = document.getElementById('result');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const buttons = document.querySelectorAll('button[id$="Gua"]');
 
         // 先天八卦卦名對應 (索引 0-7)
         const guaNames = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
@@ -304,12 +319,7 @@
             '坤乾': '地天泰', '坤兌': '地澤臨', '坤離': '地火明夷', '坤震': '地雷復', '坤巽': '地風升', '坤坎': '地水師', '坤艮': '地山謙', '坤坤': '坤為地'
         };
 
-        // 後天八卦卦位與先天八卦索引的對應 (後天卦位1-8，先天索引0-7)
-        // 1坎, 2坤, 3震, 4巽, 5中, 6乾, 7兌, 8艮, 9離
-        const laterHeavenMap = {
-            1: '坎', 2: '坤', 3: '震', 4: '巽', 6: '乾', 7: '兌', 8: '艮', 9: '離'
-        };
-        // 修正後的對應表，將數字轉成先天八卦索引
+        // 後天八卦卦位與先天八卦索引的對應 (後天卦位1-9，先天索引0-7，不含5中宮)
         const laterHeavenIndexMap = {
             1: 5, // 坎
             2: 7, // 坤
@@ -322,19 +332,26 @@
         };
 
         // 載入卦辭資料
-        fetch('hexagrams_data (1).json')
-            .then(response => response.json())
+        fetch('hexagrams_data.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('無法載入卦辭資料檔案');
+                }
+                return response.json();
+            })
             .then(data => {
                 hexagramsData = data;
                 console.log("卦辭資料載入成功");
+                loadingMessage.style.display = 'none';
+                buttons.forEach(button => button.disabled = false);
             })
             .catch(error => {
                 console.error("載入卦辭資料失敗:", error);
-                document.getElementById('result').innerHTML = `<p class="warning">無法載入卦辭資料，請檢查檔案是否存在。</p>`;
+                loadingMessage.innerHTML = `<span class="warning">無法載入卦辭資料，請檢查檔案是否存在。</span>`;
+                loadingMessage.style.display = 'block';
             });
 
         function generateGua(upperGuaNum, lowerGuaNum, movingLine) {
-            const resultDiv = document.getElementById('result');
             const guaNameElement = document.getElementById('guaName');
             const guaImageElement = document.getElementById('guaImage');
             const guaTextElement = document.getElementById('guaText');
@@ -379,8 +396,6 @@
         }
         
         function createGuaImage(upperGuaNum, lowerGuaNum, movingLine) {
-            const lines = [];
-            // 先天八卦數字對應的爻象
             const guaLines = {
                 1: ['---', '---', '---'], // 乾
                 2: ['-- --', '---', '---'], // 兌
@@ -392,17 +407,17 @@
                 8: ['-- --', '-- --', '-- --'] // 坤
             };
             
-            const upperLines = guaLines[upperGuaNum].reverse(); // 上卦由下往上畫
-            const lowerLines = guaLines[lowerGuaNum].reverse(); // 下卦由下往上畫
+            const upperLines = guaLines[upperGuaNum].reverse();
+            const lowerLines = guaLines[lowerGuaNum].reverse();
             
             const allLines = [...upperLines, ...lowerLines];
 
             const imageLines = allLines.map((line, index) => {
                 const lineNum = 6 - index;
                 if (lineNum === movingLine) {
-                    return `<span id="movingLine">${line} ← 動爻</span>`;
+                    return `   ${line}  ← 動爻`;
                 }
-                return line;
+                return `   ${line}`;
             }).reverse();
 
             return imageLines.join('\n');
@@ -446,36 +461,30 @@
         
         // 圖片卜卦法 (後天八卦)
         document.getElementById('imageGua').addEventListener('click', () => {
-            const upperNum = parseInt(document.getElementById('imageUpperNum').value);
-            const lowerNum_laterHeaven = parseInt(document.getElementById('imageLowerNum').value);
-            const year = parseInt(document.getElementById('imageYear').value);
-            const month = parseInt(document.getElementById('imageMonth').value);
-            const day = parseInt(document.getElementById('imageDay').value);
+            const upperNum_raw = parseInt(document.getElementById('imageUpperNum').value);
+            const lowerNum_raw = parseInt(document.getElementById('imageLowerNum').value);
             const hour = parseInt(document.getElementById('imageHour').value);
             const minute = parseInt(document.getElementById('imageMinute').value);
             
-            if (isNaN(upperNum) || isNaN(lowerNum_laterHeaven) || isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hour) || isNaN(minute)) {
+            if (isNaN(upperNum_raw) || isNaN(lowerNum_raw) || isNaN(hour) || isNaN(minute)) {
                 alert('請輸入有效的數字！');
                 return;
             }
 
-            // 後天八卦方位取卦，將數字轉換成先天八卦的索引
-            const upperGuaNum_laterHeaven = (upperNum % 9) || 9;
-            const lowerGuaNum_laterHeaven = (lowerNum_laterHeaven % 9) || 9;
+            const upperGuaNum_laterHeaven = (upperNum_raw % 9) || 9;
+            const lowerGuaNum_laterHeaven = (lowerNum_raw % 9) || 9;
             
-            // 修正後天八卦轉換邏輯
-            const upperGuaNum = laterHeavenIndexMap[upperGuaNum_laterHeaven];
-            const lowerGuaNum = laterHeavenIndexMap[lowerGuaNum_laterHeaven];
+            const upperGuaIndex = laterHeavenIndexMap[upperGuaNum_laterHeaven];
+            const lowerGuaIndex = laterHeavenIndexMap[lowerGuaNum_laterHeaven];
             
-            // 計算動爻
             const movingLine = (upperGuaNum_laterHeaven + lowerGuaNum_laterHeaven + hour + minute) % 6 || 6;
             
-            if (upperGuaNum === undefined || lowerGuaNum === undefined) {
+            if (upperGuaIndex === undefined || lowerGuaIndex === undefined) {
                  alert('後天八卦數字轉換失敗，請檢查輸入數字是否在 1-9 範圍內，排除5。');
                  return;
             }
 
-            generateGua(upperGuaNum + 1, lowerGuaNum + 1, movingLine); // +1 轉為 1-8 數字
+            generateGua(upperGuaIndex + 1, lowerGuaIndex + 1, movingLine);
         });
         
         // 在程式載入時隨機產生預設數字
@@ -486,8 +495,8 @@
             document.getElementById('num4').value = getRandomThreeDigit();
             document.getElementById('num5').value = getRandomThreeDigit();
             document.getElementById('num6').value = getRandomThreeDigit();
-            document.getElementById('imageUpperNum').value = getRandomThreeDigit() % 9 || 9; // 限制在 1-9
-            document.getElementById('imageLowerNum').value = getRandomThreeDigit() % 9 || 9; // 限制在 1-9
+            document.getElementById('imageUpperNum').value = getRandomThreeDigit() % 9 || 9;
+            document.getElementById('imageLowerNum').value = getRandomThreeDigit() % 9 || 9;
         });
 
         // 標籤頁切換功能
@@ -501,7 +510,6 @@
             document.getElementById(tabId).classList.add('active');
             event.currentTarget.classList.add('active');
             
-            // 每次切換分頁時隱藏結果
             resultDiv.classList.remove('visible');
             resultDiv.classList.add('hidden');
         }
