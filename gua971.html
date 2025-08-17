@@ -386,7 +386,7 @@
             4: ['-- --', '-- --', '---'], // 震
             5: ['---', '---', '-- --'], // 巽
             6: ['-- --', '---', '-- --'], // 坎
-            7: ['---', '-- --', '-- --'], // 艮
+            7: ['---', '-- --', '-- --'], // 艮 (修正)
             8: ['-- --', '-- --', '-- --'] // 坤
         };
 
@@ -402,6 +402,7 @@
             9: 3, // 南方 (離) -> 離 (3)
         };
 
+        // 修正檔名為 hexagrams_data.json
         fetch('hexagrams_data.json')
             .then(response => {
                 if (!response.ok) {
@@ -427,15 +428,15 @@
             return hexagramNames[`${upperGuaName}${lowerGuaName}`];
         }
 
+        // 修正卦象顯示邏輯
         function getGuaImage(upNum, lowNum, movingLines) {
-            const upperLines = [...guaLines[upNum]];
-            const lowerLines = [...guaLines[lowNum]];
-            
+            const upperLines = guaLines[upNum];
+            const lowerLines = guaLines[lowNum];
             const allLines = [...upperLines, ...lowerLines];
             
             let htmlLines = [];
-            for (let i = 0; i < 6; i++) {
-                const lineNum = 6 - i;
+            for (let i = 5; i >= 0; i--) {
+                const lineNum = i + 1;
                 if (movingLines.includes(lineNum)) {
                     htmlLines.push(`<span class="moving-line">${allLines[i]}</span>`);
                 } else {
@@ -449,14 +450,12 @@
             if (movingLines.length === 0) return { guaName: '無變卦', guaImage: '' };
             
             let allLines = [...guaLines[upNum], ...guaLines[lowNum]];
-            let newLines = [];
+            let newLines = [...allLines];
             
             for (let i = 0; i < 6; i++) {
-                const lineNum = 6 - i;
+                const lineNum = i + 1;
                 if (movingLines.includes(lineNum)) {
-                    newLines.push(allLines[i] === '---' ? '-- --' : '---');
-                } else {
-                    newLines.push(allLines[i]);
+                    newLines[i] = allLines[i] === '---' ? '-- --' : '---';
                 }
             }
             
@@ -511,11 +510,11 @@
             const huGua = getHuGua(upperGuaNum, lowerGuaNum);
 
             document.getElementById('guaName').textContent = `卜得 ${guaName} 卦`;
-            document.getElementById('guaImage').textContent = guaImage;
+            document.getElementById('guaImage').innerHTML = guaImage;
             document.getElementById('changeGuaName').textContent = `變為 ${changeGua.guaName}`;
-            document.getElementById('changeGuaImage').textContent = changeGua.guaImage;
+            document.getElementById('changeGuaImage').innerHTML = changeGua.guaImage;
             document.getElementById('huGuaName').textContent = `互卦 ${huGua.guaName}`;
-            document.getElementById('huGuaImage').textContent = huGua.guaImage;
+            document.getElementById('huGuaImage').innerHTML = huGua.guaImage;
 
             const lineExplanationDiv = document.getElementById('line-explanation');
             const lineExplanationContent = document.getElementById('line-explanation-content');
@@ -627,6 +626,16 @@
             resultDiv.classList.remove('visible');
             resultDiv.classList.add('hidden');
         }
+
+        // 修正數字卦預設值
+        document.addEventListener('DOMContentLoaded', () => {
+            function getRandomThreeDigit() {
+                return Math.floor(Math.random() * 900) + 100;
+            }
+            document.getElementById('num4').value = getRandomThreeDigit();
+            document.getElementById('num5').value = getRandomThreeDigit();
+            document.getElementById('num6').value = getRandomThreeDigit();
+        });
     </script>
 </body>
 </html>
