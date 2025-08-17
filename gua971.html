@@ -30,11 +30,11 @@
 
         .container {
             background-color: var(--card-bg-color);
-            padding: 2.5rem;
-            border-radius: 15px;
+            padding: 40px;
+            border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             width: 90%;
-            max-width: 800px;
+            max-width: 900px;
             text-align: center;
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
@@ -43,22 +43,23 @@
         h1 {
             color: var(--primary-color);
             font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
+            font-size: 3rem;
             margin-bottom: 0.5rem;
         }
 
         h2 {
             color: var(--secondary-color);
-            font-size: 1.5rem;
+            font-size: 2rem;
             margin-top: 0;
             margin-bottom: 1.5rem;
             border-bottom: 2px solid var(--secondary-color);
             padding-bottom: 0.5rem;
         }
 
-        .tabs {
+        .tab-buttons {
             display: flex;
             justify-content: center;
+            flex-wrap: wrap;
             gap: 10px;
             margin-bottom: 2rem;
         }
@@ -100,7 +101,8 @@
             color: var(--secondary-color);
         }
 
-        .input-group input {
+        .input-group input,
+        .input-group select {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
@@ -149,58 +151,79 @@
             transform: translateY(20px);
             text-align: left;
         }
-        
+
         #result.visible {
             opacity: 1;
             transform: translateY(0);
         }
-        
-        #result.hidden {
-            opacity: 0;
-            transform: translateY(20px);
+
+        .gua-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
         }
 
-        #guaName {
-            font-size: 1.8rem;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
+        .gua-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+            min-width: 200px;
+            margin-top: 20px;
         }
 
-        #guaImage {
-            margin: 1rem 0;
+        #guaImage,
+        #changeGuaImage,
+        #huGuaImage {
+            font-family: 'monospace';
+            font-size: 2.2rem;
             line-height: 1.2;
-            font-size: 1.5rem;
-            font-family: monospace;
-            color: var(--text-color);
+            margin: 15px 0;
             white-space: pre;
-        }
-
-        #movingLine {
-            color: var(--accent-color);
-            font-weight: bold;
-        }
-
-        #guaText {
-            font-size: 1.2rem;
-            line-height: 1.6;
             color: var(--text-color);
+            font-weight: 700;
         }
 
-        .warning {
+        .moving-line {
             color: var(--accent-color);
-            font-weight: bold;
-            margin-top: 1rem;
+            font-weight: 900 !important;
         }
 
-        @media (max-width: 600px) {
-            .container {
-                padding: 1.5rem;
-            }
+        #line-explanation {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        #line-explanation h3 {
+            color: var(--accent-color);
+            margin-bottom: 0;
+        }
+
+        #line-explanation p {
+            margin-top: 5px;
+            line-height: 1.6;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
             h1 {
-                font-size: 2rem;
+                font-size: 2.5rem;
             }
-            .tab-button {
-                padding: 8px 15px;
+            .gua-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            .container {
+                padding: 20px;
             }
         }
     </style>
@@ -209,99 +232,145 @@
     <div class="container">
         <h1>張老師易經卜卦</h1>
         <h2>易有太極，是生兩儀，兩儀生四象，四象生八卦。</h2>
-        
-        <div class="tabs">
-            <button class="tab-button active" onclick="showTab('tab1')">數字卜卦法</button>
-            <button class="tab-button" onclick="showTab('tab2')">後天米卦法</button>
-            <button class="tab-button" onclick="showTab('tab3')">圖片卜卦法</button>
+
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="showTab('manual-upper-first')">數字取卦</button>
+            <button class="tab-button" onclick="showTab('manual-dropdown')">手動取卦 (下拉選單)</button>
+            <button class="tab-button" onclick="showTab('time-divination')">時間取卦</button>
+            <button class="tab-button" onclick="showTab('by-image')">以象取卦</button>
         </div>
 
-        <div id="tab1" class="tab-content active">
-            <p>請輸入三個任意數字（三位數），來進行卜卦。</p>
+        <div id="manual-upper-first" class="tab-content active">
+            <p>輸入三組數字，分別代表**上卦**、**下卦**和**動爻**。<br>(例如：123、456、789)</p>
             <div class="input-group">
-                <label for="num1">上卦數字:</label>
-                <input type="number" id="num1" min="100" max="999">
+                <label for="num4">上卦數字:</label>
+                <input type="number" id="num4">
             </div>
             <div class="input-group">
-                <label for="num2">下卦數字:</label>
-                <input type="number" id="num2" min="100" max="999">
+                <label for="num5">下卦數字:</label>
+                <input type="number" id="num5">
             </div>
             <div class="input-group">
-                <label for="num3">動爻數字:</label>
-                <input type="number" id="num3" min="100" max="999">
+                <label for="num6">動爻數字:</label>
+                <input type="number" id="num6">
             </div>
-            <button id="numberGua" disabled>卜卦</button>
+            <button id="manualUpperBtn" disabled>生成卦象</button>
         </div>
 
-        <div id="tab2" class="tab-content">
-            <p>請輸入三個任意數字，來進行米卦卜卦。</p>
+        <div id="manual-dropdown" class="tab-content">
+            <p>透過下拉選單選擇卦象，並手動輸入變爻位置。</p>
             <div class="input-group">
-                <label for="num4">數字一:</label>
-                <input type="number" id="num4" min="100" max="999">
+                <label for="upperGuaSelect">上卦:</label>
+                <select id="upperGuaSelect">
+                    <option value="" disabled selected>請選擇上卦</option>
+                    <option value="1">1. 乾☰</option>
+                    <option value="2">2. 兌☱</option>
+                    <option value="3">3. 離☲</option>
+                    <option value="4">4. 震☳</option>
+                    <option value="5">5. 巽☴</option>
+                    <option value="6">6. 坎☵</option>
+                    <option value="7">7. 艮☶</option>
+                    <option value="8">8. 坤☷</option>
+                </select>
             </div>
             <div class="input-group">
-                <label for="num5">數字二:</label>
-                <input type="number" id="num5" min="100" max="999">
+                <label for="lowerGuaSelect">下卦:</label>
+                <select id="lowerGuaSelect">
+                    <option value="" disabled selected>請選擇下卦</option>
+                    <option value="1">1. 乾☰</option>
+                    <option value="2">2. 兌☱</option>
+                    <option value="3">3. 離☲</option>
+                    <option value="4">4. 震☳</option>
+                    <option value="5">5. 巽☴</option>
+                    <option value="6">6. 坎☵</option>
+                    <option value="7">7. 艮☶</option>
+                    <option value="8">8. 坤☷</option>
+                </select>
             </div>
             <div class="input-group">
-                <label for="num6">數字三:</label>
-                <input type="number" id="num6" min="100" max="999">
+                <label for="movingLinesInput">變爻位置 (1-6, 逗號分隔):</label>
+                <input type="text" id="movingLinesInput" placeholder="例如: 1,3,5 或 4">
+                <div class="tips">可輸入多個變爻，若無則留空。</div>
             </div>
-            <button id="riceGua" disabled>卜卦</button>
+            <button id="manualDropdownBtn" disabled>生成卦象</button>
         </div>
 
-        <div id="tab3" class="tab-content">
-            <p>請上傳圖片（已自動取樣），或輸入時間，來進行卜卦。</p>
+        <div id="time-divination" class="tab-content">
+            <p>以**當下日期時間**加上你心念的數字來計算卦象。</p>
             <div class="input-group">
-                <label for="imageUpperNum">圖片上卦數:</label>
+                <label for="timeDivinationNum">心念數字 (0-999):</label>
+                <input type="number" id="timeDivinationNum" value="0">
+            </div>
+            <button id="timeDivinationBtn" disabled>開始卜卦</button>
+        </div>
+
+        <div id="by-image" class="tab-content">
+            <p>輸入事物數量為上卦，並選取方位為下卦來取卦。</p>
+            <div class="input-group">
+                <label for="imageUpperNum">上卦數字 (事物數量或心念數字):</label>
                 <input type="number" id="imageUpperNum">
+                <div class="tips">
+                    參考：乾(金)1, 兌(金)2, 離(火)3, 震(木)4, 巽(木)5, 坎(水)6, 艮(土)7, 坤(土)8<br>
+                    例如：汽車=1、手機=2、電腦=3、書=4、花=5、飲料=6、石頭=7、泥土=8。
+                </div>
             </div>
             <div class="input-group">
-                <label for="imageLowerNum">圖片下卦數:</label>
-                <input type="number" id="imageLowerNum">
+                <label for="imageLowerSelect">下卦方位 (後天八卦):</label>
+                <select id="imageLowerSelect">
+                    <option value="" disabled selected>請選擇方位</option>
+                    <option value="1">北方 (坎)</option>
+                    <option value="2">西南 (坤)</option>
+                    <option value="3">東方 (震)</option>
+                    <option value="4">東南 (巽)</option>
+                    <option value="5">中宮 (坤)</option>
+                    <option value="6">西北 (乾)</option>
+                    <option value="7">西方 (兌)</option>
+                    <option value="8">東北 (艮)</option>
+                    <option value="9">南方 (離)</option>
+                </select>
+                <div class="tips">此為後天八卦方位，會自動轉換為先天卦數。</div>
             </div>
-            <div class="input-group">
-                <label for="imageYear">年份:</label>
-                <input type="number" id="imageYear" value="2025">
-            </div>
-            <div class="input-group">
-                <label for="imageMonth">月份:</label>
-                <input type="number" id="imageMonth" value="8">
-            </div>
-            <div class="input-group">
-                <label for="imageDay">日期:</label>
-                <input type="number" id="imageDay" value="17">
-            </div>
-            <div class="input-group">
-                <label for="imageHour">小時:</label>
-                <input type="number" id="imageHour" value="10">
-            </div>
-            <div class="input-group">
-                <label for="imageMinute">分鐘:</label>
-                <input type="number" id="imageMinute" value="34">
-            </div>
-            <button id="imageGua" disabled>卜卦</button>
+            <button id="imageGuaBtn" disabled>生成卦象</button>
         </div>
         
         <div id="loadingMessage">載入卦辭資料中，請稍候...</div>
 
         <div id="result" class="hidden">
-            <h3 id="guaName"></h3>
-            <pre id="guaImage"></pre>
-            <div id="guaText"></div>
+            <div class="gua-container">
+                <div class="gua-box">
+                    <h3>本卦</h3>
+                    <h2 id="guaName"></h2>
+                    <div id="guaImage"></div>
+                </div>
+                <div class="gua-box">
+                    <h3>變卦</h3>
+                    <h2 id="changeGuaName"></h2>
+                    <div id="changeGuaImage"></div>
+                </div>
+                <div class="gua-box">
+                    <h3>互卦</h3>
+                    <h2 id="huGuaName"></h2>
+                    <div id="huGuaImage"></div>
+                </div>
+            </div>
+            <div id="line-explanation" class="gua-box hidden">
+                <h3>動爻解釋</h3>
+                <h3 id="line-text-display"></h3>
+                <p id="line-meaning-display"></p>
+            </div>
         </div>
     </div>
-    
+
     <script>
         let hexagramsData = {};
         const resultDiv = document.getElementById('result');
         const loadingMessage = document.getElementById('loadingMessage');
-        const buttons = document.querySelectorAll('button[id$="Gua"]');
+        const buttons = document.querySelectorAll('button');
 
         // 先天八卦卦名對應 (索引 0-7)
         const guaNames = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
         
-        // 卦象組合與完整卦名對應 (關鍵修正)
+        // 卦象組合與完整卦名對應 (核心修正)
         const hexagramNames = {
             '乾乾': '乾為天', '乾兌': '天澤履', '乾離': '天火同人', '乾震': '天雷無妄', '乾巽': '天風姤', '乾坎': '天水訟', '乾艮': '天山遯', '乾坤': '天地否',
             '兌乾': '澤天夬', '兌兌': '兌為澤', '兌離': '澤火革', '兌震': '澤雷隨', '兌巽': '澤風大過', '兌坎': '澤水困', '兌艮': '澤山咸', '兌坤': '澤地萃',
@@ -313,8 +382,21 @@
             '坤乾': '地天泰', '坤兌': '地澤臨', '坤離': '地火明夷', '坤震': '地雷復', '坤巽': '地風升', '坤坎': '地水師', '坤艮': '地山謙', '坤坤': '坤為地'
         };
 
+        // 後天八卦方位對應先天八卦卦數
+        const laterHeavenMap = {
+            1: 6, // 北方 (坎) -> 坎 (6)
+            2: 8, // 西南 (坤) -> 坤 (8)
+            3: 4, // 東方 (震) -> 震 (4)
+            4: 5, // 東南 (巽) -> 巽 (5)
+            5: 8, // 中宮 (坤) -> 坤 (8)
+            6: 1, // 西北 (乾) -> 乾 (1)
+            7: 2, // 西方 (兌) -> 兌 (2)
+            8: 7, // 東北 (艮) -> 艮 (7)
+            9: 3, // 南方 (離) -> 離 (3)
+        };
+
         // 載入卦辭資料
-        fetch('hexagrams_data (1).json')
+        fetch('hexagrams_data (1).json.txt')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('無法載入卦辭資料檔案');
@@ -329,102 +411,153 @@
             })
             .catch(error => {
                 console.error("載入卦辭資料失敗:", error);
-                loadingMessage.innerHTML = `<span class="warning">無法載入卦辭資料，請檢查檔案是否存在。</span>`;
+                loadingMessage.innerHTML = `<span style="color:red; font-weight:bold;">無法載入卦辭資料，請檢查檔案是否存在或路徑是否正確。</span>`;
                 loadingMessage.style.display = 'block';
             });
 
-        function generateGua(upperGuaNum, lowerGuaNum, movingLine) {
-            const guaNameElement = document.getElementById('guaName');
-            const guaImageElement = document.getElementById('guaImage');
-            const guaTextElement = document.getElementById('guaText');
-            
-            const upperGuaName = guaNames[upperGuaNum - 1];
-            const lowerGuaName = guaNames[lowerGuaNum - 1];
-            
-            const fullGuaName = hexagramNames[`${upperGuaName}${lowerGuaName}`];
-            
-            if (!fullGuaName) {
-                guaTextElement.innerHTML = `<p class="warning">找不到對應的卦象名稱，請檢查輸入數字或卦名對應表。</p>`;
-                resultDiv.classList.add('visible');
-                return;
-            }
+        function generateGua(upperGuaNum, lowerGuaNum, movingLines) {
+            const getGuaName = (upNum, lowNum) => {
+                const upperGuaName = guaNames[upNum - 1];
+                const lowerGuaName = guaNames[lowNum - 1];
+                return hexagramNames[`${upperGuaName}${lowerGuaName}`];
+            };
 
-            const hexagramData = hexagramsData[fullGuaName];
-            
-            if (!hexagramData) {
-                guaTextElement.innerHTML = `<p class="warning">卦辭資料中找不到 ${fullGuaName} 的內容。</p>`;
-                resultDiv.classList.add('visible');
-                return;
-            }
-            
-            const movingLineData = hexagramData.find(line => line.index === movingLine);
-            
-            const guaImage = createGuaImage(upperGuaNum, lowerGuaNum, movingLine);
-            
-            guaNameElement.textContent = `卜得 ${fullGuaName} 卦`;
-            guaImageElement.textContent = guaImage;
+            const getGuaImage = (upNum, lowNum, movingLines) => {
+                const guaLines = {
+                    1: ['---', '---', '---'], // 乾
+                    2: ['-- --', '---', '---'], // 兌
+                    3: ['---', '-- --', '---'], // 離
+                    4: ['-- --', '-- --', '---'], // 震
+                    5: ['---', '---', '-- --'], // 巽
+                    6: ['-- --', '---', '-- --'], // 坎
+                    7: ['-- --', '-- --', '---'], // 艮
+                    8: ['-- --', '-- --', '-- --'] // 坤
+                };
+                
+                const upperLines = guaLines[upNum];
+                const lowerLines = guaLines[lowNum];
+                
+                const allLines = [...upperLines, ...lowerLines];
 
-            if (movingLineData) {
-                guaTextElement.innerHTML = `
-                    <p><strong>爻辭:</strong> ${movingLineData.text}</p>
-                    <p><strong>解釋:</strong> ${movingLineData.meaning}</p>
-                `;
-            } else {
-                guaTextElement.innerHTML = `<p class="warning">找不到對應的動爻解釋。</p>`;
-            }
+                const imageLines = allLines.map((line, index) => {
+                    const lineNum = index + 1;
+                    if (movingLines.includes(lineNum)) {
+                        return `<span class="moving-line">${line}</span>`;
+                    }
+                    return line;
+                }).reverse().join('\n');
+                
+                return imageLines;
+            };
 
-            resultDiv.classList.remove('hidden');
-            resultDiv.classList.add('visible');
-        }
-        
-        function createGuaImage(upperGuaNum, lowerGuaNum, movingLine) {
-            const guaLines = {
-                1: ['---', '---', '---'], // 乾
-                2: ['-- --', '---', '---'], // 兌
-                3: ['---', '-- --', '---'], // 離
-                4: ['-- --', '-- --', '---'], // 震
-                5: ['---', '---', '-- --'], // 巽
-                6: ['-- --', '---', '-- --'], // 坎
-                7: ['-- --', '-- --', '---'], // 艮
-                8: ['-- --', '-- --', '-- --'] // 坤
+            const getChangeGua = (upNum, lowNum, movingLines) => {
+                let changeLines = [];
+                const allLines = [...getGuaImage(upNum, lowNum, []).split('\n').reverse()];
+                
+                for (let i = 0; i < 6; i++) {
+                    const lineNum = i + 1;
+                    if (movingLines.includes(lineNum)) {
+                        changeLines.push(allLines[i] === '---' ? '-- --' : '---');
+                    } else {
+                        changeLines.push(allLines[i]);
+                    }
+                }
+
+                const changeUpper = changeLines.slice(3, 6);
+                const changeLower = changeLines.slice(0, 3);
+
+                const getChangeGuaNum = (lines) => {
+                    if (lines.join('') === '---' + '---' + '---') return 1;
+                    if (lines.join('') === '-- --' + '---' + '---') return 2;
+                    if (lines.join('') === '---' + '-- --' + '---') return 3;
+                    if (lines.join('') === '-- --' + '-- --' + '---') return 4;
+                    if (lines.join('') === '---' + '---' + '-- --') return 5;
+                    if (lines.join('') === '-- --' + '---' + '-- --') return 6;
+                    if (lines.join('') === '-- --' + '-- --' + '---') return 7;
+                    if (lines.join('') === '-- --' + '-- --' + '-- --') return 8;
+                };
+
+                const newUpperNum = getChangeGuaNum(changeUpper);
+                const newLowerNum = getChangeGuaNum(changeLower);
+
+                return {
+                    guaName: getGuaName(newUpperNum, newLowerNum),
+                    guaImage: getGuaImage(newUpperNum, newLowerNum, [])
+                };
             };
             
-            const upperLines = guaLines[upperGuaNum].reverse();
-            const lowerLines = guaLines[lowerGuaNum].reverse();
-            
-            const allLines = [...upperLines, ...lowerLines];
+            const getHuGua = (upNum, lowNum) => {
+                const guaLines = {
+                    1: [1, 1, 1], 2: [0, 1, 1], 3: [1, 0, 1], 4: [0, 0, 1],
+                    5: [1, 1, 0], 6: [0, 1, 0], 7: [0, 0, 1], 8: [0, 0, 0]
+                };
 
-            const imageLines = allLines.map((line, index) => {
-                const lineNum = 6 - index;
-                if (lineNum === movingLine) {
-                    return `   ${line}  ← 動爻`;
-                }
-                return `   ${line}`;
-            }).reverse();
+                const upperLines = guaLines[upNum].reverse();
+                const lowerLines = guaLines[lowNum].reverse();
+                const allLines = [...upperLines, ...lowerLines];
+                
+                const huUpperLines = [allLines[3], allLines[4], allLines[5]];
+                const huLowerLines = [allLines[2], allLines[3], allLines[4]];
+                
+                const getHuGuaNum = (lines) => {
+                    const combined = lines.join('');
+                    if (combined === '111') return 1;
+                    if (combined === '011') return 2;
+                    if (combined === '101') return 3;
+                    if (combined === '001') return 4;
+                    if (combined === '110') return 5;
+                    if (combined === '010') return 6;
+                    if (combined === '001') return 7;
+                    if (combined === '000') return 8;
+                };
 
-            return imageLines.join('\n');
-        }
+                const huUpperNum = getHuGuaNum(huUpperLines);
+                const huLowerNum = getHuGuaNum(huLowerLines);
+                
+                return {
+                    guaName: getGuaName(huUpperNum, huLowerNum),
+                    guaImage: getGuaImage(huUpperNum, huLowerNum, [])
+                };
+            };
 
-        // 數字卜卦法 (保留原始邏輯)
-        document.getElementById('numberGua').addEventListener('click', () => {
-            const num1 = parseInt(document.getElementById('num1').value);
-            const num2 = parseInt(document.getElementById('num2').value);
-            const num3 = parseInt(document.getElementById('num3').value);
+            const guaName = getGuaName(upperGuaNum, lowerGuaNum);
+            const guaImage = getGuaImage(upperGuaNum, lowerGuaNum, movingLines);
+            const changeGua = getChangeGua(upperGuaNum, lowerGuaNum, movingLines);
+            const huGua = getHuGua(upperGuaNum, lowerGuaNum);
 
-            if (isNaN(num1) || isNaN(num2) || isNaN(num3)) {
-                alert('請輸入有效數字！');
-                return;
+            document.getElementById('guaName').textContent = `卜得 ${guaName} 卦`;
+            document.getElementById('guaImage').innerHTML = guaImage;
+            document.getElementById('changeGuaName').textContent = changeGua.guaName ? `變為 ${changeGua.guaName} 卦` : '無變卦';
+            document.getElementById('changeGuaImage').innerHTML = changeGua.guaImage;
+            document.getElementById('huGuaName').textContent = huGua.guaName ? `互卦 ${huGua.guaName}` : '無互卦';
+            document.getElementById('huGuaImage').innerHTML = huGua.guaImage;
+
+            const lineExplanationDiv = document.getElementById('line-explanation');
+            const lineTextDisplay = document.getElementById('line-text-display');
+            const lineMeaningDisplay = document.getElementById('line-meaning-display');
+
+            if (movingLines.length > 0) {
+                lineExplanationDiv.classList.remove('hidden');
+                let lineHtml = '';
+                movingLines.forEach(line => {
+                    const hexagramData = hexagramsData[guaName];
+                    if (hexagramData) {
+                        const lineData = hexagramData.find(item => item.index === line);
+                        if (lineData) {
+                            lineHtml += `<h3>${lineData.text}</h3><p>${lineData.meaning}</p>`;
+                        }
+                    }
+                });
+                lineTextDisplay.innerHTML = lineHtml;
+            } else {
+                lineExplanationDiv.classList.add('hidden');
             }
 
-            const upperGuaNum = (num1 % 8) || 8;
-            const lowerGuaNum = (num2 % 8) || 8;
-            const movingLine = (num3 % 6) || 6;
+            resultDiv.classList.add('visible');
+        }
 
-            generateGua(upperGuaNum, lowerGuaNum, movingLine);
-        });
-
-        // 米卦法 (保留原始邏輯)
-        document.getElementById('riceGua').addEventListener('click', () => {
+        // 數字取卦
+        document.getElementById('manualUpperBtn').addEventListener('click', () => {
             const num4 = parseInt(document.getElementById('num4').value);
             const num5 = parseInt(document.getElementById('num5').value);
             const num6 = parseInt(document.getElementById('num6').value);
@@ -438,40 +571,62 @@
             const lowerGuaNum = (num5 % 8) || 8;
             const movingLine = (num6 % 6) || 6;
 
-            generateGua(upperGuaNum, lowerGuaNum, movingLine);
+            generateGua(upperGuaNum, lowerGuaNum, [movingLine]);
         });
-        
-        // 圖片卜卦法 (保留原始邏輯並修正)
-        document.getElementById('imageGua').addEventListener('click', () => {
-            const upperNum = parseInt(document.getElementById('imageUpperNum').value);
-            const lowerNum_laterHeaven = parseInt(document.getElementById('imageLowerNum').value);
-            const minute = parseInt(document.getElementById('imageMinute').value);
-            
-            if (isNaN(upperNum) || isNaN(lowerNum_laterHeaven) || isNaN(minute)) {
-                alert('請輸入有效的數字！');
+
+        // 手動取卦 (下拉選單)
+        document.getElementById('manualDropdownBtn').addEventListener('click', () => {
+            const upperGuaNum = parseInt(document.getElementById('upperGuaSelect').value);
+            const lowerGuaNum = parseInt(document.getElementById('lowerGuaSelect').value);
+            const movingLinesInput = document.getElementById('movingLinesInput').value;
+            let movingLines = [];
+            if (movingLinesInput) {
+                movingLines = movingLinesInput.split(',').map(Number);
+            }
+
+            if (isNaN(upperGuaNum) || isNaN(lowerGuaNum)) {
+                alert('請選擇上下卦！');
                 return;
             }
 
-            // 此處保留您原始程式碼中對上卦的計算方式
-            const upperGuaNum = (upperNum % 8) || 8;
-            
-            // 由於原始 `laterHeavenMap` 陣列有問題，我們直接使用後天八卦的數字作為下卦數
-            const lowerGuaNum = (lowerNum_laterHeaven % 8) || 8;
+            generateGua(upperGuaNum, lowerGuaNum, movingLines);
+        });
 
-            const movingLine = (upperNum + lowerNum_laterHeaven + minute) % 6 || 6;
-            
-            generateGua(upperGuaNum, lowerGuaNum, movingLine);
+        // 時間取卦
+        document.getElementById('timeDivinationBtn').addEventListener('click', () => {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const hour = date.getHours();
+            const minute = date.getMinutes();
+            const num = parseInt(document.getElementById('timeDivinationNum').value);
+
+            const upperGuaNum = (year + month + day + num) % 8 || 8;
+            const lowerGuaNum = (year + month + day + hour + num) % 8 || 8;
+            const movingLine = (year + month + day + hour + minute + num) % 6 || 6;
+
+            generateGua(upperGuaNum, lowerGuaNum, [movingLine]);
         });
         
-        // 在程式載入時隨機產生預設數字
-        document.addEventListener('DOMContentLoaded', () => {
-            function getRandomThreeDigit() {
-                return Math.floor(Math.random() * 900) + 100;
+        // 以象取卦
+        document.getElementById('imageGuaBtn').addEventListener('click', () => {
+            const upperNum = parseInt(document.getElementById('imageUpperNum').value);
+            const lowerNum_laterHeaven = parseInt(document.getElementById('imageLowerSelect').value);
+            const now = new Date();
+            const minute = now.getMinutes();
+
+            if (isNaN(upperNum) || isNaN(lowerNum_laterHeaven)) {
+                alert('請輸入有效數字並選擇方位！');
+                return;
             }
-            document.getElementById('num4').value = getRandomThreeDigit();
-            document.getElementById('num5').value = getRandomThreeDigit();
-            document.getElementById('num6').value = getRandomThreeDigit();
-            document.getElementById('imageUpperNum').value = getRandomThreeDigit();
+
+            const upperGuaNum = (upperNum % 8) || 8;
+            const lowerGuaNum = laterHeavenMap[lowerNum_laterHeaven];
+            
+            const movingLine = (upperNum + lowerNum_laterHeaven + minute) % 6 || 6;
+            
+            generateGua(upperGuaNum, lowerGuaNum, [movingLine]);
         });
 
         // 標籤頁切換功能
@@ -486,7 +641,6 @@
             event.currentTarget.classList.add('active');
             
             resultDiv.classList.remove('visible');
-            resultDiv.classList.add('hidden');
         }
     </script>
 </body>
