@@ -542,9 +542,9 @@
                 return;
             }
 
-            const upperGuaNum = (num4 - 1) % 8 + 1;
-            const lowerGuaNum = (num5 - 1) % 8 + 1;
-            const movingLine = (num6 - 1) % 6 + 1;
+            const upperGuaNum = (num4 % 8) || 8;
+            const lowerGuaNum = (num5 % 8) || 8;
+            const movingLine = (num6 % 6) || 6;
 
             generateGua(upperGuaNum, lowerGuaNum, [movingLine]);
         });
@@ -580,10 +580,11 @@
                 alert('請輸入有效的心念數字 (0-999)。');
                 return;
             }
-
-            const upperGuaNum = ((year + month + day + userNum) - 1) % 8 + 1;
-            const lowerGuaNum = ((year + month + day + hour + userNum) - 1) % 8 + 1;
-            const movingLine = ((year + month + day + hour + userNum) - 1) % 6 + 1;
+            
+            // 時間取卦的計算方式
+            const upperGuaNum = ((year + month + day + userNum) % 8) || 8;
+            const lowerGuaNum = ((year + month + day + hour + userNum) % 8) || 8;
+            const movingLine = ((year + month + day + hour + userNum) % 6) || 6;
 
             generateGua(upperGuaNum, lowerGuaNum, [movingLine]);
         });
@@ -605,7 +606,7 @@
             const now = new Date();
             const minute = now.getMinutes();
 
-            const upperGuaNum = (imageUpperNum - 1) % 8 + 1;
+            const upperGuaNum = (imageUpperNum % 8) || 8;
             const lowerGuaNum = laterHeavenMap[parseInt(imageLowerSelect)];
             
             const movingLine = (imageUpperNum + parseInt(imageLowerSelect) + minute) % 6 || 6;
@@ -625,7 +626,7 @@
             if (movingLines.length > 1) {
                 const combinedLinesText = movingLines.map(line => {
                     const lineText = getLineText(upperGuaNum, lowerGuaNum, line);
-                    return lineText ? `<p>${lineText.text} <br> ${lineText.meaning}</p>` : '';
+                    return lineText ? `<p><b>${lineText.text}</b><br>${lineText.meaning}</p>` : '';
                 }).join('');
                 document.getElementById('line-text-display').textContent = '多爻變：請自行參照各爻解釋綜合判斷。';
                 document.getElementById('line-meaning-display').innerHTML = combinedLinesText;
@@ -735,7 +736,12 @@
         function getLineText(upperGuaNum, lowerGuaNum, movingLine) {
             const guaName = guaNames[upperGuaNum - 1] + guaNames[lowerGuaNum - 1];
             if (hexagramsData[guaName]) {
-                return hexagramsData[guaName].find(line => line.index === movingLine);
+                // 檢查 movingLine 是否為 '用' 爻 (即多爻變)
+                if (movingLine === 7) {
+                    return hexagramsData[guaName].find(line => line.index === 7);
+                } else {
+                    return hexagramsData[guaName].find(line => line.index === movingLine);
+                }
             }
             return null;
         }
