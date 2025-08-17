@@ -404,6 +404,7 @@
         
         const getGuaNumFromLines = (lines) => {
             for(let num in guaLines) {
+                // 必須使用深層比較，否則會失敗
                 if (JSON.stringify(guaLines[num]) === JSON.stringify(lines)) {
                     return parseInt(num);
                 }
@@ -436,9 +437,10 @@
             return hexagramNames[`${upperGuaName}${lowerGuaName}`];
         }
 
-        function getGuaImage(upNum, lowNum, movingLines) {
-            const upperLines = guaLines[upNum];
-            const lowerLines = guaLines[lowNum];
+        // 徹底修正卦象繪製邏輯
+        function getGuaImage(upperGuaNum, lowerGuaNum, movingLines) {
+            const upperLines = guaLines[upperGuaNum];
+            const lowerLines = guaLines[lowerGuaNum];
             const allLines = [...lowerLines, ...upperLines];
             
             let htmlLines = [];
@@ -454,9 +456,12 @@
             return htmlLines.join('\n');
         }
 
-        function getChangeGua(upNum, lowNum, movingLines) {
+        // 修復變卦計算邏輯
+        function getChangeGua(upperGuaNum, lowerGuaNum, movingLines) {
             if (movingLines.length === 0) return { guaName: '無變卦', guaImage: '' };
             
+            const upperLines = guaLines[upperGuaNum];
+            const lowerLines = guaLines[lowerGuaNum];
             const allLines = [...lowerLines, ...upperLines];
             let newLines = [...allLines];
 
@@ -481,7 +486,10 @@
             };
         }
 
-        function getHuGua(upNum, lowNum) {
+        // 修復互卦計算邏輯
+        function getHuGua(upperGuaNum, lowerGuaNum) {
+            const upperLines = guaLines[upperGuaNum];
+            const lowerLines = guaLines[lowerGuaNum];
             const allLines = [...lowerLines, ...upperLines];
             
             const huLowerLines = allLines.slice(1, 4);
@@ -531,6 +539,7 @@
                 lineExplanationDiv.classList.add('hidden');
             }
 
+            resultDiv.classList.remove('hidden');
             resultDiv.classList.add('visible');
         }
 
