@@ -78,11 +78,19 @@
             transition: all 0.3s ease;
             text-transform: uppercase;
         }
+        
+        .random-btn {
+            background: linear-gradient(45deg, #56ab2f, #a8e063);
+        }
 
         button:hover {
             transform: scale(1.05);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
             background: linear-gradient(45deg, #F9A826, #FF6B6B);
+        }
+        
+        .random-btn:hover {
+            background: linear-gradient(45deg, #a8e063, #56ab2f);
         }
         
         button:active {
@@ -309,6 +317,13 @@
         #line-explanation h3 {
             color: var(--accent-color);
         }
+        
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
 
         @media (max-width: 768px) {
             h1 {
@@ -351,7 +366,10 @@
                 <label for="num6">動爻數字: </label>
                 <input type="number" id="num6">
             </div>
-            <button id="manualUpperBtn">生成卦象</button>
+            <div class="button-group">
+                <button id="manualUpperBtn">生成卦象</button>
+                <button id="randomBtn" class="random-btn">隨機產生數字</button>
+            </div>
         </div>
         
         <div id="manual-dropdown" class="tab-content">
@@ -481,7 +499,7 @@
                 console.log('卦象資料已成功載入。');
             } catch (e) {
                 console.error('載入卦象資料時發生錯誤:', e);
-                alert('無法載入卦象資料。請確認 gua_data.json 檔案是否存在且格式正確。');
+                alert('無法載入卦象資料。請確認 gua_data.json 檔案是否存在且格式正確，並與 HTML 檔案位於同一資料夾。');
             }
         };
 
@@ -654,6 +672,13 @@
         // 頁面載入時載入資料
         window.onload = loadHexagrams;
 
+        // 隨機產生數字功能
+        function generateRandomNumbers() {
+            document.getElementById('num4').value = Math.floor(Math.random() * 900) + 100;
+            document.getElementById('num5').value = Math.floor(Math.random() * 900) + 100;
+            document.getElementById('num6').value = Math.floor(Math.random() * 900) + 100;
+        }
+        
         // 綁定按鈕事件
         document.getElementById('manualUpperBtn').addEventListener('click', () => {
             const upperNum = parseInt(document.getElementById('num4').value);
@@ -668,6 +693,8 @@
 
             generateGua(upperNum, lowerNum, movingLines);
         });
+        
+        document.getElementById('randomBtn').addEventListener('click', generateRandomNumbers);
 
         document.getElementById('manualDropdownBtn').addEventListener('click', () => {
             const upperGuaSelect = document.getElementById('upperGuaSelect');
