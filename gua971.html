@@ -460,8 +460,8 @@
         function getChangeGua(upperGuaNum, lowerGuaNum, movingLines) {
             if (movingLines.length === 0) return { guaName: '無變卦', guaImage: '' };
             
-            const upperLines = guaLines[upperGuaNum];
-            const lowerLines = guaLines[lowerGuaNum];
+            const upperLines = guaLines[upperGuaNum]; // 重新定義變數
+            const lowerLines = guaLines[lowerGuaNum]; // 重新定義變數
             const allLines = [...lowerLines, ...upperLines];
             let newLines = [...allLines];
 
@@ -488,8 +488,8 @@
 
         // 修復互卦計算邏輯
         function getHuGua(upperGuaNum, lowerGuaNum) {
-            const upperLines = guaLines[upperGuaNum];
-            const lowerLines = guaLines[lowerGuaNum];
+            const upperLines = guaLines[upperGuaNum]; // 重新定義變數
+            const lowerLines = guaLines[lowerGuaNum]; // 重新定義變數
             const allLines = [...lowerLines, ...upperLines];
             
             const huLowerLines = allLines.slice(1, 4);
@@ -563,19 +563,21 @@
 
         // 手動取卦 (下拉選單)
         document.getElementById('manualDropdownBtn').addEventListener('click', () => {
-            const upperGuaNum = parseInt(document.getElementById('upperGuaSelect').value);
-            const lowerGuaNum = parseInt(document.getElementById('lowerGuaSelect').value);
+            const upperGuaSelect = document.getElementById('upperGuaSelect').value;
+            const lowerGuaSelect = document.getElementById('lowerGuaSelect').value;
+
+            if (!upperGuaSelect || !lowerGuaSelect) {
+                alert('請選擇上下卦！');
+                return;
+            }
+
+            const upperGuaNum = parseInt(upperGuaSelect);
+            const lowerGuaNum = parseInt(lowerGuaSelect);
             const movingLinesInput = document.getElementById('movingLinesInput').value;
             let movingLines = [];
             if (movingLinesInput) {
                 movingLines = movingLinesInput.split(',').map(Number);
             }
-
-            if (isNaN(upperGuaNum) || isNaN(lowerGuaNum)) {
-                alert('請選擇上下卦！');
-                return;
-            }
-
             generateGua(upperGuaNum, lowerGuaNum, movingLines);
         });
 
