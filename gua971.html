@@ -466,19 +466,20 @@
             const upperLines = guaLines[upperGuaNum];
             const lowerLines = guaLines[lowerGuaNum];
             
-            // 組合為從下到上的六爻陣列，方便處理變爻
-            let allLines = [...lowerLines].reverse().concat([...upperLines].reverse());
+            // 正確地從上到下取得六爻陣列
+            let allLines = [...upperLines, ...lowerLines];
             
             let newLines = [...allLines];
 
             movingLines.forEach(lineNum => {
-                const lineIndex = lineNum - 1;
+                // 變爻從下往上數，因此需要轉換成從上往下的陣列索引 (0-5)
+                const lineIndex = 6 - lineNum; 
                 newLines[lineIndex] = allLines[lineIndex] === '---' ? '-- --' : '---';
             });
             
-            // 從新的六爻陣列中，取出下卦和上卦的爻，並轉回上到下順序
-            const newLowerLines = newLines.slice(0, 3).reverse();
-            const newUpperLines = newLines.slice(3, 6).reverse();
+            // 從新的六爻陣列中，取出上卦和下卦的爻
+            const newUpperLines = newLines.slice(0, 3);
+            const newLowerLines = newLines.slice(3, 6);
 
             const newLowerNum = getGuaNumFromLines(newLowerLines);
             const newUpperNum = getGuaNumFromLines(newUpperLines);
@@ -496,15 +497,12 @@
             const upperLines = guaLines[upperGuaNum];
             const lowerLines = guaLines[lowerGuaNum];
             
-            // 組合為從下到上的六爻陣列
-            const allLines = [...lowerLines].reverse().concat([...upperLines].reverse());
+            // 從上到下取得六爻陣列
+            const allLines = [...upperLines, ...lowerLines];
             
-            // 互卦取本卦的下二、三、四爻和上卦初、二、三爻，也就是本卦的2,3,4,5爻
-            const huLowerLines_bottomUp = allLines.slice(1, 4); // 2,3,4爻
-            const huUpperLines_bottomUp = allLines.slice(2, 5); // 3,4,5爻
-
-            const huLowerLines = huLowerLines_bottomUp.reverse();
-            const huUpperLines = huUpperLines_bottomUp.reverse();
+            // 互卦取本卦的二、三、四爻為下卦，三、四、五爻為上卦
+            const huLowerLines = allLines.slice(1, 4); 
+            const huUpperLines = allLines.slice(2, 5); 
             
             const huLowerNum = getGuaNumFromLines(huLowerLines);
             const huUpperNum = getGuaNumFromLines(huUpperLines);
@@ -539,7 +537,7 @@
                 const hexagramData = hexagramsData[guaName];
                 if (hexagramData) {
                     movingLines.forEach(line => {
-                        const lineData = hexagramData.find(item => item.index === line);
+                        const lineData = hexagramsData[guaName].find(item => item.index === line);
                         if (lineData) {
                             lineHtml += `<h3>${lineData.text}</h3><p>${lineData.meaning}</p>`;
                         }
@@ -655,3 +653,4 @@
     </script>
 </body>
 </html>
+
