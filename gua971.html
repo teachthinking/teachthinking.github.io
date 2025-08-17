@@ -386,7 +386,7 @@
             4: ['-- --', '-- --', '---'], // 震
             5: ['---', '---', '-- --'], // 巽
             6: ['-- --', '---', '-- --'], // 坎
-            7: ['---', '-- --', '-- --'], // 艮 (修正)
+            7: ['---', '-- --', '-- --'], // 艮
             8: ['-- --', '-- --', '-- --'] // 坤
         };
 
@@ -401,8 +401,16 @@
             8: 7, // 東北 (艮) -> 艮 (7)
             9: 3, // 南方 (離) -> 離 (3)
         };
+        
+        const getGuaNumFromLines = (lines) => {
+            for(let num in guaLines) {
+                if (JSON.stringify(guaLines[num]) === JSON.stringify(lines)) {
+                    return parseInt(num);
+                }
+            }
+            return null;
+        };
 
-        // 修正檔名為 hexagrams_data.json
         fetch('hexagrams_data.json')
             .then(response => {
                 if (!response.ok) {
@@ -428,19 +436,19 @@
             return hexagramNames[`${upperGuaName}${lowerGuaName}`];
         }
 
-        // 修正卦象顯示邏輯
         function getGuaImage(upNum, lowNum, movingLines) {
             const upperLines = guaLines[upNum];
             const lowerLines = guaLines[lowNum];
-            const allLines = [...upperLines, ...lowerLines];
+            const allLines = [...lowerLines, ...upperLines];
             
             let htmlLines = [];
             for (let i = 5; i >= 0; i--) {
                 const lineNum = i + 1;
+                const line = allLines[i];
                 if (movingLines.includes(lineNum)) {
-                    htmlLines.push(`<span class="moving-line">${allLines[i]}</span>`);
+                    htmlLines.push(`<span class="moving-line">${line}</span>`);
                 } else {
-                    htmlLines.push(allLines[i]);
+                    htmlLines.push(line);
                 }
             }
             return htmlLines.join('\n');
@@ -449,9 +457,9 @@
         function getChangeGua(upNum, lowNum, movingLines) {
             if (movingLines.length === 0) return { guaName: '無變卦', guaImage: '' };
             
-            let allLines = [...guaLines[upNum], ...guaLines[lowNum]];
+            const allLines = [...lowerLines, ...upperLines];
             let newLines = [...allLines];
-            
+
             for (let i = 0; i < 6; i++) {
                 const lineNum = i + 1;
                 if (movingLines.includes(lineNum)) {
@@ -459,17 +467,13 @@
                 }
             }
             
-            const getGuaNumFromLines = (lines) => {
-                for(let num in guaLines) {
-                    if (JSON.stringify(guaLines[num]) === JSON.stringify(lines)) {
-                        return parseInt(num);
-                    }
-                }
-                return null;
-            };
+            const newLowerLines = newLines.slice(0, 3);
+            const newUpperLines = newLines.slice(3, 6);
 
-            const newUpperNum = getGuaNumFromLines(newLines.slice(0, 3));
-            const newLowerNum = getGuaNumFromLines(newLines.slice(3, 6));
+            const newLowerNum = getGuaNumFromLines(newLowerLines);
+            const newUpperNum = getGuaNumFromLines(newUpperLines);
+            
+            if (!newLowerNum || !newUpperNum) return { guaName: '無變卦', guaImage: '' };
 
             return {
                 guaName: getGuaName(newUpperNum, newLowerNum),
@@ -478,24 +482,15 @@
         }
 
         function getHuGua(upNum, lowNum) {
-            const allLines = [...guaLines[upNum], ...guaLines[lowNum]];
+            const allLines = [...lowerLines, ...upperLines];
             
-            const huUpperLines = allLines.slice(1, 4);
-            const huLowerLines = allLines.slice(2, 5);
+            const huLowerLines = allLines.slice(1, 4);
+            const huUpperLines = allLines.slice(2, 5);
 
-            const getGuaNumFromLines = (lines) => {
-                for(let num in guaLines) {
-                    if (JSON.stringify(guaLines[num]) === JSON.stringify(lines)) {
-                        return parseInt(num);
-                    }
-                }
-                return null;
-            };
-            
-            const huUpperNum = getGuaNumFromLines(huUpperLines);
             const huLowerNum = getGuaNumFromLines(huLowerLines);
+            const huUpperNum = getGuaNumFromLines(huUpperLines);
             
-            if (!huUpperNum || !huLowerNum) return { guaName: '無互卦', guaImage: '' };
+            if (!huLowerNum || !huUpperNum) return { guaName: '無互卦', guaImage: '' };
             
             return {
                 guaName: getGuaName(huUpperNum, huLowerNum),
@@ -627,7 +622,6 @@
             resultDiv.classList.add('hidden');
         }
 
-        // 修正數字卦預設值
         document.addEventListener('DOMContentLoaded', () => {
             function getRandomThreeDigit() {
                 return Math.floor(Math.random() * 900) + 100;
