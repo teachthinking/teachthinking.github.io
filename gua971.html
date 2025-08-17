@@ -340,23 +340,22 @@
                 <div class="gua-box">
                     <h3>本卦</h3>
                     <h2 id="guaName"></h2>
-                    <div id="guaImage"></div>
+                    <pre id="guaImage"></pre>
                 </div>
                 <div class="gua-box">
                     <h3>變卦</h3>
                     <h2 id="changeGuaName"></h2>
-                    <div id="changeGuaImage"></div>
+                    <pre id="changeGuaImage"></pre>
                 </div>
                 <div class="gua-box">
                     <h3>互卦</h3>
                     <h2 id="huGuaName"></h2>
-                    <div id="huGuaImage"></div>
+                    <pre id="huGuaImage"></pre>
                 </div>
             </div>
             <div id="line-explanation" class="gua-box hidden">
                 <h3>動爻解釋</h3>
-                <h3 id="line-text-display"></h3>
-                <p id="line-meaning-display"></p>
+                <div id="line-explanation-content"></div>
             </div>
         </div>
     </div>
@@ -367,10 +366,8 @@
         const loadingMessage = document.getElementById('loadingMessage');
         const buttons = document.querySelectorAll('button');
 
-        // 先天八卦卦名對應 (索引 0-7)
         const guaNames = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
         
-        // 卦象組合與完整卦名對應 (核心修正)
         const hexagramNames = {
             '乾乾': '乾為天', '乾兌': '天澤履', '乾離': '天火同人', '乾震': '天雷無妄', '乾巽': '天風姤', '乾坎': '天水訟', '乾艮': '天山遯', '乾坤': '天地否',
             '兌乾': '澤天夬', '兌兌': '兌為澤', '兌離': '澤火革', '兌震': '澤雷隨', '兌巽': '澤風大過', '兌坎': '澤水困', '兌艮': '澤山咸', '兌坤': '澤地萃',
@@ -382,7 +379,17 @@
             '坤乾': '地天泰', '坤兌': '地澤臨', '坤離': '地火明夷', '坤震': '地雷復', '坤巽': '地風升', '坤坎': '地水師', '坤艮': '地山謙', '坤坤': '坤為地'
         };
 
-        // 後天八卦方位對應先天八卦卦數
+        const guaLines = {
+            1: ['---', '---', '---'], // 乾
+            2: ['-- --', '---', '---'], // 兌
+            3: ['---', '-- --', '---'], // 離
+            4: ['-- --', '-- --', '---'], // 震
+            5: ['---', '---', '-- --'], // 巽
+            6: ['-- --', '---', '-- --'], // 坎
+            7: ['---', '-- --', '-- --'], // 艮
+            8: ['-- --', '-- --', '-- --'] // 坤
+        };
+
         const laterHeavenMap = {
             1: 6, // 北方 (坎) -> 坎 (6)
             2: 8, // 西南 (坤) -> 坤 (8)
@@ -395,7 +402,6 @@
             9: 3, // 南方 (離) -> 離 (3)
         };
 
-        // 載入卦辭資料
         fetch('hexagrams_data.json')
             .then(response => {
                 if (!response.ok) {
@@ -415,140 +421,118 @@
                 loadingMessage.style.display = 'block';
             });
 
-        function generateGua(upperGuaNum, lowerGuaNum, movingLines) {
-            const getGuaName = (upNum, lowNum) => {
-                const upperGuaName = guaNames[upNum - 1];
-                const lowerGuaName = guaNames[lowNum - 1];
-                return hexagramNames[`${upperGuaName}${lowerGuaName}`];
-            };
+        function getGuaName(upNum, lowNum) {
+            const upperGuaName = guaNames[upNum - 1];
+            const lowerGuaName = guaNames[lowNum - 1];
+            return hexagramNames[`${upperGuaName}${lowerGuaName}`];
+        }
 
-            const getGuaImage = (upNum, lowNum, movingLines) => {
-                const guaLines = {
-                    1: ['---', '---', '---'], // 乾
-                    2: ['-- --', '---', '---'], // 兌
-                    3: ['---', '-- --', '---'], // 離
-                    4: ['-- --', '-- --', '---'], // 震
-                    5: ['---', '---', '-- --'], // 巽
-                    6: ['-- --', '---', '-- --'], // 坎
-                    7: ['-- --', '-- --', '---'], // 艮
-                    8: ['-- --', '-- --', '-- --'] // 坤
-                };
-                
-                const upperLines = guaLines[upNum];
-                const lowerLines = guaLines[lowNum];
-                
-                const allLines = [...upperLines, ...lowerLines];
+        function getGuaImage(upNum, lowNum, movingLines) {
+            const upperLines = [...guaLines[upNum]];
+            const lowerLines = [...guaLines[lowNum]];
+            
+            const allLines = [...upperLines, ...lowerLines];
+            
+            let htmlLines = [];
+            for (let i = 0; i < 6; i++) {
+                const lineNum = 6 - i;
+                if (movingLines.includes(lineNum)) {
+                    htmlLines.push(`<span class="moving-line">${allLines[i]}</span>`);
+                } else {
+                    htmlLines.push(allLines[i]);
+                }
+            }
+            return htmlLines.join('\n');
+        }
 
-                const imageLines = allLines.map((line, index) => {
-                    const lineNum = index + 1;
-                    if (movingLines.includes(lineNum)) {
-                        return `<span class="moving-line">${line}</span>`;
-                    }
-                    return line;
-                }).reverse().join('\n');
-                
-                return imageLines;
-            };
-
-            const getChangeGua = (upNum, lowNum, movingLines) => {
-                let changeLines = [];
-                const allLines = [...getGuaImage(upNum, lowNum, []).split('\n').reverse()];
-                
-                for (let i = 0; i < 6; i++) {
-                    const lineNum = i + 1;
-                    if (movingLines.includes(lineNum)) {
-                        changeLines.push(allLines[i] === '---' ? '-- --' : '---');
-                    } else {
-                        changeLines.push(allLines[i]);
+        function getChangeGua(upNum, lowNum, movingLines) {
+            if (movingLines.length === 0) return { guaName: '無變卦', guaImage: '' };
+            
+            let allLines = [...guaLines[upNum], ...guaLines[lowNum]];
+            let newLines = [];
+            
+            for (let i = 0; i < 6; i++) {
+                const lineNum = 6 - i;
+                if (movingLines.includes(lineNum)) {
+                    newLines.push(allLines[i] === '---' ? '-- --' : '---');
+                } else {
+                    newLines.push(allLines[i]);
+                }
+            }
+            
+            const getGuaNumFromLines = (lines) => {
+                for(let num in guaLines) {
+                    if (JSON.stringify(guaLines[num]) === JSON.stringify(lines)) {
+                        return parseInt(num);
                     }
                 }
+                return null;
+            };
 
-                const changeUpper = changeLines.slice(3, 6);
-                const changeLower = changeLines.slice(0, 3);
+            const newUpperNum = getGuaNumFromLines(newLines.slice(0, 3));
+            const newLowerNum = getGuaNumFromLines(newLines.slice(3, 6));
 
-                const getChangeGuaNum = (lines) => {
-                    if (lines.join('') === '---' + '---' + '---') return 1;
-                    if (lines.join('') === '-- --' + '---' + '---') return 2;
-                    if (lines.join('') === '---' + '-- --' + '---') return 3;
-                    if (lines.join('') === '-- --' + '-- --' + '---') return 4;
-                    if (lines.join('') === '---' + '---' + '-- --') return 5;
-                    if (lines.join('') === '-- --' + '---' + '-- --') return 6;
-                    if (lines.join('') === '-- --' + '-- --' + '---') return 7;
-                    if (lines.join('') === '-- --' + '-- --' + '-- --') return 8;
-                };
+            return {
+                guaName: getGuaName(newUpperNum, newLowerNum),
+                guaImage: getGuaImage(newUpperNum, newLowerNum, [])
+            };
+        }
 
-                const newUpperNum = getChangeGuaNum(changeUpper);
-                const newLowerNum = getChangeGuaNum(changeLower);
+        function getHuGua(upNum, lowNum) {
+            const allLines = [...guaLines[upNum], ...guaLines[lowNum]];
+            
+            const huUpperLines = allLines.slice(1, 4);
+            const huLowerLines = allLines.slice(2, 5);
 
-                return {
-                    guaName: getGuaName(newUpperNum, newLowerNum),
-                    guaImage: getGuaImage(newUpperNum, newLowerNum, [])
-                };
+            const getGuaNumFromLines = (lines) => {
+                for(let num in guaLines) {
+                    if (JSON.stringify(guaLines[num]) === JSON.stringify(lines)) {
+                        return parseInt(num);
+                    }
+                }
+                return null;
             };
             
-            const getHuGua = (upNum, lowNum) => {
-                const guaLines = {
-                    1: [1, 1, 1], 2: [0, 1, 1], 3: [1, 0, 1], 4: [0, 0, 1],
-                    5: [1, 1, 0], 6: [0, 1, 0], 7: [0, 0, 1], 8: [0, 0, 0]
-                };
-
-                const upperLines = guaLines[upNum].reverse();
-                const lowerLines = guaLines[lowNum].reverse();
-                const allLines = [...upperLines, ...lowerLines];
-                
-                const huUpperLines = [allLines[3], allLines[4], allLines[5]];
-                const huLowerLines = [allLines[2], allLines[3], allLines[4]];
-                
-                const getHuGuaNum = (lines) => {
-                    const combined = lines.join('');
-                    if (combined === '111') return 1;
-                    if (combined === '011') return 2;
-                    if (combined === '101') return 3;
-                    if (combined === '001') return 4;
-                    if (combined === '110') return 5;
-                    if (combined === '010') return 6;
-                    if (combined === '001') return 7;
-                    if (combined === '000') return 8;
-                };
-
-                const huUpperNum = getHuGuaNum(huUpperLines);
-                const huLowerNum = getHuGuaNum(huLowerLines);
-                
-                return {
-                    guaName: getGuaName(huUpperNum, huLowerNum),
-                    guaImage: getGuaImage(huUpperNum, huLowerNum, [])
-                };
+            const huUpperNum = getGuaNumFromLines(huUpperLines);
+            const huLowerNum = getGuaNumFromLines(huLowerLines);
+            
+            if (!huUpperNum || !huLowerNum) return { guaName: '無互卦', guaImage: '' };
+            
+            return {
+                guaName: getGuaName(huUpperNum, huLowerNum),
+                guaImage: getGuaImage(huUpperNum, huLowerNum, [])
             };
+        }
 
+        function generateGua(upperGuaNum, lowerGuaNum, movingLines) {
             const guaName = getGuaName(upperGuaNum, lowerGuaNum);
             const guaImage = getGuaImage(upperGuaNum, lowerGuaNum, movingLines);
             const changeGua = getChangeGua(upperGuaNum, lowerGuaNum, movingLines);
             const huGua = getHuGua(upperGuaNum, lowerGuaNum);
 
             document.getElementById('guaName').textContent = `卜得 ${guaName} 卦`;
-            document.getElementById('guaImage').innerHTML = guaImage;
-            document.getElementById('changeGuaName').textContent = changeGua.guaName ? `變為 ${changeGua.guaName} 卦` : '無變卦';
-            document.getElementById('changeGuaImage').innerHTML = changeGua.guaImage;
-            document.getElementById('huGuaName').textContent = huGua.guaName ? `互卦 ${huGua.guaName}` : '無互卦';
-            document.getElementById('huGuaImage').innerHTML = huGua.guaImage;
+            document.getElementById('guaImage').textContent = guaImage;
+            document.getElementById('changeGuaName').textContent = `變為 ${changeGua.guaName}`;
+            document.getElementById('changeGuaImage').textContent = changeGua.guaImage;
+            document.getElementById('huGuaName').textContent = `互卦 ${huGua.guaName}`;
+            document.getElementById('huGuaImage').textContent = huGua.guaImage;
 
             const lineExplanationDiv = document.getElementById('line-explanation');
-            const lineTextDisplay = document.getElementById('line-text-display');
-            const lineMeaningDisplay = document.getElementById('line-meaning-display');
+            const lineExplanationContent = document.getElementById('line-explanation-content');
 
             if (movingLines.length > 0) {
                 lineExplanationDiv.classList.remove('hidden');
                 let lineHtml = '';
-                movingLines.forEach(line => {
-                    const hexagramData = hexagramsData[guaName];
-                    if (hexagramData) {
+                const hexagramData = hexagramsData[guaName];
+                if (hexagramData) {
+                    movingLines.forEach(line => {
                         const lineData = hexagramData.find(item => item.index === line);
                         if (lineData) {
                             lineHtml += `<h3>${lineData.text}</h3><p>${lineData.meaning}</p>`;
                         }
-                    }
-                });
-                lineTextDisplay.innerHTML = lineHtml;
+                    });
+                }
+                lineExplanationContent.innerHTML = lineHtml;
             } else {
                 lineExplanationDiv.classList.add('hidden');
             }
@@ -641,6 +625,7 @@
             event.currentTarget.classList.add('active');
             
             resultDiv.classList.remove('visible');
+            resultDiv.classList.add('hidden');
         }
     </script>
 </body>
