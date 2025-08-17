@@ -476,7 +476,7 @@
         // 外部載入易經資料庫
         let hexagramsData = {};
 
-        fetch('hexagrams_data.json.txt')
+        fetch('hexagrams_data.json')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
