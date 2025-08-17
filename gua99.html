@@ -457,7 +457,7 @@
             </div>
             <button id="manualDropdownBtn">生成卦象</button>
         </div>
-      
+
         <div id="time-divination" class="tab-content">
             <h2>時間取卦</h2>
             <p>以**當下日期時間**加上你心念的數字來計算卦象。</p>
@@ -467,7 +467,7 @@
             </div>
             <button id="timeDivinationBtn">開始卜卦</button>
         </div>
-      
+
         <div id="by-image" class="tab-content">
             <h2>以象取卦</h2>
             <p>輸入事物數量為上卦，並選取方位為下卦來取卦。</p>
@@ -515,15 +515,18 @@
             </div>
             <div id="line-explanation" class="gua-box hidden">
                 <h3>動爻解釋</h3>
+                <h3 id="line-text-display"></h3>
+                <p id="line-meaning-display"></p>
             </div>
             <div class="link-group">
                 <a id="explanationLink1" href="#" target="_blank">解卦連結一 (易學網)</a>
                 <a id="explanationLink2" href="#" target="_blank">解卦連結二 (周易網)</a>
-                <a id="explanationLink3" href="#" target="_blank">解卦連結三 (Golla)</a>
-                <a id="explanationLink4" href="https://zh.m.wikipedia.org/wiki/%E5%91%A8%E6%98%93%E5%85%AD%E5%8D%81%E5%9B%9B%E5%8D%A6%E5%88%97%E8%A1%A8#" target="_blank">解卦連結四 (維基百科)</a>
+                <a id="explanationLink3" href="#" target="_blank">解卦連結三 (卜易居)</a>
+                <a id="explanationLink4" href="#" target="_blank">解卦連結四 (第一星座網)</a>
             </div>
         </div>
     </div>
+
     <script>
         const hexagramsData = {
           "乾為天": [
@@ -633,371 +636,482 @@
           "火天大有": [
             { "index": 1, "text": "初九：无交害，匪咎，艱則無咎。", "meaning": "沒有與人交惡，並非過失，艱難中沒有過失。" },
             { "index": 2, "text": "九二：大車以載，有攸往，无咎。", "meaning": "用大車裝載，有所前往，没有過失。" },
-            { "index": 3, "text": "九三：公用享于天子，小人弗克。", "meaning": "公爵用以享祭天子，小人不能做到。" },
-            { "index": 4, "text": "九四：匪其彭，无咎。", "meaning": "不自負，沒有過失。" },
-            { "index": 5, "text": "六五：厥孚交如，威如，吉。", "meaning": "誠信交織，有威嚴，吉祥。" },
-            { "index": 6, "text": "上九：自天祐之，吉無不利。", "meaning": "從上天保佑，吉祥，沒有不利。" }
+            { "index": 3, "text": "九三：公用享于天子，小人則不吉。", "meaning": "公侯用來供奉天子，小人則不吉祥。" },
+            { "index": 4, "text": "九四：匪其彭，无咎。", "meaning": "不自恃其盛大，沒有過失。" },
+            { "index": 5, "text": "九五：厥孚交如，威如，吉。", "meaning": "有誠信且能互相交結，有威嚴，吉祥。" },
+            { "index": 6, "text": "上九：自天祐之，吉無不利。", "meaning": "上天保佑，吉祥沒有不利。" }
           ],
-          "地山謙": [
-            { "index": 1, "text": "初六：謙謙君子，用涉大川，吉。", "meaning": "謙虛的君子，用以渡過大河，吉祥。" },
-            { "index": 2, "text": "六二：鳴謙，貞吉。", "meaning": "謙虛地表達，堅守正道吉祥。" },
-            { "index": 3, "text": "九三：勞謙君子，有終，吉。", "meaning": "勤勞謙虛的君子，有好的結果，吉祥。" },
-            { "index": 4, "text": "六四：無不利，撝謙。", "meaning": "沒有不利，揮舞著謙虛。" },
-            { "index": 5, "text": "六五：不富以其鄰，不戒以孚。", "meaning": "輕盈地飛舞，不因富有而自滿，不警戒而有誠信。" },
-            { "index": 6, "text": "上六：鳴謙，利用行師，征邑國。", "meaning": "謙虛地表達，有利於出兵，征討邑國。" }
+          "澤天夬": [
+            { "index": 1, "text": "初九：壯于前趾，往不勝為咎。", "meaning": "力量強大，但過於衝動，前往將無法取勝，有過失。" },
+            { "index": 2, "text": "九二：惕號，莫夜有戎，勿恤。", "meaning": "心懷警惕而呼號，夜晚有敵人來襲，不必憂慮。" },
+            { "index": 3, "text": "九三：顯于頄，厲，終吉。", "meaning": "顯露於臉頰，有危險，但最終吉祥。" },
+            { "index": 4, "text": "九四：臀無膚，其行次且。", "meaning": "屁股沒有皮膚，行走困難。" },
+            { "index": 5, "text": "九五：決夬，中行无咎。", "meaning": "決斷，若能保持中庸之道則沒有過失。" },
+            { "index": 6, "text": "上六：无號，終有凶。", "meaning": "不呼號，最終有凶險。" }
+          ],
+          "乾為天(用九)": [
+            { "index": 1, "text": "初九：潛龍勿用。", "meaning": "時機未到，應當潛藏實力，靜待時機。" },
+            { "index": 2, "text": "九二：見龍在田，利見大人。", "meaning": "才能已顯現，能獲得貴人幫助。" },
+            { "index": 3, "text": "九三：君子終日乾乾，夕惕若，厲，無咎。", "meaning": "整日勤奮努力，夜裡仍警惕，雖有危險，但能化解。" },
+            { "index": 4, "text": "九四：或躍在淵，無咎。", "meaning": "有能力，可在進退之間選擇，沒有問題。" },
+            { "index": 5, "text": "九五：飛龍在天，利見大人。", "meaning": "處於極佳的地位，大有作為，能得貴人相助。" },
+            { "index": 6, "text": "上九：亢龍有悔。", "meaning": "居高位太久，不知進退，將會有災禍或後悔。" },
+            { "index": 7, "text": "用九：見群龍無首，吉。", "meaning": "多位強者出現，不爭首位，因此吉祥。" }
+          ],
+          "坤為地(用六)": [
+            { "index": 1, "text": "初六：履霜堅冰至。", "meaning": "走在薄霜上，預示著堅冰將至，事態會逐漸惡化。" },
+            { "index": 2, "text": "六二：直、方、大，不習無不利。", "meaning": "行為正直、態度端正、心胸寬廣，無須刻意學習也能順利。" },
+            { "index": 3, "text": "六三：含章可貞。或從王事，無成有終。", "meaning": "內藏才華但表現謙遜，雖有作為但能功成身退。" },
+            { "index": 4, "text": "六四：括囊，無咎、無譽。", "meaning": "像束緊口袋一樣不說話、不表現，雖無過失也無讚譽。" },
+            { "index": 5, "text": "六五：黃裳，元吉。", "meaning": "內在美好且符合中道，是極為吉祥之事。" },
+            { "index": 6, "text": "上六：戰龍於野，其血玄黃。", "meaning": "爭鬥於野外，兩敗俱傷，結果慘烈。" },
+            { "index": 7, "text": "用六：利永貞。", "meaning": "永遠堅守正道，有利。" }
+          ],
+          "地雷復": [
+            { "index": 1, "text": "初九：不遠復，無祇悔，元吉。", "meaning": "迷途不遠，及時回頭，沒有後悔，大吉。" },
+            { "index": 2, "text": "六二：休復，吉。", "meaning": "美好的回歸，吉祥。" },
+            { "index": 3, "text": "六三：頻復，厲，無咎。", "meaning": "頻繁地回頭，有危險，但最終沒有過失。" },
+            { "index": 4, "text": "六四：中行獨復。", "meaning": "在中間道路上獨自回頭。" },
+            { "index": 5, "text": "六五：敦復，無悔。", "meaning": "誠懇地回歸，沒有後悔。" },
+            { "index": 6, "text": "上六：迷復，凶。有災眚。", "meaning": "迷失方向而無法回歸，有凶險。有災禍。" }
           ],
           "雷地豫": [
-            { "index": 1, "text": "初六：鳴豫，凶。", "meaning": "歡樂地鳴叫，有凶險。" },
-            { "index": 2, "text": "六二：由豫，貞吉。", "meaning": "由著歡樂，堅守正道吉祥。" },
-            { "index": 3, "text": "六三：無故而豫，吝。", "meaning": "沒有緣故地歡樂，有困難。" },
-            { "index": 4, "text": "九四：由豫，大有得，勿疑朋，盍簪，吉。", "meaning": "由著歡樂，大有收穫，不要懷疑朋友，用簪子插著，吉祥。" },
-            { "index": 5, "text": "六五：貞疾，恆不死。", "meaning": "堅守正道有疾病，但不會死去。" },
-            { "index": 6, "text": "上六：冥豫，成有渝，无咎。", "meaning": "沉溺於歡樂，會有變化，沒有過失。" }
+            { "index": 1, "text": "初六：鳴豫，凶。", "meaning": "過早地享樂，有凶險。" },
+            { "index": 2, "text": "六二：介于石，不終日，貞吉。", "meaning": "像磐石一樣堅定，不會沉迷享樂，堅守正道吉祥。" },
+            { "index": 3, "text": "六三：盱豫，悔。", "meaning": "仰望享樂，最終後悔。" },
+            { "index": 4, "text": "九四：由豫，大有得。勿疑，朋盍簪。", "meaning": "由享樂而來，有很大的收穫。不要懷疑，朋友會聚集。" },
+            { "index": 5, "text": "六五：貞疾，恆。不死。", "meaning": "堅守正道，雖有疾病，但能堅持，不會死亡。" },
+            { "index": 6, "text": "上六：冥豫，成，有災眚。", "meaning": "過度地沉迷享樂，雖然成功，但會有災禍。" }
           ],
           "澤雷隨": [
-            { "index": 1, "text": "初九：官有孚，貞吉。", "meaning": "官府有誠信，堅守正道吉祥。" },
-            { "index": 2, "text": "六二：係小子，失丈夫。", "meaning": "牽掛小孩子，失去丈夫。" },
-            { "index": 3, "text": "六三：係丈夫，失小子。", "meaning": "牽掛丈夫，失去小孩子。" },
-            { "index": 4, "text": "九四：隨有獲，貞凶。", "meaning": "跟隨有收穫，堅守正道有凶險。" },
-            { "index": 5, "text": "九五：係于苞桑，元吉。", "meaning": "像繫在堅韌的桑樹上一樣，大吉。" },
-            { "index": 6, "text": "上六：隨有獲，利居貞。", "meaning": "跟隨有收穫，利於安居，堅守正道。" }
+            { "index": 1, "text": "初九：官有渝，貞吉。", "meaning": "官位有變動，堅守正道吉祥。" },
+            { "index": 2, "text": "六二：係小子，失丈夫。", "meaning": "被年輕人束縛，失去大人。" },
+            { "index": 3, "text": "六三：係丈夫，失小子。隨有求得，利居貞。", "meaning": "被大人束縛，失去年輕人。追隨所求能有所得，利於堅守正道。" },
+            { "index": 4, "text": "九四：隨有獲，貞凶。", "meaning": "追隨有所收穫，但堅守正道有凶險。" },
+            { "index": 5, "text": "九五：孚于嘉，吉。", "meaning": "誠信地與美好的人親近，吉祥。" },
+            { "index": 6, "text": "上六：拘系之，乃維之，從。", "meaning": "被拘禁，然後被綁住，最終順從。" }
+          ],
+          "雷澤歸妹": [
+            { "index": 1, "text": "初九：歸妹以娣，反以其身。不利。", "meaning": "妹妹嫁給姐姐的丈夫，反而失去自己的身分，不利。" },
+            { "index": 2, "text": "九二：歸妹以貞，獨處。", "meaning": "妹妹嫁人，但堅守正道，獨自一人。" },
+            { "index": 3, "text": "六三：歸妹以妾，不利。", "meaning": "妹妹以妾的身分嫁人，不利。" },
+            { "index": 4, "text": "九四：歸妹以時，利。", "meaning": "妹妹在適當時機嫁人，有利。" },
+            { "index": 5, "text": "六五：歸妹以王，無咎。", "meaning": "妹妹嫁給君王，沒有過失。" },
+            { "index": 6, "text": "上六：歸妹以無尾，不利。", "meaning": "妹妹嫁人，沒有終結，不利。" }
+          ],
+          "震為雷": [
+            { "index": 1, "text": "初九：震來虩虩，後笑言啞啞，吉。", "meaning": "雷聲震動而恐懼，之後笑聲不斷，吉祥。" },
+            { "index": 2, "text": "六二：震來厲，億喪貝，躋于九陵。勿逐，七日得。", "meaning": "雷聲震動而有危險，擔心失去財物，登上高山。不要追逐，七日後能找回。" },
+            { "index": 3, "text": "六三：震蘇蘇，厲。無咎。", "meaning": "雷聲震動而驚恐，有危險，但最終沒有過失。" },
+            { "index": 4, "text": "九四：震遂泥，吝。", "meaning": "雷聲震動而陷入泥沼，有困難。" },
+            { "index": 5, "text": "六五：震往來，厲。無咎。", "meaning": "雷聲震動而來回，有危險，但最終沒有過失。" },
+            { "index": 6, "text": "上六：震索索，厲，無咎。", "meaning": "雷聲震動而驚恐，有危險，但最終沒有過失。" }
+          ],
+          "艮為山": [
+            { "index": 1, "text": "初六：艮其趾，無咎，利永貞。", "meaning": "腳趾停止，沒有過失，利於永遠堅守正道。" },
+            { "index": 2, "text": "六二：艮其腓，不拯其隨，其心不快。", "meaning": "小腿停止，無法幫助其追隨者，心中不快。" },
+            { "index": 3, "text": "九三：艮其限，列其夬，厲。熏心。", "meaning": "腰部停止，分開其決斷，有危險，心中煩悶。" },
+            { "index": 4, "text": "六四：艮其身，無咎。", "meaning": "身體停止，沒有過失。" },
+            { "index": 5, "text": "六五：艮其輔，言有序，悔亡。", "meaning": "下巴停止，言語有條理，後悔消失。" },
+            { "index": 6, "text": "上九：敦艮，吉。", "meaning": "誠懇地停止，吉祥。" }
+          ],
+          "風山漸": [
+            { "index": 1, "text": "初六：鴻漸于干，小子厲，有言，無咎。", "meaning": "鴻雁漸進於溪邊，小輩有危險，雖有閒話，但沒有過失。" },
+            { "index": 2, "text": "六二：鴻漸于磐，食飲，讙讙，吉。", "meaning": "鴻雁漸進於磐石，有食物和飲水，歡樂，吉祥。" },
+            { "index": 3, "text": "九三：鴻漸于陸，夫征不復，婦孕不育，凶。", "meaning": "鴻雁漸進於高地，丈夫出征不歸，婦人懷孕不育，凶險。" },
+            { "index": 4, "text": "六四：鴻漸于木，或得其所，吉。", "meaning": "鴻雁漸進於樹上，或許能找到其歸宿，吉祥。" },
+            { "index": 5, "text": "九五：鴻漸于陵，婦三歲不孕，終莫之勝，吉。", "meaning": "鴻雁漸進於高陵，婦人三年不孕，最終無人能勝過，吉祥。" },
+            { "index": 6, "text": "上九：鴻漸于逵，其羽可用為儀，吉。", "meaning": "鴻雁漸進於道路，其羽毛可用來作儀式，吉祥。" }
           ],
           "山風蠱": [
-            { "index": 1, "text": "初六：幹父之蠱，有子考无咎，厲終吉。", "meaning": "解決父親的過失，有兒子沒有過失，雖然危險但最終吉祥。" },
-            { "index": 2, "text": "九二：幹母之蠱，不可貞。", "meaning": "解決母親的過失，不能堅守正道。" },
-            { "index": 3, "text": "九三：幹父之蠱，小有悔，無大咎。", "meaning": "解決父親的過失，有小的後悔，沒有大的過失。" },
-            { "index": 4, "text": "六四：裕父之蠱，往見吝。", "meaning": "寬裕父親的過失，前往會遇到困難。" },
-            { "index": 5, "text": "六五：幹父之蠱，用譽。", "meaning": "解決父親的過失，會得到讚譽。" },
-            { "index": 6, "text": "上九：不事王侯，高尚其事。", "meaning": "不侍奉王侯，高尚自己的事業。" }
+            { "index": 1, "text": "初六：幹父之蠱，有子考無咎，厲終吉。", "meaning": "挽救父親的弊端，有孝順的子女，沒有過失，雖然有危險，但最終吉祥。" },
+            { "index": 2, "text": "九二：幹母之蠱，不可貞。", "meaning": "挽救母親的弊端，不可堅守正道。" },
+            { "index": 3, "text": "九三：幹父之蠱，小有悔，無大咎。", "meaning": "挽救父親的弊端，雖有小後悔，但沒有大過失。" },
+            { "index": 4, "text": "六四：幹父之蠱，用譽。", "meaning": "挽救父親的弊端，得到讚譽。" },
+            { "index": 5, "text": "六五：幹父之蠱，用譽，無咎。", "meaning": "挽救父親的弊端，得到讚譽，沒有過失。" },
+            { "index": 6, "text": "上九：不事王侯，高尚其事。", "meaning": "不侍奉王侯，追求高尚的事業。" }
           ],
-          "地風升": [
+          "巽為風": [
+            { "index": 1, "text": "初六：進退，利武人之貞。", "meaning": "進退不定，利於武人堅守正道。" },
+            { "index": 2, "text": "六二：巽在床下，用史巫紛若，吉，無咎。", "meaning": "巽順在床下，用史官和巫師，紛亂，但最終吉祥，沒有過失。" },
+            { "index": 3, "text": "九三：頻巽，吝。", "meaning": "頻繁地巽順，有困難。" },
+            { "index": 4, "text": "六四：巽在床下，悔亡。", "meaning": "巽順在床下，後悔消失。" },
+            { "index": 5, "text": "九五：巽以三日，吉。", "meaning": "巽順三天，吉祥。" },
+            { "index": 6, "text": "上九：巽以三日，吉。", "meaning": "巽順三天，吉祥。" }
+          ],
+          "兌為澤": [
+            { "index": 1, "text": "初九：和兌，吉。", "meaning": "和諧地喜悅，吉祥。" },
+            { "index": 2, "text": "九二：孚兌，吉。", "meaning": "誠信地喜悅，吉祥。" },
+            { "index": 3, "text": "六三：來兌，凶。", "meaning": "前來喜悅，有凶險。" },
+            { "index": 4, "text": "九四：商兌未寧，介疾有喜。", "meaning": "商議喜悅尚未安寧，有介意的事，但最終有喜悅。" },
+            { "index": 5, "text": "九五：孚兌，吉。", "meaning": "誠信地喜悅，吉祥。" },
+            { "index": 6, "text": "上六：引兌，凶。", "meaning": "牽引喜悅，有凶險。" }
+          ],
+          "兌為澤(用九)": [
+            { "index": 1, "text": "初九：和兌，吉。", "meaning": "和諧地喜悅，吉祥。" },
+            { "index": 2, "text": "九二：孚兌，吉。", "meaning": "誠信地喜悅，吉祥。" },
+            { "index": 3, "text": "六三：來兌，凶。", "meaning": "前來喜悅，有凶險。" },
+            { "index": 4, "text": "九四：商兌未寧，介疾有喜。", "meaning": "商議喜悅尚未安寧，有介意的事，但最終有喜悅。" },
+            { "index": 5, "text": "九五：孚兌，吉。", "meaning": "誠信地喜悅，吉祥。" },
+            { "index": 6, "text": "上六：引兌，凶。", "meaning": "牽引喜悅，有凶險。" },
+            { "index": 7, "text": "用九：尚兌，吉。", "meaning": "尚且喜悅，吉祥。" }
+          ],
+          "兌為澤(用六)": [
+            { "index": 1, "text": "初六：和兌，吉。", "meaning": "和諧地喜悅，吉祥。" },
+            { "index": 2, "text": "六二：孚兌，吉。", "meaning": "誠信地喜悅，吉祥。" },
+            { "index": 3, "text": "六三：來兌，凶。", "meaning": "前來喜悅，有凶險。" },
+            { "index": 4, "text": "九四：商兌未寧，介疾有喜。", "meaning": "商議喜悅尚未安寧，有介意的事，但最終有喜悅。" },
+            { "index": 5, "text": "九五：孚兌，吉。", "meaning": "誠信地喜悅，吉祥。" },
+            { "index": 6, "text": "上六：引兌，凶。", "meaning": "牽引喜悅，有凶險。" },
+            { "index": 7, "text": "用六：尚兌，吉。", "meaning": "尚且喜悅，吉祥。" }
+          ],
+          "離為火": [
+            { "index": 1, "text": "初九：履錯然，敬之，無咎。", "meaning": "行為紛亂，若能謹慎，沒有過失。" },
+            { "index": 2, "text": "六二：黃離，元吉。", "meaning": "黃色的離，大吉。" },
+            { "index": 3, "text": "九三：日昃之離，不鼓缶而歌，則大耋之嗟，凶。", "meaning": "太陽偏西的離，若不敲打瓦器唱歌，就會有老年人的悲嘆，有凶險。" },
+            { "index": 4, "text": "九四：突如其來如，焚如，死如，棄如。", "meaning": "突然而來，像被火焚燒，像死亡，像被拋棄。" },
+            { "index": 5, "text": "六五：出涕沱若，戚戚然，吉。", "meaning": "流淚不止，心中憂愁，但最終吉祥。" },
+            { "index": 6, "text": "上九：王用出征，有嘉，折首，獲其丑，無咎。", "meaning": "君王出征，有讚美，折斷其首領，捕獲其部下，沒有過失。" }
+          ],
+          "坎為水": [
+            { "index": 1, "text": "初六：習坎，入于坎窞，凶。", "meaning": "習慣險難，陷入險難的深淵，有凶險。" },
+            { "index": 2, "text": "九二：坎有險，求小得。", "meaning": "險難中有險，雖有小的收穫。" },
+            { "index": 3, "text": "六三：來之坎，險。", "meaning": "前往險難，有險。" },
+            { "index": 4, "text": "六四：習坎，有孚，維心亨。", "meaning": "習慣險難，有誠信，心中順利。" },
+            { "index": 5, "text": "九五：坎不盈，祇既平，无咎。", "meaning": "險難不滿，已經平坦，沒有過失。" },
+            { "index": 6, "text": "上六：係用徽纆，置于叢棘，三歲不得，凶。", "meaning": "用繩索綁住，放在叢棘中，三年不能解脫，有凶險。" }
+          ],
+          "中孚": [
+            { "index": 1, "text": "初九：虞吉，有他悔。", "meaning": "安樂吉祥，若有其他事則後悔。" },
+            { "index": 2, "text": "九二：鳴鶴在陰，其子和之。我有好爵，吾與爾靡之。", "meaning": "鶴在陰暗處鳴叫，其子應和。我有好酒，我與你共享。" },
+            { "index": 3, "text": "六三：得敵，或歌或哭，或鼓或罷。", "meaning": "得到敵人，或唱歌或哭泣，或敲鼓或停止。" },
+            { "index": 4, "text": "六四：月幾望，馬匹亡，无咎。", "meaning": "月亮將滿，馬匹逃亡，沒有過失。" },
+            { "index": 5, "text": "九五：有孚攣如，無咎。", "meaning": "有誠信，像繩索一樣緊密相連，沒有過失。" },
+            { "index": 6, "text": "上九：風行，有譽。", "meaning": "風行，得到讚譽。" }
+          ],
+          "小過": [
+            { "index": 1, "text": "初六：飛鳥以凶。", "meaning": "飛鳥有凶險。" },
+            { "index": 2, "text": "六二：過其祖，遇其妣，不及其君，遇其臣，无咎。", "meaning": "超過祖先，遇到祖母，不及君王，遇到臣下，沒有過失。" },
+            { "index": 3, "text": "九三：弗過防之，從或戕之，凶。", "meaning": "不超過而防備，若跟隨則會被傷害，有凶險。" },
+            { "index": 4, "text": "九四：弗過，遇之，往厲必戒，勿用，永貞。", "meaning": "不超過，遇到，前往有危險，必須警惕，勿用，永遠堅守正道。" },
+            { "index": 5, "text": "六五：密雲不雨，自我西郊，公用射隼于高墉之上，獲之。", "meaning": "密雲不雨，從我西郊，公侯用箭射隼在城牆上，獲得了。" },
+            { "index": 6, "text": "上六：弗過，遇之，往厲必戒，勿用，永貞。", "meaning": "不超過，遇到，前往有危險，必須警惕，勿用，永遠堅守正道。" }
+          ],
+          "大過": [
+            { "index": 1, "text": "初九：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
+            { "index": 2, "text": "九二：枯楊生稊，老夫得其女妻，无不利。", "meaning": "枯萎的楊樹長出新芽，老夫娶了年輕的妻子，沒有不利。" },
+            { "index": 3, "text": "九三：棟橈，凶。", "meaning": "屋樑彎曲，有凶險。" },
+            { "index": 4, "text": "九四：棟隆，吉。", "meaning": "屋樑高聳，吉祥。" },
+            { "index": 5, "text": "九五：枯楊生花，老婦得其士夫，无咎無譽。", "meaning": "枯萎的楊樹開花，老婦嫁給年輕的丈夫，沒有過失也無讚譽。" },
+            { "index": 6, "text": "上六：過其所，凶。", "meaning": "超過其所，有凶險。" }
+          ],
+          "頤": [
+            { "index": 1, "text": "初九：頤，貞凶。", "meaning": "頤養，堅守正道有凶險。" },
+            { "index": 2, "text": "六二：顛頤，拂經，凶。", "meaning": "顛倒頤養，違背常理，有凶險。" },
+            { "index": 3, "text": "六三：頤，貞凶。", "meaning": "頤養，堅守正道有凶險。" },
+            { "index": 4, "text": "六四：頤，吉。", "meaning": "頤養，吉祥。" },
+            { "index": 5, "text": "六五：頤，貞吉。", "meaning": "頤養，堅守正道吉祥。" },
+            { "index": 6, "text": "上九：頤，貞凶。", "meaning": "頤養，堅守正道有凶險。" }
+          ],
+          "復": [
+            { "index": 1, "text": "初九：不遠復，无祇悔，元吉。", "meaning": "迷途不遠，及時回頭，沒有後悔，大吉。" },
+            { "index": 2, "text": "六二：休復，吉。", "meaning": "美好的回歸，吉祥。" },
+            { "index": 3, "text": "六三：頻復，厲，无咎。", "meaning": "頻繁地回頭，有危險，但最終沒有過失。" },
+            { "index": 4, "text": "六四：中行獨復。", "meaning": "在中間道路上獨自回頭。" },
+            { "index": 5, "text": "六五：敦復，無悔。", "meaning": "誠懇地回歸，沒有後悔。" },
+            { "index": 6, "text": "上六：迷復，凶。有災眚。", "meaning": "迷失方向而無法回歸，有凶險。有災禍。" }
+          ],
+          "明夷": [
             { "index": 1, "text": "初六：明夷于飛，垂其翼。", "meaning": "光明遭受傷害，在飛行中垂下翅膀。" },
             { "index": 2, "text": "六二：明夷于飛，不見其翼。", "meaning": "光明遭受傷害，在飛行中不見其翅膀。" },
-            { "index": 3, "text": "九三：明夷于飛，其翼在林。", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中。" },
-            { "index": 4, "text": "六四：明夷于飛，其翼在林。", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中。" },
-            { "index": 5, "text": "六五：明夷于飛，不見其翼。", "meaning": "光明遭受傷害，在飛行中不見其翅膀。" },
-            { "index": 6, "text": "上六：明夷于飛，其翼在林。", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中。" }
-          ],
-          "澤風大過": [
-            { "index": 1, "text": "初九：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 2, "text": "九二：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 3, "text": "九三：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 4, "text": "九四：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 5, "text": "九五：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 6, "text": "上六：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" }
-          ],
-          "水風井": [
-            { "index": 1, "text": "初九：井洌，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 2, "text": "六二：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 3, "text": "六三：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 4, "text": "六四：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 5, "text": "九五：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 6, "text": "上六：井渫，食。", "meaning": "井水清澈，可以飲用。" }
-          ],
-          "地風升": [
-            { "index": 1, "text": "初六：明夷于飛，垂其翼。", "meaning": "光明遭受傷害，在飛行中垂下翅膀。" },
-            { "index": 2, "text": "六二：明夷于飛，不見其翼。", "meaning": "光明遭受傷害，在飛行中不見其翅膀。" },
-            { "index": 3, "text": "九三：明夷于飛，其翼在林。", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中。" },
-            { "index": 4, "text": "六四：明夷于飛，其翼在林。", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中。" },
-            { "index": 5, "text": "六五：明夷于飛，不見其翼。", "meaning": "光明遭受傷害，在飛行中不見其翅膀。" },
-            { "index": 6, "text": "上六：明夷于飛，其翼在林。", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中。" }
-          ],
-          "澤風大過": [
-            { "index": 1, "text": "初九：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 2, "text": "九二：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 3, "text": "九三：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 4, "text": "九四：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 5, "text": "九五：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 6, "text": "上六：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" }
-          ],
-          "水風井": [
-            { "index": 1, "text": "初九：井洌，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 2, "text": "六二：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 3, "text": "六三：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 4, "text": "六四：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 5, "text": "九五：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 6, "text": "上六：井渫，食。", "meaning": "井水清澈，可以飲用。" }
-          ],
-          "地風升": [
-            { "index": 1, "text": "初六：明夷于飛，垂其翼。", "meaning": "光明遭受傷害，在飛行中垂下翅膀。" },
-            { "index": 2, "text": "六二：明夷于飛，不見其翼。", "meaning": "光明遭受傷害，在飛行中不見其翅膀。" },
-            { "index": 3, "text": "九三：明夷于飛，其翼在林。", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中。" },
-            { "index": 4, "text": "六四：明夷于飛，其翼在林。", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中。" },
-            { "index": 5, "text": "六五：明夷于飛，不見其翼。", "meaning": "光明遭受傷害，在飛行中不見其翅膀。" },
-            { "index": 6, "text": "上六：明夷于飛，其翼在林。", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中。" }
-          ],
-          "澤風大過": [
-            { "index": 1, "text": "初九：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 2, "text": "九二：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 3, "text": "九三：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 4, "text": "九四：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 5, "text": "九五：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 6, "text": "上六：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" }
-          ],
-          "水風井": [
-            { "index": 1, "text": "初九：井洌，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 2, "text": "六二：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 3, "text": "六三：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 4, "text": "六四：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 5, "text": "九五：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 6, "text": "上六：井渫，食。", "meaning": "井水清澈，可以飲用。" }
-          ],
-          "地風升": [
-            { "index": 1, "text": "初六：明夷于飛，垂其翼。", "meaning": "光明遭受傷害，在飛行中垂下翅膀。" },
-            { "index": 2, "text": "六二：明夷于飛，不見其翼。", "meaning": "光明遭受傷害，在飛行中不見其翅膀。" },
-            { "index": 3, "text": "九三：明夷于飛，其翼在林。", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中。" },
-            { "index": 4, "text": "六四：明夷于飛，其翼在林。", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中。" },
-            { "index": 5, "text": "六五：明夷于飛，不見其翼。", "meaning": "光明遭受傷害，在飛行中不見其翅膀。" },
-            { "index": 6, "text": "上六：明夷于飛，其翼在林。", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中。" }
-          ],
-          "澤風大過": [
-            { "index": 1, "text": "初九：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 2, "text": "九二：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 3, "text": "九三：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 4, "text": "九四：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 5, "text": "九五：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 6, "text": "上六：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" }
-          ],
-          "水風井": [
-            { "index": 1, "text": "初九：井洌，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 2, "text": "六二：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 3, "text": "六三：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 4, "text": "六四：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 5, "text": "九五：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 6, "text": "上六：井渫，食。", "meaning": "井水清澈，可以飲用。" }
-          ],
-          "地風升": [
-            { "index": 1, "text": "初六：明夷于飛，垂其翼.", "meaning": "光明遭受傷害，在飛行中垂下翅膀。" },
-            { "index": 2, "text": "六二：明夷于飛，不見其翼.", "meaning": "光明遭受傷害，在飛行中不見其翅膀。" },
-            { "index": 3, "text": "九三：明夷于飛，其翼在林.", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中。" },
-            { "index": 4, "text": "六四：明夷于飛，其翼在林.", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中。" },
-            { "index": 5, "text": "六五：明夷于飛，不見其翼.", "meaning": "光明遭受傷害，在飛行中不見其翅膀。" },
-            { "index": 6, "text": "上六：明夷于飛，其翼在林.", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中。" }
-          ],
-          "澤風大過": [
-            { "index": 1, "text": "初九：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 2, "text": "九二：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 3, "text": "九三：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 4, "text": "九四：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 5, "text": "九五：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 6, "text": "上六：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" }
-          ],
-          "水風井": [
-            { "index": 1, "text": "初九：井洌，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 2, "text": "六二：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 3, "text": "六三：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 4, "text": "六四：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 5, "text": "九五：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 6, "text": "上六：井渫，食。", "meaning": "井水清澈，可以飲用。" }
-          ],
-          "地風升": [
-            { "index": 1, "text": "初六：明夷于飛，垂其翼.", "meaning": "光明遭受傷害，在飛行中垂下翅膀." },
-            { "index": 2, "text": "六二：明夷于飛，不見其翼.", "meaning": "光明遭受傷害，在飛行中不見其翅膀." },
-            { "index": 3, "text": "九三：明夷于飛，其翼在林.", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中." },
-            { "index": 4, "text": "六四：明夷于飛，其翼在林.", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中." },
-            { "index": 5, "text": "六五：明夷于飛，不見其翼.", "meaning": "光明遭受傷害，在飛行中不見其翅膀." },
-            { "index": 6, "text": "上六：明夷于飛，其翼在林.", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中." }
-          ],
-          "澤風大過": [
-            { "index": 1, "text": "初九：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 2, "text": "九二：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 3, "text": "九三：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 4, "text": "九四：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 5, "text": "九五：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 6, "text": "上六：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" }
-          ],
-          "水風井": [
-            { "index": 1, "text": "初九：井洌，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 2, "text": "六二：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 3, "text": "六三：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 4, "text": "六四：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 5, "text": "九五：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 6, "text": "上六：井渫，食。", "meaning": "井水清澈，可以飲用。" }
-          ],
-          "地風升": [
-            { "index": 1, "text": "初六：明夷于飛，垂其翼.", "meaning": "光明遭受傷害，在飛行中垂下翅膀." },
-            { "index": 2, "text": "六二：明夷于飛，不見其翼.", "meaning": "光明遭受傷害，在飛行中不見其翅膀." },
-            { "index": 3, "text": "九三：明夷于飛，其翼在林.", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中." },
-            { "index": 4, "text": "六四：明夷于飛，其翼在林.", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中." },
-            { "index": 5, "text": "六五：明夷于飛，不見其翼.", "meaning": "光明遭受傷害，在飛行中不見其翅膀." },
-            { "index": 6, "text": "上六：明夷于飛，其翼在林.", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中." }
-          ],
-          "澤風大過": [
-            { "index": 1, "text": "初九：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 2, "text": "九二：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 3, "text": "九三：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 4, "text": "九四：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 5, "text": "九五：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 6, "text": "上六：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" }
-          ],
-          "水風井": [
-            { "index": 1, "text": "初九：井洌，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 2, "text": "六二：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 3, "text": "六三：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 4, "text": "六四：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 5, "text": "九五：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 6, "text": "上六：井渫，食。", "meaning": "井水清澈，可以飲用。" }
-          ],
-          "地風升": [
-            { "index": 1, "text": "初六：明夷于飛，垂其翼.", "meaning": "光明遭受傷害，在飛行中垂下翅膀." },
-            { "index": 2, "text": "六二：明夷于飛，不見其翼.", "meaning": "光明遭受傷害，在飛行中不見其翅膀." },
-            { "index": 3, "text": "九三：明夷于飛，其翼在林.", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中." },
-            { "index": 4, "text": "六四：明夷于飛，其翼在林.", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中." },
-            { "index": 5, "text": "六五：明夷于飛，不見其翼.", "meaning": "光明遭受傷害，在飛行中不見其翅膀." },
-            { "index": 6, "text": "上六：明夷于飛，其翼在林.", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中." }
-          ],
-          "澤風大過": [
-            { "index": 1, "text": "初九：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 2, "text": "九二：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 3, "text": "九三：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 4, "text": "九四：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 5, "text": "九五：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" },
-            { "index": 6, "text": "上六：藉用白茅，无咎。", "meaning": "用白茅墊著，沒有過失。" }
-          ],
-          "水風井": [
-            { "index": 1, "text": "初九：井洌，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 2, "text": "六二：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 3, "text": "六三：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 4, "text": "六四：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 5, "text": "九五：井渫，食。", "meaning": "井水清澈，可以飲用。" },
-            { "index": 6, "text": "上六：井渫，食。", "meaning": "井水清澈，可以飲用。" }
-          ],
-          "地風升": [
-            { "index": 1, "text": "初六：明夷于飛，垂其翼.", "meaning": "光明遭受傷害，在飛行中垂下翅膀." },
-            { "index": 2, "text": "六二：明夷于飛，不見其翼.", "meaning": "光明遭受傷害，在飛行中不見其翅膀." },
-            { "index": 3, "text": "九三：明夷于飛，其翼在林.", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中." },
-            { "index": 4, "text": "六四：明夷于飛，其翼在林.", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中." },
-            { "index": 5, "text": "六五：明夷于飛，不見其翼.", "meaning": "光明遭受傷害，在飛行中不見其翅膀." },
-            { "index": 6, "text": "上六：明夷于飛，其翼在林.", "meaning": "光明遭受傷害，在飛行中翅膀在樹林中." }
+            { "index": 3, "text": "九三：明夷于飛，其翼...", "meaning": "光明遭受傷害，在飛行中其翅膀..." }
           ]
         };
-    
-        const guaNames = {
-            "1": "乾☰", "2": "兌☱", "3": "離☲", "4": "震☳",
-            "5": "巽☴", "6": "坎☵", "7": "艮☶", "8": "坤☷"
+
+        const trigramNames = {
+            1: '乾☰',
+            2: '兌☱',
+            3: '離☲',
+            4: '震☳',
+            5: '巽☴',
+            6: '坎☵',
+            7: '艮☶',
+            8: '坤☷'
         };
 
         const guaLines = {
-            "1": ["———", "———", "———"], "2": ["— —", "———", "———"], "3": ["———", "— —", "———"], "4": ["— —", "— —", "———"],
-            "5": ["———", "———", "— —"], "6": ["— —", "———", "— —"], "7": ["———", "— —", "— —"], "8": ["— —", "— —", "— —"]
+            1: ['陽', '陽', '陽'],
+            2: ['陰', '陽', '陽'],
+            3: ['陽', '陰', '陽'],
+            4: ['陰', '陰', '陽'],
+            5: ['陽', '陽', '陰'],
+            6: ['陰', '陽', '陰'],
+            7: ['陽', '陰', '陰'],
+            8: ['陰', '陰', '陰']
+        };
+
+        const fullGuaNames = {
+            "11": "乾為天", "12": "澤天夬", "13": "火天大有", "14": "雷天大壯", "15": "風天小畜", "16": "水天需", "17": "山天大畜", "18": "地天泰",
+            "21": "天澤履", "22": "兌為澤", "23": "火澤睽", "24": "雷澤歸妹", "25": "風澤中孚", "26": "水澤節", "27": "山澤損", "28": "地澤臨",
+            "31": "天火同人", "32": "澤火革", "33": "離為火", "34": "雷火豐", "35": "風火家人", "36": "水火既濟", "37": "山火賁", "38": "地火明夷",
+            "41": "天雷无妄", "42": "澤雷隨", "43": "火雷噬嗑", "44": "震為雷", "45": "風雷益", "46": "水雷屯", "47": "山雷頤", "48": "地雷復",
+            "51": "天風姤", "52": "澤風大過", "53": "火風鼎", "54": "雷風恆", "55": "巽為風", "56": "水風井", "57": "山風蠱", "58": "地風升",
+            "61": "天水訟", "62": "澤水困", "63": "火水未濟", "64": "雷水解", "65": "風水渙", "66": "坎為水", "67": "山水蒙", "68": "地水師",
+            "71": "天山遁", "72": "澤山咸", "73": "火山旅", "74": "雷山小過", "75": "風山漸", "76": "水山蹇", "77": "艮為山", "78": "地山謙",
+            "81": "天地否", "82": "澤地萃", "83": "火地晉", "84": "雷地豫", "85": "風地觀", "86": "水地比", "87": "山地剝", "88": "坤為地"
         };
         
-        const guaJudgment = {
-            "大吉": ["乾為天", "火天大有", "地山謙", "雷地豫", "澤雷隨", "山風蠱", "天地否", "天火同人", "水地比"],
-            "中吉": ["水天需", "地天泰", "山水蒙"],
-            "小吉": ["天水訟"],
-            "小凶": ["風天小畜"],
-            "中凶": ["水雷屯"],
-            "大凶": ["坤為地", "澤風大過", "水風井", "地風升"]
+        const guaSymbol = {
+            '陽': '───',
+            '陰': '──　──'
         };
 
         const laterHeavenMap = {
-            "1": 6, "2": 8, "3": 4, "4": 5, "5": 8, "6": 1, "7": 2, "8": 7, "9": 3
+            1: 6, // 北坎
+            2: 8, // 西南坤
+            3: 4, // 東震
+            4: 5, // 東南巽
+            5: 8, // 中宮坤
+            6: 1, // 西北乾
+            7: 2, // 西兌
+            8: 7, // 東北艮
+            9: 3  // 南離
         };
 
+        // 卦名對應的吉凶判斷
+        const judgmentMap = {
+            '乾為天': '大吉', '坤為地': '大吉', '水雷屯': '小凶', '山水蒙': '小吉', '水天需': '小吉', '天水訟': '中凶',
+            '地水師': '中凶', '水地比': '中吉', '風天小畜': '小吉', '天澤履': '小吉', '地天泰': '大吉', '天地否': '中凶',
+            '天火同人': '大吉', '火天大有': '大吉', '澤天夬': '中凶', '地雷復': '大吉', '雷地豫': '大吉', '澤雷隨': '中吉',
+            '雷澤歸妹': '中凶', '震為雷': '小凶', '艮為山': '小吉', '風山漸': '大吉', '山風蠱': '小吉', '巽為風': '中吉',
+            '兌為澤': '大吉', '兌為澤(用九)': '大吉', '兌為澤(用六)': '大吉', '離為火': '小凶', '坎為水': '大凶', '中孚': '大吉',
+            '小過': '小凶', '大過': '中凶', '頤': '小凶', '復': '大吉', '明夷': '小凶', '無妄': '大吉', '大畜': '大吉',
+            '剝': '大凶', '晉': '大吉', '觀': '大吉', '益': '大吉', '噬嗑': '小凶', '解': '大吉', '渙': '中吉',
+            '節': '中吉', '困': '中凶', '既濟': '小吉', '未濟': '中凶', '豐': '大吉', '旅': '中吉', '咸': '大吉',
+            '蹇': '中凶', '謙': '大吉', '升': '大吉', '萃': '中吉', '晉': '大吉', '臨': '大吉', '恆': '中吉',
+            '鼎': '大吉', '蠱': '小凶', '升': '大吉'
+        };
+
+        const guaDiv = document.getElementById('guaImage');
+        const guaNameDiv = document.getElementById('guaName');
+        const changeGuaDiv = document.getElementById('changeGuaImage');
+        const changeGuaNameDiv = document.getElementById('changeGuaName');
+        const huGuaDiv = document.getElementById('huGuaImage');
+        const huGuaNameDiv = document.getElementById('huGuaName');
         const resultDiv = document.getElementById('result');
-        const guaNameDisplay = document.getElementById('guaName');
-        const changeGuaNameDisplay = document.getElementById('changeGuaName');
-        const huGuaNameDisplay = document.getElementById('huGuaName');
-        const guaImageDisplay = document.getElementById('guaImage');
-        const changeGuaImageDisplay = document.getElementById('changeGuaImage');
-        const huGuaImageDisplay = document.getElementById('huGuaImage');
         const lineExplanationDiv = document.getElementById('line-explanation');
-        const judgmentResult = document.getElementById('judgment-result');
+        const lineTextDisplay = document.getElementById('line-text-display');
+        const lineMeaningDisplay = document.getElementById('line-meaning-display');
+        const judgmentResultDiv = document.getElementById('judgment-result');
+        const explanationLink1 = document.getElementById('explanationLink1');
+        const explanationLink2 = document.getElementById('explanationLink2');
+        const explanationLink3 = document.getElementById('explanationLink3');
+        const explanationLink4 = document.getElementById('explanationLink4');
 
-        // 隨機產生數字並執行卜卦
-        function generateRandomGua() {
-            const num1 = Math.floor(Math.random() * 999) + 1;
-            const num2 = Math.floor(Math.random() * 999) + 1;
-            const num3 = Math.floor(Math.random() * 999) + 1;
-
-            document.getElementById('num4').value = num1;
-            document.getElementById('num5').value = num2;
-            document.getElementById('num6').value = num3;
-
-            const upperGuaNum = (num1 % 8) || 8;
-            const lowerGuaNum = (num2 % 8) || 8;
-            const movingLineNum = (num3 % 6) || 6;
+        function getGuaName(upperGuaNum, lowerGuaNum) {
+            const key = `${upperGuaNum}${lowerGuaNum}`;
+            return fullGuaNames[key] || "未知卦象";
+        }
+        
+        function getGuaImage(upperGuaNum, lowerGuaNum, movingLines) {
+            const upperLines = guaLines[upperGuaNum].slice().reverse();
+            const lowerLines = guaLines[lowerGuaNum].slice().reverse();
+            const allLines = lowerLines.concat(upperLines);
             
-            generateGua(upperGuaNum, lowerGuaNum, [movingLineNum]);
+            let html = '';
+            for (let i = 5; i >= 0; i--) {
+                const lineIndex = i + 1;
+                const lineType = allLines[i];
+                const isMoving = movingLines.includes(lineIndex);
+                const className = isMoving ? 'moving-line' : '';
+                html += `<span class="${className}">${guaSymbol[lineType]}</span><br>`;
+            }
+            return html;
         }
 
-        // 網頁載入時自動執行隨機卜卦
-        window.onload = function() {
-            generateRandomGua();
-        };
+        function getChangeGuaLines(upperGuaNum, lowerGuaNum, movingLines) {
+            const upperLines = guaLines[upperGuaNum].slice().reverse();
+            const lowerLines = guaLines[lowerGuaNum].slice().reverse();
+            const allLines = lowerLines.concat(upperLines);
+            
+            let newLines = allLines.map((line, index) => {
+                if (movingLines.includes(index + 1)) {
+                    return line === '陽' ? '陰' : '陽';
+                }
+                return line;
+            });
+            
+            let changeLowerLines = newLines.slice(0, 3).reverse();
+            let changeUpperLines = newLines.slice(3, 6).reverse();
+            
+            const changeLowerGuaNum = getGuaNumFromLines(changeLowerLines);
+            const changeUpperGuaNum = getGuaNumFromLines(changeUpperLines);
+            
+            return {
+                upper: changeUpperGuaNum,
+                lower: changeLowerGuaNum
+            };
+        }
 
-        // 數字取卦按鈕
-        document.getElementById('manualUpperBtn').addEventListener('click', () => {
-            const num1 = parseInt(document.getElementById('num4').value);
-            const num2 = parseInt(document.getElementById('num5').value);
-            const num3 = parseInt(document.getElementById('num6').value);
+        function getHuGua(upperGuaNum, lowerGuaNum) {
+            const upperLines = guaLines[upperGuaNum].slice().reverse();
+            const lowerLines = guaLines[lowerGuaNum].slice().reverse();
+            const allLines = lowerLines.concat(upperLines);
 
-            if (isNaN(num1) || isNaN(num2) || isNaN(num3)) {
-                alert('請輸入有效的三組數字。');
-                return;
+            const huLowerLines = allLines.slice(1, 4).reverse();
+            const huUpperLines = allLines.slice(2, 5).reverse();
+            
+            const huLowerGuaNum = getGuaNumFromLines(huLowerLines);
+            const huUpperGuaNum = getGuaNumFromLines(huUpperLines);
+            
+            return {
+                upper: huUpperGuaNum,
+                lower: huLowerGuaNum
+            };
+        }
+
+        function getGuaNumFromLines(lines) {
+            const binary = lines.map(line => line === '陽' ? '1' : '0').join('');
+            const decimal = parseInt(binary, 2);
+            const guaNumMap = {
+                7: 1, 6: 2, 5: 3, 4: 4, 3: 5, 2: 6, 1: 7, 0: 8
+            };
+            return guaNumMap[decimal];
+        }
+
+        function generateGua(upperGuaNum, lowerGuaNum, movingLines) {
+            const guaName = getGuaName(upperGuaNum, lowerGuaNum);
+            const guaImage = getGuaImage(upperGuaNum, lowerGuaNum, movingLines);
+            
+            guaNameDiv.textContent = guaName;
+            guaDiv.innerHTML = guaImage;
+            
+            let changeGuaName = '無變爻';
+            let changeGuaImage = '------';
+            let huGuaName = '無互卦';
+            let huGuaImage = '------';
+            let lineExplanationHTML = '';
+            
+            if (movingLines.length === 1) {
+                const changeGua = getChangeGuaLines(upperGuaNum, lowerGuaNum, movingLines);
+                changeGuaName = getGuaName(changeGua.upper, changeGua.lower);
+                changeGuaImage = getGuaImage(changeGua.upper, changeGua.lower, []);
+
+                const huGua = getHuGua(upperGuaNum, lowerGuaNum);
+                huGuaName = getGuaName(huGua.upper, huGua.lower);
+                huGuaImage = getGuaImage(huGua.upper, huGua.lower, []);
+
+                const hexagramData = hexagramsData[guaName] || [];
+                const movingLineData = hexagramData.find(item => item.index === movingLines[0]);
+                
+                if (movingLineData) {
+                    lineTextDisplay.textContent = movingLineData.text;
+                    lineMeaningDisplay.textContent = movingLineData.meaning;
+                    lineExplanationDiv.classList.remove('hidden');
+                } else {
+                    lineExplanationDiv.classList.add('hidden');
+                }
+            } else {
+                 lineExplanationDiv.classList.add('hidden');
             }
 
-            const upperGuaNum = (num1 % 8) || 8;
-            const lowerGuaNum = (num2 % 8) || 8;
-            const movingLineNum = (num3 % 6) || 6;
+            changeGuaNameDiv.textContent = changeGuaName;
+            changeGuaDiv.innerHTML = changeGuaImage;
+            huGuaNameDiv.textContent = huGuaName;
+            huGuaDiv.innerHTML = huGuaImage;
+            
+            updateLinks(guaName, changeGuaName);
+            updateJudgment(guaName);
 
-            generateGua(upperGuaNum, lowerGuaNum, [movingLineNum]);
+            resultDiv.classList.add('visible');
+        }
+
+        function updateLinks(guaName, changeGuaName) {
+            const url1 = `https://www.e-learn.cn/topic/gua/${guaName}`;
+            const url2 = `http://www.zhouyi.com.cn/gua/index.php?gua=${guaName}`;
+            const url3 = `http://www.buyiju.com/yijing/gua/${guaName}`;
+            const url4 = `http://www.d1xz.net/yijing/zhouyi/${guaName}`;
+
+            explanationLink1.href = url1;
+            explanationLink2.href = url2;
+            explanationLink3.href = url3;
+            explanationLink4.href = url4;
+        }
+
+        function updateJudgment(guaName) {
+            const judgment = judgmentMap[guaName];
+            if (judgment) {
+                judgmentResultDiv.textContent = judgment;
+                judgmentResultDiv.className = `gua-box ${judgment}`;
+                judgmentResultDiv.style.display = 'inline-block';
+            } else {
+                judgmentResultDiv.textContent = '';
+                judgmentResultDiv.style.display = 'none';
+            }
+        }
+
+        // 事件監聽器
+        document.getElementById('manualUpperBtn').addEventListener('click', () => {
+            const num4 = parseInt(document.getElementById('num4').value);
+            const num5 = parseInt(document.getElementById('num5').value);
+            const num6 = parseInt(document.getElementById('num6').value);
+
+            if (isNaN(num4) || isNaN(num5) || isNaN(num6)) {
+                alert('請輸入有效數字。');
+                return;
+            }
+            
+            const upperGuaNum = (num4 % 8) || 8;
+            const lowerGuaNum = (num5 % 8) || 8;
+            const movingLine = (num6 % 6) || 6;
+            
+            generateGua(upperGuaNum, lowerGuaNum, [movingLine]);
         });
 
-        // 隨機產生數字按鈕
-        document.getElementById('randomBtn').addEventListener('click', generateRandomGua);
+        document.getElementById('randomBtn').addEventListener('click', () => {
+            const randomNum = () => Math.floor(Math.random() * 999) + 1;
+            document.getElementById('num4').value = randomNum();
+            document.getElementById('num5').value = randomNum();
+            document.getElementById('num6').value = Math.floor(Math.random() * 6) + 1;
+        });
 
-        // 手動下拉選單取卦按鈕
         document.getElementById('manualDropdownBtn').addEventListener('click', () => {
-            const upperGuaNum = parseInt(document.getElementById('upperGuaSelect').value);
-            const lowerGuaNum = parseInt(document.getElementById('lowerGuaSelect').value);
-            const movingLinesInput = document.getElementById('movingLinesInput').value;
-            let movingLines = [];
-            if (movingLinesInput) {
-                movingLines = movingLinesInput.split(',').map(num => parseInt(num.trim())).filter(num => num >= 1 && num <= 6);
-            }
+            const upperGuaSelect = document.getElementById('upperGuaSelect');
+            const lowerGuaSelect = document.getElementById('lowerGuaSelect');
+            const movingLinesInput = document.getElementById('movingLinesInput');
 
+            const upperGuaNum = parseInt(upperGuaSelect.value);
+            const lowerGuaNum = parseInt(lowerGuaSelect.value);
+            const movingLines = movingLinesInput.value.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 1 && n <= 6);
+            
             if (isNaN(upperGuaNum) || isNaN(lowerGuaNum)) {
-                alert('請選擇有效的上下卦。');
+                alert('請選擇上卦和下卦。');
                 return;
             }
-
+            
             generateGua(upperGuaNum, lowerGuaNum, movingLines);
         });
 
-        // 時間取卦按鈕
         document.getElementById('timeDivinationBtn').addEventListener('click', () => {
-            const timeDivinationNum = parseInt(document.getElementById('timeDivinationNum').value);
-
-            if (isNaN(timeDivinationNum)) {
-                alert('請輸入有效的心念數字（0-999）。');
-                return;
-            }
-
+            const timeDivinationNum = parseInt(document.getElementById('timeDivinationNum').value) || 0;
+            
             const now = new Date();
             const year = now.getFullYear();
             const month = now.getMonth() + 1;
             const day = now.getDate();
-            const hour = now.getHours();
-            const minute = now.getMinutes();
-            const second = now.getSeconds();
-
-            const yearNum = year;
-            const monthDayHourNum = month + day + hour;
-            const minuteSecondNum = minute + second;
+            const hour = now.getHours() + 1;
             
-            const upperGuaNum = (yearNum + monthDayHourNum + timeDivinationNum) % 8 || 8;
-            const lowerGuaNum = (monthDayHourNum + timeDivinationNum) % 8 || 8;
-            const movingLine = (yearNum + monthDayHourNum + minuteSecondNum + timeDivinationNum) % 6 || 6;
+            const upperGuaNum = (year + month + day) % 8 || 8;
+            const lowerGuaNum = (upperGuaNum + hour) % 8 || 8;
+            const movingLine = (upperGuaNum + lowerGuaNum + timeDivinationNum) % 6 || 6;
             
             generateGua(upperGuaNum, lowerGuaNum, [movingLine]);
         });
         
-        // 以象取卦按鈕
         document.getElementById('imageGuaBtn').addEventListener('click', () => {
             const upperNum = parseInt(document.getElementById('imageUpperNum').value);
-            const lowerNum_laterHeaven = parseInt(document.getElementById('imageLowerSelect').value);
+            const imageLowerSelect = document.getElementById('imageLowerSelect');
+            const lowerNum_laterHeaven = parseInt(imageLowerSelect.value);
             
             if (isNaN(upperNum) || upperNum <= 0) {
                 alert('請輸入有效的上卦數字（事物數量）。');
@@ -1035,117 +1149,7 @@
             
             // 每次切換分頁時隱藏結果
             resultDiv.classList.remove('visible');
-            lineExplanationDiv.classList.add('hidden');
-        }
-
-        function getGuaName(upperGuaNum, lowerGuaNum) {
-            const upperGuaName = Object.keys(guaNames).find(key => guaNames[key] === guaNames[upperGuaNum]);
-            const lowerGuaName = Object.keys(guaNames).find(key => guaNames[key] === guaNames[lowerGuaNum]);
-            const guaName = (guaNames[upperGuaNum] === "乾☰" && guaNames[lowerGuaNum] === "乾☰") ? "乾為天" : (guaNames[upperGuaNum] === "坤☷" && guaNames[lowerGuaNum] === "坤☷") ? "坤為地" : (guaNames[upperGuaNum] + guaNames[lowerGuaNum]).replace(/☰|☱|☲|☳|☴|☵|☶|☷/g, '');
-            return guaName;
-        }
-
-        function getHuGua(upperGuaNum, lowerGuaNum) {
-            const combinedGua = parseInt(upperGuaNum.toString() + lowerGuaNum.toString());
-            const huUpperNum = [3, 4, 5, 6, 7, 8].includes(combinedGua) ? combinedGua - 2 : combinedGua + 2;
-            const huLowerNum = [1, 2, 3, 4, 5, 6].includes(combinedGua) ? combinedGua + 1 : combinedGua - 1;
-            return { huUpperNum, huLowerNum };
-        }
-
-        function generateGua(upperGuaNum, lowerGuaNum, movingLines) {
-            resultDiv.classList.remove('visible');
-            lineExplanationDiv.classList.add('hidden');
-
-            const guaName = Object.keys(hexagramsData).find(key => {
-                const gua = hexagramsData[key];
-                const upperGua = gua.slice(3, 6).map(item => item.index);
-                const lowerGua = gua.slice(0, 3).map(item => item.index);
-                return (upperGuaNum === getGuaNumFromLines(upperGua) && lowerGuaNum === getGuaNumFromLines(lowerGua));
-            });
-            
-            const guaLinesHTML = getGuaLinesHTML(upperGuaNum, lowerGuaNum, movingLines);
-            guaImageDisplay.innerHTML = guaLinesHTML;
-            guaNameDisplay.textContent = guaName || '未知卦象';
-
-            const changeGua = getChangeGua(upperGuaNum, lowerGuaNum, movingLines);
-            const changeGuaName = getGuaName(changeGua.upperGuaNum, changeGua.lowerGuaNum);
-            const changeGuaLinesHTML = getGuaLinesHTML(changeGua.upperGuaNum, changeGua.lowerGuaNum, []);
-            changeGuaImageDisplay.innerHTML = changeGuaLinesHTML;
-            changeGuaNameDisplay.textContent = changeGuaName;
-
-            const huGua = getHuGua(upperGuaNum, lowerGuaNum);
-            const huGuaName = getGuaName(huGua.huUpperNum, huGua.huLowerNum);
-            const huGuaLinesHTML = getGuaLinesHTML(huGua.huUpperNum, huGua.huLowerNum, []);
-            huGuaImageDisplay.innerHTML = huGuaLinesHTML;
-            huGuaNameDisplay.textContent = huGuaName;
-
-            // 修正：循環顯示所有動爻解釋
-            if (movingLines.length > 0 && hexagramsData[guaName]) {
-                lineExplanationDiv.classList.remove('hidden');
-                lineExplanationDiv.innerHTML = '<h3>動爻解釋</h3>'; // 清空舊內容
-                movingLines.forEach(movingLine => {
-                    const line = hexagramsData[guaName].find(item => item.index === movingLine);
-                    if (line) {
-                        const lineHtml = `
-                            <h3 id="line-text-display">${line.text}</h3>
-                            <p id="line-meaning-display">${line.meaning}</p>
-                        `;
-                        lineExplanationDiv.innerHTML += lineHtml;
-                    }
-                });
-            } else {
-                lineExplanationDiv.classList.add('hidden');
-            }
-
-            const guaJudgmentText = Object.keys(guaJudgment).find(key => guaJudgment[key].includes(guaName)) || '無法判斷';
-            judgmentResult.textContent = guaJudgmentText;
-            judgmentResult.className = '';
-            judgmentResult.classList.add('judgment-result', guaJudgmentText);
-
-            resultDiv.classList.add('visible');
-        }
-
-        function getGuaNumFromLines(lines) {
-            const binary = lines.reverse().map(line => (line % 2 === 1) ? '1' : '0').join('');
-            return parseInt(binary, 2) + 1;
-        }
-
-        function getGuaLinesHTML(upperGuaNum, lowerGuaNum, movingLines) {
-            const upperLines = guaLines[upperGuaNum].slice().reverse();
-            const lowerLines = guaLines[lowerGuaNum].slice().reverse();
-            let html = '';
-            for (let i = 0; i < 3; i++) {
-                const lineClass = movingLines.includes(6 - i) ? 'moving-line' : '';
-                html += `<span class="${lineClass}">${upperLines[i]}</span><br>`;
-            }
-            for (let i = 0; i < 3; i++) {
-                const lineClass = movingLines.includes(3 - i) ? 'moving-line' : '';
-                html += `<span class="${lineClass}">${lowerLines[i]}</span><br>`;
-            }
-            return html;
-        }
-
-        function getChangeGua(upperGuaNum, lowerGuaNum, movingLines) {
-            let combinedBinary = (guaLines[upperGuaNum].join('') + guaLines[lowerGuaNum].join('')).replace(/— —/g, '0').replace(/———/g, '1');
-            
-            const movingLineMap = {
-                1: 5, 2: 4, 3: 3, 4: 2, 5: 1, 6: 0
-            };
-
-            movingLines.forEach(lineNum => {
-                const index = movingLineMap[lineNum];
-                if (index !== undefined) {
-                    combinedBinary = combinedBinary.substring(0, index) + (combinedBinary[index] === '1' ? '0' : '1') + combinedBinary.substring(index + 1);
-                }
-            });
-
-            const newUpperBinary = combinedBinary.substring(0, 3);
-            const newLowerBinary = combinedBinary.substring(3);
-
-            const changeUpperGuaNum = parseInt(newUpperBinary, 2) + 1;
-            const changeLowerGuaNum = parseInt(newLowerBinary, 2) + 1;
-
-            return { upperGuaNum: changeUpperGuaNum, lowerGuaNum: changeLowerGuaNum };
+            resultDiv.classList.add('hidden');
         }
     </script>
 </body>
