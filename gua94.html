@@ -546,12 +546,12 @@
         // 載入外部 JSON 檔案
         async function loadHexagramsData() {
             try {
-                const response = await fetch('hexagrams_data.json.txt');
+                const response = await fetch('hexagrams_data.json');
                 hexagramsData = await response.json();
                 console.log('Hexagram data loaded successfully.', hexagramsData);
             } catch (error) {
                 console.error('Failed to load hexagram data:', error);
-                alert('無法載入卦象資料檔案，請確認 hexagrams_data.json.txt 是否存在！');
+                alert('無法載入卦象資料檔案，請確認 hexagrams_data.json 是否存在！');
             }
         }
         
