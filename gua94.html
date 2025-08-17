@@ -89,6 +89,12 @@
             transform: scale(0.98);
         }
 
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
         hr {
             width: 80%;
             border: 0;
@@ -310,6 +316,13 @@
             color: var(--accent-color);
         }
 
+        #loading-message {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 2.5rem;
@@ -351,7 +364,7 @@
                 <label for="num6">動爻數字: </label>
                 <input type="number" id="num6">
             </div>
-            <button id="manualUpperBtn">生成卦象</button>
+            <button id="manualUpperBtn" disabled>生成卦象</button>
         </div>
         
         <div id="manual-dropdown" class="tab-content">
@@ -392,7 +405,7 @@
                     可輸入多個變爻，若無則留空。
                 </div>
             </div>
-            <button id="manualDropdownBtn">生成卦象</button>
+            <button id="manualDropdownBtn" disabled>生成卦象</button>
         </div>
 
         <div id="time-divination" class="tab-content">
@@ -402,7 +415,7 @@
                 <label for="timeDivinationNum">心念數字 (0-999): </label>
                 <input type="number" id="timeDivinationNum" value="0">
             </div>
-            <button id="timeDivinationBtn">開始卜卦</button>
+            <button id="timeDivinationBtn" disabled>開始卜卦</button>
         </div>
         
         <div id="by-image" class="tab-content">
@@ -434,9 +447,10 @@
                     此為後天八卦方位，會自動轉換為先天卦數。
                 </div>
             </div>
-            <button id="imageGuaBtn">生成卦象</button>
+            <button id="imageGuaBtn" disabled>生成卦象</button>
         </div>
 
+        <div id="loading-message">資料載入中，請稍候...</div>
 
         <div id="result" class="hidden">
             <div class="gua-container">
@@ -473,8 +487,9 @@
     </div>
 
     <script>
-        // 外部載入易經資料庫
         let hexagramsData = {};
+        const loadingMessage = document.getElementById('loading-message');
+        const divinationButtons = document.querySelectorAll('button[id$="Btn"]');
 
         fetch('hexagrams_data.json')
             .then(response => {
@@ -485,12 +500,25 @@
             })
             .then(data => {
                 hexagramsData = data;
+                loadingMessage.style.display = 'none';
+                divinationButtons.forEach(button => button.disabled = false);
                 console.log('易經資料成功載入！');
             })
             .catch(error => {
                 console.error('載入易經資料時發生錯誤:', error);
-                alert('載入易經資料時發生錯誤，請檢查 hexagrams_data.json.txt 檔案是否存在。');
+                loadingMessage.textContent = '載入易經資料失敗，請檢查檔案。';
             });
+            
+        // 頁面載入時隨機生成數字
+        function generateRandomNumber() {
+            return Math.floor(Math.random() * 999) + 1;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('num4').value = generateRandomNumber();
+            document.getElementById('num5').value = generateRandomNumber();
+            document.getElementById('num6').value = generateRandomNumber();
+        });
             
         // 八卦的索引對應與名稱
         const guaNames = ["乾為天", "兌為澤", "離為火", "震為雷", "巽為風", "坎為水", "艮為山", "坤為地"];
@@ -530,18 +558,6 @@
         const explanationLink1 = document.getElementById('explanationLink1');
         const explanationLink2 = document.getElementById('explanationLink2');
         const explanationLink3 = document.getElementById('explanationLink3');
-
-        // 載入時隨機生成數字
-        function generateRandomNumber() {
-            return Math.floor(Math.random() * 999) + 1;
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('num4').value = generateRandomNumber();
-            document.getElementById('num5').value = generateRandomNumber();
-            document.getElementById('num6').value = generateRandomNumber();
-        });
-
 
         // 事件監聽
         document.getElementById('manualUpperBtn').addEventListener('click', () => {
@@ -593,7 +609,6 @@
                 return;
             }
             
-            // 時間取卦的計算方式
             const upperGuaNum = ((year + month + day + userNum) % 8) || 8;
             const lowerGuaNum = ((year + month + day + hour + userNum) % 8) || 8;
             const movingLine = ((year + month + day + hour + userNum) % 6) || 6;
@@ -629,12 +644,13 @@
 
         // 卦象生成主函數
         function generateGua(upperGuaNum, lowerGuaNum, movingLines) {
+            // 這邊的檢查已經可以移除，因為按鈕在資料載入前是禁用的。
+            // 但保留作為額外保險。
             if (Object.keys(hexagramsData).length === 0) {
                  alert('易經資料庫尚未載入，請稍後再試。');
                 return;
             }
             
-            // 處理多個變爻
             if (movingLines.length > 1) {
                 const combinedLinesText = movingLines.map(line => {
                     const lineText = getLineText(upperGuaNum, lowerGuaNum, line);
@@ -654,7 +670,6 @@
                     lineExplanationDiv.classList.add('hidden');
                 }
             } else {
-                // 無變爻
                 lineExplanationDiv.classList.add('hidden');
             }
             
@@ -682,6 +697,9 @@
         function getChangeGua(upperGuaNum, lowerGuaNum, movingLines) {
             const lines = guaTable[upperGuaNum].lines.concat(guaTable[lowerGuaNum].lines);
             const changeLines = [...lines];
+            if (movingLines.length === 0) {
+                 return getGuaInfo(upperGuaNum, lowerGuaNum);
+            }
             movingLines.forEach(lineIndex => {
                 const index = 6 - lineIndex;
                 changeLines[index] = changeLines[index] === 0 ? 1 : 0;
@@ -748,40 +766,7 @@
         function getLineText(upperGuaNum, lowerGuaNum, movingLine) {
             const guaName = guaNames[upperGuaNum - 1] + guaNames[lowerGuaNum - 1];
             if (hexagramsData[guaName]) {
-                // 檢查 movingLine 是否為 '用' 爻 (即多爻變)
-                if (movingLine === 7) {
+                if (movingLine === 7) { // 處理多爻變的特殊情況
                     return hexagramsData[guaName].find(line => line.index === 7);
                 } else {
-                    return hexagramsData[guaName].find(line => line.index === movingLine);
-                }
-            }
-            return null;
-        }
-
-        // 更新解卦連結
-        function updateExplanationLinks(guaName) {
-            const encodedName = encodeURIComponent(guaName);
-            explanationLink1.href = `https://www.eee-learning.com/article/zhouyi/chouyi-64gua/${encodedName}`;
-            explanationLink2.href = `http://www.zyxzw.com/yijing/yijing_gua64/${encodedName}.htm`;
-            explanationLink3.href = `https://www.golla.tw/IChing/Hexagrams/${guaName}`;
-        }
-        
-        // 標籤頁切換功能
-        function showTab(tabId) {
-            const tabs = document.querySelectorAll('.tab-content');
-            tabs.forEach(tab => tab.classList.remove('active'));
-            
-            const tabButtons = document.querySelectorAll('.tab-button');
-            tabButtons.forEach(button => button.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
-            
-            // 每次切換分頁時隱藏結果
-            resultDiv.classList.remove('visible');
-            lineExplanationDiv.classList.add('hidden');
-        }
-
-    </script>
-</body>
-</html>
+                    return hexagramsData[guaName].find(
