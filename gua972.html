@@ -394,6 +394,12 @@
     </div>
 
     <script>
+        // 確保在腳本載入時，按鈕是禁用的，直到卦辭資料載入完成
+        document.addEventListener('DOMContentLoaded', () => {
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => button.disabled = true);
+        });
+        
         let hexagramsData = {};
         const resultDiv = document.getElementById('result');
         const loadingMessage = document.getElementById('loadingMessage');
@@ -439,6 +445,23 @@
             9: 3, // 南方 (離) -> 離 (3)
         };
         
+        // 新增的拼音轉換器，用於生成外部連結
+        const PinyinConverter = {
+            map: {
+                '乾為天': 'qianweitian', '天澤履': 'tianzelu', '天火同人': 'tianhuatongren', '天雷無妄': 'tianleiouwou', '天風姤': 'tianfenggou', '天水訟': 'tianshuisong', '天山遯': 'tianshandun', '天地否': 'tiandifou',
+                '澤天夬': 'zetiankuai', '兌為澤': 'duaiweize', '澤火革': 'zehuage', '澤雷隨': 'zeleioui', '澤風大過': 'zefengdaguo', '澤水困': 'zeshiukou', '澤山咸': 'zeshanxian', '澤地萃': 'zedicui',
+                '火天大有': 'huatiandayou', '火澤睽': 'huazekui', '離為火': 'liweihuo', '火雷噬嗑': 'hualeihe', '火風鼎': 'huofengding', '火水未濟': 'huashuiweiji', '火山旅': 'huoshanlu', '火地晉': 'huodijin',
+                '雷天大壯': 'leitiandazhuang', '雷澤歸妹': 'leizeguimei', '雷火豐': 'leihuafeng', '震為雷': 'zhenweilei', '雷風恆': 'leifenghang', '雷水解': 'leishuijie', '雷山小過': 'leishanxiaoguo', '地雷豫': 'dilaiyu',
+                '風天小畜': 'fengtianxiaochu', '風澤中孚': 'fengzezhongfu', '風火家人': 'fenghuajiaren', '風雷益': 'fengleiyi', '巽為風': 'xunweifeng', '風水渙': 'fengshuihuan', '風山漸': 'fengshanjian', '風地觀': 'fengdiguan',
+                '水天需': 'shuitianxu', '水澤節': 'shuizejie', '水火既濟': 'shuihuajiji', '水雷屯': 'shuileitun', '水風井': 'shuifengjing', '坎為水': 'kanweishui', '水山蹇': 'shuishanqian', '水地比': 'shuishui',
+                '山天大畜': 'shantiandachu', '山澤損': 'shanzesun', '山火賁': 'shanhuabi', '山雷頤': 'shanleii', '山風蠱': 'shanfenggu', '山水蒙': 'shanshuimeng', '艮為山': 'genweishan', '山地剝': 'shandibuo',
+                '地天泰': 'ditianai', '地澤臨': 'dizelin', '地火明夷': 'dihuamingyi', '地雷復': 'diluifu', '地風升': 'difengsheng', '地水師': 'dishuishi', '地山謙': 'dishanqian', '坤為地': 'kunweidi'
+            },
+            convert: function(chineseName) {
+                return this.map[chineseName] || '';
+            }
+        };
+
         const getGuaNumFromLines = (lines) => {
             for(let num in guaLines) {
                 if (JSON.stringify(guaLines[num]) === JSON.stringify(lines)) {
@@ -451,7 +474,6 @@
         fetch('hexagrams_data.json')
             .then(response => {
                 if (!response.ok) {
-                    // 如果檔案不存在，則使用內建的資料
                     console.log("無法載入 hexagrams_data.json，使用內建資料");
                     return {
                         "乾為天": [
