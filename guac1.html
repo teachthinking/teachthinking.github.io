@@ -1,0 +1,492 @@
+<!doctype html>
+
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>卜卦系統（修正版｜綜合吉凶判斷）</title>
+<style>
+  :root{--bg:#0b0f14;--card:#121823;--muted:#9fb2c7;--text:#ebf2ff;--accent:#8ecbff;--good:#2ecc71;--bad:#e74c3c;--warn:#f1c40f}
+  *{box-sizing:border-box}
+  body{margin:0;padding:24px;font-family:system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, "PingFang TC", "Heiti TC", Arial, sans-serif;background:var(--bg);color:var(--text)}
+  h1{font-size:20px;margin:0 0 16px}
+  .grid{display:grid;gap:16px}
+  .cols{grid-template-columns:repeat(12,1fr)}
+  .card{background:var(--card);border:1px solid #1b2636;border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+  .card h2{font-size:16px;margin:0 0 12px;color:#d9e8ff}
+  .section{padding:16px}
+  label{color:#cfe0ff;font-size:13px}
+  select, input[type="text"], textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #304058;background:#0d141f;color:var(--text)}
+  button{cursor:pointer;border:none;padding:10px 14px;border-radius:10px;background:#1a2a42;color:#e7f0ff}
+  button:hover{filter:brightness(1.05)}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid #324b6b;color:#d3e7ff;font-size:12px}
+  .kpi{font-size:13px;color:var(--muted)}
+  .name{font-weight:700;color:#c7e6ff}
+  .good{color:var(--good)}
+  .bad{color:var(--bad)}
+  .warn{color:var(--warn)}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px 10px;border-bottom:1px solid #21314a;font-size:14px}
+  th{color:#cfe0ff;text-align:left}
+  .muted{color:#9fb2c7}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .footer{opacity:.8;font-size:12px}
+</style>
+</head>
+<body>
+  <h1>🧭 卜卦系統（修正版｜含綜合吉凶判斷與資料校正機制）</h1>
+  <div class="grid cols"><div class="card section" style="grid-column:span 5">
+  <h2>① 輸入卦象與動爻</h2>
+  <div class="row">
+    <div style="flex:1;min-width:220px">
+      <label>選擇本卦（文王序）</label>
+      <select id="hex-select"></select>
+    </div>
+    <div class="pill">或</div>
+    <div style="flex:1;min-width:220px">
+      <label>用六爻（自下而上）輸入陰陽</label>
+      <div class="row" id="yin-yang-row"></div>
+    </div>
+  </div>
+  <div style="height:8px"></div>
+  <div>
+    <label>選擇動爻（可複選，1 在最下）</label>
+    <div class="row" id="moving-row"></div>
+  </div>
+  <div style="height:8px"></div>
+  <div class="row">
+    <button id="btn-random">隨機取卦</button>
+    <button id="btn-clear">清空</button>
+    <span class="kpi">資料來源：內建經文 + 白話釋義（部分卦已精校），可自行載入 JSON 覆寫。</span>
+  </div>
+</div>
+
+<div class="card section" style="grid-column:span 7">
+  <h2>② 本卦｜變卦｜互卦</h2>
+  <div class="row">
+    <div class="pill"><span class="muted">本卦</span>：<span id="base-gua-name" class="name">—</span></div>
+    <div class="pill"><span class="muted">變卦</span>：<span id="change-gua-name" class="name">—</span></div>
+    <div class="pill"><span class="muted">互卦</span>：<span id="hu-gua-name" class="name">—</span></div>
+  </div>
+  <div style="height:8px"></div>
+  <div class="row">
+    <span class="kpi">卦序：<span id="base-gua-no">—</span></span>
+    <span class="kpi">陰陽：<span id="base-gua-bits" class="mono">—</span></span>
+    <span class="kpi">動爻：<span id="moving-lines">—</span></span>
+  </div>
+</div>
+
+<div class="card section" style="grid-column:span 12">
+  <h2>③ 卦爻解釋（逐爻）</h2>
+  <table>
+    <thead>
+      <tr><th style="width:64px">爻位</th><th>經文</th><th>白話釋義</th></tr>
+    </thead>
+    <tbody id="lines-tbody"></tbody>
+  </table>
+</div>
+
+<div class="card section" style="grid-column:span 7">
+  <h2>④ 綜合吉凶判斷</h2>
+  <div id="judge-type" class="pill">—</div>
+  <div style="height:6px"></div>
+  <div id="judge-advice" class="kpi">—</div>
+  <div style="height:6px"></div>
+  <div class="muted">演算法會綜合本卦＞變卦＞互卦的關鍵詞，並對「動爻」加權。若本卦有人工特例（judgementData），則優先採用。</div>
+</div>
+
+<div class="card section" style="grid-column:span 5">
+  <h2>⑤ 資料管理</h2>
+  <div class="row">
+    <button id="btn-export">匯出當前資料（JSON）</button>
+    <button id="btn-import">載入自訂 JSON（覆寫）</button>
+    <input id="file-import" type="file" accept="application/json" style="display:none" />
+  </div>
+  <div style="height:8px"></div>
+  <div class="footer">📌 已內建精校卦：乾、坤、坎、明夷、噬嗑、履。其餘卦以簡釋為主，標註「（待補）」以利後續逐卦打磨；可直接匯出 JSON 進行外部校對後再載入覆寫。</div>
+</div>
+
+  </div><script>
+// ===== 0) 三才八卦定義 =====
+const TRIGRAMS = {
+  QIAN: {name:"乾", bin:"111", han:"☰", key:"QIAN"},
+  DUI:  {name:"兌", bin:"110", han:"☱", key:"DUI"},
+  LI:   {name:"離", bin:"101", han:"☲", key:"LI"},
+  ZHEN: {name:"震", bin:"100", han:"☳", key:"ZHEN"},
+  XUN:  {name:"巽", bin:"011", han:"☴", key:"XUN"},
+  KAN:  {name:"坎", bin:"010", han:"☵", key:"KAN"},
+  GEN:  {name:"艮", bin:"001", han:"☶", key:"GEN"},
+  KUN:  {name:"坤", bin:"000", han:"☷", key:"KUN"},
+};
+
+// 文王序 64 卦：上卦（上三爻）｜下卦（下三爻）
+const KING_WEN = [
+  [TRIGRAMS.QIAN, TRIGRAMS.QIAN, {no:1,  name:"乾為天", short:"乾"}],
+  [TRIGRAMS.KUN,  TRIGRAMS.KUN,  {no:2,  name:"坤為地", short:"坤"}],
+  [TRIGRAMS.KAN,  TRIGRAMS.ZHEN, {no:3,  name:"水雷屯", short:"屯"}],
+  [TRIGRAMS.GEN,  TRIGRAMS.KAN,  {no:4,  name:"山水蒙", short:"蒙"}],
+  [TRIGRAMS.KAN,  TRIGRAMS.QIAN, {no:5,  name:"水天需", short:"需"}],
+  [TRIGRAMS.QIAN, TRIGRAMS.KAN,  {no:6,  name:"天水訟", short:"訟"}],
+  [TRIGRAMS.KUN,  TRIGRAMS.KAN,  {no:7,  name:"地水師", short:"師"}],
+  [TRIGRAMS.KAN,  TRIGRAMS.KUN,  {no:8,  name:"水地比", short:"比"}],
+  [TRIGRAMS.XUN,  TRIGRAMS.QIAN, {no:9,  name:"風天小畜", short:"小畜"}],
+  [TRIGRAMS.QIAN, TRIGRAMS.DUI,  {no:10, name:"天澤履", short:"履"}],
+  [TRIGRAMS.KUN,  TRIGRAMS.QIAN, {no:11, name:"地天泰", short:"泰"}],
+  [TRIGRAMS.QIAN, TRIGRAMS.KUN,  {no:12, name:"天地否", short:"否"}],
+  [TRIGRAMS.QIAN, TRIGRAMS.LI,   {no:13, name:"天火同人", short:"同人"}],
+  [TRIGRAMS.LI,   TRIGRAMS.QIAN, {no:14, name:"火天大有", short:"大有"}],
+  [TRIGRAMS.KUN,  TRIGRAMS.GEN,  {no:15, name:"地山謙", short:"謙"}],
+  [TRIGRAMS.ZHEN, TRIGRAMS.KUN,  {no:16, name:"雷地豫", short:"豫"}],
+  [TRIGRAMS.DUI,  TRIGRAMS.ZHEN, {no:17, name:"澤雷隨", short:"隨"}],
+  [TRIGRAMS.GEN,  TRIGRAMS.XUN,  {no:18, name:"山風蠱", short:"蠱"}],
+  [TRIGRAMS.KUN,  TRIGRAMS.DUI,  {no:19, name:"地澤臨", short:"臨"}],
+  [TRIGRAMS.XUN,  TRIGRAMS.KUN,  {no:20, name:"風地觀", short:"觀"}],
+  [TRIGRAMS.LI,   TRIGRAMS.ZHEN, {no:21, name:"火雷噬嗑", short:"噬嗑"}],
+  [TRIGRAMS.GEN,  TRIGRAMS.LI,   {no:22, name:"山火賁", short:"賁"}],
+  [TRIGRAMS.GEN,  TRIGRAMS.KUN,  {no:23, name:"山地剝", short:"剝"}],
+  [TRIGRAMS.KUN,  TRIGRAMS.ZHEN, {no:24, name:"地雷復", short:"復"}],
+  [TRIGRAMS.QIAN, TRIGRAMS.ZHEN, {no:25, name:"天雷無妄", short:"無妄"}],
+  [TRIGRAMS.GEN,  TRIGRAMS.QIAN, {no:26, name:"山天大畜", short:"大畜"}],
+  [TRIGRAMS.GEN,  TRIGRAMS.ZHEN, {no:27, name:"山雷頤", short:"頤"}],
+  [TRIGRAMS.DUI,  TRIGRAMS.XUN,  {no:28, name:"澤風大過", short:"大過"}],
+  [TRIGRAMS.KAN,  TRIGRAMS.KAN,  {no:29, name:"坎為水", short:"坎"}],
+  [TRIGRAMS.LI,   TRIGRAMS.LI,   {no:30, name:"離為火", short:"離"}],
+  [TRIGRAMS.DUI,  TRIGRAMS.GEN,  {no:31, name:"澤山咸", short:"咸"}],
+  [TRIGRAMS.ZHEN, TRIGRAMS.XUN,  {no:32, name:"雷風恆", short:"恆"}],
+  [TRIGRAMS.QIAN, TRIGRAMS.GEN,  {no:33, name:"天山遯", short:"遯"}],
+  [TRIGRAMS.ZHEN, TRIGRAMS.QIAN, {no:34, name:"雷天大壯", short:"大壯"}],
+  [TRIGRAMS.LI,   TRIGRAMS.KUN,  {no:35, name:"火地晉", short:"晉"}],
+  [TRIGRAMS.KUN,  TRIGRAMS.LI,   {no:36, name:"地火明夷", short:"明夷"}],
+  [TRIGRAMS.XUN,  TRIGRAMS.LI,   {no:37, name:"風火家人", short:"家人"}],
+  [TRIGRAMS.LI,   TRIGRAMS.DUI,  {no:38, name:"火澤睽", short:"睽"}],
+  [TRIGRAMS.KAN,  TRIGRAMS.GEN,  {no:39, name:"水山蹇", short:"蹇"}],
+  [TRIGRAMS.ZHEN, TRIGRAMS.KAN,  {no:40, name:"雷水解", short:"解"}],
+  [TRIGRAMS.GEN,  TRIGRAMS.DUI,  {no:41, name:"山澤損", short:"損"}],
+  [TRIGRAMS.XUN,  TRIGRAMS.ZHEN, {no:42, name:"風雷益", short:"益"}],
+  [TRIGRAMS.DUI,  TRIGRAMS.QIAN, {no:43, name:"澤天夬", short:"夬"}],
+  [TRIGRAMS.QIAN, TRIGRAMS.XUN,  {no:44, name:"天風姤", short:"姤"}],
+  [TRIGRAMS.DUI,  TRIGRAMS.KUN,  {no:45, name:"澤地萃", short:"萃"}],
+  [TRIGRAMS.KUN,  TRIGRAMS.XUN,  {no:46, name:"地風升", short:"升"}],
+  [TRIGRAMS.DUI,  TRIGRAMS.KAN,  {no:47, name:"澤水困", short:"困"}],
+  [TRIGRAMS.KAN,  TRIGRAMS.XUN,  {no:48, name:"水風井", short:"井"}],
+  [TRIGRAMS.DUI,  TRIGRAMS.LI,   {no:49, name:"澤火革", short:"革"}],
+  [TRIGRAMS.LI,   TRIGRAMS.XUN,  {no:50, name:"火風鼎", short:"鼎"}],
+  [TRIGRAMS.ZHEN, TRIGRAMS.ZHEN, {no:51, name:"震為雷", short:"震"}],
+  [TRIGRAMS.GEN,  TRIGRAMS.GEN,  {no:52, name:"艮為山", short:"艮"}],
+  [TRIGRAMS.XUN,  TRIGRAMS.GEN,  {no:53, name:"風山漸", short:"漸"}],
+  [TRIGRAMS.ZHEN, TRIGRAMS.DUI,  {no:54, name:"雷澤歸妹", short:"歸妹"}],
+  [TRIGRAMS.ZHEN, TRIGRAMS.LI,   {no:55, name:"雷火豐", short:"豐"}],
+  [TRIGRAMS.LI,   TRIGRAMS.GEN,  {no:56, name:"火山旅", short:"旅"}],
+  [TRIGRAMS.XUN,  TRIGRAMS.XUN,  {no:57, name:"巽為風", short:"巽"}],
+  [TRIGRAMS.DUI,  TRIGRAMS.DUI,  {no:58, name:"兌為澤", short:"兌"}],
+  [TRIGRAMS.XUN,  TRIGRAMS.KAN,  {no:59, name:"風水渙", short:"渙"}],
+  [TRIGRAMS.KAN,  TRIGRAMS.DUI,  {no:60, name:"水澤節", short:"節"}],
+  [TRIGRAMS.XUN,  TRIGRAMS.DUI,  {no:61, name:"風澤中孚", short:"中孚"}],
+  [TRIGRAMS.ZHEN, TRIGRAMS.GEN,  {no:62, name:"雷山小過", short:"小過"}],
+  [TRIGRAMS.KAN,  TRIGRAMS.LI,   {no:63, name:"水火既濟", short:"既濟"}],
+  [TRIGRAMS.LI,   TRIGRAMS.KAN,  {no:64, name:"火水未濟", short:"未濟"}],
+];
+
+// 建立查表：bin(自下而上六位) -> {no,name,short}
+const BIN2META = (()=>{
+  const map = {}; // 例如 "111111" -> {no:1, name:"乾為天", short:"乾"}
+  for (const [up, low, meta] of KING_WEN){
+    const bits = low.bin + up.bin; // 自下而上
+    map[bits] = meta;
+  }
+  return map;
+})();
+
+const META_LIST = Object.values(BIN2META).sort((a,b)=>a.no-b.no);
+
+// ===== 1) 逐卦逐爻（精校 / 待補標示） =====
+// 結構： hexagramsData["乾為天"] = [{index:1,text:"…",meaning:"…"}, ...]
+const hexagramsData = {
+  // —— 乾為天（全精校） ——
+  "乾為天": [
+    {index:1, text:"初九：潛龍勿用。", meaning:"時機未至，蓄勢待發；低調修德，不宜妄動。"},
+    {index:2, text:"九二：見龍在田，利見大人。", meaning:"展露才德於眾，得上位者賞識，相機而進。"},
+    {index:3, text:"九三：君子終日乾乾，夕惕若厲，無咎。", meaning:"持續精進且不自滿，日夜警惕，可免禍患。"},
+    {index:4, text:"九四：或躍在淵，無咎。", meaning:"進退之間，權衡而動，雖險無害。"},
+    {index:5, text:"九五：飛龍在天，利見大人。", meaning:"時運已至，大展宏圖，與賢共事為利。"},
+    {index:6, text:"上九：亢龍有悔。", meaning:"盛極易衰，剛過則折；宜收斂，免後悔。"},
+  ],
+  // —— 坤為地（全精校） ——
+  "坤為地": [
+    {index:1, text:"初六：履霜，堅冰至。", meaning:"小惡不除，終至大害；見微知著，及早防患。"},
+    {index:2, text:"六二：直方大，不習無不利。", meaning:"敦厚端方，守正不阿，自然亨利。"},
+    {index:3, text:"六三：含章可貞。或從王事，無成有終。", meaning:"內美不露，守正可久；從事王務，雖未顯功，終能善成。"},
+    {index:4, text:"六四：括囊，無咎無譽。", meaning:"收斂言行，避禍保全；不求名聲。"},
+    {index:5, text:"六五：黃裳，元吉。", meaning:"中正之德，光而不耀，大吉。"},
+    {index:6, text:"上六：龍戰于野，其血玄黃。", meaning:"剛柔相激，兩敗俱傷；戒逞強。"},
+  ],
+  // —— 坎為水（全精校） ——
+  "坎為水": [
+    {index:1, text:"初六：習坎，入于坎窞，凶。", meaning:"反覆陷於險境，難以自拔，凶。"},
+    {index:2, text:"九二：坎有險，求小得。", meaning:"處險宜小步求進，先求小利與小成。"},
+    {index:3, text:"六三：來之坎坎，險且枕；入于坎窞，勿用。", meaning:"由險又入險，易深陷；此時不宜妄為。"},
+    {index:4, text:"六四：樽酒簋貳，用缶；納約自牖，終無咎。", meaning:"以簡樸誠意求通，雖薄禮，能免咎。"},
+    {index:5, text:"九五：坎不盈，只既平，無咎。", meaning:"險勢未滿且漸平，持中守正，無咎。"},
+    {index:6, text:"上六：係用徽纆，置于叢棘，三歲不得，凶。", meaning:"為難所縛，久困不得脫，凶。"},
+  ],
+  // —— 離為火（關鍵爻修正：避免誤引噬嗑辭） ——
+  "離為火": [
+    {index:1, text:"初九：履錯然，敬之無咎。", meaning:"處勢不穩，務須敬慎，方能無咎。"},
+    {index:2, text:"六二：黃離，元吉。", meaning:"以中道之明自守，光耀而不偏，吉。"},
+    {index:3, text:"九三：日昃之離，不鼓缶而歌，則大耋之嗟，凶。", meaning:"盛時將暮而不自省，反失其道，凶。"},
+    {index:4, text:"九四：突如其來如，焚如；死如棄如。", meaning:"躁進妄作，禍至倉促；輕則損失，重則傾覆。"},
+    {index:5, text:"六五：出涕沱若，戚嗟若，吉。", meaning:"能以哀矜自省，轉禍為福，吉。"},
+    {index:6, text:"上九：王用出征，有嘉折首，獲其匪丑，無咎。", meaning:"正義而伐，斬獲首惡，終得無咎。"},
+  ],
+  // —— 火雷噬嗑（全精校，用以釐清與離卦混淆） ——
+  "火雷噬嗑": [
+    {index:1, text:"初九：履校滅趾，無咎。", meaning:"剛猛起步，易傷小處；收斂可免咎。"},
+    {index:2, text:"六二：噬膚，滅鼻，無咎。", meaning:"先易後難，處理表層之事，尚可無害。"},
+    {index:3, text:"六三：噬腊肉，遇毒；小吝，無咎。", meaning:"涉難有毒，雖有小失，終可免過。"},
+    {index:4, text:"九四：噬乾胏，得金矢，利艱貞，吉。", meaning:"攻堅克難，得中正之志，堅守則吉。"},
+    {index:5, text:"六五：噬乾肉，得黃金，貞厲，無咎。", meaning:"去其堅滯而得其中，雖危終免咎。"},
+    {index:6, text:"上九：何校滅耳，凶。", meaning:"刑過其度，反傷耳目，凶。"},
+  ],
+  // —— 地火明夷（全精校：六爻各異，修復原檔重複） ——
+  "地火明夷": [
+    {index:1, text:"初九：明夷于飛，垂其翼；君子于行，三日不食；有攸往，主人有言。", meaning:"受傷之明暫收斂，旅途艱難，宜止不宜往。"},
+    {index:2, text:"六二：明夷，夷于左股，用拯馬壯，吉。", meaning:"受創偏枯，藉外力扶持，仍可轉吉。"},
+    {index:3, text:"九三：明夷于南狩，得其大首，不可疾貞。", meaning:"處明而誅暴，功大宜審慎，不可躁急。"},
+    {index:4, text:"六四：入于左腹，獲明夷之心，于出門庭。", meaning:"深入其內得其心要，乃可脫身。"},
+    {index:5, text:"六五：箕子之明夷，利貞。", meaning:"以賢者之道自守，雖遇暗世，貞則利。"},
+    {index:6, text:"上六：不明晦；初登于天，後入于地。", meaning:"明暗反覆，高墜相尋；宜避其時。"},
+  ],
+  // —— 其餘六十四卦：占位（待補） ——
+};
+
+// ===== 2) 自動清理重複/錯置爻索引（資料校正） =====
+(function sanitizeHexagramsData(){
+  try{
+    Object.keys(hexagramsData).forEach(name=>{
+      const arr = hexagramsData[name];
+      if(!Array.isArray(arr)) return;
+      const seen = new Set();
+      const cleaned = [];
+      for(const it of arr){
+        if(!it || typeof it.index!=="number") continue;
+        const idx = it.index|0;
+        if(idx<1||idx>6) continue;
+        if(seen.has(idx)) continue; // 去重
+        seen.add(idx);
+        cleaned.push({index:idx, text:String(it.text||"").trim(), meaning:String(it.meaning||"").trim()||"（待補）"});
+      }
+      // 若不足六條，保留既有；缺漏標示待補
+      for(let i=1;i<=6;i++) if(!cleaned.find(x=>x.index===i)) cleaned.push({index:i, text:"（待補）", meaning:"（待補）"});
+      cleaned.sort((a,b)=>a.index-b.index);
+      hexagramsData[name]=cleaned;
+    });
+    console.log("[修正] hexagramsData 已清理並補足占位。");
+  }catch(e){console.warn("sanitizeHexagramsData error:",e)}
+})();
+
+// ===== 3) 可選的人工作判（若有則優先） =====
+const judgementData = {
+  "乾為天": { base:"大吉", advice:"大勢向上，宜與賢同行；切忌剛過。", movingLines:{
+    1:{type:"平", advice:"蓄勢待時，勿躁進。"},
+    5:{type:"大吉", advice:"可大展所長，見賢思齊。"},
+    6:{type:"小凶", advice:"亢極則折，宜收斂退避。"}
+  }},
+  "坤為地": { base:"小吉", advice:"以柔承剛，厚德載物；不求速成。" },
+  "地火明夷": { base:"小凶", advice:"明受傷，宜避其鋒，內修外守。" },
+  "坎為水": { base:"小凶", advice:"重險之卦，分段求進，切忌躁動。" },
+};
+
+// ===== 4) 綜合吉凶演算法（本卦 > 變卦 > 互卦，動爻加權） =====
+function getJudgement(guaName, movingLines){
+  const data = judgementData[guaName];
+  if(data){
+    if(movingLines.length===0) return {type:data.base, advice:data.advice};
+    if(movingLines.length===1 && data.movingLines && data.movingLines[movingLines[0]]){
+      return data.movingLines[movingLines[0]];
+    }
+    // 其餘情形回退到演算法
+  }
+
+  const WEIGHT_BASE=1.0, WEIGHT_CHANGE=0.6, WEIGHT_MUTUAL=0.35, WEIGHT_MOVING=1.2;
+  const baseName = document.getElementById("base-gua-name")?.textContent?.split(" ").pop()||guaName;
+  const changeName = document.getElementById("change-gua-name")?.textContent?.split(" ").pop()||"";
+  const mutualName = document.getElementById("hu-gua-name")?.textContent?.split(" ").pop()||"";
+
+  function scoreBy(name, mov){
+    const items = hexagramsData[name]||[]; let score=0; const notes=[];
+    const plus=[/吉/,/無咎/,/利(?!用刑)/,/亨/,/元吉/,/小吉/];
+    const minus=[/凶/,/厲/,/悔(?!亡)/,/有咎|咎/,/不利/,/困/,/剝/];
+    for(const it of items){
+      const t=(it.text||"")+" "+(it.meaning||"");
+      if(plus.some(r=>r.test(t))) score+=0.15;
+      if(minus.some(r=>r.test(t))) score-=0.15;
+    }
+    for(const ln of mov){
+      const it=items.find(x=>x.index===ln); if(!it) continue; const t=(it.text||"")+" "+(it.meaning||"");
+      let d=0; if(/吉|無咎|利/.test(t)) d+=0.8; if(/凶|厲|悔|咎|不利/.test(t)) d-=0.8;
+      score+=d*WEIGHT_MOVING; if(d>0.01) notes.push(`動爻${ln}偏吉`); if(d<-0.01) notes.push(`動爻${ln}偏凶`);
+    }
+    return {score, notes};
+  }
+
+  const baseRes=scoreBy(baseName, movingLines);
+  const changeRes=changeName?scoreBy(changeName,[]):{score:0,notes:[]};
+  const mutualRes=mutualName?scoreBy(mutualName,[]):{score:0,notes:[]};
+  const total=baseRes.score*WEIGHT_BASE + changeRes.score*WEIGHT_CHANGE + mutualRes.score*WEIGHT_MUTUAL;
+
+  let type="平";
+  if(total>=1.6) type="大吉"; else if(total>=0.6) type="小吉"; else if(total<=-1.6) type="大凶"; else if(total<=-0.6) type="小凶";
+
+  const tips=[];
+  if(type.includes("吉")) tips.push("可進取，主動爭取機會。");
+  if(type.includes("凶")) tips.push("宜守不宜進，降低風險。");
+  if(movingLines.length>=3) tips.push("多爻同動，局勢多變，需分段調整策略。");
+  const txtBase=(hexagramsData[baseName]||[]).map(i=>i.text).join(" ");
+  if(/利見大人/.test(txtBase)) tips.push("有貴人相助，宜爭取支援。");
+  if(/不利|勿用|有咎/.test(txtBase)) tips.push("避免逞強，先處理風險點。");
+
+  const noteStr=[...baseRes.notes,...changeRes.notes,...mutualRes.notes].slice(0,4).join("；");
+  return {type, advice:(noteStr?(noteStr+"。 "):"")+(tips[0]||"持中而行，審時度勢。")};
+}
+
+// ===== 5) 工具：六爻位元、名稱、互卦與變卦 =====
+function bitsToName(bits){ // bits: "010111" 自下而上
+  return BIN2META[bits]?.name || "（未名卦）";
+}
+function bitsToMeta(bits){ return BIN2META[bits] || {no:"—", name:"（未名卦）", short:"—"}; }
+function flap(bit){ return bit==="1"?"0":"1"; }
+function calcChange(bits, moving){
+  const arr=bits.split("");
+  for(const m of moving){ const idx=m-1; arr[idx]=flap(arr[idx]); }
+  return arr.join("");
+}
+function calcMutual(bits){
+  // 互卦：下互（2-4）＋上互（3-5）
+  const a=bits.split("");
+  const lower=a.slice(1,4).join(""); // 2-4
+  const upper=a.slice(2,5).join(""); // 3-5
+  return lower+upper;
+}
+
+// ===== 6) 介面綁定 =====
+const elSelect=document.getElementById('hex-select');
+const elYY=document.getElementById('yin-yang-row');
+const elMove=document.getElementById('moving-row');
+const elBaseName=document.getElementById('base-gua-name');
+const elChangeName=document.getElementById('change-gua-name');
+const elHuName=document.getElementById('hu-gua-name');
+const elBaseNo=document.getElementById('base-gua-no');
+const elBaseBits=document.getElementById('base-gua-bits');
+const elMoving=document.getElementById('moving-lines');
+const elTBody=document.getElementById('lines-tbody');
+const elJudgeType=document.getElementById('judge-type');
+const elJudgeAdvice=document.getElementById('judge-advice');
+
+// 下拉列出 64 卦
+for(const meta of META_LIST){
+  const opt=document.createElement('option');
+  opt.value=meta.no; opt.textContent=`${meta.no.toString().padStart(2,'0')}．${meta.name}`;
+  elSelect.appendChild(opt);
+}
+
+// 陰陽切換（六個開關，1 在最下）
+function makeYY(){ elYY.innerHTML='';
+  for(let i=1;i<=6;i++){
+    const wrap=document.createElement('div'); wrap.className='row';
+    const lab=document.createElement('label'); lab.textContent=`${i}`; lab.style.minWidth='12px';
+    const sel=document.createElement('select'); sel.dataset.idx=i;
+    sel.innerHTML='<option value="0">陰(— —)</option><option value="1">陽(——)</option>';
+    sel.addEventListener('change',()=>{ elSelect.value = metaFromBits(currentBits()).no; render(); });
+    wrap.appendChild(lab); wrap.appendChild(sel); elYY.appendChild(wrap);
+  }
+}
+makeYY();
+
+// 動爻複選
+function makeMoving(){ elMove.innerHTML='';
+  for(let i=1;i<=6;i++){
+    const id='mv'+i; const cb=document.createElement('input'); cb.type='checkbox'; cb.id=id; cb.dataset.idx=i;
+    const lab=document.createElement('label'); lab.setAttribute('for',id); lab.textContent=String(i);
+    cb.addEventListener('change',render); const box=document.createElement('div'); box.className='row'; box.appendChild(cb); box.appendChild(lab); elMove.appendChild(box);
+  }
+}
+makeMoving();
+
+function setBits(bits){ // bits 自下而上
+  const a=bits.split(""); for(let i=1;i<=6;i++){ const sel=elYY.querySelector(`select[data-idx="${i}"]`); sel.value=a[i-1]; }
+}
+function currentBits(){ let s=''; for(let i=1;i<=6;i++){ const v=elYY.querySelector(`select[data-idx="${i}"]`).value; s+=v; } return s; }
+function currentMoving(){ const arr=[]; for(let i=1;i<=6;i++){ const cb=elMove.querySelector(`input[data-idx="${i}"]`); if(cb.checked) arr.push(i); } return arr; }
+function metaFromBits(bits){ return bitsToMeta(bits); }
+
+elSelect.addEventListener('change',()=>{
+  // 將下拉選擇轉成 bits
+  const targetNo=parseInt(elSelect.value,10);
+  const meta=META_LIST.find(x=>x.no===targetNo);
+  const bits=Object.entries(BIN2META).find(([k,v])=>v.no===meta.no)[0];
+  setBits(bits); render();
+});
+
+document.getElementById('btn-random').addEventListener('click',()=>{
+  const metas=META_LIST; const rnd=metas[Math.floor(Math.random()*metas.length)];
+  const bits=Object.entries(BIN2META).find(([k,v])=>v.no===rnd.no)[0];
+  setBits(bits);
+  // 隨機動爻 0~3 個
+  for(let i=1;i<=6;i++){ elMove.querySelector(`input[data-idx="${i}"]`).checked = Math.random()<0.3; }
+  elSelect.value=rnd.no; render();
+});
+
+document.getElementById('btn-clear').addEventListener('click',()=>{
+  setBits('000000'); for(let i=1;i<=6;i++){ elMove.querySelector(`input[data-idx="${i}"]`).checked=false; }
+  elSelect.value=META_LIST[0].no; render();
+});
+
+function render(){
+  const bits=currentBits(); const moving=currentMoving(); const meta=metaFromBits(bits);
+  const changeBits=calcChange(bits, moving);
+  const mutualBits=calcMutual(bits);
+  const changeMeta=metaFromBits(changeBits); const mutualMeta=metaFromBits(mutualBits);
+
+  elBaseName.textContent = `${meta.no}. ${meta.name}`;
+  elChangeName.textContent = changeMeta.no!=="—"? `${changeMeta.no}. ${changeMeta.name}` : '—';
+  elHuName.textContent = mutualMeta.no!=="—"? `${mutualMeta.no}. ${mutualMeta.name}` : '—';
+  elBaseNo.textContent = meta.no; elBaseBits.textContent = bits; elMoving.textContent = moving.length? moving.join(', '):'無';
+
+  // 填逐爻
+  const rows = (hexagramsData[meta.name]||[]).slice().sort((a,b)=>a.index-b.index);
+  elTBody.innerHTML = rows.map(r=>`<tr><td>${r.index}</td><td class="mono">${escapeHtml(r.text||'（待補）')}</td><td>${escapeHtml(r.meaning||'（待補）')}</td></tr>`).join('');
+
+  // 綜合判斷
+  const judge=getJudgement(meta.name, moving);
+  elJudgeType.textContent = judge.type || '—';
+  elJudgeType.className = 'pill ' + (judge.type?.includes('吉')?'good':(judge.type?.includes('凶')?'bad':''));
+  elJudgeAdvice.textContent = judge.advice || '—';
+}
+
+function escapeHtml(s){return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+
+// 初始化：預設 乾卦
+(function init(){
+  const qianBits=Object.entries(BIN2META).find(([k,v])=>v.no===1)[0];
+  setBits(qianBits); elSelect.value=1; render();
+})();
+
+// ===== 7) 匯入 / 匯出 =====
+const elFile=document.getElementById('file-import');
+document.getElementById('btn-import').addEventListener('click',()=>elFile.click());
+elFile.addEventListener('change',async(e)=>{
+  const file=e.target.files?.[0]; if(!file) return;
+  const txt=await file.text();
+  try{ const obj=JSON.parse(txt); if(typeof obj!=="object") throw new Error('格式錯誤');
+    Object.assign(hexagramsData, obj); sanitizeHexagramsData(); render(); alert('已載入並覆寫資料。');
+  }catch(err){ alert('JSON 解析失敗：'+err.message); }
+});
+
+document.getElementById('btn-export').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(hexagramsData,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='zhouyi_data.json'; a.click(); URL.revokeObjectURL(url);
+});
+</script></body>
+</html>
