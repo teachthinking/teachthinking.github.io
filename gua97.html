@@ -537,7 +537,14 @@
             8: 7, // 東北艮
             9: 3, // 南方離
         };
-
+        
+        // 爻位判斷
+        const lineType = (index) => {
+            const types = ['初', '二', '三', '四', '五', '上'];
+            const names = ['九', '六'];
+            return types[index - 1] + names[index % 2];
+        };
+        
         // 六十四卦、三百八十四爻的爻辭資料庫
         let hexagramsData = {
             "乾為天": [
@@ -709,94 +716,12 @@
                 { "index": 6, "text": "上九：晉如，無不利。", "meaning": "前進，沒有不利。" }
             ],
             "地火明夷": [
-                { "index": 1, "text": "初九：明夷于飛，垂其翼。", "meaning": "光明遭受傷害，在飛行中垂下翅膀。" },
-                { "index": 2, "text": "六二：明夷于飛，不見其翼。", "meaning": "光明遭受傷害，在飛行中不見其翅膀。" },
-                { "index": 3, "text": "九三：明夷于飛，其翼其翼。", "meaning": "光明遭受傷害，其翅膀其翅膀。" },
-                { "index": 4, "text": "六四：明夷于飛，利貞，无咎。", "meaning": "光明遭受傷害，利於堅守正道，沒有過失。" },
-                { "index": 5, "text": "六五：明夷于飛，不見其翼，利貞，无咎。", "meaning": "光明遭受傷害，不見其翅膀，利於堅守正道，沒有過失。" },
-                { "index": 6, "text": "上九：明夷于飛，其翼其翼。", "meaning": "光明遭受傷害，其翅膀其翅膀。" }
-            ],
-            "火地晉": [
-                { "index": 1, "text": "初六：晉如，摧如，貞吉。", "meaning": "前進，但有所摧毀，堅守正道吉祥。" },
-                { "index": 2, "text": "六二：晉如，憂如，貞吉。", "meaning": "前進，但有所憂慮，堅守正道吉祥。" },
-                { "index": 3, "text": "六三：晉如，平如，貞吉。", "meaning": "前進，但有所平坦，堅守正道吉祥。" },
-                { "index": 4, "text": "九四：晉如，奮如，貞吉。", "meaning": "前進，但有所奮發，堅守正道吉祥。" },
-                { "index": 5, "text": "六五：晉如，亡如，貞吉。", "meaning": "前進，但有所喪失，堅守正道吉祥。" },
-                { "index": 6, "text": "上九：晉如，無不利。", "meaning": "前進，沒有不利。" }
-            ],
-            "火地晉": [
-                { "index": 1, "text": "初六：晉如，摧如，貞吉。", "meaning": "前進，但有所摧毀，堅守正道吉祥。" },
-                { "index": 2, "text": "六二：晉如，憂如，貞吉。", "meaning": "前進，但有所憂慮，堅守正道吉祥。" },
-                { "index": 3, "text": "六三：晉如，平如，貞吉。", "meaning": "前進，但有所平坦，堅守正道吉祥。" },
-                { "index": 4, "text": "九四：晉如，奮如，貞吉。", "meaning": "前進，但有所奮發，堅守正道吉祥。" },
-                { "index": 5, "text": "六五：晉如，亡如，貞吉。", "meaning": "前進，但有所喪失，堅守正道吉祥。" },
-                { "index": 6, "text": "上九：晉如，無不利。", "meaning": "前進，沒有不利。" }
-            ],
-            "地火明夷": [
                 { "index": 1, "text": "初六：明夷于飛，垂其翼。", "meaning": "光明遭受傷害，在飛行中垂下翅膀。" },
                 { "index": 2, "text": "六二：明夷于飛，不見其翼。", "meaning": "光明遭受傷害，在飛行中不見其翅膀。" },
                 { "index": 3, "text": "九三：明夷于飛，其翼其翼。", "meaning": "光明遭受傷害，其翅膀其翅膀。" },
                 { "index": 4, "text": "六四：明夷于飛，利貞，无咎。", "meaning": "光明遭受傷害，利於堅守正道，沒有過失。" },
                 { "index": 5, "text": "六五：明夷于飛，不見其翼，利貞，无咎。", "meaning": "光明遭受傷害，不見其翅膀，利於堅守正道，沒有過失。" },
                 { "index": 6, "text": "上九：明夷于飛，其翼其翼。", "meaning": "光明遭受傷害，其翅膀其翅膀。" }
-            ],
-            "火地晉": [
-                { "index": 1, "text": "初六：晉如，摧如，貞吉。", "meaning": "前進，但有所摧毀，堅守正道吉祥。" },
-                { "index": 2, "text": "六二：晉如，憂如，貞吉。", "meaning": "前進，但有所憂慮，堅守正道吉祥。" },
-                { "index": 3, "text": "六三：晉如，平如，貞吉。", "meaning": "前進，但有所平坦，堅守正道吉祥。" },
-                { "index": 4, "text": "九四：晉如，奮如，貞吉。", "meaning": "前進，但有所奮發，堅守正道吉祥。" },
-                { "index": 5, "text": "六五：晉如，亡如，貞吉。", "meaning": "前進，但有所喪失，堅守正道吉祥。" },
-                { "index": 6, "text": "上九：晉如，無不利。", "meaning": "前進，沒有不利。" }
-            ],
-            "地火明夷": [
-                { "index": 1, "text": "初六：明夷于飛，垂其翼。", "meaning": "光明遭受傷害，在飛行中垂下翅膀。" },
-                { "index": 2, "text": "六二：明夷于飛，不見其翼。", "meaning": "光明遭受傷害，在飛行中不見其翅膀。" },
-                { "index": 3, "text": "九三：明夷于飛，其翼其翼。", "meaning": "光明遭受傷害，其翅膀其翅膀。" },
-                { "index": 4, "text": "六四：明夷于飛，利貞，无咎。", "meaning": "光明遭受傷害，利於堅守正道，沒有過失。" },
-                { "index": 5, "text": "六五：明夷于飛，不見其翼，利貞，无咎。", "meaning": "光明遭受傷害，不見其翅膀，利於堅守正道，沒有過失。" },
-                { "index": 6, "text": "上九：明夷于飛，其翼其翼。", "meaning": "光明遭受傷害，其翅膀其翅膀。" }
-            ],
-            "地火明夷": [
-                { "index": 1, "text": "初六：明夷于飛，垂其翼。", "meaning": "光明遭受傷害，在飛行中垂下翅膀。" },
-                { "index": 2, "text": "六二：明夷于飛，不見其翼。", "meaning": "光明遭受傷害，在飛行中不見其翅膀。" },
-                { "index": 3, "text": "九三：明夷于飛，其翼其翼。", "meaning": "光明遭受傷害，其翅膀其翅膀。" },
-                { "index": 4, "text": "六四：明夷于飛，利貞，无咎。", "meaning": "光明遭受傷害，利於堅守正道，沒有過失。" },
-                { "index": 5, "text": "六五：明夷于飛，不見其翼，利貞，无咎。", "meaning": "光明遭受傷害，不見其翅膀，利於堅守正道，沒有過失。" },
-                { "index": 6, "text": "上九：明夷于飛，其翼其翼。", "meaning": "光明遭受傷害，其翅膀其翅膀。" }
-            ],
-            "澤地萃": [
-                { "index": 1, "text": "初六：有孚不終，或亂或萃，若號，一握為笑，勿恤，往無咎。", "meaning": "有誠信但不堅持到底，或混亂或聚集，若哭泣，一握手就能歡笑，不要憂慮，前往沒有過失。" },
-                { "index": 2, "text": "六二：引吉，無咎，有孚，不終，或亂或萃，若號，一握為笑，勿恤，往無咎。", "meaning": "引導吉祥，沒有過失，有誠信，但不堅持到底，或混亂或聚集，若哭泣，一握手就能歡笑，不要憂慮，前往沒有過失。" },
-                { "index": 3, "text": "六二：引吉，無咎，有孚，不終，或亂或萃，若號，一握為笑，勿恤，往無咎。", "meaning": "引導吉祥，沒有過失，有誠信，但不堅持到底，或混亂或聚集，若哭泣，一握手就能歡笑，不要憂慮，前往沒有過失。" },
-                { "index": 4, "text": "六三：萃如，不勝，無攸利。", "meaning": "聚集，但不能勝利，沒有任何好處。" },
-                { "index": 5, "text": "九四：大吉，無咎。", "meaning": "大吉，沒有過失。" },
-                { "index": 6, "text": "九五：萃如，不勝，無攸利。", "meaning": "聚集，但不能勝利，沒有任何好處。" },
-                { "index": 7, "text": "上六：萃如，不勝，無攸利。", "meaning": "聚集，但不能勝利，沒有任何好處。" },
-                { "index": 8, "text": "上六：齎咨涕洟，無咎。", "meaning": "痛苦流涕，沒有過失。" }
-            ],
-            "水地比": [
-                { "index": 1, "text": "初六：有孚比之，無咎。有孚盈缶，終來有它，吉。", "meaning": "有誠信地與人親近，沒有過失。有誠信地裝滿酒器，最終會得到意外的驚喜，吉祥。" },
-                { "index": 2, "text": "六二：比之自內，貞吉。", "meaning": "親近從內心開始，堅守正道吉祥。" },
-                { "index": 3, "text": "六三：比之匪人，凶。", "meaning": "親近不對的人，有凶險。" },
-                { "index": 4, "text": "六四：外比于賢人，貞吉。", "meaning": "與賢人親近，堅守正道吉祥。" },
-                { "index": 5, "text": "九五：顯比，王用三驅，失前禽，邑人不誡，吉。", "meaning": "親近賢人，君王用三面圍獵，放走前面的禽獸，城裡的人不警戒，吉祥。" },
-                { "index": 6, "text": "上六：比之無首，凶。", "meaning": "親近沒有首領，沒有主見，有凶險。" }
-            ],
-            "水地比": [
-                { "index": 1, "text": "初六：有孚比之，無咎。有孚盈缶，終來有它，吉。", "meaning": "有誠信地與人親近，沒有過失。有誠信地裝滿酒器，最終會得到意外的驚喜，吉祥。" },
-                { "index": 2, "text": "六二：比之自內，貞吉。", "meaning": "親近從內心開始，堅守正道吉祥。" },
-                { "index": 3, "text": "六三：比之匪人，凶。", "meaning": "親近不對的人，有凶險。" },
-                { "index": 4, "text": "六四：外比于賢人，貞吉。", "meaning": "與賢人親近，堅守正道吉祥。" },
-                { "index": 5, "text": "九五：顯比，王用三驅，失前禽，邑人不誡，吉。", "meaning": "親近賢人，君王用三面圍獵，放走前面的禽獸，城裡的人不警戒，吉祥。" },
-                { "index": 6, "text": "上六：比之無首，凶。", "meaning": "親近沒有首領，沒有主見，有凶險。" }
-            ],
-            "水地比": [
-                { "index": 1, "text": "初六：有孚比之，無咎。有孚盈缶，終來有它，吉。", "meaning": "有誠信地與人親近，沒有過失。有誠信地裝滿酒器，最終會得到意外的驚喜，吉祥。" },
-                { "index": 2, "text": "六二：比之自內，貞吉。", "meaning": "親近從內心開始，堅守正道吉祥。" },
-                { "index": 3, "text": "六三：比之匪人，凶。", "meaning": "親近不對的人，有凶險。" },
-                { "index": 4, "text": "六四：外比于賢人，貞吉。", "meaning": "與賢人親近，堅守正道吉祥。" },
-                { "index": 5, "text": "九五：顯比，王用三驅，失前禽，邑人不誡，吉。", "meaning": "親近賢人，君王用三面圍獵，放走前面的禽獸，城裡的人不警戒，吉祥。" },
-                { "index": 6, "text": "上六：比之無首，凶。", "meaning": "親近沒有首領，沒有主見，有凶險。" }
             ],
             "澤地萃": [
                 { "index": 1, "text": "初六：有孚不終，或亂或萃，若號，一握為笑，勿恤，往無咎。", "meaning": "有誠信但不堅持到底，或混亂或聚集，若哭泣，一握手就能歡笑，不要憂慮，前往沒有過失。" },
@@ -822,31 +747,14 @@
                 { "index": 5, "text": "九五：有孚攣如，無咎。", "meaning": "有誠信，像繩索一樣緊密相連，沒有過失。" },
                 { "index": 6, "text": "上六：有孚攣如，無咎。", "meaning": "有誠信，像繩索一樣緊密相連，沒有過失。" }
             ],
-            "水天需": [
-                { "index": 1, "text": "初九：需于郊，利用恒，無咎。", "meaning": "在郊外等待，利於持之以恆，沒有過失。" },
-                { "index": 2, "text": "九二：需于沙，小有言，終吉。", "meaning": "在沙地等待，雖有小人說閒話，但最終吉祥。" },
-                { "index": 3, "text": "九三：需于泥，致寇至。", "meaning": "在泥沼中等待，引來盜賊，有凶險。" },
-                { "index": 4, "text": "六四：需于血，出自穴。", "meaning": "在血泊中等待，處於危險境地，但最終能脫離險境。" },
-                { "index": 5, "text": "九五：需于酒食，貞吉。", "meaning": "在酒食宴樂中等待，堅守正道吉祥。" },
-                { "index": 6, "text": "上六：入于穴，有不速之客三人來，敬之，終吉。", "meaning": "進入洞穴中，有不速之客來訪，若能恭敬以待，最終吉祥。" }
-            ],
             "坎為水": [
                 { "index": 1, "text": "初六：習坎，入于坎，入于坎，凶。", "meaning": "習慣險難，進入險難，有凶險。" },
                 { "index": 2, "text": "九二：坎有險，求小得。", "meaning": "險難中有險，求得小小的收穫。" },
                 { "index": 3, "text": "六三：坎有險，入于坎，入于坎，凶。", "meaning": "險難中有險，進入險難，有凶險。" },
                 { "index": 4, "text": "六四：入于坎，入于坎，凶。", "meaning": "進入險難，有凶險。" },
-                { "index": 5, "text": "九五：坎有險，求大得。", "meaning": "險難中有險，求得大的收穫。" },
+                { "index": 5, "text": "九五：坎有險，求大得。", "meaning": "險難中有險，求得大的收穫." },
                 { "index": 6, "text": "上六：坎有險，入于坎，入于坎，凶。", "meaning": "險難中有險，進入險難，有凶險。" }
-            ],
-            "澤地萃": [
-                { "index": 1, "text": "初六：有孚不終，或亂或萃，若號，一握為笑，勿恤，往無咎。", "meaning": "有誠信但不堅持到底，或混亂或聚集，若哭泣，一握手就能歡笑，不要憂慮，前往沒有過失。" },
-                { "index": 2, "text": "六二：引吉，無咎，有孚，不終，或亂或萃，若號，一握為笑，勿恤，往無咎。", "meaning": "引導吉祥，沒有過失，有誠信，但不堅持到底，或混亂或聚集，若哭泣，一握手就能歡笑，不要憂慮，前往沒有過失。" },
-                { "index": 3, "text": "六三：萃如，不勝，無攸利。", "meaning": "聚集，但不能勝利，沒有任何好處。" },
-                { "index": 4, "text": "九四：大吉，無咎。", "meaning": "大吉，沒有過失。" },
-                { "index": 5, "text": "九五：萃如，不勝，無攸利。", "meaning": "聚集，但不能勝利，沒有任何好處。" },
-                { "index": 6, "text": "上六：齎咨涕洟，無咎。", "meaning": "痛苦流涕，沒有過失。" }
-            ],
-            // ... (其他卦象資料保持原狀)
+            ]
         };
 
         // 卦象吉凶判斷資料 (這裡的判斷會優先於自動判斷)
@@ -972,7 +880,7 @@
         }
         // ====== 新增的吉凶判斷演算法 END ======
 
-        // 卦象產生核心邏輯
+        // 核心生成卦象函式
         const upperGuaEl = document.getElementById('upperGuaSelect');
         const lowerGuaEl = document.getElementById('lowerGuaSelect');
         const movingLinesEl = document.getElementById('movingLinesInput');
@@ -1076,93 +984,128 @@
             const guaCombined = parseInt(`${upper}${lower}`);
             const guaName = guaNames[guaCombined];
             const guaLines = hexagramsData[guaName];
+            
+            // 處理多個動爻的情況
+            if (movingLines.length > 1) {
+                alert("目前只支援單一動爻判斷，將以第一個動爻為準。");
+                movingLines = [movingLines[0]];
+            }
 
-            // 生成變卦
-            const changeLines = [];
-            const newUpper = [];
-            const newLower = [];
-            let changeUpper, changeLower;
+            // 根據動爻生成變卦
+            const changeGuaLines = [];
+            const upperLines = [];
+            const lowerLines = [];
 
             guaLines.forEach((line, index) => {
                 let symbol = (line.text.includes('九') || line.text.includes('七')) ? '—' : '— —';
-                
+                let changeSymbol = symbol;
+
                 if (movingLines.includes(line.index)) {
                     // 變爻
-                    symbol = `<span>${symbol}</span>`;
-                    
-                    if (line.text.includes('九') || line.text.includes('七')) {
-                        // 陽變陰
-                        changeLines.push({ ...line, symbol: '— —' });
-                        if (index < 3) {
-                            newLower.push('陰');
-                        } else {
-                            newUpper.push('陰');
-                        }
+                    if (symbol === '—') {
+                        changeSymbol = '— —';
                     } else {
-                        // 陰變陽
-                        changeLines.push({ ...line, symbol: '—' });
-                        if (index < 3) {
-                            newLower.push('陽');
-                        } else {
-                            newUpper.push('陽');
-                        }
+                        changeSymbol = '—';
                     }
+                }
+                
+                changeGuaLines.push(changeSymbol);
+                if (index < 3) {
+                    lowerLines.push(changeSymbol);
                 } else {
-                    // 不變
-                    changeLines.push({ ...line, symbol: symbol });
-                    if (index < 3) {
-                        newLower.push(symbol === '—' ? '陽' : '陰');
-                    } else {
-                        newUpper.push(symbol === '—' ? '陽' : '陰');
-                    }
+                    upperLines.push(changeSymbol);
                 }
             });
             
-            const originalGuaImage = generateGuaImage(upper, lower, movingLines);
-            const changeGuaImage = generateChangeGuaImage(newUpper, newLower, movingLines);
-
+            const getGuaNumber = (lineSymbols) => {
+                const binary = lineSymbols.map(s => s === '—' ? '1' : '0').reverse().join('');
+                const decimal = parseInt(binary, 2);
+                const guaMap = {
+                    0: 8, // 坤
+                    1: 7, // 艮
+                    2: 6, // 坎
+                    3: 5, // 巽
+                    4: 4, // 震
+                    5: 3, // 離
+                    6: 2, // 兌
+                    7: 1, // 乾
+                };
+                return guaMap[decimal];
+            };
+            
+            const changeUpperNum = getGuaNumber(upperLines);
+            const changeLowerNum = getGuaNumber(lowerLines);
+            const changeGuaName = guaNames[parseInt(`${changeUpperNum}${changeLowerNum}`)];
+            
             // 生成互卦
-            const huGuaUpperLine = guaLines[1];
-            const huGuaMiddleLine = guaLines[2];
-            const huGuaLowerLine = guaLines[3];
+            const huGuaCombined = getHuGua(guaLines);
+            const huGuaName = guaNames[huGuaCombined];
             
-            const huUpperNum = (huGuaUpperLine.text.includes('九') || huGuaUpperLine.text.includes('七')) ? 1 : 2;
-            const huMiddleNum = (huGuaMiddleLine.text.includes('九') || huGuaMiddleLine.text.includes('七')) ? 1 : 2;
-            const huLowerNum = (huGuaLowerLine.text.includes('九') || huGuaLowerLine.text.includes('七')) ? 1 : 2;
-            
-            const huUpper = (huUpperNum * 4) + (huMiddleNum * 2) + huLowerNum;
-            const huLower = (huGuaMiddleLine.text.includes('九') || huGuaMiddleLine.text.includes('七')) ? 1 : 2;
-            
-            const huGuaUpperNum = parseInt((upper === 1 ? '1' : '0') + (huGuaUpperLine.text.includes('九') || huGuaUpperLine.text.includes('七') ? '1' : '0') + (huGuaMiddleLine.text.includes('九') || huGuaMiddleLine.text.includes('七') ? '1' : '0'), 2);
-            const huGuaLowerNum = parseInt((huGuaMiddleLine.text.includes('九') || huGuaMiddleLine.text.includes('七') ? '1' : '0') + (huGuaLowerLine.text.includes('九') || huGuaLowerLine.text.includes('七') ? '1' : '0') + (lower === 1 ? '1' : '0'), 2);
-
-            const huGuaName = guaNames[parseInt(`${huGuaUpperNum+1}${huGuaLowerNum+1}`)];
-            const huGuaImage = generateGuaImage(huGuaUpperNum+1, huGuaLowerNum+1, []);
+            const huUpperNum = Math.floor(huGuaCombined / 10);
+            const huLowerNum = huGuaCombined % 10;
 
             // 顯示結果
-            showResults(guaName, originalGuaImage, guaLines, changeGuaName, changeGuaImage, huGuaName, huGuaImage, movingLines);
+            showResults(guaName, upper, lower, movingLines, changeGuaName, changeUpperNum, changeLowerNum, huGuaName, huUpperNum, huLowerNum);
         }
 
-        function generateGuaImage(upper, lower, movingLines) {
+        // 輔助函式：產生互卦的數字
+        function getHuGua(guaLines) {
+            const getLineValue = (line) => (line.text.includes('九') || line.text.includes('七')) ? '1' : '0';
+            
+            const huUpperLines = [
+                getLineValue(guaLines[4]),
+                getLineValue(guaLines[3]),
+                getLineValue(guaLines[2])
+            ].join('');
+            
+            const huLowerLines = [
+                getLineValue(guaLines[3]),
+                getLineValue(guaLines[2]),
+                getLineValue(guaLines[1])
+            ].join('');
+            
+            const binaryToGuaNumber = (binary) => {
+                const decimal = parseInt(binary, 2);
+                const guaMap = {
+                    0: 8, // 坤
+                    1: 7, // 艮
+                    2: 6, // 坎
+                    3: 5, // 巽
+                    4: 4, // 震
+                    5: 3, // 離
+                    6: 2, // 兌
+                    7: 1, // 乾
+                };
+                return guaMap[decimal];
+            };
+
+            const huUpper = binaryToGuaNumber(huUpperLines);
+            const huLower = binaryToGuaNumber(huLowerLines);
+            
+            return parseInt(`${huUpper}${huLower}`);
+        }
+
+        // 輔助函式：產生卦象圖像
+        function generateGuaImage(upper, lower, movingLines, type) {
             let imageHTML = "";
             let guaImageLines = [];
+            
             const upperGuaName = guaSymbols[upper];
             const lowerGuaName = guaSymbols[lower];
             
             guaImageLines = [
-                upperGuaName.split('')[1],
-                upperGuaName.split('')[2],
                 upperGuaName.split('')[3],
-                lowerGuaName.split('')[1],
+                upperGuaName.split('')[2],
+                upperGuaName.split('')[1],
+                lowerGuaName.split('')[3],
                 lowerGuaName.split('')[2],
-                lowerGuaName.split('')[3]
+                lowerGuaName.split('')[1]
             ];
 
-            // 添加動爻效果
-            for (let i = 5; i >= 0; i--) {
+            for (let i = 0; i < 6; i++) {
                 const lineIndex = 6 - i;
                 let line = guaImageLines[i];
-                if (movingLines.includes(lineIndex)) {
+                if (type === 'original' && movingLines.includes(lineIndex)) {
                     line = `<span class="moving-line">${line}</span>`;
                 }
                 imageHTML += line + "<br>";
@@ -1170,29 +1113,22 @@
             return imageHTML;
         }
 
-        function generateChangeGuaImage(upperLines, lowerLines, movingLines) {
-            const allLines = [...upperLines, ...lowerLines];
-            let imageHTML = "";
-            for (let i = 5; i >= 0; i--) {
-                const lineIndex = 6 - i;
-                let line = allLines[i];
-                if (movingLines.includes(lineIndex)) {
-                    line = `<span class="moving-line">${line}</span>`;
-                }
-                imageHTML += line + "<br>";
-            }
-            return imageHTML;
-        }
 
-        function showResults(guaName, guaImageHTML, guaLines, changeGuaName, changeGuaImageHTML, huGuaName, huGuaImageHTML, movingLines) {
+        function showResults(guaName, upper, lower, movingLines, changeGuaName, changeUpper, changeLower, huGuaName, huUpper, huLower) {
+            const guaCombined = parseInt(`${upper}${lower}`);
+            const guaLines = hexagramsData[guaName];
+            
+            // 顯示本卦
             guaNameEl.textContent = guaName;
-            guaImageEl.innerHTML = guaImageHTML;
+            guaImageEl.innerHTML = generateGuaImage(upper, lower, movingLines, 'original');
 
+            // 顯示變卦
             changeGuaNameEl.textContent = changeGuaName;
-            changeGuaImageEl.innerHTML = changeGuaImageHTML;
+            changeGuaImageEl.innerHTML = generateGuaImage(changeUpper, changeLower, movingLines, 'change');
 
+            // 顯示互卦
             huGuaNameEl.textContent = huGuaName;
-            huGuaImageEl.innerHTML = huGuaImageHTML;
+            huGuaImageEl.innerHTML = generateGuaImage(huUpper, huLower, [], 'hu');
 
             // 顯示綜合判斷
             const judgement = calculateComprehensiveJudgement(guaName, changeGuaName, huGuaName, movingLines);
