@@ -1,0 +1,142 @@
+<!DOCTYPE html><html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>易經卦象解釋</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
+    .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; }
+    h1 { text-align: center; }
+    .tabs { display: flex; border-bottom: 1px solid #ccc; margin-bottom: 10px; }
+    .tab { padding: 10px 20px; cursor: pointer; border: 1px solid #ccc; border-bottom: none; border-radius: 10px 10px 0 0; margin-right: 5px; background: #eee; }
+    .tab.active { background: #fff; font-weight: bold; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .btn { padding: 6px 12px; margin: 5px; cursor: pointer; border: 1px solid #aaa; border-radius: 5px; background: #f0f0f0; }
+    .gua-box { border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+    pre { white-space: pre-wrap; word-wrap: break-word; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>易經卦象解釋</h1>
+    <div>
+      <button class="btn" onclick="exportJSON()">匯出 JSON</button>
+      <input type="file" id="jsonFile" style="display:none" accept="application/json"/>
+      <button class="btn" onclick="document.getElementById('jsonFile').click()">載入自訂 JSON</button>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-tab="tab1">卦象</div>
+      <div class="tab" data-tab="tab2">逐爻解釋</div>
+      <div class="tab" data-tab="tab3">綜合判斷</div>
+    </div><div id="tab1" class="tab-content active">
+  <div class="gua-box">
+    <h2 id="base-gua-name">本卦：</h2>
+    <div id="base-gua"></div>
+  </div>
+  <div class="gua-box">
+    <h2 id="change-gua-name">變卦：</h2>
+    <div id="change-gua"></div>
+  </div>
+  <div class="gua-box">
+    <h2 id="hu-gua-name">互卦：</h2>
+    <div id="hu-gua"></div>
+  </div>
+</div>
+
+<div id="tab2" class="tab-content">
+  <h2>逐爻解釋</h2>
+  <div id="line-explanation"></div>
+</div>
+
+<div id="tab3" class="tab-content">
+  <h2>綜合判斷</h2>
+  <div id="judgement-box"></div>
+</div>
+
+  </div>  <script>
+    // 範例 hexagramsData（只放乾卦，其他卦可補完）
+    let hexagramsData = {
+      "乾為天": [
+        { index: 1, text: "初九：潛龍勿用", meaning: "隱藏實力，時機未到。" },
+        { index: 2, text: "九二：見龍在田，利見大人", meaning: "才德展現，遇貴人相助。" },
+        { index: 3, text: "九三：君子終日乾乾，夕惕若厲，無咎", meaning: "勤奮警惕，自可無咎。" },
+        { index: 4, text: "九四：或躍在淵，無咎", meaning: "把握機會，進退得宜。" },
+        { index: 5, text: "九五：飛龍在天，利見大人", meaning: "事業大展，眾望所歸。" },
+        { index: 6, text: "上九：亢龍有悔", meaning: "過度張揚，必招後悔。" }
+      ]
+    };
+
+    function renderLines(guaName) {
+      const box = document.getElementById("line-explanation");
+      box.innerHTML = "";
+      const arr = hexagramsData[guaName] || [];
+      arr.sort((a,b)=>a.index-b.index).forEach(line => {
+        const div = document.createElement("div");
+        div.innerHTML = `<b>第${line.index}爻</b>：${line.text} <br>白話：${line.meaning}`;
+        div.style.borderBottom = "1px solid #ddd";
+        div.style.padding = "5px 0";
+        box.appendChild(div);
+      });
+    }
+
+    function getJudgement(guaName, movingLines=[]) {
+      let arr = hexagramsData[guaName] || [];
+      let score = 0;
+      arr.forEach(l => {
+        if (/吉|利|無咎/.test(l.text + l.meaning)) score++;
+        if (/凶|悔|咎/.test(l.text + l.meaning)) score--;
+      });
+      let type = "平";
+      if (score >= 3) type = "大吉";
+      else if (score >= 1) type = "小吉";
+      else if (score <= -3) type = "大凶";
+      else if (score <= -1) type = "小凶";
+      return { type, advice: score>0?"適合積極進取":"宜守不宜進" };
+    }
+
+    function renderJudgement(guaName) {
+      const box = document.getElementById("judgement-box");
+      const j = getJudgement(guaName);
+      box.innerHTML = `<p><b>吉凶判斷：</b>${j.type}</p><p><b>建議：</b>${j.advice}</p>`;
+    }
+
+    function exportJSON(){
+      const blob = new Blob([JSON.stringify(hexagramsData,null,2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "zhouyi_data.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById("jsonFile").addEventListener("change", function(e){
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt){
+        try {
+          hexagramsData = JSON.parse(evt.target.result);
+          alert("JSON 資料已載入");
+          renderLines("乾為天");
+          renderJudgement("乾為天");
+        } catch(err){ alert("載入失敗: "+err); }
+      };
+      reader.readAsText(file);
+    });
+
+    // Tab 切換
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", function(){
+        document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(tab.dataset.tab).classList.add("active");
+      });
+    });
+
+    // 初始化
+    renderLines("乾為天");
+    renderJudgement("乾為天");
+  </script></body>
+</html>
