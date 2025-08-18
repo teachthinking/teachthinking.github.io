@@ -1,0 +1,19 @@
+{
+  "乾為天": {
+    "judgment": { 
+      "overall": 8.5,
+      "people": 8, "affairs": 9, "time": 8, "place": 7, "object": 8
+    },
+    "lines": [
+      {
+        "index": 1,
+        "text": "初九：潛龍，勿用。",
+        "meaning": "蓄勢待發，宜守宜藏。",
+        "score": 5.5,
+        "aspect": { "people": 6, "affairs": 5, "time": 5, "place": 5, "object": 6 }
+      }
+      // … index 2~6
+    ]
+  }
+  // … 其餘卦名（如「坤為地」「水雷屯」「山水蒙」等）
+}
