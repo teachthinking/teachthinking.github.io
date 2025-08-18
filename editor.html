@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>易經資料編輯器</title>
+    <style>
+        body {
+            font-family: "Noto Sans TC", sans-serif;
+            background: #f7f7f7;
+            color: #222;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+        }
+        h1 { margin: 0 0 6px 0; font-size: 26px; }
+        .hint { font-size: 13px; color: #666; margin-bottom: 20px; }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 9px 16px;
+            background: #222;
+            color: #fff;
+            border-radius: 8px;
+            border: 0;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        textarea {
+            width: 100%;
+            height: 60vh;
+            border: 1px solid #d0d0d0;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .message.success { background: #e8f5e9; color: #388e3c; }
+        .message.error { background: #ffebee; color: #d32f2f; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>易經資料編輯器</h1>
+        <div class="hint">直接修改 JSON 格式的卦象數據。</div>
+
+        <div class="toolbar">
+            <button id="loadBtn">載入 hexagrams.json</button>
+            <button id="formatBtn">格式化 JSON</button>
+            <button id="downloadBtn">下載 hexagrams.json</button>
+        </div>
+
+        <textarea id="jsonEditor"></textarea>
+        <div id="message" class="message hidden"></div>
+    </div>
+
+    <script>
+        const editor = document.getElementById('jsonEditor');
+        const messageBox = document.getElementById('message');
+
+        function showMessage(msg, type) {
+            messageBox.textContent = msg;
+            messageBox.className = `message ${type}`;
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        document.getElementById('loadBtn').addEventListener('click', () => {
+            fetch('hexagrams.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('無法載入檔案，請確保 hexagrams.json 存在於相同目錄！');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    editor.value = data;
+                    showMessage('hexagrams.json 載入成功！', 'success');
+                })
+                .catch(error => {
+                    editor.value = '';
+                    showMessage(error.message, 'error');
+                });
+        });
+
+        document.getElementById('formatBtn').addEventListener('click', () => {
+            try {
+                const data = JSON.parse(editor.value);
+                editor.value = JSON.stringify(data, null, 2);
+                showMessage('JSON 格式化成功！', 'success');
+            } catch (e) {
+                showMessage(`JSON 格式錯誤：${e.message}`, 'error');
+            }
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            try {
+                const data = JSON.parse(editor.value); // 再次驗證
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'hexagrams.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showMessage('檔案下載成功！', 'success');
+            } catch (e) {
+                showMessage(`JSON 格式錯誤，無法下載：${e.message}`, 'error');
+            }
+        });
+
+        // 頁面載入時自動載入 JSON
+        window.addEventListener('load', () => {
+             document.getElementById('loadBtn').click();
+        });
+    </script>
+</body>
+</html>
