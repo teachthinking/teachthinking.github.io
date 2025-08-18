@@ -166,6 +166,7 @@
   let hexList = [];             // 原始陣列
   const hexByLines = new Map(); // JSON(lines) -> entry
   const hexByName = new Map();  // name/title -> entry
+  const hexByCombinedName = new Map(); // 新增：用於匹配 "乾為乾" 這種組合名稱
 
   // 載入 hexagrams.json（若存在）
   fetch('hexagrams.json')
@@ -193,8 +194,6 @@
       
       hexList.forEach(entry => {
         if (!entry) return;
-        if (entry.name) hexByName.set(entry.name, entry);
-        if (entry.title) hexByName.set(entry.title, entry);
         
         // 核心修正：將 lines 陣列轉換為 0/1 格式，並作為 Map 的鍵
         if (Array.isArray(entry.lines) && entry.lines.length === 6) {
@@ -207,9 +206,18 @@
           if (linesBinary.every(val => val !== null) && linesBinary.length === 6) {
             const key = JSON.stringify(linesBinary);
             hexByLines.set(key, entry);
+
+            // 新增：同時建立組合名稱到標準名稱的映射
+            const uIdx = triIndexByLines.get(JSON.stringify(linesBinary.slice(3, 6)));
+            const lIdx = triIndexByLines.get(JSON.stringify(linesBinary.slice(0, 3)));
+            if (uIdx && lIdx) {
+              const combinedName = `${trigramName[uIdx]}為${trigramName[lIdx]}`;
+              hexByCombinedName.set(combinedName, entry);
+            }
           }
         }
       });
+      console.log('hexByCombinedName:', hexByCombinedName); // Debug
     })
     .catch(()=> { /* 允許沒有 hexagrams.json */ });
 
@@ -247,7 +255,11 @@
     if (!lines || lines.length !== 6) return '卦象錯誤';
     const uIdx = triIndexByLines.get(JSON.stringify(lines.slice(3, 6)));
     const lIdx = triIndexByLines.get(JSON.stringify(lines.slice(0, 3)));
-    return `${trigramName[uIdx]}為${trigramName[lIdx]}`;
+    
+    // 優先從組合名稱對照表尋找
+    const combinedName = `${trigramName[uIdx]}為${trigramName[lIdx]}`;
+    const entry = hexByCombinedName.get(combinedName);
+    return entry ? (entry.name || entry.title) : combinedName;
   }
 
   function findHexEntryByLines(lines){
