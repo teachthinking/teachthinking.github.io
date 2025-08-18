@@ -91,7 +91,7 @@
     </div>
 
     <div id="tab-time" class="tab-content">
-      <h3>時間取卦（梅花易）</h3>
+      <h3>時間取卦</h3>
       <div class="row">
         <input id="dtInput" type="datetime-local" />
         <button id="btnTime" class="primary">以時間生成卦象</button>
@@ -359,7 +359,7 @@
   });
 
   /* ---------------------------
-     綁定：時間取卦（梅花易）初始化與處理
+     綁定：時間取卦 初始化與處理
      --------------------------- */
   function pad(n){ return String(n).padStart(2,'0'); }
   function localDatetimeForInput(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
