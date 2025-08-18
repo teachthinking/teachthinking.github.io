@@ -52,5 +52,97 @@
       { "index": 5, "text": "九五：屯其膏，小貞吉，大貞凶。", "meaning": "資源有限，小事可行，大事難成。", "score": 5 },
       { "index": 6, "text": "上六：乘馬班如，泣血漣如。", "meaning": "困境未解，易生悲傷。", "score": 3 }
     ]
-  }
+  },
+  {
+  "山水蒙": {
+    "judgment": {
+      "overall": 5,
+      "people": 6,
+      "affairs": 5,
+      "time": 4,
+      "place": 5,
+      "object": 5
+    },
+    "lines": [
+      { "index": 1, "text": "初六：發蒙，利用刑人，用說桎梏，以往吝。", "meaning": "啟蒙之初需嚴正規範，否則易生悔吝。", "score": 4 },
+      { "index": 2, "text": "九二：包蒙吉，納婦吉，子克家。", "meaning": "包容蒙昧可獲吉祥，如主婦持家。", "score": 7 },
+      { "index": 3, "text": "六三：勿用取女，見金夫，不有躬，無攸利。", "meaning": "不當結合如見利忘義，無所獲益。", "score": 3 },
+      { "index": 4, "text": "六四：困蒙，吝。", "meaning": "困於蒙昧，孤立無援。", "score": 2 },
+      { "index": 5, "text": "六五：童蒙，吉。", "meaning": "虛心受教如童子，自然吉祥。", "score": 8 },
+      { "index": 6, "text": "上九：擊蒙，不利為寇，利禦寇。", "meaning": "嚴厲啟蒙需適度，過剛則招反抗。", "score": 5 }
+    ]
+  },
+  "水天需": {
+    "judgment": {
+      "overall": 7,
+      "people": 7,
+      "affairs": 8,
+      "time": 6,
+      "place": 6,
+      "object": 7
+    },
+    "lines": [
+      { "index": 1, "text": "初九：需于郊，利用恆，無咎。", "meaning": "耐心等待於遠方，堅守可免災。", "score": 6 },
+      { "index": 2, "text": "九二：需于沙，小有言，終吉。", "meaning": "臨近險境有口舌，終能化解。", "score": 7 },
+      { "index": 3, "text": "九三：需于泥，致寇至。", "meaning": "陷於險境，招致禍患。", "score": 4 },
+      { "index": 4, "text": "六四：需于血，出自穴。", "meaning": "身陷險境，終能脫困。", "score": 5 },
+      { "index": 5, "text": "九五：需于酒食，貞吉。", "meaning": "安享飲食以待時，守正得吉。", "score": 9 },
+      { "index": 6, "text": "上六：入于穴，有不速之客三人來，敬之終吉。", "meaning": "意外變故，以禮相待可化吉。", "score": 6 }
+    ]
+  },
+  "天水訟": {
+    "judgment": {
+      "overall": 4,
+      "people": 3,
+      "affairs": 4,
+      "time": 5,
+      "place": 4,
+      "object": 4
+    },
+    "lines": [
+      { "index": 1, "text": "初六：不永所事，小有言，終吉。", "meaning": "不爭執到底，小有口舌終吉祥。", "score": 6 },
+      { "index": 2, "text": "九二：不克訟，歸而逋，其邑人三百戶無眚。", "meaning": "訟敗能退避，可免災殃。", "score": 5 },
+      { "index": 3, "text": "六三：食舊德，貞厲，終吉。", "meaning": "安守本分，雖險終吉。", "score": 6 },
+      { "index": 4, "text": "九四：不克訟，復即命，渝安貞，吉。", "meaning": "知訟不可勝，回歸正道則吉。", "score": 7 },
+      { "index": 5, "text": "九五：訟，元吉。", "meaning": "公正裁決，大得人心。", "score": 8 },
+      { "index": 6, "text": "上九：或錫之鞶帶，終朝三褫之。", "meaning": "爭訟得勝亦難持久。", "score": 3 }
+    ]
+  },
+  "地水師": {
+    "judgment": {
+      "overall": 6,
+      "people": 7,
+      "affairs": 5,
+      "time": 6,
+      "place": 5,
+      "object": 6
+    },
+    "lines": [
+      { "index": 1, "text": "初六：師出以律，否臧凶。", "meaning": "軍隊需嚴明紀律，否則必凶。", "score": 4 },
+      { "index": 2, "text": "九二：在師中，吉無咎，王三錫命。", "meaning": "統帥得中道，獲君王信任。", "score": 8 },
+      { "index": 3, "text": "六三：師或輿尸，凶。", "meaning": "戰敗載尸而歸，大凶。", "score": 2 },
+      { "index": 4, "text": "六四：師左次，無咎。", "meaning": "撤退防守，免於災禍。", "score": 6 },
+      { "index": 5, "text": "六五：田有禽，利執言，無咎。", "meaning": "師出有名，節制可免過失。", "score": 7 },
+      { "index": 6, "text": "上六：大君有命，開國承家，小人勿用。", "meaning": "論功行賞時需防小人。", "score": 5 }
+    ]
+  },
+  "水地比": {
+    "judgment": {
+      "overall": 8,
+      "people": 9,
+      "affairs": 8,
+      "time": 7,
+      "place": 7,
+      "object": 8
+    },
+    "lines": [
+      { "index": 1, "text": "初六：有孚比之，無咎。有孚盈缶，終來有它吉。", "meaning": "誠信親附，終獲意外之吉。", "score": 8 },
+      { "index": 2, "text": "六二：比之自內，貞吉。", "meaning": "發自內心的親比，固守正道則吉。", "score": 9 },
+      { "index": 3, "text": "六三：比之匪人。", "meaning": "親附不得其人。", "score": 3 },
+      { "index": 4, "text": "六四：外比之，貞吉。", "meaning": "向外親附賢者，守正得吉。", "score": 7 },
+      { "index": 5, "text": "九五：顯比，王用三驅，失前禽，邑人不誡，吉。", "meaning": "光明親比，如君王網開一面。", "score": 9 },
+      { "index": 6, "text": "上六：比之無首，凶。", "meaning": "親比無主導者，必致凶險。", "score": 2 }
+    ]
+  },
+  
 }
