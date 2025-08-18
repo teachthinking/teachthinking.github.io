@@ -1,56 +1,56 @@
 {
   "乾為天": {
     "judgment": {
-      "overall": 8,
-      "people": 8,
-      "affairs": 9,
+      "overall": 9,
+      "people": 9,
+      "affairs": 10,
       "time": 8,
       "place": 7,
-      "object": 8
+      "object": 9
     },
     "lines": [
-      { "index": 1, "text": "初九：潛龍，勿用。", "meaning": "潛藏不出，時機未到。", "score": 5 },
-      { "index": 2, "text": "九二：見龍在田，利見大人。", "meaning": "剛健顯現，得遇貴人。", "score": 7 },
-      { "index": 3, "text": "九三：君子終日乾乾，夕惕若厲，無咎。", "meaning": "勤奮不懈，保持警惕。", "score": 7 },
-      { "index": 4, "text": "九四：或躍在淵，無咎。", "meaning": "進退得宜，無所害。", "score": 6 },
-      { "index": 5, "text": "九五：飛龍在天，利見大人。", "meaning": "時運高亨，貴人相助。", "score": 9 },
-      { "index": 6, "text": "上九：亢龍有悔。", "meaning": "剛愎自用，終致後悔。", "score": 3 }
+      { "index": 1, "text": "初九：潛龍，勿用。", "meaning": "龍潛水中，不宜妄動。", "score": 5 },
+      { "index": 2, "text": "九二：見龍在田，利見大人。", "meaning": "龍現田野，利見德位兼備者。", "score": 8 },
+      { "index": 3, "text": "九三：君子終日乾乾，夕惕若厲，無咎。", "meaning": "君子晝夜勤勉警惕，雖危無害。", "score": 7 },
+      { "index": 4, "text": "九四：或躍在淵，無咎。", "meaning": "龍躍深淵（進退有據），無過。", "score": 6 },
+      { "index": 5, "text": "九五：飛龍在天，利見大人。", "meaning": "龍飛天際（君王之位），大吉。", "score": 10 },
+      { "index": 6, "text": "上九：亢龍有悔。", "meaning": "龍飛過高（剛極必反），有悔。", "score": 3 }
     ]
   },
   "坤為地": {
     "judgment": {
-      "overall": 7,
-      "people": 7,
-      "affairs": 6,
-      "time": 7,
-      "place": 8,
-      "object": 7
+      "overall": 8,
+      "people": 8,
+      "affairs": 7,
+      "time": 8,
+      "place": 9,
+      "object": 8
     },
     "lines": [
-      { "index": 1, "text": "初六：履霜，堅冰至。", "meaning": "小惡不除，終成大害。", "score": 5 },
-      { "index": 2, "text": "六二：直方大，不習無不利。", "meaning": "誠直正大，無往不利。", "score": 8 },
-      { "index": 3, "text": "六三：含章可貞。", "meaning": "內斂含蓄，守正可吉。", "score": 6 },
-      { "index": 4, "text": "六四：括囊，無咎無譽。", "meaning": "收斂自守，免招是非。", "score": 5 },
-      { "index": 5, "text": "六五：黃裳，元吉。", "meaning": "中庸柔順，吉祥亨通。", "score": 9 },
-      { "index": 6, "text": "上六：龍戰於野，其血玄黃。", "meaning": "剛柔爭鬥，兩敗俱傷。", "score": 3 }
+      { "index": 1, "text": "初六：履霜，堅冰至。", "meaning": "踏霜知冰將至（見微知著）。", "score": 6 },
+      { "index": 2, "text": "六二：直方大，不習無不利。", "meaning": "正直端方（地道本質），不刻意為亦無不利。", "score": 9 },
+      { "index": 3, "text": "六三：含章可貞。或從王事，無成有終。", "meaning": "蘊含文采守正。輔佐君王，不居功有善終。", "score": 7 },
+      { "index": 4, "text": "六四：括囊，無咎無譽。", "meaning": "紮緊口袋（謹言慎行），無過亦無譽。", "score": 5 },
+      { "index": 5, "text": "六五：黃裳，元吉。", "meaning": "穿黃色下裳（柔中居尊），大吉。", "score": 10 },
+      { "index": 6, "text": "上六：龍戰於野，其血玄黃。", "meaning": "陰陽相爭（坤極返剛），兩敗俱傷。", "score": 2 }
     ]
   },
   "水雷屯": {
     "judgment": {
       "overall": 5,
       "people": 5,
-      "affairs": 5,
-      "time": 5,
+      "affairs": 4,
+      "time": 6,
       "place": 5,
       "object": 5
     },
     "lines": [
-      { "index": 1, "text": "初九：磐桓，利居貞，利建侯。", "meaning": "開端艱難，宜守正，逐步前行。", "score": 5 },
-      { "index": 2, "text": "六二：屯如邅如，乘馬班如。", "meaning": "進退艱難，阻力重重。", "score": 4 },
-      { "index": 3, "text": "六三：即鹿無虞，惟入於林中。", "meaning": "盲目妄動，必有損失。", "score": 4 },
-      { "index": 4, "text": "六四：乘馬班如，求婚媾，往吉，無不利。", "meaning": "謀合有機，轉機可得。", "score": 6 },
-      { "index": 5, "text": "九五：屯其膏，小貞吉，大貞凶。", "meaning": "資源有限，小事可行，大事難成。", "score": 5 },
-      { "index": 6, "text": "上六：乘馬班如，泣血漣如。", "meaning": "困境未解，易生悲傷。", "score": 3 }
+      { "index": 1, "text": "初九：磐桓，利居貞，利建侯。", "meaning": "徘徊不進（初生艱難），宜守正，利分封諸侯。", "score": 6 },
+      { "index": 2, "text": "六二：屯如邅如，乘馬班如。匪寇婚媾，女子貞不字，十年乃字。", "meaning": "艱難徘徊，非寇乃求婚。女子守貞不嫁，十年方嫁（遲得正應）。", "score": 5 },
+      { "index": 3, "text": "六三：即鹿無虞，惟入于林中。君子幾不如舍，往吝。", "meaning": "逐鹿無向导，深入林間。君子知機不如捨棄，往必有憾。", "score": 3 },
+      { "index": 4, "text": "六四：乘馬班如，求婚媾，往吉無不利。", "meaning": "騎馬徘徊求婚，前往吉祥。", "score": 7 },
+      { "index": 5, "text": "九五：屯其膏，小貞吉，大貞凶。", "meaning": "囤積資源，小事守正吉，大事則凶。", "score": 5 },
+      { "index": 6, "text": "上六：乘馬班如，泣血漣如。", "meaning": "騎馬徘徊，血淚交流（窮途末路）。", "score": 1 }
     ]
   },
   
