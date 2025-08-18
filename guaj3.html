@@ -202,9 +202,9 @@
             if (line.text && line.text.includes('九')) return 1;
             if (line.text && line.text.includes('六')) return 0;
             return null;
-          }).filter(x => x !== null);
+          });
           
-          if (linesBinary.length === 6) {
+          if (linesBinary.every(val => val !== null) && linesBinary.length === 6) {
             const key = JSON.stringify(linesBinary);
             hexByLines.set(key, entry);
           }
