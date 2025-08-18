@@ -143,6 +143,312 @@
       { "index": 5, "text": "九五：顯比，王用三驅，失前禽，邑人不誡，吉。", "meaning": "光明親比，如君王網開一面。", "score": 9 },
       { "index": 6, "text": "上六：比之無首，凶。", "meaning": "親比無主導者，必致凶險。", "score": 2 }
     ]
-  }
+  }，
+  "風天小畜": {
+    "judgment": {
+      "overall": 6,
+      "people": 6,
+      "affairs": 7,
+      "time": 5,
+      "place": 6,
+      "object": 6
+    },
+    "lines": [
+      { "index": 1, "text": "初九：復自道，何其咎？吉。", "meaning": "回歸正道，無過且吉。", "score": 7 },
+      { "index": 2, "text": "九二：牽復，吉。", "meaning": "與人同返正道，吉祥。", "score": 8 },
+      { "index": 3, "text": "九三：輿說輻，夫妻反目。", "meaning": "如車輪脫軸，關係破裂。", "score": 3 },
+      { "index": 4, "text": "六四：有孚，血去惕出，無咎。", "meaning": "以誠信化解危機，免除憂懼。", "score": 6 },
+      { "index": 5, "text": "九五：有孚攣如，富以其鄰。", "meaning": "誠信團結，與鄰共享富足。", "score": 9 },
+      { "index": 6, "text": "上九：既雨既處，尚德載，婦貞厲。月幾望，君子征凶。", "meaning": "盛極而危，陰柔過盛則凶。", "score": 4 }
+    ]
+  },
+  "天澤履": {
+    "judgment": {
+      "overall": 7,
+      "people": 7,
+      "affairs": 8,
+      "time": 6,
+      "place": 6,
+      "object": 7
+    },
+    "lines": [
+      { "index": 1, "text": "初九：素履往，無咎。", "meaning": "樸實行事，無所過失。", "score": 7 },
+      { "index": 2, "text": "九二：履道坦坦，幽人貞吉。", "meaning": "守道安恬，隱者得吉。", "score": 8 },
+      { "index": 3, "text": "六三：眇能視，跛能履，履虎尾，咥人，凶。武人為于大君。", "meaning": "力不從心卻冒進，如踩虎尾遭凶。", "score": 2 },
+      { "index": 4, "text": "九四：履虎尾，愬愬終吉。", "meaning": "謹慎面對危險，終得吉祥。", "score": 6 },
+      { "index": 5, "text": "九五：夬履，貞厲。", "meaning": "剛決而行，需防險阻。", "score": 5 },
+      { "index": 6, "text": "上九：視履考祥，其旋元吉。", "meaning": "回顧歷程，周詳者大吉。", "score": 9 }
+    ]
+  },
+  "地天泰": {
+    "judgment": {
+      "overall": 9,
+      "people": 9,
+      "affairs": 9,
+      "time": 8,
+      "place": 8,
+      "object": 9
+    },
+    "lines": [
+      { "index": 1, "text": "初九：拔茅茹，以其彙，征吉。", "meaning": "連根拔起茅草（象徵團結行動），出征吉祥。", "score": 8 },
+      { "index": 2, "text": "九二：包荒，用馮河，不遐遺，朋亡，得尚于中行。", "meaning": "包容廣大，果敢渡河，不遺遠友，符合中道。", "score": 9 },
+      { "index": 3, "text": "九三：無平不陂，無往不復，艱貞無咎。勿恤其孚，于食有福。", "meaning": "盛極必衰是常理，艱守正道則無害，終有福報。", "score": 7 },
+      { "index": 4, "text": "六四：翩翩不富，以其鄰，不戒以孚。", "meaning": "虛懷不貪，與鄰以誠相待。", "score": 8 },
+      { "index": 5, "text": "六五：帝乙歸妹，以祉元吉。", "meaning": "如帝王嫁妹般謙和，大獲吉祥。", "score": 10 },
+      { "index": 6, "text": "上六：城復于隍，勿用師。自邑告命，貞吝。", "meaning": "盛世轉衰，不宜用兵，守成亦難。", "score": 4 }
+    ]
+  },
+  "天地否": {
+    "judgment": {
+      "overall": 3,
+      "people": 3,
+      "affairs": 2,
+      "time": 4,
+      "place": 3,
+      "object": 3
+    },
+    "lines": [
+      { "index": 1, "text": "初六：拔茅茹，以其彙，貞吉亨。", "meaning": "小人結黨（與泰卦初九對比），守正可免禍。", "score": 5 },
+      { "index": 2, "text": "六二：包承，小人吉，大人否亨。", "meaning": "小人阿諛得逞，君子守困。", "score": 4 },
+      { "index": 3, "text": "六三：包羞。", "meaning": "忍辱含羞。", "score": 3 },
+      { "index": 4, "text": "九四：有命無咎，疇離祉。", "meaning": "奉命行事無害，與眾同獲福。", "score": 6 },
+      { "index": 5, "text": "九五：休否，大人吉。其亡其亡，繫于苞桑。", "meaning": "閉塞將終，君子如繫於桑根般穩固。", "score": 8 },
+      { "index": 6, "text": "上九：傾否，先否後喜。", "meaning": "閉塞極而傾覆，先苦後樂。", "score": 7 }
+    ]
+  },
+  "天火同人": {
+    "judgment": {
+      "overall": 8,
+      "people": 9,
+      "affairs": 8,
+      "time": 7,
+      "place": 7,
+      "object": 8
+    },
+    "lines": [
+      { "index": 1, "text": "初九：同人于門，無咎。", "meaning": "出門即與人和同，無過失。", "score": 7 },
+      { "index": 2, "text": "六二：同人于宗，吝。", "meaning": "僅與同宗親近，格局狹小。", "score": 5 },
+      { "index": 3, "text": "九三：伏戎于莽，升其高陵，三歲不興。", "meaning": "隱藏兵甲於草莽，三年不敢動，暗藏衝突。", "score": 4 },
+      { "index": 4, "text": "九四：乘其墉，弗克攻，吉。", "meaning": "登上城牆卻不進攻（節制得宜），吉祥。", "score": 7 },
+      { "index": 5, "text": "九五：同人，先號咷而後笑，大師克相遇。", "meaning": "先衝突後和諧，大軍會師化解矛盾。", "score": 9 },
+      { "index": 6, "text": "上九：同人于郊，無悔。", "meaning": "在郊外與人和同，無可悔恨。", "score": 6 }
+    ]
+  },
+  "火天大有": {
+    "judgment": {
+      "overall": 9,
+      "people": 8,
+      "affairs": 9,
+      "time": 8,
+      "place": 8,
+      "object": 9
+    },
+    "lines": [
+      { "index": 1, "text": "初九：無交害，匪咎，艱則無咎。", "meaning": "不涉及利害，艱苦自守則無害。", "score": 6 },
+      { "index": 2, "text": "九二：大車以載，有攸往，無咎。", "meaning": "如大車滿載，穩健前行。", "score": 8 },
+      { "index": 3, "text": "九三：公用亨于天子，小人弗克。", "meaning": "君子獻貢於天子，小人不能勝任。", "score": 7 },
+      { "index": 4, "text": "九四：匪其彭，無咎。", "meaning": "不過分炫耀，免於災禍。", "score": 7 },
+      { "index": 5, "text": "六五：厥孚交如，威如，吉。", "meaning": "以誠信威嚴待人，大吉。", "score": 10 },
+      { "index": 6, "text": "上九：自天祐之，吉無不利。", "meaning": "天道佑助，無往不利。", "score": 9 }
+    ]
+  },
+  "地山謙": {
+    "judgment": {
+      "overall": 9,
+      "people": 9,
+      "affairs": 8,
+      "time": 8,
+      "place": 9,
+      "object": 9
+    },
+    "lines": [
+      { "index": 1, "text": "初六：謙謙君子，用涉大川，吉。", "meaning": "謙而又謙的君子，可渡險難。", "score": 8 },
+      { "index": 2, "text": "六二：鳴謙，貞吉。", "meaning": "謙德外顯而正固，吉祥。", "score": 9 },
+      { "index": 3, "text": "九三：勞謙君子，有終吉。", "meaning": "有功仍謙，善始善終。", "score": 10 },
+      { "index": 4, "text": "六四：無不利，撝謙。", "meaning": "發揮謙德，無所不利。", "score": 9 },
+      { "index": 5, "text": "六五：不富以其鄰，利用侵伐，無不利。", "meaning": "虛心不恃富，必要時以武力服眾亦無礙。", "score": 7 },
+      { "index": 6, "text": "上六：鳴謙，利用行師，征邑國。", "meaning": "謙名遠播，可用兵征不服。", "score": 6 }
+    ]
+  },
+  "雷地豫": {
+    "judgment": {
+      "overall": 7,
+      "people": 8,
+      "affairs": 7,
+      "time": 7,
+      "place": 6,
+      "object": 7
+    },
+    "lines": [
+      { "index": 1, "text": "初六：鳴豫，凶。", "meaning": "沉溺歡樂自鳴得意，凶。", "score": 2 },
+      { "index": 2, "text": "六二：介于石，不終日，貞吉。", "meaning": "耿介如石，不待終日即悟正道。", "score": 8 },
+      { "index": 3, "text": "六三：盱豫悔，遲有悔。", "meaning": "諂媚求樂終悔，遲疑亦悔。", "score": 3 },
+      { "index": 4, "text": "九四：由豫，大有得。勿疑，朋盍簪。", "meaning": "眾樂由己而致，朋友聚合。", "score": 9 },
+      { "index": 5, "text": "六五：貞疾，恆不死。", "meaning": "守正防疾，雖危不亡。", "score": 6 },
+      { "index": 6, "text": "上六：冥豫，成有渝，無咎。", "meaning": "昏昧享樂，及時改正則無害。", "score": 5 }
+    ]
+  },
+  "澤雷隨": {
+    "judgment": {
+      "overall": 7,
+      "people": 8,
+      "affairs": 7,
+      "time": 6,
+      "place": 6,
+      "object": 7
+    },
+    "lines": [
+      { "index": 1, "text": "初九：官有渝，貞吉。出門交有功。", "meaning": "主導權變動時，守正可吉。對外交接有利。", "score": 7 },
+      { "index": 2, "text": "六二：係小子，失丈夫。", "meaning": "依附小人將失去強者支持。", "score": 4 },
+      { "index": 3, "text": "六三：係丈夫，失小子。隨有求得，利居貞。", "meaning": "選擇跟隨強者，需守正防貪。", "score": 6 },
+      { "index": 4, "text": "九四：隨有獲，貞凶。有孚在道，以明，何咎？", "meaning": "隨從獲利需防貪，光明正道則無咎。", "score": 5 },
+      { "index": 5, "text": "九五：孚于嘉，吉。", "meaning": "以誠信隨從善美，大吉。", "score": 9 },
+      { "index": 6, "text": "上六：拘係之，乃從維之。王用亨于西山。", "meaning": "強制隨從，需以誠意維繫（如周文王祭西山）。", "score": 5 }
+    ]
+  },
+  "山風蠱": {
+    "judgment": {
+      "overall": 5,
+      "people": 4,
+      "affairs": 5,
+      "time": 6,
+      "place": 5,
+      "object": 5
+    },
+    "lines": [
+      { "index": 1, "text": "初六：幹父之蠱，有子，考無咎，厲終吉。", "meaning": "糾正父輩積弊，雖艱險終吉。", "score": 7 },
+      { "index": 2, "text": "九二：幹母之蠱，不可貞。", "meaning": "處理母系遺患，不可過剛。", "score": 5 },
+      { "index": 3, "text": "九三：幹父之蠱，小有悔，無大咎。", "meaning": "改革過急有小悔，但無大害。", "score": 6 },
+      { "index": 4, "text": "六四：裕父之蠱，往見吝。", "meaning": "寬縱積弊，往後必困。", "score": 3 },
+      { "index": 5, "text": "六五：幹父之蠱，用譽。", "meaning": "以聲譽繼承父業（如周武王承文德）。", "score": 8 },
+      { "index": 6, "text": "上九：不事王侯，高尚其事。", "meaning": "超然不理世事（如伯夷叔齊）。", "score": 6 }
+    ]
+  },
+  "地澤臨": {
+    "judgment": {
+      "overall": 8,
+      "people": 8,
+      "affairs": 9,
+      "time": 7,
+      "place": 7,
+      "object": 8
+    },
+    "lines": [
+      { "index": 1, "text": "初九：咸臨，貞吉。", "meaning": "以感化領導，守正得吉。", "score": 8 },
+      { "index": 2, "text": "九二：咸臨，吉無不利。", "meaning": "廣泛感化眾人，無往不利。", "score": 9 },
+      { "index": 3, "text": "六三：甘臨，無攸利。既憂之，無咎。", "meaning": "僅以甜言領導無益，知憂則免禍。", "score": 4 },
+      { "index": 4, "text": "六四：至臨，無咎。", "meaning": "親臨處事，無過失。", "score": 7 },
+      { "index": 5, "text": "六五：知臨，大君之宜，吉。", "meaning": "以智慧統御，君主典範。", "score": 10 },
+      { "index": 6, "text": "上六：敦臨，吉無咎。", "meaning": "以厚德領導，吉祥無害。", "score": 8 }
+    ]
+  },
+  "風地觀": {
+    "judgment": {
+      "overall": 6,
+      "people": 7,
+      "affairs": 6,
+      "time": 5,
+      "place": 6,
+      "object": 6
+    },
+    "lines": [
+      { "index": 1, "text": "初六：童觀，小人無咎，君子吝。", "meaning": "如童子淺見，小人無害，君子則憾。", "score": 4 },
+      { "index": 2, "text": "六二：闚觀，利女貞。", "meaning": "狹隘觀察（如女子窺視），僅利守成。", "score": 5 },
+      { "index": 3, "text": "六三：觀我生，進退。", "meaning": "審視自身，決定進退。", "score": 6 },
+      { "index": 4, "text": "六四：觀國之光，利用賓于王。", "meaning": "觀摩國家光輝，適合作君王賓客。", "score": 8 },
+      { "index": 5, "text": "九五：觀我生，君子無咎。", "meaning": "君子自省，免於過失。", "score": 9 },
+      { "index": 6, "text": "上九：觀其生，君子無咎。", "meaning": "觀察他人作為，君子可避禍。", "score": 7 }
+    ]
+  },
+  "火雷噬嗑": {
+    "judgment": {
+      "overall": 5,
+      "people": 5,
+      "affairs": 6,
+      "time": 5,
+      "place": 4,
+      "object": 5
+    },
+    "lines": [
+      { "index": 1, "text": "初九：屨校滅趾，無咎。", "meaning": "腳鐐傷趾（小懲戒），可免大過。", "score": 5 },
+      { "index": 2, "text": "六二：噬膚滅鼻，無咎。", "meaning": "如咬肉傷鼻（強力執法），但無害。", "score": 6 },
+      { "index": 3, "text": "六三：噬臘肉，遇毒，小吝，無咎。", "meaning": "咬腐肉遇毒（處棘手事），小困無害。", "score": 4 },
+      { "index": 4, "text": "九四：噬乾胏，得金矢，利艱貞，吉。", "meaning": "啃硬骨得銅矢（解難獲助），守正終吉。", "score": 7 },
+      { "index": 5, "text": "六五：噬乾肉，得黃金，貞厲，無咎。", "meaning": "咬乾肉得金（處險獲利），謹慎無害。", "score": 6 },
+      { "index": 6, "text": "上九：何校滅耳，凶。", "meaning": "肩扛刑具傷耳（大罪罰），凶。", "score": 2 }
+    ]
+  },
+  "山火賁": {
+    "judgment": {
+      "overall": 6,
+      "people": 7,
+      "affairs": 6,
+      "time": 6,
+      "place": 5,
+      "object": 7
+    },
+    "lines": [
+      { "index": 1, "text": "初九：賁其趾，舍車而徒。", "meaning": "裝飾腳趾（樸實為美），寧步行不乘車。", "score": 7 },
+      { "index": 2, "text": "六二：賁其須。", "meaning": "修飾鬍鬚（輔佐尊者）。", "score": 6 },
+      { "index": 3, "text": "九三：賁如濡如，永貞吉。", "meaning": "文采光潤，長守正道則吉。", "score": 8 },
+      { "index": 4, "text": "六四：賁如皤如，白馬翰如，匪寇婚媾。", "meaning": "素白裝飾（返璞歸真），白馬飛馳非敵是友。", "score": 7 },
+      { "index": 5, "text": "六五：賁于丘園，束帛戔戔，吝，終吉。", "meaning": "簡樸裝飾山園，雖吝嗇終吉。", "score": 6 },
+      { "index": 6, "text": "上九：白賁，無咎。", "meaning": "純白無飾（絢爛歸於平淡），無過。", "score": 9 }
+    ]
+  },
+  "山地剝": {
+    "judgment": {
+      "overall": 3,
+      "people": 2,
+      "affairs": 3,
+      "time": 4,
+      "place": 3,
+      "object": 3
+    },
+    "lines": [
+      { "index": 1, "text": "初六：剝床以足，蔑貞凶。", "meaning": "腐蝕從床腳開始，輕視正道必凶。", "score": 2 },
+      { "index": 2, "text": "六二：剝床以辨，蔑貞凶。", "meaning": "腐蝕至床板，仍不守正更凶。", "score": 1 },
+      { "index": 3, "text": "六三：剝之，無咎。", "meaning": "參與腐蝕卻能免禍（因與上九相應）。", "score": 5 },
+      { "index": 4, "text": "六四：剝床以膚，凶。", "meaning": "腐蝕至床面，災及自身。", "score": 2 },
+      { "index": 5, "text": "六五：貫魚以宮人寵，無不利。", "meaning": "如宮女列隊受寵（有序順從），轉危為安。", "score": 7 },
+      { "index": 6, "text": "上九：碩果不食，君子得輿，小人剝廬。", "meaning": "唯一陽爻：君子得車（獲民心），小人毀屋（失根本）。", "score": 8 }
+    ]
+  },
+  "地雷復": {
+    "judgment": {
+      "overall": 8,
+      "people": 7,
+      "affairs": 8,
+      "time": 9,
+      "place": 7,
+      "object": 8
+    },
+    "lines": [
+      { "index": 1, "text": "初九：不遠復，無祗悔，元吉。", "meaning": "失誤即改，大吉。", "score": 9 },
+      { "index": 2, "text": "六二：休復，吉。", "meaning": "欣然歸復正道，吉祥。", "score": 8 },
+      { "index": 3, "text": "六三：頻復，厲無咎。", "meaning": "屢犯屢改，雖危無害。", "score": 6 },
+      { "index": 4, "text": "六四：中行獨復。", "meaning": "與眾同行時獨自歸正。", "score": 7 },
+      { "index": 5, "text": "六五：敦復，無悔。", "meaning": "敦厚堅定地歸復，無悔。", "score": 8 },
+      { "index": 6, "text": "上六：迷復，凶，有災眚。用行師，終有大敗，以其國君凶，至于十年不克征。", "meaning": "迷途不返，大凶（如戰敗亡國）。", "score": 1 }
+    ]
+  },
+  "天雷無妄": {
+    "judgment": {
+      "overall": 7,
+      "people": 7,
+      "affairs": 8,
+      "time": 6,
+      "place": 7,
+      "object": 7
+    },
+    "lines": [
+      { "index": 1, "text": "初九：無妄，往吉。", "meaning": "不妄為，前行必吉。", "score": 8 },
+      { "index": 2, "text": "六二：不耕獲，不菑畬，則利有攸往。", "meaning": "不妄想不勞而獲，利於行動。", "score": 7 },
+      { "index": 3, "text": "六三：無妄之災，或繫之牛，行人之得，邑人之災。", "meaning": "意外災禍（如牛被路人牽走，村民蒙冤）。", "score": 3 },
+      { "index": 4, "text": "九四：可貞，無咎。", "meaning": "堅守正道，免於災禍。", "score": 6 },
+      { "index": 5, "text": "九五：無妄之疾，勿藥有喜。", "meaning": "無故患病（如心理因素），不藥自癒。", "score": 7 },
+      { "index": 6, "text": "上九：無妄，行有眚，無攸利。", "meaning": "雖不妄為，行將遇險，無利可圖。", "score": 4 }
+    ]
+  },
   
 }
