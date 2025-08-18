@@ -292,6 +292,32 @@
      生成並顯示卦象（主流程）
      --------------------------- */
  
+    
+    
+    
+    
+    
+    let currentResult = null;
+
+  function makeFromUpperLower(uIdx, lIdx){
+    const upper = guaTable[uIdx] || guaTable[1];
+    const lower = guaTable[lIdx] || guaTable[1];
+    // lines: bottom->top
+    return [...lower, ...upper];
+  }
+
+  function generateGua(uIdx, lIdx, movingArr){
+    const moving = Array.isArray(movingArr) ? movingArr.filter(x=>Number.isFinite(x) && x>=1 && x<=6) : [];
+    const lines = makeFromUpperLower(uIdx, lIdx); // bottom->top
+    // main hex entry
+    const hexMain = findHexEntryByLines(lines) || findHexEntryByName(formatName(uIdx,lIdx));
+   // const mainName = hexMain && (hexMain.name || hexMain.title) ? (hexMain.name || hexMain.title) : formatName(uIdx,lIdx);
+    const upName = trigramName[uIdx];
+const lowName = trigramName[lIdx];
+const key = upName + lowName;
+const mapped = hexagramNameMap[key];
+const mainName = mapped || formatName(uIdx,lIdx);
+const hexMain = findHexEntryByName(mainName);
     const hexagramNameMap = {
   "乾乾": "乾為天",
   "坤坤": "坤為地",
@@ -355,31 +381,6 @@
   "艮兌": "艮為山",
   "兌艮": "兌為澤"
 };
-    
-    
-    
-    
-    let currentResult = null;
-
-  function makeFromUpperLower(uIdx, lIdx){
-    const upper = guaTable[uIdx] || guaTable[1];
-    const lower = guaTable[lIdx] || guaTable[1];
-    // lines: bottom->top
-    return [...lower, ...upper];
-  }
-
-  function generateGua(uIdx, lIdx, movingArr){
-    const moving = Array.isArray(movingArr) ? movingArr.filter(x=>Number.isFinite(x) && x>=1 && x<=6) : [];
-    const lines = makeFromUpperLower(uIdx, lIdx); // bottom->top
-    // main hex entry
-    const hexMain = findHexEntryByLines(lines) || findHexEntryByName(formatName(uIdx,lIdx));
-   // const mainName = hexMain && (hexMain.name || hexMain.title) ? (hexMain.name || hexMain.title) : formatName(uIdx,lIdx);
-    const upName = trigramName[uIdx];
-const lowName = trigramName[lIdx];
-const key = upName + lowName;
-const mapped = hexagramNameMap[key];
-const mainName = mapped || formatName(uIdx,lIdx);
-const hexMain = findHexEntryByName(mainName);
     // 變卦：複製並翻轉指定爻
     const changeLines = lines.slice();
     moving.forEach(n => { const idx = n - 1; if (idx>=0 && idx<6) changeLines[idx] = 1 - changeLines[idx]; });
