@@ -18,6 +18,10 @@
     button.primary{ padding:10px 20px; background:#333; color:#fff; border:0; border-radius:6px; cursor:pointer; }
     #line-explanation{ margin-top:20px; }
     #judgeBox{ margin-top:20px; border:2px solid #666; padding:12px; border-radius:10px; }
+    .score-card { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+    .score-bar-wrap{ flex:1; margin:0 10px; height:10px; background:#eee; border-radius:6px; overflow:hidden; }
+    .score-bar{ height:100%; background:linear-gradient(90deg,#f44336,#ff9800,#4caf50); width:0; transition:width .4s; }
+    .score-val{ font-weight:bold; }
   </style>
 </head>
 <body>
@@ -91,14 +95,12 @@
 </div>
 
   </div>  <script>
-    const guaTable = { 1:[1,1,1],2:[0,1,1],3:[1,0,1],4:[0,0,1],5:[1,1,0],6:[0,1,0],7:[1,0,0],8:[0,0,0] };
-    const all64Gua = [
-      { id:1,name:'乾為天',lines:[1,1,1,1,1,1] },
-      { id:2,name:'坤為地',lines:[0,0,0,0,0,0] }
-    ];
-
+    const guaTable={1:[1,1,1],2:[0,1,1],3:[1,0,1],4:[0,0,1],5:[1,1,0],6:[0,1,0],7:[1,0,0],8:[0,0,0]};
+    const all64Gua=[{id:1,name:'乾為天',lines:[1,1,1,1,1,1]},{id:2,name:'坤為地',lines:[0,0,0,0,0,0]}];
     let hexagramsData={};
     fetch('hexagrams.json').then(r=>r.json()).then(j=>hexagramsData=j);
+
+    let currentResult={};
 
     const resultDiv=document.getElementById('result');
     const guaNameH2=document.getElementById('guaName');
@@ -160,6 +162,7 @@
         }
       }else lineExplanationDiv.classList.add('hidden');
 
+      currentResult={main:gua,change:changeGua,hu:huGua,moving,mName:gua.name,cName:changeGua&&changeGua.name,hName:huGua&&huGua.name};
       resultDiv.classList.remove('hidden');
       document.getElementById('judgeBox').classList.add('hidden');
     }
@@ -177,10 +180,75 @@
       generateGua(u,l,ms);
     });
 
-    // 綜合判斷按鈕（目前僅顯示區塊，實際計算之後導入）
+    // 綜合判斷計算
+    const WEIGHTS={moving:0.4,main:0.25,change:0.2,hu:0.15};
+    const ASPECTS=[{k:'people',n:'人'},{k:'affairs',n:'事'},{k:'time',n:'時'},{k:'place',n:'地'},{k:'object',n:'物'}];
+
+    function clamp(x){return Math.max(0,Math.min(10,x));}
+    function getAspect(entry){
+      if(!entry||!hexagramsData[entry.name]) return {people:5,affairs:5,time:5,place:5,object:5};
+      const j=hexagramsData[entry.name].judgment||{};
+      return {
+        people:clamp(j.people??j.overall??5),
+        affairs:clamp(j.affairs??j.overall??5),
+        time:clamp(j.time??j.overall??5),
+        place:clamp(j.place??j.overall??5),
+        object:clamp(j.object??j.overall??5)
+      };
+    }
+    function movingImpact(entry,moving){
+      if(!entry||!hexagramsData[entry.name]) return {people:5,affairs:5,time:5,place:5,object:5};
+      const lines=hexagramsData[entry.name].lines||[];
+      if(!moving||moving.length===0) return {people:5,affairs:5,time:5,place:5,object:5};
+      let sum={people:0,affairs:0,time:0,place:0,object:0},c=0;
+      moving.forEach(i=>{
+        const ln=lines.find(l=>l.index===i);
+        let s=ln&&ln.score?ln.score:5;
+        let a=ln&&ln.aspect?ln.aspect:null;
+        if(a){
+          sum.people+=clamp(a.people??s);
+          sum.affairs+=clamp(a.affairs??s);
+          sum.time+=clamp(a.time??s);
+          sum.place+=clamp(a.place??s);
+          sum.object+=clamp(a.object??s);
+        } else {
+          sum.people+=s;sum.affairs+=s;sum.time+=s;sum.place+=s;sum.object+=s;
+        }
+        c++;
+      });
+      return {people:sum.people/c,affairs:sum.affairs/c,time:sum.time/c,place:sum.place/c,object:sum.object/c};
+    }
+    function computeScores(res){
+      const main=getAspect(res.main);
+      const change=getAspect(res.change);
+      const hu=getAspect(res.hu);
+      const mv=movingImpact(res.main,res.moving);
+      let out={};
+      ASPECTS.forEach(a=>{
+        out[a.k]=WEIGHTS.moving*mv[a.k]+WEIGHTS.main*main[a.k]+WEIGHTS.change*change[a.k]+WEIGHTS.hu*hu[a.k];
+      });
+      return out;
+    }
+    function renderScores(scores){
+      const wrap=document.getElementById('scoreWrap');
+      wrap.innerHTML='';
+      ASPECTS.forEach(a=>{
+        const v=clamp(scores[a.k]);
+        const card=document.createElement('div');card.className='score-card';
+        const name=document.createElement('div');name.textContent=`【${a.n}】`;
+        const barW=document.createElement('div');barW.className='score-bar-wrap';
+        const bar=document.createElement('div');bar.className='score-bar';bar.style.width=(v*10)+'%';
+        barW.appendChild(bar);
+        const val=document.createElement('div');val.className='score-val';val.textContent=v.toFixed(1);
+        card.appendChild(name);card.appendChild(barW);card.appendChild(val);
+        wrap.appendChild(card);
+      });
+    }
+
     document.getElementById('judgeBtn').addEventListener('click',()=>{
+      const sc=computeScores(currentResult);
+      renderScores(sc);
       document.getElementById('judgeBox').classList.remove('hidden');
-      document.getElementById('scoreWrap').innerHTML='<p>（此處將顯示人事時地物五向度分數）</p>';
     });
   </script></body>
 </html>
