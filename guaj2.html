@@ -35,7 +35,6 @@
     <h1>張老師易經卜卦</h1>
     <h2 id="subtitle" class="subtitle">載入中…（若無 quotes.json 顯示預設句）</h2>
 
-    <!-- 分頁按鈕 -->
     <div class="tab-buttons">
       <button class="tab-button active" data-target="tab-number">數字取卦</button>
       <button class="tab-button" data-target="tab-manual">手動取卦</button>
@@ -43,7 +42,6 @@
       <button class="tab-button" data-target="tab-image">以象取卦</button>
     </div>
 
-    <!-- 數字取卦 -->
     <div id="tab-number" class="tab-content active">
       <h3>數字取卦</h3>
       <div class="row">
@@ -55,7 +53,6 @@
       <div class="row"><span class="hint">提示：輸入 100–999。上/下卦 = 數字 % 8（0 視為 8），動爻 = 數字 % 6（0 視為 6）。頁面載入會隨機預設三個數字。</span></div>
     </div>
 
-    <!-- 手動取卦 -->
     <div id="tab-manual" class="tab-content">
       <h3>手動取卦</h3>
       <div class="row">
@@ -72,7 +69,6 @@
       </div>
     </div>
 
-    <!-- 時間取卦（梅花易） -->
     <div id="tab-time" class="tab-content">
       <h3>時間取卦（梅花易）</h3>
       <div class="row">
@@ -83,7 +79,6 @@
       <div class="row"><span class="hint">算法：上卦 = (年+月+日) % 8；下卦 = (年+月+日+時) % 8；動爻 = (年+月+日+時+分) % 6；餘數為 0 則視為 8 或 6。</span></div>
     </div>
 
-    <!-- 以象取卦 -->
     <div id="tab-image" class="tab-content">
       <h3>以象取卦</h3>
       <div class="row">
@@ -115,7 +110,6 @@
       </div>
     </div>
 
-    <!-- 結果區 -->
     <div id="result" class="hidden">
       <h2>卦象結果</h2>
 
@@ -164,9 +158,6 @@
   const trigramName = {1:'乾',2:'兌',3:'離',4:'震',5:'巽',6:'坎',7:'艮',8:'坤'};
   const triIndexByLines = new Map(Object.entries(guaTable).map(([i,arr])=>[JSON.stringify(arr), +i]));
 
-
-
-    
   // hexagrams.json 支援彈性讀取（array 或 object）：
   let hexList = [];             // 原始陣列
   const hexByLines = new Map(); // JSON(lines) -> entry
@@ -176,29 +167,51 @@
   fetch('hexagrams.json')
     .then(r => r.json())
     .then(data => {
-      // 正規化為陣列
-      if (Array.isArray(data)) hexList = data;
-      else if (data && typeof data === 'object') {
-        hexList = Object.keys(data).map(k => {
-          const e = data[k] || {};
-          if (!e.name && !e.title) e.name = k;
-          return e;
-        });
+      // 建立一個臨時陣列來存放處理後的卦象資料
+      let processedHexList = [];
+      
+      // 檢查資料格式，如果不是陣列，就假設它是物件
+      if (Array.isArray(data)) {
+        processedHexList = data;
+      } else if (data && typeof data === 'object') {
+        // 遍歷物件中的每個卦象，並將其轉換成程式預期的結構
+        for (const key in data) {
+          if (Object.prototype.hasOwnProperty.call(data, key)) {
+            const entry = data[key] || {};
+            // 如果 entry 沒有 name 或 title，就用 key 當作 name
+            if (!entry.name && !entry.title) {
+              entry.name = key;
+            }
+            // 處理 lines 陣列，確保其為 bottom->top 的 0/1 陣列
+            // 為了讓程式碼更通用，這裡我們可以利用卦名反推三爻，再組合六爻。
+            const guaName = key.replace(/[上為]/g, '').trim(); // 移除"上,為"
+            const upperName = guaName.slice(0, 1);
+            const lowerName = guaName.slice(1, 2);
+            
+            const uIdx = Object.keys(trigramName).find(k => trigramName[k] === upperName);
+            const lIdx = Object.keys(trigramName).find(k => trigramName[k] === lowerName);
+            
+            if (uIdx && lIdx) {
+              entry.lines = makeFromUpperLower(uIdx, lIdx); // 重新生成 lines 陣列
+            }
+            processedHexList.push(entry);
+          }
+        }
       }
 
+      // 將處理後的資料載入到全域變數中
+      hexList = processedHexList;
+      
       // 建立快速對照
       hexList.forEach(entry => {
         if (!entry) return;
         // name/title
         if (entry.name) hexByName.set(entry.name, entry);
         if (entry.title) hexByName.set(entry.title, entry);
-        // lines：若 entry.lines 為長度 6 的陣列，建立正反序 key
+        // lines
         if (Array.isArray(entry.lines) && entry.lines.length === 6) {
-          const k1 = JSON.stringify(entry.lines); // 假設 bottom->top 或 top->bottom，不確定
-          const k2 = JSON.stringify([...entry.lines].reverse());
-          // 優先保留已存在的（避免覆寫），但儲存兩種 orientation 都指向 entry
-          if (!hexByLines.has(k1)) hexByLines.set(k1, entry);
-          if (!hexByLines.has(k2)) hexByLines.set(k2, entry);
+          const k1 = JSON.stringify(entry.lines); // 假設 bottom->top
+          hexByLines.set(k1, entry);
         }
       });
     })
@@ -239,8 +252,6 @@
   function findHexEntryByLines(lines){
     const key = JSON.stringify(lines);
     if (hexByLines.has(key)) return hexByLines.get(key);
-    const revKey = JSON.stringify([...lines].reverse());
-    if (hexByLines.has(revKey)) return hexByLines.get(revKey);
     return null;
   }
   function findHexEntryByName(name){
@@ -270,17 +281,9 @@
   function getLineEntryFor(hexEntry, yaoIndex){
     if (!hexEntry || !Array.isArray(hexEntry.lines)) return null;
     const arr = hexEntry.lines;
-    // 若 arr 中元素有 index 屬性，優先找 index 相符
+    // 找 index 相符
     for (const el of arr) {
       if (el && (el.index === yaoIndex || el.index === String(yaoIndex))) return (typeof el === 'string') ? { text: el } : el;
-    }
-    // 若純陣列，先假設 order = bottom->top
-    if (arr.length === 6) {
-      const maybe = arr[yaoIndex - 1];
-      if (maybe) return (typeof maybe === 'string') ? { text: maybe } : maybe;
-      // 再嘗試 top->bottom
-      const maybeRev = arr[arr.length - yaoIndex];
-      if (maybeRev) return (typeof maybeRev === 'string') ? { text: maybeRev } : maybeRev;
     }
     return null;
   }
@@ -294,13 +297,7 @@
   /* ---------------------------
      生成並顯示卦象（主流程）
      --------------------------- */
- 
-    
-
-    
-    
-    
-    let currentResult = null;
+  let currentResult = null;
 
   function makeFromUpperLower(uIdx, lIdx){
     const upper = guaTable[uIdx] || guaTable[1];
@@ -310,16 +307,12 @@
   }
 
   function generateGua(uIdx, lIdx, movingArr){
-
-
-    
     const moving = Array.isArray(movingArr) ? movingArr.filter(x=>Number.isFinite(x) && x>=1 && x<=6) : [];
     const lines = makeFromUpperLower(uIdx, lIdx); // bottom->top
     // main hex entry
     const hexMain = findHexEntryByLines(lines) || findHexEntryByName(formatName(uIdx,lIdx));
-   const mainName = hexMain && (hexMain.name || hexMain.title) ? (hexMain.name || hexMain.title) : formatName(uIdx,lIdx);
-    
-    
+    const mainName = hexMain && (hexMain.name || hexMain.title) ? (hexMain.name || hexMain.title) : formatName(uIdx,lIdx);
+
     // 變卦：複製並翻轉指定爻
     const changeLines = lines.slice();
     moving.forEach(n => { const idx = n - 1; if (idx>=0 && idx<6) changeLines[idx] = 1 - changeLines[idx]; });
