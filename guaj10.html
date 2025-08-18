@@ -441,7 +441,7 @@
       }
     }
 
-    const WEIGHTS = {moving:0.4, main:0.25, change:0.2, hu:0.15};
+    const WEIGHTS = {moving:0.5, main:0.2, change:0.2, hu:0.1};
     const out = {};
     ASPECTS.forEach(a => {
       out[a.k] = (WEIGHTS.moving * movingScores[a.k] + WEIGHTS.main * mainScores[a.k] + WEIGHTS.change * changeScores[a.k] + WEIGHTS.hu * huScores[a.k]) || 0;
