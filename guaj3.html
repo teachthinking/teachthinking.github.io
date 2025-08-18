@@ -169,59 +169,45 @@
 
   // 載入 hexagrams.json（若存在）
   fetch('hexagrams.json')
-    .then(r => r.json())
+    .then(r => {
+        if (!r.ok) throw new Error('Network response was not ok');
+        return r.json();
+    })
     .then(data => {
-      // 建立一個臨時陣列來存放處理後的卦象資料
       let processedHexList = [];
-      
-      // 檢查資料格式，如果不是陣列，就假設它是物件
       if (Array.isArray(data)) {
         processedHexList = data;
       } else if (data && typeof data === 'object') {
-        // 遍歷物件中的每個卦象，並將其轉換成程式預期的結構
         for (const key in data) {
           if (Object.prototype.hasOwnProperty.call(data, key)) {
-            const entry = data[key] || {};
-            // 如果 entry 沒有 name 或 title，就用 key 當作 name
-            if (!entry.name && !entry.title) {
-              entry.name = key;
+            const entry = data[key];
+            if (entry) {
+                entry.name = key; // 使用 object key 作為卦名
+                processedHexList.push(entry);
             }
-            // 處理 lines 陣列
-            if (data[key].lines) {
-                entry.lines = data[key].lines;
-            } else {
-                // 如果 JSON 沒有 lines 屬性，嘗試從卦名推導
-                const guaName = key.replace(/[上為]/g, '').trim();
-                const upperName = guaName.slice(0, 1);
-                const lowerName = guaName.slice(1, 2);
-                
-                const uIdx = Object.keys(trigramName).find(k => trigramName[k] === upperName);
-                const lIdx = Object.keys(trigramName).find(k => trigramName[k] === lowerName);
-                if (uIdx && lIdx) {
-                    entry.lines = makeFromUpperLower(uIdx, lIdx);
-                }
-            }
-            processedHexList.push(entry);
           }
         }
       }
 
-      // 將處理後的資料載入到全域變數中
       hexList = processedHexList;
       
-      // 建立快速對照
       hexList.forEach(entry => {
         if (!entry) return;
-        // name/title
         if (entry.name) hexByName.set(entry.name, entry);
         if (entry.title) hexByName.set(entry.title, entry);
         
-        // lines
+        // 核心修正：將 lines 陣列轉換為 0/1 格式，並作為 Map 的鍵
         if (Array.isArray(entry.lines) && entry.lines.length === 6) {
-          // 確保 lines 是純粹的 0/1 陣列，才能被 JSON.stringify 正確處理
-          const linesBinary = entry.lines.map(line => line.value || (line.index && (line.index.includes('九') ? 1 : 0)));
-          const key = JSON.stringify(linesBinary);
-          hexByLines.set(key, entry);
+          const linesBinary = entry.lines.map(line => {
+            if (line.text && line.text.includes('九')) return 1;
+            if (line.text && line.text.includes('六')) return 0;
+            return null;
+          }).filter(x => x !== null);
+          
+          if (linesBinary.length === 6) {
+            const key = JSON.stringify(linesBinary);
+            hexByLines.set(key, entry);
+          }
         }
       });
     })
@@ -229,7 +215,10 @@
 
   // 載入 quotes.json 作為副標題（若沒有則使用預設）
   fetch('quotes.json')
-    .then(r => r.json())
+    .then(r => {
+        if (!r.ok) throw new Error('Network response was not ok');
+        return r.json();
+    })
     .then(list => {
       if (Array.isArray(list) && list.length > 0) {
         document.getElementById('subtitle').textContent = list[Math.floor(Math.random()*list.length)];
@@ -254,33 +243,23 @@
     btn.addEventListener('click', ()=> showTabById(btn.dataset.target));
   });
 
-  function formatName(uIdx, lIdx){
-    return `${trigramName[uIdx] || uIdx}上・${trigramName[lIdx] || lIdx}下`;
+  function formatGuaNameByLines(lines){
+    if (!lines || lines.length !== 6) return '卦象錯誤';
+    const uIdx = triIndexByLines.get(JSON.stringify(lines.slice(3, 6)));
+    const lIdx = triIndexByLines.get(JSON.stringify(lines.slice(0, 3)));
+    return `${trigramName[uIdx]}為${trigramName[lIdx]}`;
   }
 
-  // 找 hex entry：先以 6 爻陣列（bottom->top）匹配，找不到再以名稱匹配
   function findHexEntryByLines(lines){
     const key = JSON.stringify(lines);
-    if (hexByLines.has(key)) return hexByLines.get(key);
-    // 找不到則反向查找
-    const reversedLines = [...lines].reverse();
-    const reversedKey = JSON.stringify(reversedLines);
-    if (hexByLines.has(reversedKey)) return hexByLines.get(reversedKey);
-    return null;
+    return hexByLines.get(key);
   }
-  function findHexEntryByName(name){
-    if (hexByName.has(name)) return hexByName.get(name);
-    return null;
-  }
-
-  // 顯示卦象的文字線條（由上到下顯示）
+  
   function getGuaHtml(lines, moving=[]){
-    // lines: bottom->top (index0 = 爻1 下爻)
     let html = '';
-    // 顯示順序：從 index5 (上爻) 到 index0 (下爻)
     for (let i = 5; i >= 0; i--) {
       const val = lines[i];
-      const yaoNo = i + 1; // 爻號：1..6 (bottom->top)
+      const yaoNo = i + 1;
       let lineText = val === 1 ? '———————' : '———   ———';
       
       const isMoving = (moving || []).includes(yaoNo);
@@ -295,14 +274,11 @@
     return html;
   }
 
-  // 由 hexEntry 取出單一爻資料（yaoIndex 為 1..6，代表 bottom->top）
   function getLineEntryFor(hexEntry, yaoIndex){
     if (!hexEntry || !Array.isArray(hexEntry.lines)) return null;
-    // 修正: 遍歷 lines 陣列，找到 index 屬性匹配的爻
     return hexEntry.lines.find(line => line && line.index === yaoIndex);
   }
 
-  // XSS 逃逸（顯示來自 JSON 的自由文本）
   function escapeHtml(s){
     if (s === null || s === undefined) return '';
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
@@ -316,55 +292,40 @@
   function makeFromUpperLower(uIdx, lIdx){
     const upper = guaTable[uIdx] || guaTable[1];
     const lower = guaTable[lIdx] || guaTable[1];
-    // lines: bottom->top
     return [...lower, ...upper];
   }
 
   function generateGua(uIdx, lIdx, movingArr){
     const moving = Array.isArray(movingArr) ? movingArr.filter(x=>Number.isFinite(x) && x>=1 && x<=6) : [];
-    const lines = makeFromUpperLower(uIdx, lIdx); // bottom->top
+    const lines = makeFromUpperLower(uIdx, lIdx);
     
+    // 取得本卦資料
     const hexMain = findHexEntryByLines(lines);
-    let mainName = hexMain ? (hexMain.name || hexMain.title) : `${trigramName[uIdx]}為${trigramName[lIdx]}`;
-    if (!hexMain) {
-      // 嘗試找卦名如"天水訟"
-      const specialName = Object.values(trigramName).find(name => {
-          const uN = trigramName[uIdx];
-          const lN = trigramName[lIdx];
-          const pattern = new RegExp(`^${uN}.*${lN}$`);
-          const entries = Array.from(hexByName.values()).filter(e => pattern.test(e.name));
-          return entries.length > 0;
-      });
-      if (specialName) mainName = specialName;
-    }
+    const mainName = hexMain ? (hexMain.name || hexMain.title) : formatGuaNameByLines(lines);
     
-    // 變卦：複製並翻轉指定爻
+    // 取得變卦資料
     const changeLines = lines.slice();
     moving.forEach(n => { const idx = n - 1; if (idx>=0 && idx<6) changeLines[idx] = 1 - changeLines[idx]; });
-    const uChangeIdx = triIndexByLines.get(JSON.stringify(changeLines.slice(3, 6)));
-    const lChangeIdx = triIndexByLines.get(JSON.stringify(changeLines.slice(0, 3)));
     const hexChange = findHexEntryByLines(changeLines);
-    const changeName = hexChange ? (hexChange.name || hexChange.title) : `${trigramName[uChangeIdx]}為${trigramName[lChangeIdx]}`;
+    const changeName = hexChange ? (hexChange.name || hexChange.title) : formatGuaNameByLines(changeLines);
 
-    // 互卦（常用計法）
-    const huLines = makeFromUpperLower(triIndexByLines.get(JSON.stringify([lines[1], lines[2], lines[3]])), triIndexByLines.get(JSON.stringify([lines[2], lines[3], lines[4]])));
-    const uHuIdx = triIndexByLines.get(JSON.stringify(huLines.slice(3, 6)));
-    const lHuIdx = triIndexByLines.get(JSON.stringify(huLines.slice(0, 3)));
+    // 取得互卦資料
+    const huLines = [ lines[1], lines[2], lines[3], lines[2], lines[3], lines[4] ];
     const hexHu = findHexEntryByLines(huLines);
-    const huName = hexHu ? (hexHu.name || hexHu.title) : `${trigramName[uHuIdx]}為${trigramName[lHuIdx]}`;
-    
-    // Render 主卦、變卦、互卦
+    const huName = hexHu ? (hexHu.name || hexHu.title) : formatGuaNameByLines(huLines);
+
+    // 渲染顯示
     document.getElementById('guaName').textContent = mainName;
     document.getElementById('guaImage').innerHTML = getGuaHtml(lines, moving);
-    document.getElementById('guaNote').textContent = (hexMain && (hexMain.judgment || hexMain.note || hexMain.description)) ? (hexMain.judgment || hexMain.note || hexMain.description) : '';
+    document.getElementById('guaNote').textContent = (hexMain && hexMain.judgment) ? hexMain.judgment.overall : '（未找到綜合判斷）';
 
     document.getElementById('changeGuaName').textContent = `變卦：${changeName}`;
-    document.getElementById('changeGuaImage').innerHTML = getGuaHtml(changeLines, []); // 變卦顯示翻轉後的線條
+    document.getElementById('changeGuaImage').innerHTML = getGuaHtml(changeLines, []);
 
     document.getElementById('huGuaName').textContent = `互卦：${huName}`;
     document.getElementById('huGuaImage').innerHTML = getGuaHtml(huLines, []);
 
-    // 動爻解釋：多變爻全部顯示（若 hexMain 有 lines 資料）
+    // 動爻解釋
     const lineBox = document.getElementById('lineTextDisplay');
     lineBox.innerHTML = '';
     if (moving.length > 0) {
@@ -380,7 +341,6 @@
           }
         });
       } else {
-        // hexMain 不存在或無 lines，顯示 fallback 訊息
         moving.forEach(mv => {
           lineBox.innerHTML += `<div><strong>第 ${mv} 爻：</strong><em>（未載入或找不到 hexagrams.json，無法顯示爻辭）</em></div>`;
         });
@@ -436,7 +396,6 @@
   function localDatetimeForInput(d){
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
-  // 預設現在時間
   document.getElementById('dtInput').value = localDatetimeForInput(new Date());
   document.getElementById('nowQuick').addEventListener('click', ()=> {
     document.getElementById('dtInput').value = localDatetimeForInput(new Date());
@@ -478,7 +437,7 @@
   function clamp(x){ return Math.max(0, Math.min(10, Number(x) || 0)); }
 
   function getAspectScoresFor(entry){
-    if (!entry || !entry.judgment) return {people:5,affairs:5,time:5,place:5,object:5};
+    if (!entry || !entry.judgment) return {overall:5,people:5,affairs:5,time:5,place:5,object:5};
     const j = entry.judgment;
     return {
       people: clamp(j.people ?? j.overall ?? 5),
@@ -493,32 +452,38 @@
     const mainScores = getAspectScoresFor(result.hexMain);
     const changeScores = result.hexChange ? getAspectScoresFor(result.hexChange) : {people:5,affairs:5,time:5,place:5,object:5};
     const huScores = result.hexHu ? getAspectScoresFor(result.hexHu) : {people:5,affairs:5,time:5,place:5,object:5};
-    // moving lines average (若 hexMain 有 lines[].score/aspect)
     let movingScores = {people:5,affairs:5,time:5,place:5,object:5};
     if (result.moving && result.moving.length>0 && result.hexMain && Array.isArray(result.hexMain.lines)){
       let sum = {people:0,affairs:0,time:0,place:0,object:0}; let c=0;
       result.moving.forEach(mv => {
         const le = getLineEntryFor(result.hexMain, mv);
-        if (le) {
-          const a = le.aspect || {};
+        if (le && le.score !== undefined) {
           const s = Number(le.score ?? 5);
-          sum.people += clamp(a.people ?? s);
-          sum.affairs += clamp(a.affairs ?? s);
-          sum.time += clamp(a.time ?? s);
-          sum.place += clamp(a.place ?? s);
-          sum.object += clamp(a.object ?? s);
+          sum.people += clamp(s);
+          sum.affairs += clamp(s);
+          sum.time += clamp(s);
+          sum.place += clamp(s);
+          sum.object += clamp(s);
         } else {
           sum.people += 5; sum.affairs += 5; sum.time += 5; sum.place += 5; sum.object += 5;
         }
         c++;
       });
-      if (c>0) movingScores = {people: sum.people/c, affairs: sum.affairs/c, time: sum.time/c, place: sum.place/c, object: sum.object/c};
+      if (c>0) {
+        movingScores = {
+          people: sum.people/c, 
+          affairs: sum.affairs/c, 
+          time: sum.time/c, 
+          place: sum.place/c, 
+          object: sum.object/c
+        };
+      }
     }
 
     const WEIGHTS = {moving:0.4, main:0.25, change:0.2, hu:0.15};
     const out = {};
     ASPECTS.forEach(a => {
-      out[a.k] = WEIGHTS.moving * movingScores[a.k] + WEIGHTS.main * mainScores[a.k] + WEIGHTS.change * changeScores[a.k] + WEIGHTS.hu * huScores[a.k];
+      out[a.k] = (WEIGHTS.moving * movingScores[a.k] + WEIGHTS.main * mainScores[a.k] + WEIGHTS.change * changeScores[a.k] + WEIGHTS.hu * huScores[a.k]) || 0;
     });
     return out;
   }
