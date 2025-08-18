@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>易經資料編輯器 (手機友善版)</title>
+    <style>
+        body {
+            font-family: "Noto Sans TC", sans-serif;
+            background: #f7f7f7;
+            color: #222;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        h1 { margin: 0 0 6px 0; font-size: 26px; }
+        .hint { font-size: 13px; color: #666; margin-bottom: 20px; }
+        .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+        button { padding: 9px 16px; background: #222; color: #fff; border-radius: 8px; border: 0; cursor: pointer; font-size: 14px; }
+        input[type="text"], input[type="number"], textarea, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .message { margin-top: 15px; padding: 10px; border-radius: 8px; }
+        .message.success { background: #e8f5e9; color: #388e3c; }
+        .message.error { background: #ffebee; color: #d32f2f; }
+        
+        /* 上下分欄佈局 */
+        .hexagram-list-container {
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .hexagram-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .hexagram-item {
+            padding: 8px 12px;
+            background-color: #eee;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .hexagram-item:hover { background-color: #ddd; }
+        .hexagram-item.active { background-color: #222; color: #fff; }
+
+        .editor-form-container {
+            margin-top: 20px;
+        }
+        
+        .hexagram-card {
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            background: #fdfdfd;
+        }
+        .hexagram-card h3 { margin: 0 0 10px 0; font-size: 18px; }
+        .hexagram-field-group { margin-bottom: 10px; }
+        .hexagram-field-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+        .lines-editor { margin-top: 15px; border-top: 1px dashed #e0e0e0; padding-top: 15px; }
+        .line-editor { display: grid; gap: 10px; margin-bottom: 10px; align-items: flex-start; grid-template-columns: 30px 1fr 1fr 100px; }
+        .line-index { font-weight: bold; text-align: center; }
+        
+        .judgment-fields {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .json-preview {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 20px;
+        }
+        pre { overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+
+        /* 媒體查詢：桌面佈局 */
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row;
+                gap: 20px;
+            }
+            .main-content {
+                flex: 1;
+            }
+            .json-preview {
+                flex: 0 0 450px;
+                margin-top: 0;
+            }
+            .hexagram-list-container {
+                padding-bottom: 0;
+                border-bottom: none;
+                flex: 0 0 200px;
+                border-right: 1px solid #e0e0e0;
+            }
+            .hexagram-list {
+                flex-direction: column;
+            }
+            .hexagram-item {
+                border-radius: 8px;
+                text-align: left;
+            }
+            .editor-form-container {
+                flex: 1;
+                margin-top: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hexagram-list-container">
+            <h1>易經卦象</h1>
+            <div class="hint">點擊卦名來載入編輯</div>
+            <div id="hexagramList" class="hexagram-list"></div>
+        </div>
+
+        <div class="main-content">
+            <h1>編輯器</h1>
+            <div class="toolbar">
+                <button id="downloadBtn">下載 hexagrams.json</button>
+            </div>
+
+            <div id="editorForm" class="editor-form-container hidden">
+                <div class="hexagram-card">
+                    <h3><span id="hexagramTitle"></span> 卦象資訊</h3>
+                    <div class="hexagram-field-group">
+                        <label>卦名</label>
+                        <input type="text" id="hexagramName" />
+                    </div>
+                    <div class="hexagram-field-group">
+                        <label>卦辭</label>
+                        <textarea id="hexagramJudgmentOverall"></textarea>
+                    </div>
+                    <div class="hexagram-field-group">
+                        <label>判斷分數 (0-10)</label>
+                        <div class="judgment-fields">
+                            <div><label>整體</label><input type="number" id="judgeOverall" min="0" max="10" /></div>
+                            <div><label>人</label><input type="number" id="judgePeople" min="0" max="10" /></div>
+                            <div><label>事</label><input type="number" id="judgeAffairs" min="0" max="10" /></div>
+                            <div><label>時</label><input type="number" id="judgeTime" min="0" max="10" /></div>
+                            <div><label>地</label><input type="number" id="judgePlace" min="0" max="10" /></div>
+                            <div><label>物</label><input type="number" id="judgeObject" min="0" max="10" /></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hexagram-card lines-editor">
+                    <h3>爻辭編輯</h3>
+                    <div id="linesContainer"></div>
+                </div>
+            </div>
+            
+            <div id="message" class="message hidden"></div>
+        </div>
+        
+        <div class="json-preview hidden">
+            <h3>JSON 預覽</h3>
+            <pre id="jsonPreviewContent"></pre>
+        </div>
+    </div>
+
+    <script>
+        let hexagramsData = {};
+        let currentHexagramKey = null;
+        const hexagramListContainer = document.getElementById('hexagramList');
+        const editorForm = document.getElementById('editorForm');
+        const jsonPreviewContent = document.getElementById('jsonPreviewContent');
+        const messageBox = document.getElementById('message');
+
+        function showMessage(msg, type) {
+            messageBox.textContent = msg;
+            messageBox.className = `message ${type}`;
+            setTimeout(() => { messageBox.classList.add('hidden'); }, 5000);
+        }
+
+        function loadHexagramsList() {
+            fetch('hexagrams.json')
+                .then(response => response.json())
+                .then(data => {
+                    hexagramsData = data;
+                    hexagramListContainer.innerHTML = '';
+                    const sortedKeys = Object.keys(data).sort();
+                    sortedKeys.forEach(key => {
+                        const div = document.createElement('div');
+                        div.className = 'hexagram-item';
+                        div.textContent = key;
+                        div.setAttribute('data-key', key);
+                        div.addEventListener('click', () => {
+                            selectHexagram(key);
+                        });
+                        hexagramListContainer.appendChild(div);
+                    });
+                    showMessage('卦象資料載入成功，請選擇一個卦來編輯。', 'success');
+                })
+                .catch(e => {
+                    showMessage('無法載入 hexagrams.json，請確認檔案存在且格式正確。', 'error');
+                });
+        }
+        
+        function selectHexagram(key) {
+            if (currentHexagramKey === key) return;
+            
+            // 移除舊的 active 樣式
+            if (currentHexagramKey) {
+                document.querySelector(`.hexagram-item[data-key="${currentHexagramKey}"]`).classList.remove('active');
+            }
+            
+            currentHexagramKey = key;
+            document.querySelector(`.hexagram-item[data-key="${key}"]`).classList.add('active');
+            renderEditor(key);
+        }
+
+        function renderEditor(hexagramKey) {
+            const hexagram = hexagramsData[hexagramKey];
+            if (!hexagram) return;
+
+            document.getElementById('hexagramTitle').textContent = hexagramKey;
+            document.getElementById('hexagramName').value = hexagram.name || hexagramKey;
+            document.getElementById('hexagramJudgmentOverall').value = hexagram.judgment?.overall || '';
+
+            ['overall', 'people', 'affairs', 'time', 'place', 'object'].forEach(key => {
+                const input = document.getElementById(`judge${key.charAt(0).toUpperCase() + key.slice(1)}`);
+                input.value = hexagram.judgment?.[key] !== undefined ? hexagram.judgment[key] : '';
+            });
+
+            const linesContainer = document.getElementById('linesContainer');
+            linesContainer.innerHTML = '';
+
+            const lineIndices = [1, 2, 3, 4, 5, 6];
+            lineIndices.forEach(index => {
+                const line = hexagram.lines.find(l => l.index === index) || { index, text: '', meaning: '', score: '' };
+                const div = document.createElement('div');
+                div.className = 'line-editor';
+                div.innerHTML = `
+                    <div class="line-index">${line.index}</div>
+                    <div>
+                        <label>爻辭</label>
+                        <textarea data-type="text">${line.text}</textarea>
+                    </div>
+                    <div>
+                        <label>意義</label>
+                        <textarea data-type="meaning">${line.meaning}</textarea>
+                    </div>
+                    <div>
+                        <label>分數</label>
+                        <input type="number" data-type="score" min="0" max="10" value="${line.score !== undefined ? line.score : ''}" />
+                    </div>
+                `;
+                linesContainer.appendChild(div);
+            });
+            editorForm.classList.remove('hidden');
+            updateJsonPreview();
+        }
+
+        function updateJsonPreview() {
+            if (!currentHexagramKey) return;
+            const hexagramKey = currentHexagramKey;
+            const hexagram = { ...hexagramsData[hexagramKey] };
+            hexagram.name = document.getElementById('hexagramName').value;
+            
+            const judgment = {
+                overall: document.getElementById('hexagramJudgmentOverall').value
+            };
+            ['people', 'affairs', 'time', 'place', 'object'].forEach(key => {
+                const val = document.getElementById(`judge${key.charAt(0).toUpperCase() + key.slice(1)}`).value;
+                if (val !== '') judgment[key] = parseFloat(val);
+            });
+            hexagram.judgment = judgment;
+            
+            const newLines = [];
+            document.querySelectorAll('.line-editor').forEach(div => {
+                const index = parseInt(div.querySelector('.line-index').textContent);
+                const text = div.querySelector('textarea[data-type="text"]').value;
+                const meaning = div.querySelector('textarea[data-type="meaning"]').value;
+                const scoreInput = div.querySelector('input[data-type="score"]');
+                const score = parseFloat(scoreInput.value);
+                
+                const lineData = { index, text, meaning };
+                if (!isNaN(score)) {
+                    lineData.score = score;
+                }
+                newLines.push(lineData);
+            });
+            hexagram.lines = newLines;
+
+            hexagramsData[hexagramKey] = hexagram;
+            jsonPreviewContent.textContent = JSON.stringify(hexagramsData, null, 2);
+        }
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const jsonContent = JSON.stringify(hexagramsData, null, 2);
+            const blob = new Blob([jsonContent], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'hexagrams.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showMessage('檔案下載成功！', 'success');
+        });
+
+        editorForm.addEventListener('input', updateJsonPreview);
+
+        loadHexagramsList();
+    </script>
+</body>
+</html>
