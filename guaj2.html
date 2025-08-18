@@ -28,6 +28,13 @@
     .score-bar{height:100%;width:0;transition:width .4s;background:linear-gradient(90deg,#f44336,#ff9800,#4caf50)}
     .score-val{min-width:36px;text-align:right;font-weight:600}
     pre{background:#fafafa;padding:8px;border-radius:6px;overflow:auto}
+    
+    /* 新增：美化卦象顯示 */
+    .gua-line { font-family: 'Courier New', monospace; font-size: 20px; line-height: 1.2; }
+    .gua-line div { padding: 2px 0; }
+    .gua-yang { font-weight: bold; } /* 陽爻 */
+    .gua-yin { font-weight: bold; } /* 陰爻 */
+    .gua-moving { color: #b71c1c; font-weight: bold; } /* 動爻 */
   </style>
 </head>
 <body>
@@ -114,22 +121,19 @@
       <h2>卦象結果</h2>
 
       <div class="gua-box">
-        <h3>本卦</h3>
-        <h2 id="guaName"></h2>
-        <div id="guaImage"></div>
+        <h3 id="guaName"></h3>
+        <div id="guaImage" class="gua-line"></div>
         <div id="guaNote" class="hint" style="margin-top:8px"></div>
       </div>
 
       <div class="gua-box">
-        <h3>變卦</h3>
-        <h2 id="changeGuaName"></h2>
-        <div id="changeGuaImage"></div>
+        <h3 id="changeGuaName"></h3>
+        <div id="changeGuaImage" class="gua-line"></div>
       </div>
 
       <div class="gua-box">
-        <h3>互卦</h3>
-        <h2 id="huGuaName"></h2>
-        <div id="huGuaImage"></div>
+        <h3 id="huGuaName"></h3>
+        <div id="huGuaImage" class="gua-line"></div>
       </div>
 
       <div id="line-explanation" class="gua-box hidden">
@@ -192,7 +196,7 @@
             const lIdx = Object.keys(trigramName).find(k => trigramName[k] === lowerName);
             
             if (uIdx && lIdx) {
-              entry.lines = makeFromUpperLower(uIdx, lIdx); // 重新生成 lines 陣列
+              entry.lines = data[key].lines; // 使用原始 JSON 中的 lines 陣列
             }
             processedHexList.push(entry);
           }
@@ -210,8 +214,10 @@
         if (entry.title) hexByName.set(entry.title, entry);
         // lines
         if (Array.isArray(entry.lines) && entry.lines.length === 6) {
-          const k1 = JSON.stringify(entry.lines); // 假設 bottom->top
-          hexByLines.set(k1, entry);
+          const k1 = JSON.stringify(entry.lines.map(x=>x.is_yang===undefined?x.is_yang:x.value)); // 修正：確保 lines 陣列能被 JSON.stringify 處理
+          const linesBinary = entry.lines.map(line => line.value || (line.text.includes('九') ? 1 : 0));
+          const key = JSON.stringify(linesBinary);
+          hexByLines.set(key, entry);
         }
       });
     })
@@ -267,11 +273,15 @@
     for (let i = 5; i >= 0; i--) {
       const val = lines[i];
       const yaoNo = i + 1; // 爻號：1..6 (bottom->top)
-      const lineText = val === 1 ? '———————' : '———   ———';
-      if ((moving || []).includes(yaoNo)) {
-        html += `<div class="moving-line">${lineText} （第 ${yaoNo} 爻 變）</div>`;
+      let lineText = val === 1 ? '———————' : '———   ———';
+      
+      const isMoving = (moving || []).includes(yaoNo);
+      
+      if (isMoving) {
+          lineText = val === 1 ? '——————— ◆' : '———   ——— ◇';
+          html += `<div class="gua-moving">${lineText}</div>`;
       } else {
-        html += `<div>${lineText}</div>`;
+          html += `<div class="${val === 1 ? 'gua-yang' : 'gua-yin'}">${lineText}</div>`;
       }
     }
     return html;
@@ -280,12 +290,8 @@
   // 由 hexEntry 取出單一爻資料（yaoIndex 為 1..6，代表 bottom->top）
   function getLineEntryFor(hexEntry, yaoIndex){
     if (!hexEntry || !Array.isArray(hexEntry.lines)) return null;
-    const arr = hexEntry.lines;
-    // 找 index 相符
-    for (const el of arr) {
-      if (el && (el.index === yaoIndex || el.index === String(yaoIndex))) return (typeof el === 'string') ? { text: el } : el;
-    }
-    return null;
+    // 修正: 遍歷 lines 陣列，找到 index 屬性匹配的爻
+    return hexEntry.lines.find(line => line && line.index === yaoIndex);
   }
 
   // XSS 逃逸（顯示來自 JSON 的自由文本）
@@ -310,19 +316,23 @@
     const moving = Array.isArray(movingArr) ? movingArr.filter(x=>Number.isFinite(x) && x>=1 && x<=6) : [];
     const lines = makeFromUpperLower(uIdx, lIdx); // bottom->top
     // main hex entry
-    const hexMain = findHexEntryByLines(lines) || findHexEntryByName(formatName(uIdx,lIdx));
-    const mainName = hexMain && (hexMain.name || hexMain.title) ? (hexMain.name || hexMain.title) : formatName(uIdx,lIdx);
+    const hexMain = findHexEntryByLines(lines) || findHexEntryByName(trigramName[uIdx]+'為'+trigramName[lIdx]);
+    const mainName = hexMain && (hexMain.name || hexMain.title) ? (hexMain.name || hexMain.title) : `${trigramName[uIdx] || '未知'}為${trigramName[lIdx] || '未知'}`;
 
     // 變卦：複製並翻轉指定爻
     const changeLines = lines.slice();
     moving.forEach(n => { const idx = n - 1; if (idx>=0 && idx<6) changeLines[idx] = 1 - changeLines[idx]; });
-    const hexChange = findHexEntryByLines(changeLines) || null;
-    const changeName = hexChange && (hexChange.name || hexChange.title) ? (hexChange.name || hexChange.title) : `${formatName(uIdx,lIdx)}（變卦）`;
+    const uChangeIdx = triIndexByLines.get(JSON.stringify(changeLines.slice(3, 6)));
+    const lChangeIdx = triIndexByLines.get(JSON.stringify(changeLines.slice(0, 3)));
+    const hexChange = findHexEntryByLines(changeLines) || findHexEntryByName(trigramName[uChangeIdx]+'為'+trigramName[lChangeIdx]);
+    const changeName = hexChange && (hexChange.name || hexChange.title) ? (hexChange.name || hexChange.title) : `${trigramName[uChangeIdx] || '未知'}為${trigramName[lChangeIdx] || '未知'}`;
 
     // 互卦（常用計法）
     const huLines = [ lines[1], lines[2], lines[3], lines[2], lines[3], lines[4] ];
-    const hexHu = findHexEntryByLines(huLines) || null;
-    const huName = hexHu && (hexHu.name || hexHu.title) ? (hexHu.name || hexHu.title) : '互卦';
+    const uHuIdx = triIndexByLines.get(JSON.stringify(huLines.slice(3, 6)));
+    const lHuIdx = triIndexByLines.get(JSON.stringify(huLines.slice(0, 3)));
+    const hexHu = findHexEntryByLines(huLines) || findHexEntryByName(trigramName[uHuIdx]+'為'+trigramName[lHuIdx]);
+    const huName = hexHu && (hexHu.name || hexHu.title) ? (hexHu.name || hexHu.title) : `${trigramName[uHuIdx] || '未知'}為${trigramName[lHuIdx] || '未知'}`;
 
     // Render 主卦、變卦、互卦
     document.getElementById('guaName').textContent = mainName;
@@ -343,17 +353,17 @@
         moving.forEach(mv => {
           const le = getLineEntryFor(hexMain, mv);
           if (le) {
-            const text = escapeHtml(le.text || le.name || le.desc || le.description || '');
-            const meaning = escapeHtml(le.meaning || le.note || '');
-            lineBox.innerHTML += `<div><strong>${mv} 爻：</strong>${text}<div class="hint">${meaning}</div></div>`;
+            const text = escapeHtml(le.text || '');
+            const meaning = escapeHtml(le.meaning || '');
+            lineBox.innerHTML += `<div><strong>第 ${mv} 爻：</strong>${text}<div class="hint">${meaning}</div></div>`;
           } else {
-            lineBox.innerHTML += `<div><strong>${mv} 爻：</strong><em>（hexagrams.json 中找不到該爻的爻辭）</em></div>`;
+            lineBox.innerHTML += `<div><strong>第 ${mv} 爻：</strong><em>（hexagrams.json 中找不到該爻的爻辭）</em></div>`;
           }
         });
       } else {
         // hexMain 不存在或無 lines，顯示 fallback 訊息
         moving.forEach(mv => {
-          lineBox.innerHTML += `<div><strong>${mv} 爻：</strong><em>（未載入或找不到 hexagrams.json，無法顯示爻辭）</em></div>`;
+          lineBox.innerHTML += `<div><strong>第 ${mv} 爻：</strong><em>（未載入或找不到 hexagrams.json，無法顯示爻辭）</em></div>`;
         });
       }
       document.getElementById('line-explanation').classList.remove('hidden');
