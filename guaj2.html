@@ -317,13 +317,8 @@
     const lines = makeFromUpperLower(uIdx, lIdx); // bottom->top
     // main hex entry
     const hexMain = findHexEntryByLines(lines) || findHexEntryByName(formatName(uIdx,lIdx));
-   // const mainName = hexMain && (hexMain.name || hexMain.title) ? (hexMain.name || hexMain.title) : formatName(uIdx,lIdx);
-    const upName = trigramName[uIdx];
-const lowName = trigramName[lIdx];
-const key = upName + lowName;
-const mapped = hexagramNameMap[key];
-const mainName = mapped || formatName(uIdx,lIdx);
-const hexMain = findHexEntryByName(mainName);
+   const mainName = hexMain && (hexMain.name || hexMain.title) ? (hexMain.name || hexMain.title) : formatName(uIdx,lIdx);
+    
     
     // 變卦：複製並翻轉指定爻
     const changeLines = lines.slice();
