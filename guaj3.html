@@ -310,14 +310,17 @@
     const changeName = hexChange ? (hexChange.name || hexChange.title) : formatGuaNameByLines(changeLines);
 
     // 取得互卦資料
-    const huLines = [ lines[1], lines[2], lines[3], lines[2], lines[3], lines[4] ];
+    const huLinesBase = [ lines[1], lines[2], lines[3] ];
+    const huLinesTop = [ lines[2], lines[3], lines[4] ];
+    const huLines = [...huLinesBase, ...huLinesTop];
+    
     const hexHu = findHexEntryByLines(huLines);
     const huName = hexHu ? (hexHu.name || hexHu.title) : formatGuaNameByLines(huLines);
 
     // 渲染顯示
     document.getElementById('guaName').textContent = mainName;
     document.getElementById('guaImage').innerHTML = getGuaHtml(lines, moving);
-    document.getElementById('guaNote').textContent = (hexMain && hexMain.judgment) ? hexMain.judgment.overall : '（未找到綜合判斷）';
+    document.getElementById('guaNote').textContent = (hexMain && hexMain.judgment && hexMain.judgment.overall) ? hexMain.judgment.overall : '（未找到綜合判斷）';
 
     document.getElementById('changeGuaName').textContent = `變卦：${changeName}`;
     document.getElementById('changeGuaImage').innerHTML = getGuaHtml(changeLines, []);
