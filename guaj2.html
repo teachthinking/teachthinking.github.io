@@ -296,6 +296,22 @@
      --------------------------- */
  
     
+
+    
+    
+    
+    let currentResult = null;
+
+  function makeFromUpperLower(uIdx, lIdx){
+    const upper = guaTable[uIdx] || guaTable[1];
+    const lower = guaTable[lIdx] || guaTable[1];
+    // lines: bottom->top
+    return [...lower, ...upper];
+  }
+
+  function generateGua(uIdx, lIdx, movingArr){
+
+
     const hexagramNameMap = {
   "乾乾": "乾為天",
   "坤坤": "坤為地",
@@ -359,19 +375,9 @@
   "艮兌": "艮為山",
   "兌艮": "兌為澤"
 };
-    
-    
-    
-    let currentResult = null;
 
-  function makeFromUpperLower(uIdx, lIdx){
-    const upper = guaTable[uIdx] || guaTable[1];
-    const lower = guaTable[lIdx] || guaTable[1];
-    // lines: bottom->top
-    return [...lower, ...upper];
-  }
 
-  function generateGua(uIdx, lIdx, movingArr){
+    
     const moving = Array.isArray(movingArr) ? movingArr.filter(x=>Number.isFinite(x) && x>=1 && x<=6) : [];
     const lines = makeFromUpperLower(uIdx, lIdx); // bottom->top
     // main hex entry
