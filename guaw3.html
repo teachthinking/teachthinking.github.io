@@ -596,48 +596,43 @@
           // 針對性建議
           const suggestionObj = explanationData.建議;
           if (suggestionObj) {
-            let suggestionHtml = `<h5>◎ 針對性建議</h5><p>${suggestionObj.general
-                .replace(/\${tiGua.wuxing}/g, tiGua.wuxing)
-                .replace(/\${yongGua.wuxing}/g, yongGua.wuxing)}</p>`;
-            
-            if (suggestionObj.specific) {
-                suggestionHtml += '<ul>';
-                for (const key in suggestionObj.specific) {
-                    const specificContent = suggestionObj.specific[key];
-                    const targetWuxing = (relation === '比和') ? tiGua.wuxing : yongGua.wuxing;
+              let suggestionHtml = `<h5>◎ 針對性建議</h5><p>${suggestionObj.general
+                  .replace(/\${tiGua.wuxing}/g, tiGua.wuxing)
+                  .replace(/\${yongGua.wuxing}/g, yongGua.wuxing)}</p>`;
+              
+              if (suggestionObj.specific) {
+                  const targetWuxing = (relation === '比和' || relation === '被生' || relation === '被克') ? tiGua.wuxing : yongGua.wuxing;
 
-                    if (typeof specificContent === 'string') {
-                        // 簡單字串
-                        if (key === targetWuxing) {
-                             const formattedContent = specificContent
-                                .replace(/\${tiGua.wuxing}/g, tiGua.wuxing)
-                                .replace(/\${yongGua.wuxing}/g, yongGua.wuxing);
-                            suggestionHtml += `<li>**${key}**：${formattedContent}</li>`;
-                        }
-                    } else if (typeof specificContent === 'object') {
-                        // 子層物件 (例如 health 的 保養重點)
-                        let subListHtml = '<ul>';
-                        for (const subKey in specificContent) {
-                            const subContent = specificContent[subKey];
-                            const formattedSubContent = subContent.replace(/\${tiGua.wuxing}/g, tiGua.wuxing).replace(/\${yongGua.wuxing}/g, yongGua.wuxing);
-                            if (subKey === targetWuxing) {
-                                subListHtml += `<li>${subKey}：**${formattedSubContent}**</li>`;
-                            } else {
-                                subListHtml += `<li>${subKey}：${formattedSubContent}</li>`;
-                            }
-                        }
-                        subListHtml += '</ul>';
-                        
-                        if (subListHtml.includes('**')) { // 判斷子列表是否有粗體，有才顯示
-                             suggestionHtml += `<li>**${key}**：${subListHtml}</li>`;
-                        } else {
-                             suggestionHtml += `<li>**${key}**：${subListHtml}</li>`;
-                        }
-                    }
-                }
-                suggestionHtml += '</ul>';
-            }
-            analysisDiv.innerHTML += `<div class="analysis-item suggestion">${suggestionHtml}</div>`;
+                  // 遞迴處理建議內容
+                  function processSuggestions(data) {
+                      let listHtml = '';
+                      for (const key in data) {
+                          const content = data[key];
+                          if (typeof content === 'string') {
+                              // 單一字串，直接處理
+                              if (key === targetWuxing) {
+                                  const formattedContent = content.replace(/\${tiGua.wuxing}/g, tiGua.wuxing).replace(/\${yongGua.wuxing}/g, yongGua.wuxing);
+                                  listHtml += `<li>**${key}**：${formattedContent}</li>`;
+                              } else {
+                                  // 如果不是目標五行，則不顯示
+                              }
+                          } else if (typeof content === 'object') {
+                              // 多層物件，遞迴呼叫
+                              let subListHtml = processSuggestions(content);
+                              if (subListHtml) { // 只在子列表有內容時才顯示
+                                  listHtml += `<li>**${key}**：<ul>${subListHtml}</ul></li>`;
+                              }
+                          }
+                      }
+                      return listHtml;
+                  }
+
+                  const specificHtml = processSuggestions(suggestionObj.specific);
+                  if (specificHtml) {
+                      suggestionHtml += `<ul>${specificHtml}</ul>`;
+                  }
+              }
+              analysisDiv.innerHTML += `<div class="analysis-item suggestion">${suggestionHtml}</div>`;
           }
       }
   }
