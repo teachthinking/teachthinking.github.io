@@ -134,9 +134,9 @@
     async function loadData() {
       try {
         const [hexagramsRes, trigramsRes, wuxingRes] = await Promise.all([
-          fetch('hexagrams.json.txt'),
-          fetch('trigram_explanations.json.txt'),
-          fetch('wuxing_explanations.json.txt')
+          fetch('hexagrams.json'),
+          fetch('trigram_explanations.json'),
+          fetch('wuxing_explanations.json')
         ]);
         hexagramsData = await hexagramsRes.json();
         trigramExplanationsData = await trigramsRes.json();
