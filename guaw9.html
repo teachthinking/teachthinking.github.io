@@ -215,54 +215,61 @@
   };
   const trigramName = {1:'乾',2:'兌',3:'離',4:'震',5:'巽',6:'坎',7:'艮',8:'坤'};
   const triIndexByLines = new Map(Object.entries(guaTable).map(([i,arr])=>[JSON.stringify(arr.slice(0,3)), +i]));
-  const wuxingRelations = {
-    '金': {'生':'水', '克':'木', '被生':'土', '被克':'火', '比和':'金'},
-    '木': {'生':'火', '克':'土', '被生':'水', '被克':'金', '比和':'木'},
-    '水': {'生':'木', '克':'火', '被生':'金', '被克':'土', '比和':'水'},
-    '火': {'生':'土', '克':'金', '被生':'木', '被克':'水', '比和':'火'},
-    '土': {'生':'金', '克':'水', '被生':'火', '被克':'木', '比和':'土'}
-  };
-  function getWuxingRelation(from, to) {
-      if (from === to) return '比和';
-      if (wuxingRelations[from]['生'] === to) return '生';
-      if (wuxingRelations[from]['克'] === to) return '克';
-      if (wuxingRelations[to]['生'] === from) return '被生';
-      if (wuxingRelations[to]['克'] === from) return '被克';
-      return '未知';
-  }
-  function getRelationStatus(relation) {
-      if (relation === '被生' || relation === '生') return '凶';
-      if (relation === '被克') return '大凶';
-      if (relation === '克' || relation === '比和') return '吉';
-      return '平';
-  }
   
-  function getWuxingEffect(from, to) {
-      const relation = getWuxingRelation(from, to);
-      const status = getRelationStatus(relation);
-      let summary = '';
-
-      if (relation === '克') {
-          summary = '吉，您能掌控局面，事可成。';
-      } else if (relation === '生') {
-          summary = '凶，我方付出大於回報，易疲憊。';
-      } else if (relation === '比和') {
-          summary = '吉，事可成，但需自身努力。';
-      } else if (relation === '被生') {
-          summary = '吉，事情發展順利，有貴人相助。';
-      } else if (relation === '被克') {
-          summary = '大凶，會遭受挫折，有損害或災難。';
-      }
-
-      return { relation, status, summary };
-  }
-
-
   let hexList = [];
   const hexByLines = new Map();
   const hexByCombinedName = new Map();
   let wuxingExplanations = {};
   let trigramExplanations = {};
+
+  // 輔助函數：根據五行關係判斷吉凶
+  function getWuxingOutcome(tiWuxing, yongWuxing) {
+      const relations = {
+          '金': { '生': '水', '剋': '木', '被生': '土', '被剋': '火', '比和': '金' },
+          '木': { '生': '火', '剋': '土', '被生': '水', '被剋': '金', '比和': '木' },
+          '水': { '生': '木', '剋': '火', '被生': '金', '被剋': '土', '比和': '水' },
+          '火': { '生': '土', '剋': '金', '被生': '木', '被剋': '水', '比和': '火' },
+          '土': { '生': '金', '剋': '水', '被生': '火', '被剋': '木', '比和': '土' }
+      };
+
+      if (!tiWuxing || !yongWuxing) return { relation: '未知', status: '平', explanation: '五行資料不完整。' };
+
+      let relationType, status;
+
+      // 用生體 (用卦的五行生體卦的五行)
+      if (relations[yongWuxing]['生'] === tiWuxing) {
+          relationType = '用生體';
+          status = '大吉';
+      }
+      // 體克用 (體卦的五行克用卦的五行)
+      else if (relations[tiWuxing]['剋'] === yongWuxing) {
+          relationType = '體克用';
+          status = '吉';
+      }
+      // 比和 (體用五行相同)
+      else if (tiWuxing === yongWuxing) {
+          relationType = '比和';
+          status = '平';
+      }
+      // 體生用 (體卦的五行生用卦的五行)
+      else if (relations[tiWuxing]['生'] === yongWuxing) {
+          relationType = '體生用';
+          status = '凶';
+      }
+      // 用克體 (用卦的五行克體卦的五行)
+      else if (relations[yongWuxing]['剋'] === tiWuxing) {
+          relationType = '用克體';
+          status = '大凶';
+      }
+      // 未知關係
+      else {
+          relationType = '未知';
+          status = '平';
+      }
+
+      return { relation: relationType, status: status };
+  }
+
 
   fetch('hexagrams.json')
     .then(r => r.ok ? r.json() : Promise.reject('Network response was not ok'))
@@ -541,20 +548,18 @@
       }
 
       // 本卦分析
-      const mainEffect = getWuxingEffect(tiGua.wuxing, yongGua.wuxing);
+      const mainEffect = getWuxingOutcome(tiGua.wuxing, yongGua.wuxing);
       const mainDesc = `**體卦**（您）為 **${tiGua.name}** 屬 **${tiGua.wuxing}**，**用卦**（外在事物）為 **${yongGua.name}** 屬 **${yongGua.wuxing}**。`;
-      contentDiv.innerHTML += `<div class="wuxing-box">**本卦：**<span class="wuxing-status ${mainEffect.status}">${mainEffect.relation}</span><div class="wuxing-desc">${mainDesc}${mainEffect.summary}</div></div>`;
+      contentDiv.innerHTML += `<div class="wuxing-box">**本卦：**<span class="wuxing-status ${mainEffect.status}">${mainEffect.relation}</span><div class="wuxing-desc">${mainDesc}</div></div>`;
 
       // 互卦分析
       const huLines = result.huLines;
-      const huUpperId = triIndexByLines.get(JSON.stringify(huLines.slice(3,6)));
       const huLowerId = triIndexByLines.get(JSON.stringify(huLines.slice(0,3)));
       const huLGua = getTrigramInfo(huLowerId);
-      const huUGua = getTrigramInfo(huUpperId);
       
-      const huEffect = getWuxingEffect(tiGua.wuxing, huLGua.wuxing);
-      const huDesc = `互卦上卦${huUGua.name}五行屬${huUGua.wuxing}，互卦下卦${huLGua.name}五行屬${huLGua.wuxing}。體卦對互卦（過程）五行關係為：${huEffect.relation}。`;
-      contentDiv.innerHTML += `<div class="wuxing-box">**互卦：**<span class="wuxing-status ${huEffect.status}">${huEffect.relation}</span><div class="wuxing-desc">${huDesc}${huEffect.summary}</div></div>`;
+      const huEffect = getWuxingOutcome(tiGua.wuxing, huLGua.wuxing);
+      const huDesc = `體卦對互卦五行關係為：**${huEffect.relation}**。`;
+      contentDiv.innerHTML += `<div class="wuxing-box">**互卦：**<span class="wuxing-status ${huEffect.status}">${huEffect.relation}</span><div class="wuxing-desc">${huDesc}</div></div>`;
 
       // 變卦分析
       const changeLines = result.changeLines;
@@ -562,9 +567,9 @@
       const changeUpperId = triIndexByLines.get(JSON.stringify(changeLines.slice(3,6)));
       const changeGua = (result.moving[0] <= 3) ? getTrigramInfo(changeLowerId) : getTrigramInfo(changeUpperId);
       
-      const changeEffect = getWuxingEffect(tiGua.wuxing, changeGua.wuxing);
-      const changeDesc = `變卦五行與體卦五行關係為：${changeEffect.relation}。`;
-      contentDiv.innerHTML += `<div class="wuxing-box">**變卦：**<span class="wuxing-status ${changeEffect.status}">${changeEffect.relation}</span><div class="wuxing-desc">${changeDesc}${changeEffect.summary}</div></div>`;
+      const changeEffect = getWuxingOutcome(tiGua.wuxing, changeGua.wuxing);
+      const changeDesc = `變卦五行與體卦五行關係為：**${changeEffect.relation}**。`;
+      contentDiv.innerHTML += `<div class="wuxing-box">**變卦：**<span class="wuxing-status ${changeEffect.status}">${changeEffect.relation}</span><div class="wuxing-desc">${changeDesc}</div></div>`;
   }
   
   /* ---------------------------
@@ -598,10 +603,11 @@
       analysisDiv.innerHTML += `<div class="analysis-item"><h4>${questionTitle}：總體解讀</h4><p>卦辭：${judgmentText}</p><p>動爻爻辭：${(yaoCi?.text || '無')}</p></div>`;
 
       // 2. 五行生剋分層次分析
-      const mainRelation = getWuxingRelation(yongGua.wuxing, tiGua.wuxing);
+      // 本卦：現況分析
+      const mainRelation = getWuxingOutcome(tiGua.wuxing, yongGua.wuxing).relation;
       const mainExplanation = wuxingExplanations[mainRelation]?.[questionType]?.本卦 || '（此類別無詳細解釋）';
       
-      let guaAnalysisHtml = `<div class="analysis-item"><h4>第一層：本卦（現況分析）</h4><p>您的問事面向為 **${questionTitle}**。<br>體卦（您）為 **${tiGua.name}** 屬 **${tiGua.wuxing}**，用卦（外在事物）為 **${yongGua.name}** 屬 **${yongGua.wuxing}**。<br>五行關係為：**${mainRelation}**。此卦象代表：<br><span class="analysis-status ${getRelationStatus(mainRelation)}">${mainExplanation}</span></p>`;
+      let guaAnalysisHtml = `<div class="analysis-item"><h4>第一層：本卦（現況分析）</h4><p>您的問事面向為 **${questionTitle}**。<br>體卦（您）為 **${tiGua.name}** 屬 **${tiGua.wuxing}**，用卦（外在事物）為 **${yongGua.name}** 屬 **${yongGua.wuxing}**。<br>五行關係為：**${mainRelation}**。此卦象代表：<br><span class="analysis-status ${getWuxingOutcome(tiGua.wuxing, yongGua.wuxing).status}">${mainExplanation}</span></p>`;
       
       if (trigramExplanations[tiGua.name]?.[questionType] || trigramExplanations[yongGua.name]?.[questionType]) {
           guaAnalysisHtml += `<div class="trigram-details"><strong>卦象取象：</strong><br>`;
@@ -623,10 +629,10 @@
       const huLGua = getTrigramInfo(huLowerId);
       const huUGua = getTrigramInfo(huUpperId);
       
-      const huRelation = getWuxingRelation(huLGua.wuxing, tiGua.wuxing);
+      const huRelation = getWuxingOutcome(tiGua.wuxing, huLGua.wuxing).relation;
       const huExplanation = wuxingExplanations[huRelation]?.[questionType]?.互卦 || '（此類別無詳細解釋）';
       
-      guaAnalysisHtml = `<div class="analysis-item"><h4>第二層：互卦（過程分析）</h4><p>體卦屬 **${tiGua.wuxing}**，互卦（代表過程）屬 **${huLGua.wuxing}** 與 **${huUGua.wuxing}**。<br>五行關係為：**${huRelation}**。這顯示事情在過程中將會：<br><span class="analysis-status ${getRelationStatus(huRelation)}">${huExplanation}</span></p>`;
+      guaAnalysisHtml = `<div class="analysis-item"><h4>第二層：互卦（過程分析）</h4><p>體卦屬 **${tiGua.wuxing}**，互卦（代表過程）屬 **${huLGua.wuxing}** 與 **${huUGua.wuxing}**。<br>五行關係為：**${huRelation}**。這顯示事情在過程中將會：<br><span class="analysis-status ${getWuxingOutcome(tiGua.wuxing, huLGua.wuxing).status}">${huExplanation}</span></p>`;
 
       if (trigramExplanations[huLGua.name]?.[questionType] || trigramExplanations[huUGua.name]?.[questionType]) {
           guaAnalysisHtml += `<div class="trigram-details"><strong>卦象取象：</strong><br>`;
@@ -647,10 +653,10 @@
       const changeLowerId = triIndexByLines.get(JSON.stringify(changeLines.slice(0,3)));
       const changeUpperId = triIndexByLines.get(JSON.stringify(changeLines.slice(3,6)));
       const changeGua = (result.moving[0] <= 3) ? getTrigramInfo(changeLowerId) : getTrigramInfo(changeUpperId);
-      const changeRelation = getWuxingRelation(changeGua.wuxing, tiGua.wuxing);
+      const changeRelation = getWuxingOutcome(tiGua.wuxing, changeGua.wuxing).relation;
       const changeExplanation = wuxingExplanations[changeRelation]?.[questionType]?.變卦 || '（此類別無詳細解釋）';
       
-      guaAnalysisHtml = `<div class="analysis-item"><h4>第三層：變卦（結果分析）</h4><p>體卦屬 **${tiGua.wuxing}**，變卦（代表結果）屬 **${changeGua.wuxing}**。<br>五行關係為：**${changeRelation}**。這代表最終的結果將會是：<br><span class="analysis-status ${getRelationStatus(changeRelation)}">${changeExplanation}</span></p>`;
+      guaAnalysisHtml = `<div class="analysis-item"><h4>第三層：變卦（結果分析）</h4><p>體卦屬 **${tiGua.wuxing}**，變卦（代表結果）屬 **${changeGua.wuxing}**。<br>五行關係為：**${changeRelation}**。這代表最終的結果將會是：<br><span class="analysis-status ${getWuxingOutcome(tiGua.wuxing, changeGua.wuxing).status}">${changeExplanation}</span></p>`;
       
       if (trigramExplanations[changeGua.name]?.[questionType]) {
           guaAnalysisHtml += `<div class="trigram-details"><strong>卦象取象：</strong><br>`;
