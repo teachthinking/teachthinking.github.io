@@ -267,29 +267,26 @@
   ]).then(results => {
     results.forEach(res => {
       if (res.status === 'fulfilled') {
-        // 根據檔案內容或名稱來判斷資料類型
         if (res.value && Array.isArray(res.value) && res.value[0]?.lines) {
-          // 處理 hexagrams.json (陣列格式)
-          hexList = res.value.filter(entry => entry && Array.isArray(entry.lines) && entry.lines.length === 6);
-          hexList.forEach(entry => {
-              const linesBinary = entry.lines.map(line => line.text.includes('九') ? 1 : line.text.includes('六') ? 0 : null);
-              if (linesBinary.every(val => val !== null) && linesBinary.length === 6) {
-                  hexByLines.set(JSON.stringify(linesBinary), entry);
-                  const uIdx = triIndexByLines.get(JSON.stringify(linesBinary.slice(3, 6)));
-                  const lIdx = triIndexByLines.get(JSON.stringify(linesBinary.slice(0, 3)));
-                  if (uIdx && lIdx) {
-                      hexByCombinedName.set(`${trigramName[uIdx]}為${trigramName[lIdx]}`, entry);
-                  }
-              }
-          });
+            hexList = res.value;
+            hexList.forEach(entry => {
+                if (entry && Array.isArray(entry.lines) && entry.lines.length === 6) {
+                    const linesBinary = entry.lines.map(line => (line.text.includes('九') || line.text.includes('七')) ? 1 : (line.text.includes('六') || line.text.includes('八')) ? 0 : null);
+                    if (linesBinary.every(val => val !== null)) {
+                        hexByLines.set(JSON.stringify(linesBinary), entry);
+                        const uIdx = triIndexByLines.get(JSON.stringify(linesBinary.slice(3, 6)));
+                        const lIdx = triIndexByLines.get(JSON.stringify(linesBinary.slice(0, 3)));
+                        if (uIdx && lIdx) {
+                            hexByCombinedName.set(`${trigramName[uIdx]}為${trigramName[lIdx]}`, entry);
+                        }
+                    }
+                }
+            });
         } else if (res.value && Array.isArray(res.value) && typeof res.value[0] === 'string') {
-          // 處理 quotes.json
           document.getElementById('subtitle').textContent = res.value[Math.floor(Math.random() * res.value.length)] || '易有太極，是生兩儀，兩儀生四象，四象生八卦。';
         } else if (res.value && typeof res.value === 'object' && res.value['體克用']) {
-          // 處理 wuxing_explanations.json
           wuxingExplanations = res.value;
         } else if (res.value && typeof res.value === 'object' && res.value['乾']) {
-          // 處理 trigram_explanations.json
           trigramExplanations = res.value;
         } else {
             console.warn('無法識別的 JSON 資料格式:', res.value);
@@ -427,13 +424,13 @@
       if (hexMain && Array.isArray(hexMain.lines)) {
         moving.forEach(mv => {
           const le = getLineEntryFor(hexMain, mv);
-          const text = escapeHtml(le?.text || '');
-          const meaning = escapeHtml(le?.meaning || '');
+          const text = escapeHtml(le?.text || '爻辭未找到');
+          const meaning = escapeHtml(le?.meaning || '（無解釋）');
           lineBox.innerHTML += `<div><strong>第 ${mv} 爻：</strong>${text}<div class="hint">${meaning}</div></div>`;
         });
       } else {
         moving.forEach(mv => {
-          lineBox.innerHTML += `<div><strong>第 ${mv} 爻：</strong><em>（未載入或找不到 hexagrams.json，無法顯示爻辭）</em></div>`;
+          lineBox.innerHTML += `<div><strong>第 ${mv} 爻：</strong><em>（無法載入爻辭，請檢查 hexagrams.json）</em></div>`;
         });
       }
       document.getElementById('line-explanation').classList.remove('hidden');
@@ -541,7 +538,7 @@
 
       // 本卦分析
       const mainEffect = getWuxingOutcome(tiGua.wuxing, yongGua.wuxing);
-      const mainExplanation = wuxingExplanations[mainEffect.relation]?.['general']?.本卦 || '（此類別無詳細解釋）';
+      const mainExplanation = wuxingExplanations[mainEffect.relation]?.['overall'] || '（此類別無詳細解釋）';
       const mainDesc = `**體卦**（您）為 **${tiGua.name}** 屬 **${tiGua.wuxing}**，**用卦**（外在事物）為 **${yongGua.name}** 屬 **${yongGua.wuxing}**。`;
       contentDiv.innerHTML += `<div class="wuxing-box">**本卦：**<span class="wuxing-status ${mainEffect.status}">${mainEffect.relation}</span><div class="wuxing-desc">${mainDesc}<br>${mainExplanation}</div></div>`;
 
@@ -553,7 +550,7 @@
       const huUGua = getTrigramInfo(huUpperId);
       
       const huOutcome = getWuxingOutcome(tiGua.wuxing, huLGua.wuxing);
-      const huExplanation = wuxingExplanations[huOutcome.relation]?.['general']?.互卦 || '（此類別無詳細解釋）';
+      const huExplanation = wuxingExplanations[huOutcome.relation]?.['overall'] || '（此類別無詳細解釋）';
       
       let guaAnalysisHtml = `<div class="analysis-item"><h4>第二層：互卦（過程分析）</h4><p>體卦屬 **${tiGua.wuxing}**，互卦（代表過程）屬 **${huLGua.wuxing}** 與 **${huUGua.wuxing}**。<br>五行關係為：**${huOutcome.relation}**。這顯示事情在過程中將會：<br><span class="analysis-status ${huOutcome.status}">${huExplanation}</span></p>`;
 
@@ -577,7 +574,7 @@
       const changeUpperId = triIndexByLines.get(JSON.stringify(changeLines.slice(3,6)));
       const changeGua = (result.moving[0] <= 3) ? getTrigramInfo(changeLowerId) : getTrigramInfo(changeUpperId);
       const changeOutcome = getWuxingOutcome(tiGua.wuxing, changeGua.wuxing);
-      const changeExplanation = wuxingExplanations[changeOutcome.relation]?.['general']?.變卦 || '（此類別無詳細解釋）';
+      const changeExplanation = wuxingExplanations[changeOutcome.relation]?.['overall'] || '（此類別無詳細解釋）';
       
       guaAnalysisHtml = `<div class="analysis-item"><h4>第三層：變卦（結果分析）</h4><p>體卦屬 **${tiGua.wuxing}**，變卦（代表結果）屬 **${changeGua.wuxing}**。<br>五行關係為：**${changeOutcome.relation}**。這代表最終的結果將會是：<br><span class="analysis-status ${changeOutcome.status}">${changeExplanation}</span></p>`;
       
@@ -683,7 +680,7 @@
 
 
       // 針對性建議
-      const suggestionObj = wuxingExplanations[mainOutcome.relation]?.[questionType]?.建議;
+      const suggestionObj = wuxingExplanations[mainOutcome.relation]?.['建議'];
       if (suggestionObj) {
           let suggestionHtml = `<h5>◎ 針對性建議</h5><p>${suggestionObj.general
               .replace(/\${tiGua.wuxing}/g, tiGua.wuxing)
