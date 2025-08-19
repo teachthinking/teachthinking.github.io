@@ -63,6 +63,8 @@
     .analysis-status.吉 { color: #4caf50; }
     .analysis-status.凶 { color: #d32f2f; }
     .analysis-status.平 { color: #1e88e5; }
+    .analysis-status.大凶 { color: #d32f2f; }
+    .analysis-status.大吉 { color: #4caf50; }
     .analysis-item .suggestion { background: #e8f5e9; padding: 12px; border-radius: 8px; border-left: 4px solid #4caf50; margin-top: 15px; }
     
   </style>
@@ -229,17 +231,37 @@
       if (relation === '克' || relation === '被克') return '凶';
       return '平';
   }
+  
   function getWuxingEffect(from, to) {
       const relation = getWuxingRelation(from, to);
-      const status = getRelationStatus(relation);
+      let status = getRelationStatus(relation);
       let summary = '';
-      if (relation === '生') summary = '吉，事情發展順利，有貴人相助。';
-      if (relation === '比和') summary = '吉，事可成，但需自身努力。';
-      if (relation === '被生') summary = '吉，有貴人相助，但自身較被動。';
-      if (relation === '克') summary = '凶，會遇到阻礙，事難成。';
-      if (relation === '被克') summary = '大凶，會遭受挫折，有損害或災難。';
+
+      if (relation === '克') {
+          // 體卦剋用卦，視為大吉
+          status = '大吉';
+          summary = '大吉，能掌控局面，事可成。';
+      } else if (relation === '生') {
+          // 用卦生體卦，視為吉
+          status = '吉';
+          summary = '吉，事情發展順利，有貴人相助。';
+      } else if (relation === '比和') {
+          // 體用同五行，視為吉
+          status = '吉';
+          summary = '吉，事可成，但需自身努力。';
+      } else if (relation === '被生') {
+          // 體卦生用卦，視為凶
+          status = '凶';
+          summary = '凶，我方付出大於回報，易疲憊。';
+      } else if (relation === '被克') {
+          // 用卦克體卦，視為大凶
+          status = '大凶';
+          summary = '大凶，會遭受挫折，有損害或災難。';
+      }
+
       return { relation, status, summary };
   }
+
 
   let hexList = [];
   const hexByLines = new Map();
@@ -491,8 +513,8 @@
       const [tiGua, yongGua] = (movingYao <= 3) ? [uGua, lGua] : [lGua, uGua];
 
       // 本卦分析
-      const mainEffect = getWuxingEffect(yongGua.wuxing, tiGua.wuxing);
-      const mainDesc = `體卦（靜）${tiGua.name}五行屬${tiGua.wuxing}，用卦（動）${yongGua.name}五行屬${yongGua.wuxing}。`;
+      const mainEffect = getWuxingEffect(tiGua.wuxing, yongGua.wuxing);
+      const mainDesc = `體卦（您）${tiGua.name}五行屬${tiGua.wuxing}，用卦（外在事物）${yongGua.name}五行屬${yongGua.wuxing}。`;
       contentDiv.innerHTML += `<div class="wuxing-box">本卦：<span class="wuxing-status ${mainEffect.status}">${mainEffect.relation}</span><div class="wuxing-desc">${mainDesc}${mainEffect.summary}</div></div>`;
 
       // 互卦分析
@@ -510,12 +532,10 @@
       // 變卦分析
       const changeUpper = result.changeLines.slice(3,6);
       const changeLower = result.changeLines.slice(0,3);
-      const changeUpperId = triIndexByLines.get(JSON.stringify(changeUpper));
       const changeLowerId = triIndexByLines.get(JSON.stringify(changeLower));
-      const changeUGua = { name: trigramName[changeUpperId], wuxing: guaTable[changeUpperId][3] };
-      const changeLGua = { name: trigramName[changeLowerId], wuxing: guaTable[changeLowerId][3] };
-      
-      const changeEffect = getWuxingEffect(tiGua.wuxing, (movingYao <=3) ? changeLGua.wuxing : changeUGua.wuxing);
+      const changeUpperId = triIndexByLines.get(JSON.stringify(changeUpper));
+      const changeGua = (movingYao <= 3) ? { wuxing: guaTable[changeLowerId][3] } : { wuxing: guaTable[changeUpperId][3] };
+      const changeEffect = getWuxingEffect(tiGua.wuxing, changeGua.wuxing);
       const changeDesc = `變卦五行與體卦五行關係為：${changeEffect.relation}。`;
       contentDiv.innerHTML += `<div class="wuxing-box">變卦：<span class="wuxing-status ${changeEffect.status}">${changeEffect.relation}</span><div class="wuxing-desc">${changeDesc}${changeEffect.summary}</div></div>`;
   }
@@ -553,7 +573,7 @@
           [tiGua, yongGua] = (movingYao <= 3) ? [uGua, lGua] : [lGua, uGua];
 
           // 本卦：現況分析 (用卦對體卦)
-          const mainEffect = getWuxingEffect(yongGua.wuxing, tiGua.wuxing);
+          const mainEffect = getWuxingEffect(tiGua.wuxing, yongGua.wuxing);
           const mainExplanation = wuxingExplanations[mainEffect.relation]?.[questionType]?.本卦 || '（此類別無詳細解釋）';
           analysisDiv.innerHTML += `<div class="analysis-item"><h4>第一層：本卦（現況分析）</h4><p>您的問事面向為 **${questionTitle}**。<br>體卦（您）屬 **${tiGua.wuxing}**，用卦（外在事物）屬 **${yongGua.wuxing}**。<br>五行關係為：**${mainEffect.relation}**。此卦象代表：<br><span class="analysis-status ${mainEffect.status}">${mainExplanation}</span></p></div>`;
 
