@@ -1,40 +1,264 @@
-import React, { useMemo, useState } from "react"; import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; import { Button } from "@/components/ui/button"; import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"; import { Input } from "@/components/ui/input"; import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select"; import { motion } from "framer-motion"; import { Info, RefreshCw, Sparkles } from "lucide-react";
+<!doctype html>
 
-/**
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>梅花心易｜五行定吉凶（五面向分析 Demo）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .tab-active { @apply border-b-2 border-slate-900 text-slate-900; }
+  </style>
+</head>
+<body class="bg-gradient-to-b from-white to-slate-50 text-slate-800 min-h-screen">
+  <div class="max-w-5xl mx-auto p-6 md:p-10 space-y-6">
+    <header class="flex items-center justify-between">
+      <h1 class="text-2xl md:text-3xl font-bold tracking-tight">梅花心易｜五行定吉凶（五面向分析 Demo）</h1>
+      <button id="resetBtn" class="px-3 py-2 text-sm rounded-xl border shadow-sm hover:bg-slate-50">重置示例</button>
+    </header><!-- 輸入區 -->
+<section class="bg-white rounded-2xl shadow-sm border p-5">
+  <h2 class="font-semibold mb-4">輸入區</h2>
+  <div class="grid md:grid-cols-3 gap-4">
+    <div>
+      <label class="text-sm font-medium">下卦（內卦）</label>
+      <select id="lowerSelect" class="mt-1 w-full border rounded-xl p-2">
+      </select>
+    </div>
+    <div>
+      <label class="text-sm font-medium">上卦（外卦）</label>
+      <select id="upperSelect" class="mt-1 w-full border rounded-xl p-2">
+      </select>
+    </div>
+    <div>
+      <label class="text-sm font-medium">動爻（1~6，自下而上）</label>
+      <input id="movingInput" type="number" min="1" max="6" step="1" class="mt-1 w-full border rounded-xl p-2" value="1" />
+    </div>
+  </div>
+</section>
 
-梅花心易（簡化教學型 Demo）
+<!-- 推算結果 -->
+<section class="bg-white rounded-2xl shadow-sm border p-5">
+  <h2 class="font-semibold mb-4">推算結果</h2>
+  <div class="grid md:grid-cols-3 gap-4 text-sm" id="resultCards">
+    <div>
+      <div class="font-medium">本卦</div>
+      <div id="baseLower"></div>
+      <div id="baseUpper"></div>
+    </div>
+    <div>
+      <div class="font-medium">互卦</div>
+      <div id="mutualLower"></div>
+      <div id="mutualUpper"></div>
+    </div>
+    <div>
+      <div class="font-medium">變卦</div>
+      <div id="changedLower"></div>
+      <div id="changedUpper"></div>
+    </div>
+  </div>
+</section>
 
-以「人、事、時、地、物」五面向為架構，提供一個可擴充的 React 前端。
+<!-- 分頁 -->
+<section class="bg-white rounded-2xl shadow-sm border p-5">
+  <div class="flex gap-4 border-b pb-2 text-sm">
+    <button class="tab-btn tab-active" data-tab="human">人</button>
+    <button class="tab-btn" data-tab="event">事</button>
+    <button class="tab-btn" data-tab="time">時</button>
+    <button class="tab-btn" data-tab="place">地</button>
+    <button class="tab-btn" data-tab="object">物</button>
+  </div>
+  <div class="pt-4 text-sm leading-7">
+    <div id="tab-human" class="tab-pane"></div>
+    <div id="tab-event" class="tab-pane hidden">
+      <h3 class="font-medium">「事」的判讀框架（待填入）</h3>
+      <p>可依五行生克強弱推事勢：本卦（用對體）主當下形勢；互卦主過程與中間人物；變卦主趨勢與結果。可加入「六親、用忌、旺相休囚」等權重。</p>
+    </div>
+    <div id="tab-time" class="tab-pane hidden">
+      <h3 class="font-medium">「時」的判讀框架（待填入）</h3>
+      <p>以季節與納甲等方法權重：春木旺、夏火旺、秋金旺、冬水旺、四季末土旺；互卦與變卦生扶剋泄可作時間窗口判斷。</p>
+    </div>
+    <div id="tab-place" class="tab-pane hidden">
+      <h3 class="font-medium">「地」的判讀框架（待填入）</h3>
+      <p>以卦象方位地理：兌為西澤、離為南火熱、艮為東北山、巽為東南風木……據此推測方位與環境屬性。</p>
+    </div>
+    <div id="tab-object" class="tab-pane hidden">
+      <h3 class="font-medium">「物」的判讀框架（待填入）</h3>
+      <p>離主光明/電器/文書，兌主金屬/口舌，巽主木製/可彎曲，艮主石土/止物……可改為 JSON 表並加上權重配對。</p>
+    </div>
+  </div>
+</section>
 
+<footer class="text-xs text-slate-500 text-center pt-2">© <span id="year"></span> 梅花心易前端示範 — 可自由改作商業/教學用途。</footer>
 
-內建八卦 → 五行、人物、身體部位等對應，以及本卦/變卦/互卦自動推算與生克判斷。
+  </div>  <script>
+    const TRIGRAMS = [
+      { key: "乾", bin: [1,1,1], element: "金", person: "父、長者、領導", body: "首、骨、肺經上部", symbol: "天" },
+      { key: "兌", bin: [0,1,1], element: "金", person: "少女、悅口之人", body: "口、肺、咽喉", symbol: "澤" },
+      { key: "離", bin: [1,0,1], element: "火", person: "中女、文明之人", body: "目、心、血分", symbol: "火" },
+      { key: "震", bin: [0,0,1], element: "木", person: "長男、驚動者", body: "足、肝膽", symbol: "雷" },
+      { key: "巽", bin: [1,1,0], element: "木", person: "長女、商賈、流通者", body: "股、大腿、筋", symbol: "風" },
+      { key: "坎", bin: [0,1,0], element: "水", person: "中男、行旅、險難者", body: "腎、耳、血", symbol: "水" },
+      { key: "艮", bin: [1,0,0], element: "土", person: "少男、門戶、止守者", body: "背、手、鼻", symbol: "山" },
+      { key: "坤", bin: [0,0,0], element: "土", person: "母、眾、承載者", body: "腹、脾、肌肉", symbol: "地" },
+    ];
 
+    const ELEMENTS = {
+      木: { generates: "火", overcomes: "土", generatedBy: "水", overcomeBy: "金" },
+      火: { generates: "土", overcomes: "金", generatedBy: "木", overcomeBy: "水" },
+      土: { generates: "金", overcomes: "水", generatedBy: "火", overcomeBy: "木" },
+      金: { generates: "水", overcomes: "木", generatedBy: "土", overcomeBy: "火" },
+      水: { generates: "木", overcomes: "火", generatedBy: "金", overcomeBy: "土" },
+    };
 
-已預設示例：䷰ 澤火革（下離、上兌），初爻動 ⇒ 變卦 ䷞ 澤山咸。
+    const $ = (sel)=>document.querySelector(sel);
+    const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
 
+    function optionHtml(t) { return `<option value="${t.key}">${t.key}（${t.symbol}／${t.element}）</option>`; }
 
-你可以：
+    function initSelectors() {
+      const lowerSel = $('#lowerSelect');
+      const upperSel = $('#upperSelect');
+      lowerSel.innerHTML = TRIGRAMS.map(optionHtml).join('');
+      upperSel.innerHTML = TRIGRAMS.map(optionHtml).join('');
+      lowerSel.value = '離';
+      upperSel.value = '兌';
+    }
 
-1. 直接改下/上卦與動爻測試其它卦例；
+    function buildHexagram(lowerKey, upperKey){
+      const lower = TRIGRAMS.find(t=>t.key===lowerKey);
+      const upper = TRIGRAMS.find(t=>t.key===upperKey);
+      const lines = [...lower.bin, ...upper.bin];
+      return { lines, lower, upper };
+    }
 
+    function flipAt(lines, index1to6){
+      const idx = index1to6 - 1;
+      const next = lines.slice();
+      next[idx] = next[idx] ? 0 : 1;
+      return next;
+    }
 
+    function linesToTrigram(lines3){
+      return TRIGRAMS.find(t=> t.bin.every((b,i)=>b===lines3[i]));
+    }
 
-2. 在「設定」分頁擴充對應表與規則；
+    function hexFromLines(lines){
+      const lower = linesToTrigram(lines.slice(0,3));
+      const upper = linesToTrigram(lines.slice(3,6));
+      return { lines, lower, upper };
+    }
 
+    function mutualHexagram(lines){
+      const lowerMutual = lines.slice(1,4); // 2,3,4
+      const upperMutual = lines.slice(2,5); // 3,4,5
+      return { lower: linesToTrigram(lowerMutual), upper: linesToTrigram(upperMutual), lines: [...lowerMutual, ...upperMutual] };
+    }
 
+    function relation(fromElem, toElem){
+      if (ELEMENTS[fromElem].generates === toElem) return '生';
+      if (ELEMENTS[fromElem].overcomes === toElem) return '克';
+      if (ELEMENTS[fromElem].generatedBy === toElem) return '被生';
+      if (ELEMENTS[fromElem].overcomeBy === toElem) return '被克';
+      return '平';
+    }
 
-3. 將五面向的說明與規則填入專案中（此檔已示範「人」）。 */
+    function prettyRelation(fromElem, toElem){
+      const r = relation(fromElem, toElem);
+      if (r==='生') return `${fromElem}生${toElem}`;
+      if (r==='克') return `${fromElem}克${toElem}`;
+      if (r==='被生') return `${fromElem}受${toElem}所生`;
+      if (r==='被克') return `${fromElem}受${toElem}所克`;
+      return `${fromElem}與${toElem}相平`;
+    }
 
+    function renderSummary(base, mutual, changed){
+      $('#baseLower').textContent   = `下：${base.lower.key}（${base.lower.symbol}／${base.lower.element}）`;
+      $('#baseUpper').textContent   = `上：${base.upper.key}（${base.upper.symbol}／${base.upper.element}）`;
+      $('#mutualLower').textContent = `下：${mutual.lower.key}（${mutual.lower.symbol}／${mutual.lower.element}）`;
+      $('#mutualUpper').textContent = `上：${mutual.upper.key}（${mutual.upper.symbol}／${mutual.upper.element}）`;
+      $('#changedLower').textContent= `下：${changed.lower.key}（${changed.lower.symbol}／${changed.lower.element}）`;
+      $('#changedUpper').textContent= `上：${changed.upper.key}（${changed.upper.symbol}／${changed.upper.element}）`;
+    }
 
+    function renderHuman(base, mutual, changed, movingLine){
+      const isLowerMoving = movingLine >=1 && movingLine <=3;
+      const mover = isLowerMoving ? base.lower : base.upper;
+      const body  = isLowerMoving ? base.upper : base.lower;
 
+      const step1 = prettyRelation(mover.element, body.element);
+      const step2 = prettyRelation(mutual.upper.element, mutual.lower.element);
+      const step3 = prettyRelation(changed.lower.element, changed.upper.element);
 
-// 八卦基礎資料 const TRIGRAMS = [ { key: "乾", bin: [1, 1, 1], element: "金", person: "父、長者、領導", body: "首、骨、肺經上部", symbol: "天" }, { key: "兌", bin: [0, 1, 1], element: "金", person: "少女、悅口之人", body: "口、肺、咽喉", symbol: "澤" }, { key: "離", bin: [1, 0, 1], element: "火", person: "中女、文明之人", body: "目、心、血分", symbol: "火" }, { key: "震", bin: [0, 0, 1], element: "木", person: "長男、驚動者", body: "足、肝膽", symbol: "雷" }, { key: "巽", bin: [1, 1, 0], element: "木", person: "長女、商賈、流通者", body: "股、大腿、筋", symbol: "風" }, { key: "坎", bin: [0, 1, 0], element: "水", person: "中男、行旅、險難者", body: "腎、耳、血", symbol: "水" }, { key: "艮", bin: [1, 0, 0], element: "土", person: "少男、門戶、止守者", body: "背、手、鼻", symbol: "山" }, { key: "坤", bin: [0, 0, 0], element: "土", person: "母、眾、承載者", body: "腹、脾、肌肉", symbol: "地" }, ] as const;
+      const whoByTrigram = { 乾: '老父/長者/領導', 兌: '少女/悅口之人', 離: '中女/文化人士', 震: '長男/急躁者', 巽: '長女/商旅者', 坎: '中男/行旅者', 艮: '少男/小輩', 坤: '母/眾人/承載者' };
+      const bodyPartByTrigram = { 乾: '首部', 兌: '口與肺系', 離: '目與心血', 震: '足', 巽: '股（大腿）', 坎: '腎耳血', 艮: '背手鼻', 坤: '腹脾肌' };
 
-type TrigramKey = typeof TRIGRAMS[number]["key"];
+      const lines = [];
+      lines.push(`<div><b>一、分析本卦、變卦、互卦之五行生克</b></div>`);
+      lines.push(`<ul class="list-disc pl-5 mt-1 space-y-1">
+        <li><b>本卦：</b>${isLowerMoving? '下' : '上'}${mover.key}${mover.element}為動卦，${isLowerMoving? '上' : '下'}${body.key}${body.element}為體卦，${step1}。</li>
+        <li><b>變卦：</b>下${changed.lower.key}${changed.lower.element}，上${changed.upper.key}${changed.upper.element}，${step3}。</li>
+        <li><b>互卦：</b>下${mutual.lower.key}${mutual.lower.element}，上${mutual.upper.key}${mutual.upper.element}，${step2}。</li>
+      </ul>`);
 
-const ELEMENTS: Record<string, { generates: string; overcomes: string; generatedBy: string; overcomeBy: string }>= { 木: { generates: "火", overcomes: "土", generatedBy: "水", overcomeBy: "金" }, 火: { generates: "土", overcomes: "金", generatedBy: "木", overcomeBy: "水" }, 土: { generates: "金", overcomes: "水", generatedBy: "火", overcomeBy: "木" }, 金: { generates: "水", overcomes: "木", generatedBy: "土", overcomeBy: "火" }, 水: { generates: "木", overcomes: "火", generatedBy: "金", overcomeBy: "土" }, };
+      lines.push(`<div class="mt-3"><b>二、判斷（以人物身體象為切入）</b></div>`);
+      const item1 = (mover.element==='火' && body.key==='兌')
+        ? '以人象言，兌為少女，而火克金，易有受傷之象。'
+        : `以人象言，${body.key}象為「${whoByTrigram[body.key]}」。`;
+      lines.push(`<ol class="list-decimal pl-5 mt-1 space-y-1">
+        <li>先看本卦：體卦為 ${body.key}${body.element}（${whoByTrigram[body.key]}），${item1}</li>
+        <li>再看互卦：上互 ${mutual.upper.key}${mutual.upper.element} 對 下互 ${mutual.lower.key}${mutual.lower.element} 為「${relation(mutual.upper.element, mutual.lower.element)}」；${mutual.lower.key==='巽' ? '巽主股，推其部位在股（腿）。' : `身體部位參考：${mutual.lower.key}主「${bodyPartByTrigram[mutual.lower.key]}」。`}</li>
+        <li>後看變卦：下變 ${changed.lower.key}${changed.lower.element} 對 上變 ${changed.upper.key}${changed.upper.element} 為「${relation(changed.lower.element, changed.upper.element)}」，${relation(changed.lower.element, changed.upper.element)==='生' ? '得生扶，象不至於極凶。' : '視生克強弱斟酌吉凶。'}</li>
+      </ol>`);
 
-// 以八卦二進位推 64 卦（自下而上 1~6 爻；1=陽、0=陰） function buildHexagram(lower: TrigramKey, upper: TrigramKey) { const lo = TRIGRAMS.find(t=>t.key===lower)!; const up = TRIGRAMS.find(t=>t.key===upper)!; const lines = [...lo.bin, ...up.bin]; // index: 0..5 = 初至上（自下而上） return { lines, lower: lo, upper: up }; }
+      $('#tab-human').innerHTML = lines.join('\n');
+    }
+
+    function computeAndRender(){
+      const lowerKey = $('#lowerSelect').value;
+      const upperKey = $('#upperSelect').value;
+      const movingLine = Math.max(1, Math.min(6, parseInt($('#movingInput').value || '1', 10)));
+
+      const base = buildHexagram(lowerKey, upperKey);
+      const changed = hexFromLines(flipAt(base.lines, movingLine));
+      const mutual = mutualHexagram(base.lines);
+
+      renderSummary(base, mutual, changed);
+      renderHuman(base, mutual, changed, movingLine);
+    }
+
+    function bindEvents(){
+      $('#lowerSelect').addEventListener('change', computeAndRender);
+      $('#upperSelect').addEventListener('change', computeAndRender);
+      $('#movingInput').addEventListener('input', computeAndRender);
+      $('#resetBtn').addEventListener('click', ()=>{
+        $('#lowerSelect').value = '離';
+        $('#upperSelect').value = '兌';
+        $('#movingInput').value = 1;
+        activateTab('human');
+        computeAndRender();
+      });
+
+      $$('.tab-btn').forEach(btn=>{
+        btn.addEventListener('click', ()=> activateTab(btn.dataset.tab));
+      });
+    }
+
+    function activateTab(name){
+      $$('.tab-btn').forEach(b=> b.classList.toggle('tab-active', b.dataset.tab===name));
+      $$('.tab-pane').forEach(p=> p.classList.add('hidden'));
+      $('#tab-'+name).classList.remove('hidden');
+    }
+
+    // init
+    document.addEventListener('DOMContentLoaded', ()=>{
+      initSelectors();
+      bindEvents();
+      activateTab('human');
+      computeAndRender();
+      document.getElementById('year').textContent = new Date().getFullYear();
+    });
+  </script></body>
+</html>// 以八卦二進位推 64 卦（自下而上 1~6 爻；1=陽、0=陰） function buildHexagram(lower: TrigramKey, upper: TrigramKey) { const lo = TRIGRAMS.find(t=>t.key===lower)!; const up = TRIGRAMS.find(t=>t.key===upper)!; const lines = [...lo.bin, ...up.bin]; // index: 0..5 = 初至上（自下而上） return { lines, lower: lo, upper: up }; }
 
 function flipAt(lines: number[], index1to6: number) { const idx = index1to6 - 1; const next = [...lines]; next[idx] = next[idx] ? 0 : 1; return next; }
 
