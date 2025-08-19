@@ -63,6 +63,7 @@
     .analysis-status.吉 { color: #4caf50; }
     .analysis-status.凶 { color: #d32f2f; }
     .analysis-status.平 { color: #1e88e5; }
+    .analysis-item .suggestion { background: #e8f5e9; padding: 12px; border-radius: 8px; border-left: 4px solid #4caf50; margin-top: 15px; }
     
   </style>
 </head>
@@ -553,7 +554,7 @@
 
           // 本卦：現況分析 (用卦對體卦)
           const mainEffect = getWuxingEffect(yongGua.wuxing, tiGua.wuxing);
-          const mainExplanation = wuxingExplanations[mainEffect.relation]?.[questionType] || '（此類別無詳細解釋）';
+          const mainExplanation = wuxingExplanations[mainEffect.relation]?.[questionType]?.本卦 || '（此類別無詳細解釋）';
           analysisDiv.innerHTML += `<div class="analysis-item"><h4>第一層：本卦（現況分析）</h4><p>您的問事面向為 **${questionTitle}**。<br>體卦（您）屬 **${tiGua.wuxing}**，用卦（外在事物）屬 **${yongGua.wuxing}**。<br>五行關係為：**${mainEffect.relation}**。此卦象代表：<br><span class="analysis-status ${mainEffect.status}">${mainExplanation}</span></p></div>`;
 
           // 互卦：過程分析 (體卦對互卦)
@@ -561,7 +562,7 @@
           const huUpperId = triIndexByLines.get(JSON.stringify(huUpper));
           const huUGua = { wuxing: guaTable[huUpperId][3] };
           const huEffect = getWuxingEffect(tiGua.wuxing, huUGua.wuxing);
-          const huExplanation = wuxingExplanations[huEffect.relation]?.[questionType] || '（此類別無詳細解釋）';
+          const huExplanation = wuxingExplanations[huEffect.relation]?.[questionType]?.互卦 || '（此類別無詳細解釋）';
           analysisDiv.innerHTML += `<div class="analysis-item"><h4>第二層：互卦（過程分析）</h4><p>體卦屬 **${tiGua.wuxing}**，互卦屬 **${huUGua.wuxing}**。<br>五行關係為：**${huEffect.relation}**。這顯示事情在過程中將會：<br><span class="analysis-status ${huEffect.status}">${huExplanation}</span></p></div>`;
           
           // 變卦：最終結果 (體卦對變卦)
@@ -571,8 +572,18 @@
           const changeUpperId = triIndexByLines.get(JSON.stringify(changeUpper));
           const changeGua = (movingYao <= 3) ? { wuxing: guaTable[changeLowerId][3] } : { wuxing: guaTable[changeUpperId][3] };
           const changeEffect = getWuxingEffect(tiGua.wuxing, changeGua.wuxing);
-          const changeExplanation = wuxingExplanations[changeEffect.relation]?.[questionType] || '（此類別無詳細解釋）';
+          const changeExplanation = wuxingExplanations[changeEffect.relation]?.[questionType]?.變卦 || '（此類別無詳細解釋）';
           analysisDiv.innerHTML += `<div class="analysis-item"><h4>第三層：變卦（結果分析）</h4><p>體卦屬 **${tiGua.wuxing}**，變卦屬 **${changeGua.wuxing}**。<br>五行關係為：**${changeEffect.relation}**。這代表最終的結果將會是：<br><span class="analysis-status ${changeEffect.status}">${changeExplanation}</span></p></div>`;
+          
+          // 針對性建議
+          const suggestion = wuxingExplanations[mainEffect.relation]?.[questionType]?.建議 || '（目前無相關建議）';
+          const finalSuggestion = suggestion
+            .replace(/\${tiGua.wuxing}/g, tiGua.wuxing)
+            .replace(/\${yongGua.wuxing}/g, yongGua.wuxing);
+
+          if (finalSuggestion.trim()) {
+              analysisDiv.innerHTML += `<div class="analysis-item suggestion"><h4>◎ 針對性建議</h4><p>${finalSuggestion}</p></div>`;
+          }
       }
   }
 
