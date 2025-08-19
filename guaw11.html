@@ -257,7 +257,7 @@
           relationType = '體生用';
           status = '凶';
       }
-      // 用克體 (用卦的五行克體卦的五行)
+      // 用克體 (用卦的五行克用卦的五行)
       else if (relations[yongWuxing]['剋'] === tiWuxing) {
           relationType = '用克體';
           status = '大凶';
@@ -556,8 +556,9 @@
 
       // 本卦分析
       const mainEffect = getWuxingOutcome(tiGua.wuxing, yongGua.wuxing);
+      const mainExplanation = wuxingExplanations[mainEffect.relation]?.['general']?.本卦 || '（此類別無詳細解釋）';
       const mainDesc = `**體卦**（您）為 **${tiGua.name}** 屬 **${tiGua.wuxing}**，**用卦**（外在事物）為 **${yongGua.name}** 屬 **${yongGua.wuxing}**。`;
-      contentDiv.innerHTML += `<div class="wuxing-box">**本卦：**<span class="wuxing-status ${mainEffect.status}">${mainEffect.relation}</span><div class="wuxing-desc">${mainDesc}</div></div>`;
+      contentDiv.innerHTML += `<div class="wuxing-box">**本卦：**<span class="wuxing-status ${mainEffect.status}">${mainEffect.relation}</span><div class="wuxing-desc">${mainDesc}<br>${mainExplanation}</div></div>`;
 
       // 互卦分析
       const huLines = result.huLines;
@@ -567,22 +568,22 @@
       const huUGua = getTrigramInfo(huUpperId);
       
       const huOutcome = getWuxingOutcome(tiGua.wuxing, huLGua.wuxing);
-      const huExplanation = wuxingExplanations[huOutcome.relation]?.[questionType]?.互卦 || '（此類別無詳細解釋）';
+      const huExplanation = wuxingExplanations[huOutcome.relation]?.['general']?.互卦 || '（此類別無詳細解釋）';
       
       let guaAnalysisHtml = `<div class="analysis-item"><h4>第二層：互卦（過程分析）</h4><p>體卦屬 **${tiGua.wuxing}**，互卦（代表過程）屬 **${huLGua.wuxing}** 與 **${huUGua.wuxing}**。<br>五行關係為：**${huOutcome.relation}**。這顯示事情在過程中將會：<br><span class="analysis-status ${huOutcome.status}">${huExplanation}</span></p>`;
 
-      if (trigramExplanations[huLGua.name]?.[questionType] || trigramExplanations[huUGua.name]?.[questionType]) {
-          guaAnalysisHtml += `<div class="trigram-details"><strong>卦象取象：</strong><br>`;
-          if (trigramExplanations[huLGua.name]?.[questionType]) {
-              guaAnalysisHtml += `**下互卦**（${huLGua.name}）：${trigramExplanations[huLGua.name][questionType]}<br>`;
+      if (trigramExplanations[huLGua.name] || trigramExplanations[huUGua.name]) {
+          guaAnalysisHtml += `<div class="trigram-details"><strong>互卦取象：</strong><br>`;
+          if (trigramExplanations[huLGua.name]?.life) {
+              guaAnalysisHtml += `**下互卦**（${huLGua.name}）：${trigramExplanations[huLGua.name].life}<br>`;
           }
-          if (trigramExplanations[huUGua.name]?.[questionType]) {
-              guaAnalysisHtml += `**上互卦**（${huUGua.name}）：${trigramExplanations[huUGua.name][questionType]}`;
+          if (trigramExplanations[huUGua.name]?.life) {
+              guaAnalysisHtml += `**上互卦**（${huUGua.name}）：${trigramExplanations[huUGua.name].life}`;
           }
           guaAnalysisHtml += `</div>`;
       }
       guaAnalysisHtml += `</div>`;
-      analysisDiv.innerHTML += guaAnalysisHtml;
+      contentDiv.innerHTML += guaAnalysisHtml;
 
 
       // 變卦：最終結果
@@ -591,47 +592,17 @@
       const changeUpperId = triIndexByLines.get(JSON.stringify(changeLines.slice(3,6)));
       const changeGua = (result.moving[0] <= 3) ? getTrigramInfo(changeLowerId) : getTrigramInfo(changeUpperId);
       const changeOutcome = getWuxingOutcome(tiGua.wuxing, changeGua.wuxing);
-      const changeExplanation = wuxingExplanations[changeOutcome.relation]?.[questionType]?.變卦 || '（此類別無詳細解釋）';
+      const changeExplanation = wuxingExplanations[changeOutcome.relation]?.['general']?.變卦 || '（此類別無詳細解釋）';
       
       guaAnalysisHtml = `<div class="analysis-item"><h4>第三層：變卦（結果分析）</h4><p>體卦屬 **${tiGua.wuxing}**，變卦（代表結果）屬 **${changeGua.wuxing}**。<br>五行關係為：**${changeOutcome.relation}**。這代表最終的結果將會是：<br><span class="analysis-status ${changeOutcome.status}">${changeExplanation}</span></p>`;
       
-      if (trigramExplanations[changeGua.name]?.[questionType]) {
-          guaAnalysisHtml += `<div class="trigram-details"><strong>卦象取象：</strong><br>`;
-          guaAnalysisHtml += `**變卦**（${changeGua.name}）：${trigramExplanations[changeGua.name][questionType]}`;
+      if (trigramExplanations[changeGua.name]?.life) {
+          guaAnalysisHtml += `<div class="trigram-details"><strong>變卦取象：</strong><br>`;
+          guaAnalysisHtml += `**變卦**（${changeGua.name}）：${trigramExplanations[changeGua.name].life}`;
           guaAnalysisHtml += `</div>`;
       }
       guaAnalysisHtml += `</div>`;
-      analysisDiv.innerHTML += guaAnalysisHtml;
-  }
-  
-  function getTrigramExplanationHtml(tiGua, yongGua, huLGua, huUGua, changeGua, questionType) {
-      let html = '';
-      if (trigramExplanations[tiGua.name]?.[questionType] || trigramExplanations[yongGua.name]?.[questionType]) {
-          html += `<div class="trigram-details"><strong>本卦取象：</strong><br>`;
-          if (trigramExplanations[tiGua.name]?.[questionType]) {
-              html += `**體卦**（${tiGua.name}）：${trigramExplanations[tiGua.name][questionType]}<br>`;
-          }
-          if (trigramExplanations[yongGua.name]?.[questionType]) {
-              html += `**用卦**（${yongGua.name}）：${trigramExplanations[yongGua.name][questionType]}`;
-          }
-          html += `</div>`;
-      }
-      if (trigramExplanations[huLGua.name]?.[questionType] || trigramExplanations[huUGua.name]?.[questionType]) {
-          html += `<div class="trigram-details"><strong>互卦取象：</strong><br>`;
-          if (trigramExplanations[huLGua.name]?.[questionType]) {
-              html += `**下互卦**（${huLGua.name}）：${trigramExplanations[huLGua.name][questionType]}<br>`;
-          }
-          if (trigramExplanations[huUGua.name]?.[questionType]) {
-              html += `**上互卦**（${huUGua.name}）：${trigramExplanations[huUGua.name][questionType]}`;
-          }
-          html += `</div>`;
-      }
-      if (trigramExplanations[changeGua.name]?.[questionType]) {
-          html += `<div class="trigram-details"><strong>變卦取象：</strong><br>`;
-          html += `**變卦**（${changeGua.name}）：${trigramExplanations[changeGua.name][questionType]}`;
-          html += `</div>`;
-      }
-      return html;
+      contentDiv.innerHTML += guaAnalysisHtml;
   }
   
   function renderQuestionAnalysis(result, questionType) {
