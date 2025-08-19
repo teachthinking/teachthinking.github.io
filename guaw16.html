@@ -134,9 +134,9 @@
     async function loadData() {
       try {
         const [hexagramsRes, trigramsRes, wuxingRes] = await Promise.all([
-          fetch('hexagrams.json'),
-          fetch('trigram_explanations.json'),
-          fetch('wuxing_explanations.json')
+          fetch('hexagrams.json.txt'),
+          fetch('trigram_explanations.json.txt'),
+          fetch('wuxing_explanations.json.txt')
         ]);
         hexagramsData = await hexagramsRes.json();
         trigramExplanationsData = await trigramsRes.json();
@@ -151,9 +151,10 @@
     loadData();
 
     function getGuaInfo(lines) {
-      const lineStr = lines.join('');
+      const lineStr = lines.map(l => (l === 7 || l === 9) ? 1 : 0).join('');
       for (const name in hexagramsData) {
-        if (hexagramsData[name].lines.map(l => l.index > 6 ? 1 : 0).join('') === lineStr) {
+        const hexagramLines = hexagramsData[name].lines.map(l => l.index > 6 ? 1 : 0);
+        if (hexagramLines.join('') === lineStr) {
           return { name, ...hexagramsData[name] };
         }
       }
@@ -196,7 +197,7 @@
       }
     }
 
-    function getTrigramName(trigramLines) {
+    function getTrigramNameByBinary(trigramLines) {
       const trigramStr = trigramLines.join('');
       for (const name in trigramsMap) {
         if (trigramsMap[name].join('') === trigramStr) {
@@ -207,13 +208,22 @@
     }
 
     function getTiYongGua(mainGua, movingLineIndex) {
-      const trigramLines = mainGua.lines.map(l => l.index > 6 ? 1 : 0);
-      const mainInnerTrigramName = getTrigramName(trigramLines.slice(0, 3));
-      const mainOuterTrigramName = getTrigramName(trigramLines.slice(3, 6));
+      const mainLinesBinary = mainGua.lines.map(l => l.index > 6 ? 1 : 0);
+      const lowerTrigramBinary = mainLinesBinary.slice(0, 3);
+      const upperTrigramBinary = mainLinesBinary.slice(3, 6);
+      
+      const lowerTrigramName = getTrigramNameByBinary(lowerTrigramBinary);
+      const upperTrigramName = getTrigramNameByBinary(upperTrigramBinary);
 
-      const tiGua = (movingLineIndex === 1 || movingLineIndex === 2 || movingLineIndex === 3) ? { name: mainOuterTrigramName, wuxing: trigramWuxing[mainOuterTrigramName] } : { name: mainInnerTrigramName, wuxing: trigramWuxing[mainInnerTrigramName] };
-      const yongGua = (movingLineIndex === 1 || movingLineIndex === 2 || movingLineIndex === 3) ? { name: mainInnerTrigramName, wuxing: trigramWuxing[mainInnerTrigramName] } : { name: mainOuterTrigramName, wuxing: trigramWuxing[mainOuterTrigramName] };
+      let tiGua, yongGua;
 
+      if (movingLineIndex <= 3) {
+        tiGua = { name: upperTrigramName, wuxing: trigramWuxing[upperTrigramName] };
+        yongGua = { name: lowerTrigramName, wuxing: trigramWuxing[lowerTrigramName] };
+      } else {
+        tiGua = { name: lowerTrigramName, wuxing: trigramWuxing[lowerTrigramName] };
+        yongGua = { name: upperTrigramName, wuxing: trigramWuxing[upperTrigramName] };
+      }
       return { tiGua, yongGua };
     }
 
@@ -227,7 +237,7 @@
       };
       return wuxingRelation[tiWuxing][yongWuxing];
     }
-
+    
     function renderQuestionAnalysis(result, questionType) {
       const analysisDiv = document.getElementById('analysis-output');
       analysisDiv.innerHTML = '';
@@ -246,12 +256,25 @@
       `;
       analysisDiv.innerHTML += `<div class="analysis-item">${basicAnalysisHtml}</div>`;
 
-      // 體用分析
+      // 八卦體用分析
       const { tiGua, yongGua } = getTiYongGua(mainGua, movingLineIndex);
+      const tiExplanation = trigramExplanationsData[tiGua.name];
+      const yongExplanation = trigramExplanationsData[yongGua.name];
+      const trigramAnalysisHtml = `
+          <h3>八卦體用分析</h3>
+          <p><b>體卦</b>：<b>${tiGua.name}</b>，五行屬<b>${tiGua.wuxing}</b>。代表問事者本身，也代表事物本身。
+            <p class="hint">解釋：${tiExplanation[questionType]}</p>
+          </p>
+          <p><b>用卦</b>：<b>${yongGua.name}</b>，五行屬<b>${yongGua.wuxing}</b>。代表問事所涉及的對方、環境或事物。
+            <p class="hint">解釋：${yongExplanation[questionType]}</p>
+          </p>
+      `;
+      analysisDiv.innerHTML += `<div class="analysis-item">${trigramAnalysisHtml}</div>`;
+
+      // 五行生剋分析
       const wuxingRelationship = getWuxingRelationship(tiGua.wuxing, yongGua.wuxing);
       const wuxingAnalysisHtml = `
-          <h3>五行體用分析</h3>
-          <p>本卦為體，體卦為<b>${tiGua.name}</b>，五行屬<b>${tiGua.wuxing}</b>。變卦為用，用卦為<b>${yongGua.name}</b>，五行屬<b>${yongGua.wuxing}</b>。</p>
+          <h3>五行生剋分析</h3>
           <p>體用關係為：<b>${tiGua.wuxing}</b>${wuxingRelationship}<b>${yongGua.wuxing}</b>。</p>
       `;
       analysisDiv.innerHTML += `<div class="analysis-item">${wuxingAnalysisHtml}</div>`;
@@ -319,22 +342,6 @@
         alert('請輸入三個有效的數字');
         return;
       }
-
-      // 簡化卦爻生成邏輯
-      const guaValues = nums.map(n => n % 8);
-      const upperTrigramValue = guaValues[0];
-      const lowerTrigramValue = guaValues[1];
-      const movingLineValue = guaValues[2];
-
-      const lineMap = { 1: 7, 2: 8, 3: 9, 4: 8, 5: 7, 0: 6 };
-      const guaLines = [
-        lineMap[lowerTrigramValue],
-        lineMap[lowerTrigramValue+1 > 5 ? (lowerTrigramValue+1) % 5 : lowerTrigramValue+1], // Simplified logic for line 2
-        lineMap[lowerTrigramValue+2 > 5 ? (lowerTrigramValue+2) % 5 : lowerTrigramValue+2], // Simplified logic for line 3
-        lineMap[upperTrigramValue],
-        lineMap[upperTrigramValue+1 > 5 ? (upperTrigramValue+1) % 5 : upperTrigramValue+1], // Simplified logic for line 5
-        lineMap[upperTrigramValue+2 > 5 ? (upperTrigramValue+2) % 5 : upperTrigramValue+2]  // Simplified logic for line 6
-      ];
       
       const mainLines = nums.map(n => n % 6 === 0 ? 6 : (n % 6 === 1 ? 7 : (n % 6 === 2 ? 8 : (n % 6 === 3 ? 9 : (n % 6 === 4 ? 7 : 8)))));
       const derivedLines = mainLines.map(line => {
@@ -371,11 +378,11 @@
         document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        document.getElementById(button.dataset.tab).classList.add('active');
-        
-        // Hide other analysis boxes when switching tabs
         document.getElementById('wuxingAnalysis').classList.add('hidden');
         document.getElementById('judgeBox').classList.add('hidden');
+        if (button.dataset.tab) {
+          document.getElementById(button.dataset.tab).classList.add('active');
+        }
       });
     });
 
