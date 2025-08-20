@@ -271,7 +271,7 @@
       const relations = {
           '金': { '生': '水', '剋': '木', '被生': '土', '被剋': '火', '比和': '金' },
           '木': { '生': '火', '剋': '土', '被生': '水', '被剋': '金', '比和': '木' },
-          '水': { '生': '木', '剋': '火', '被生': '金', '被剋': '土', '比和': '火' },
+          '水': { '生': '木', '剋': '火', '被生': '金', '被剋': '土', '比和': '水' },
           '火': { '生': '土', '剋': '金', '被生': '木', '被剋': '水', '比和': '火' },
           '土': { '生': '金', '剋': '水', '被生': '火', '被剋': '木', '比和': '土' }
       };
@@ -304,10 +304,10 @@
   
   // 異步載入所有 JSON 資料
   Promise.allSettled([
-    fetch('hexagrams.json').then(r => r.ok ? r.json() : Promise.reject('無法載入 hexagrams.json.txt')),
-    fetch('quotes.json').then(r => r.ok ? r.json() : Promise.reject('無法載入 quotes.json.txt')),
-    fetch('wuxing_explanations.json').then(r => r.ok ? r.json() : Promise.reject('無法載入 wuxing_explanations.json.txt')),
-    fetch('trigram_explanations.json').then(r => r.ok ? r.json() : Promise.reject('無法載入 trigram_explanations.json.txt'))
+    fetch('hexagrams.json').then(r => r.ok ? r.json() : Promise.reject('無法載入 hexagrams.json')),
+    fetch('quotes.json').then(r => r.ok ? r.json() : Promise.reject('無法載入 quotes.json')),
+    fetch('wuxing_explanations.json').then(r => r.ok ? r.json() : Promise.reject('無法載入 wuxing_explanations.json')),
+    fetch('trigram_explanations.json').then(r => r.ok ? r.json() : Promise.reject('無法載入 trigram_explanations.json'))
   ]).then(results => {
     results.forEach(res => {
       if (res.status === 'fulfilled') {
@@ -826,25 +826,50 @@
           `;
       }
 
-      // 渲染本卦評分
+      // 渲染本卦評分與象徵意義
       const mainJudgment = result.hexMain?.judgment || {};
+      const mainSymbolism = result.hexMain?.symbolism || {};
       let mainHtml = `<h5>本卦（現況分析）</h5>`;
+      let mainSymbolismHtml = '';
       categories.forEach(cat => {
           if (mainJudgment[cat]) {
               mainHtml += renderScoreBar(categoryLabels[cat], mainJudgment[cat]);
           }
+          if (mainSymbolism[cat]) {
+              mainSymbolismHtml += `<p><strong>${categoryLabels[cat]}：</strong>${mainSymbolism[cat]}</p>`;
+          }
       });
-      contentDiv.innerHTML += `<div class="detailed-section">${mainHtml}</div>`;
+      contentDiv.innerHTML += `<div class="detailed-section">${mainHtml}${mainSymbolismHtml}</div>`;
 
-      // 渲染變卦評分
+      // 渲染變卦評分與象徵意義
       const changeJudgment = result.hexChange?.judgment || {};
+      const changeSymbolism = result.hexChange?.symbolism || {};
       let changeHtml = `<h5>變卦（結果分析）</h5>`;
+      let changeSymbolismHtml = '';
       categories.forEach(cat => {
           if (changeJudgment[cat]) {
               changeHtml += renderScoreBar(categoryLabels[cat], changeJudgment[cat]);
           }
+          if (changeSymbolism[cat]) {
+              changeSymbolismHtml += `<p><strong>${categoryLabels[cat]}：</strong>${changeSymbolism[cat]}</p>`;
+          }
       });
-      contentDiv.innerHTML += `<div class="detailed-section">${changeHtml}</div>`;
+      contentDiv.innerHTML += `<div class="detailed-section">${changeHtml}${changeSymbolismHtml}</div>`;
+      
+      // 渲染動爻的象徵意義
+      const movingYao = result.moving[0];
+      const yaoEntry = result.hexMain?.lines.find(line => line.index === movingYao);
+      const yaoSymbolism = yaoEntry?.symbolism || {};
+      if (Object.keys(yaoSymbolism).length > 0) {
+        let yaoHtml = `<h5>動爻：第 ${movingYao} 爻象徵意義</h5>`;
+        let yaoSymbolismHtml = '';
+        categories.forEach(cat => {
+          if (yaoSymbolism[cat]) {
+             yaoSymbolismHtml += `<p><strong>${categoryLabels[cat]}：</strong>${yaoSymbolism[cat]}</p>`;
+          }
+        });
+        contentDiv.innerHTML += `<div class="detailed-section">${yaoHtml}${yaoSymbolismHtml}</div>`;
+      }
       
       // 渲染卦象取象
       let trigramHtml = `<h5>卦象取象</h5>`;
@@ -853,8 +878,6 @@
       const cUgua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))));
       const cLgua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))));
 
-      const trigramSymbols = { '人': 'people', '事': 'affairs', '時': 'time', '地': 'place', '物': 'object' };
-      
       trigramHtml += `<div class="trigram-details"><strong>本卦取象：</strong><br>`;
       trigramHtml += `**上卦**（${uGua.name}）：${uGua.explanations?.life || '無'}<br>`;
       trigramHtml += `**下卦**（${lGua.name}）：${lGua.explanations?.life || '無'}`;
