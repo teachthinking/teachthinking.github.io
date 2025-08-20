@@ -304,10 +304,10 @@
   
   // 異步載入所有 JSON 資料
   Promise.allSettled([
-    fetch('hexagrams.json').then(r => r.ok ? r.json() : Promise.reject('hexagrams.json')),
-    fetch('quotes.json').then(r => r.ok ? r.json() : Promise.reject('quotes.json')),
-    fetch('wuxing_explanations.json').then(r => r.ok ? r.json() : Promise.reject('wuxing_explanations.json')),
-    fetch('trigram_explanations.json').then(r => r.ok ? r.json() : Promise.reject('trigram_explanations.json'))
+    fetch('hexagrams.json').then(r => r.ok ? r.json() : Promise.reject('無法載入 hexagrams.json.txt')),
+    fetch('quotes.json').then(r => r.ok ? r.json() : Promise.reject('無法載入 quotes.json.txt')),
+    fetch('wuxing_explanations.json').then(r => r.ok ? r.json() : Promise.reject('無法載入 wuxing_explanations.json.txt')),
+    fetch('trigram_explanations.json').then(r => r.ok ? r.json() : Promise.reject('無法載入 trigram_explanations.json.txt'))
   ]).then(results => {
     results.forEach(res => {
       if (res.status === 'fulfilled') {
@@ -342,10 +342,7 @@
             console.warn('無法識別的 JSON 資料格式:', res.value);
         }
       } else {
-          console.error(`無法載入 ${res.reason}，將使用預設內容。`);
-          if (res.reason === 'quotes.json') {
-              document.getElementById('subtitle').textContent = '易有太極，是生兩儀，兩儀生四象，四象生八卦。';
-          }
+          console.error(`檔案載入失敗：${res.reason}`);
       }
     });
 
@@ -864,4 +861,37 @@
       trigramHtml += `</div>`;
       
       trigramHtml += `<div class="trigram-details" style="margin-top:10px;"><strong>變卦取象：</strong><br>`;
-      trigramHtml += `**上
+      trigramHtml += `**上變卦**（${cUgua.name}）：${cUgua.explanations?.life || '無'}<br>`;
+      trigramHtml += `**下變卦**（${cLgua.name}）：${cLgua.explanations?.life || '無'}`;
+      trigramHtml += `</div>`;
+      
+      contentDiv.innerHTML += `<div class="detailed-section">${trigramHtml}</div>`;
+  }
+
+  document.getElementById('judgeBtn').addEventListener('click', ()=>{
+    if (!currentResult) { alert('請先生成卦象'); return; }
+    document.getElementById('judgeBox').classList.remove('hidden');
+    renderWuxingAnalysis(currentResult);
+    renderDetailedAnalysis(currentResult);
+  });
+  
+  document.getElementById('analyzeBtn').addEventListener('click', ()=>{
+      if (!dataReady) {
+          alert('資料仍在載入中，請稍候再試。');
+          return;
+      }
+      const questionType = document.getElementById('questionSelector').value;
+      if (questionType === '1') {
+          alert('請先選擇一個問事類別！');
+          return;
+      }
+      if (currentResult.moving.length !== 1) {
+          document.getElementById('questionAnalysisResult').classList.remove('hidden');
+          document.getElementById('questionAnalysisResult').innerHTML = `<div class="analysis-message">此「五行解卦」功能僅適用於單一動爻的梅花心易斷卦法。若為多爻變，則應以爻辭和變卦卦辭來綜合判斷。</div>`;
+          return;
+      }
+      renderQuestionAnalysis(currentResult, questionType);
+  });
+  </script>
+</body>
+</html>
