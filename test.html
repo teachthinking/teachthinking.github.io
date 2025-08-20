@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON 檔案載入測試</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>JSON 檔案載入測試</h1>
+    <p>正在嘗試從本機端載入 `hexagrams.json`...</p>
+    <p id="status">載入中...</p>
+    <pre id="content"></pre>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('hexagrams.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`網路錯誤或檔案不存在！HTTP 狀態碼：${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const status = document.getElementById('status');
+                    status.textContent = '成功載入檔案！';
+                    status.className = 'success';
+
+                    const hexagramCount = Object.keys(data).length;
+                    const content = document.getElementById('content');
+                    content.textContent = `檔案中共包含 ${hexagramCount} 個卦象。`;
+
+                    if (hexagramCount === 64) {
+                        content.textContent += ' 太棒了！這表示您的檔案是完整且可讀取的！';
+                    } else {
+                        content.textContent += ' 但卦象數量不正確。請檢查檔案內容。';
+                    }
+                })
+                .catch(error => {
+                    const status = document.getElementById('status');
+                    status.textContent = `載入失敗：${error.message}`;
+                    status.className = 'error';
+                    console.error('載入失敗原因：', error);
+                });
+        });
+    </script>
+</body>
+</html>
