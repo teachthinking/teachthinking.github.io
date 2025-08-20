@@ -101,10 +101,10 @@
     // 載入所有JSON檔案
     function loadData() {
         Promise.all([
-            fetch('trigram_explanations.json.txt'), // 使用者提供的副檔名
-            fetch('hexagrams.json.txt'), // 使用者提供的副檔名
-            fetch('quotes.json.txt'), // 使用者提供的副檔名
-            fetch('wuxing_explanations.json.txt') // 使用者提供的副檔名
+            fetch('trigram_explanations.json.txt'),
+            fetch('hexagrams.json.txt'),
+            fetch('quotes.json.txt'),
+            fetch('wuxing_explanations.json.txt')
         ]).then(responses => {
             return Promise.all(responses.map(response => {
                 if (!response.ok) {
@@ -125,27 +125,44 @@
         });
     }
 
-    // 新增：從六十四卦名中提取上下兩個單卦名
+    // *** 修正一：新增輔助函式，從六十四卦名中提取上下兩個單卦名 ***
     function getTrigrams(hexagramName) {
         // 從 hexagrams.json.txt 的鍵值中，根據格式提取單卦
         // 假設卦名格式為 "乾為天", "雷火豐" 或 "天火同人"
-        const parts = hexagramName.replace(/為/, '').split('');
-        const upperGuaName = parts[0];
-        const lowerGuaName = parts[1];
-
-        // 由於部分卦名使用雙字（如雷、風、火、水、山、澤），需要對應到單字八卦
-        const guaMap = {
+        const nameMapping = {
             '乾': '乾', '坤': '坤', '震': '震', '巽': '巽',
             '坎': '坎', '離': '離', '艮': '艮', '兌': '兌',
             '天': '乾', '地': '坤', '雷': '震', '風': '巽',
             '水': '坎', '火': '離', '山': '艮', '澤': '兌'
         };
+
+        const cleanedName = hexagramName.replace(/為/, '');
+        const parts = [];
+        let i = 0;
+        while (i < cleanedName.length) {
+            let found = false;
+            // 檢查雙字卦名，如"天火"
+            if (i + 1 < cleanedName.length) {
+                const twoChars = cleanedName.substring(i, i + 2);
+                if (nameMapping[twoChars]) {
+                    parts.push(twoChars);
+                    i += 2;
+                    found = true;
+                }
+            }
+            // 檢查單字卦名，如"乾"
+            if (!found) {
+                parts.push(cleanedName.substring(i, i + 1));
+                i++;
+            }
+        }
         
         return {
-            upper: guaMap[upperGuaName] || upperGuaName,
-            lower: guaMap[lowerGuaName] || lowerGuaName
+            upper: nameMapping[parts[0]],
+            lower: nameMapping[parts[1]]
         };
     }
+    // *** 修正一：結束 ***
     
     // 卦象生成邏輯 (這部分保持不變)
     function generateHexagram(num1, num2, num3) {
@@ -167,24 +184,15 @@
         const originalHexagram = getHexagramFromLines(lines);
         const changedHexagram = getChangedHexagram(lines, movingLines);
         
-        // 取得五行關係
         const originalGua = hexagrams[originalHexagram.name];
-        const changedGua = hexagrams[changedHexagram.name];
-        
-        // 判斷用神和體卦，假設動爻在上卦則用上卦為用神，否則用下卦
-        // 這裡的邏輯需要您根據實際的五行解卦規則來調整
-        // 簡化示範：假設以動爻所在之卦為「用卦」
-        const movingLineIndex = movingLines[0]; // 假設只有一個動爻
-        const originalUpperGua = originalHexagram.upper;
-        const originalLowerGua = originalHexagram.lower;
         
         let yongGua, tiGua;
-        if (movingLineIndex >= 4) { // 變爻在上卦
-            yongGua = { name: originalUpperGua, wuxing: wuxingMap[originalUpperGua] };
-            tiGua = { name: originalLowerGua, wuxing: wuxingMap[originalLowerGua] };
-        } else { // 變爻在下卦
-            yongGua = { name: originalLowerGua, wuxing: wuxingMap[originalLowerGua] };
-            tiGua = { name: originalUpperGua, wuxing: wuxingMap[originalUpperGua] };
+        if (movingLines[0] >= 4) {
+            yongGua = { name: originalHexagram.upper, wuxing: wuxingMap[originalHexagram.upper] };
+            tiGua = { name: originalHexagram.lower, wuxing: wuxingMap[originalHexagram.lower] };
+        } else {
+            yongGua = { name: originalHexagram.lower, wuxing: wuxingMap[originalHexagram.lower] };
+            tiGua = { name: originalHexagram.upper, wuxing: wuxingMap[originalHexagram.upper] };
         }
 
         const guaRelation = wuxingRelations[yongGua.wuxing][tiGua.wuxing];
@@ -234,21 +242,19 @@
     
     function getChangedHexagram(originalLines, movingLines) {
         const changedLines = originalLines.map(line => {
-            if (line === 6) return 7; // 陰變陽
-            if (line === 9) return 8; // 陽變陰
+            if (line === 6) return 7;
+            if (line === 9) return 8;
             return line;
         });
         
         return getHexagramFromLines(changedLines);
     }
     
-    // 渲染卦象結果
     function renderResult(result) {
         const resultBox = document.getElementById('resultBox');
         
         let html = '';
         
-        // 顯示本卦
         html += `<div class="result-section"><h3>本卦：${result.original.name}</h3>`;
         html += `<div class="hexagram-visual">`;
         for (let i = 5; i >= 0; i--) {
@@ -259,7 +265,6 @@
         }
         html += `</div></div>`;
         
-        // 顯示變卦
         html += `<div class="result-section"><h3>變卦：${result.changed.name}</h3>`;
         html += `<div class="hexagram-visual">`;
         for (let i = 5; i >= 0; i--) {
@@ -269,7 +274,6 @@
         }
         html += `</div></div>`;
         
-        // 顯示動爻
         if (result.moving.length > 0) {
             html += `<div class="result-section"><h3>動爻</h3>`;
             html += `<p>變動爻為：${result.moving.join('、')}爻</p></div>`;
@@ -281,7 +285,7 @@
         document.getElementById('questionSelector').classList.remove('hidden');
     }
     
-    // 渲染詳細分析
+    // *** 修正二：只修改八卦解析部分，保留原有邏輯和介面 ***
     function renderQuestionAnalysis(result) {
         const analysisDiv = document.createElement('div');
         analysisDiv.classList.add('analysis-box');
@@ -294,7 +298,9 @@
         };
         const questionName = typeMapping[questionType];
 
-        // *** A方案修正：將六十四卦名拆解為八卦名，再進行索引 ***
+        let html = '';
+
+        // *** 修正：使用 getTrigrams 輔助函式來獲取八卦解釋 ***
         const originalTrigrams = getTrigrams(result.original.name);
         const changedTrigrams = getTrigrams(result.changed.name);
 
@@ -303,30 +309,28 @@
         const changedUpperTrigram = trigramExplanations[changedTrigrams.upper];
         const changedLowerTrigram = trigramExplanations[changedTrigrams.lower];
 
-        let html = '';
-
         // 顯示本卦的八卦解釋
         html += `<div class="analysis-item"><h4>【本卦八卦解析】</h4>`;
         if (originalUpperTrigram) {
-            html += `<p><strong>上卦(${originalTrigrams.upper})：</strong>${originalUpperTrigram[questionType] || ''}</p>`;
+            html += `<p><strong>上卦(${originalTrigrams.upper})：</strong>${originalUpperTrigram[questionType] || '無資料'}</p>`;
         }
         if (originalLowerTrigram) {
-            html += `<p><strong>下卦(${originalTrigrams.lower})：</strong>${originalLowerTrigram[questionType] || ''}</p>`;
+            html += `<p><strong>下卦(${originalTrigrams.lower})：</strong>${originalLowerTrigram[questionType] || '無資料'}</p>`;
         }
         html += `</div>`;
 
         // 顯示變卦的八卦解釋
         html += `<div class="analysis-item"><h4>【變卦八卦解析】</h4>`;
         if (changedUpperTrigram) {
-            html += `<p><strong>上卦(${changedTrigrams.upper})：</strong>${changedUpperTrigram[questionType] || ''}</p>`;
+            html += `<p><strong>上卦(${changedTrigrams.upper})：</strong>${changedUpperTrigram[questionType] || '無資料'}</p>`;
         }
         if (changedLowerTrigram) {
-            html += `<p><strong>下卦(${changedTrigrams.lower})：</strong>${changedLowerTrigram[questionType] || ''}</p>`;
+            html += `<p><strong>下卦(${changedTrigrams.lower})：</strong>${changedLowerTrigram[questionType] || '無資料'}</p>`;
         }
         html += `</div>`;
         // *** 修正結束 ***
 
-        // 五行分析
+        // 五行分析 (這部分保持不變)
         if (result.moving.length === 1) {
             const guaRelation = result.guaRelation;
             const suggestionObj = wuxingExplanations[guaRelation];
@@ -340,12 +344,10 @@
                 let suggestionHtml = `<h4>【五行解卦】</h4>`;
                 suggestionHtml += `<p><strong>卦象關係：</strong>${guaRelationName[guaRelation] || ''}</p>`;
                 
-                // 檢查並顯示總體分析
                 if (suggestionObj.overall) {
                     suggestionHtml += `<p><strong>總體分析：</strong>${suggestionObj.overall}</p>`;
                 }
 
-                // 檢查並顯示特定問事類別的分析
                 if (suggestionObj[questionType] && typeof suggestionObj[questionType] === 'object') {
                     const specificContent = suggestionObj[questionType];
                     suggestionHtml += `<p><strong>針對${questionName}的建議：</strong></p>`;
@@ -364,11 +366,11 @@
             }
         }
         
-        // 移除舊的分析結果，再加入新的
         const oldAnalysisBox = document.querySelector('.analysis-box');
         if (oldAnalysisBox) oldAnalysisBox.remove();
         document.getElementById('resultBox').appendChild(analysisDiv);
     }
+    // *** 修正二：結束 ***
     
     document.getElementById('generateBtn').addEventListener('click', () => {
         const num1 = parseInt(document.getElementById('num1').value);
@@ -399,13 +401,11 @@
             alert('請先選擇一個問事類別！');
             return;
         }
-        // 五行解卦僅適用於單一動爻，這裡檢查一下
         if (currentResult.moving.length !== 1) {
             alert('五行解卦僅適用於單一動爻的情況，本卦不適用。');
             return;
         }
         
-        // 渲染分析
         renderQuestionAnalysis(currentResult);
     });
 
