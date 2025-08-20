@@ -261,10 +261,10 @@
   
   // 異步載入所有 JSON 資料
   Promise.allSettled([
-    fetch('hexagrams.json.txt').then(r => r.ok ? r.json() : Promise.reject('hexagrams.json')),
-    fetch('quotes.json.txt').then(r => r.ok ? r.json() : Promise.reject('quotes.json')),
-    fetch('wuxing_explanations.json.txt').then(r => r.ok ? r.json() : Promise.reject('wuxing_explanations.json')),
-    fetch('trigram_explanations.json.txt').then(r => r.ok ? r.json() : Promise.reject('trigram_explanations.json'))
+    fetch('hexagrams.json').then(r => r.ok ? r.json() : Promise.reject('hexagrams.json')),
+    fetch('quotes.json').then(r => r.ok ? r.json() : Promise.reject('quotes.json')),
+    fetch('wuxing_explanations.json').then(r => r.ok ? r.json() : Promise.reject('wuxing_explanations.json')),
+    fetch('trigram_explanations.json').then(r => r.ok ? r.json() : Promise.reject('trigram_explanations.json'))
   ]).then(results => {
     results.forEach(res => {
       if (res.status === 'fulfilled') {
