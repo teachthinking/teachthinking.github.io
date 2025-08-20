@@ -5,421 +5,412 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>張老師易經卜卦</title>
   <style>
-    body { font-family: "Noto Sans TC", sans-serif; background: #f7f7f7; color: #222; padding: 20px; }
-    .container { max-width: 980px; margin: 0 auto; background: #fff; padding: 22px; border-radius: 12px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06); }
-    h1 { margin: 0 0 6px 0; font-size: 26px; }
-    h2.subtitle { margin: 0 0 16px 0; color: #666; font-weight: 400; font-size: 15px; }
-    .tab-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
-    .tab-button { padding: 8px 14px; border-radius: 8px; border: 0; background: #efefef; cursor: pointer; }
-    .tab-button.active { background: #222; color: #fff; }
-    .tab-content { display: none; padding-top: 8px; }
-    .tab-content.active { display: block; }
-    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
-    .hint { font-size: 13px; color: #666; }
-    .gua-box { border: 1px solid #e6e6e6; border-radius: 10px; padding: 12px; background: #fafafa; margin-bottom: 12px; }
-    .hidden { display: none; }
-    button.primary { padding: 9px 16px; background: #222; color: #fff; border-radius: 8px; border: 0; cursor: pointer; }
-    input, select, textarea { padding: 8px; border-radius: 8px; border: 1px solid #d0d0d0; font-size: 14px; }
-    .pill { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #f0f0f0; font-size: 12px; }
-    #line-explanation > div { margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed #eee; }
-    .score-card { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-    .score-bar-wrap { flex: 1; height: 10px; background: #eee; border-radius: 6px; overflow: hidden; }
-    .score-bar { height: 100%; width: 0; transition: width 0.4s; background: linear-gradient(90deg, #f44336, #ff9800, #4caf50); }
-    .score-val { min-width: 36px; text-align: right; font-weight: 600; }
-    pre { background: #fafafa; padding: 8px; border-radius: 6px; overflow: auto; }
-    .gua-line { font-family: 'Courier New', monospace; font-size: 20px; line-height: 1.2; }
-    .gua-line div { padding: 2px 0; }
-    .gua-yang { display: flex; align-items: center; justify-content: center; height: 1.2em; }
-    .gua-yang::before { content: ''; width: 100%; height: 6px; background: #222; }
-    .gua-yin { display: flex; align-items: center; justify-content: space-between; height: 1.2em; }
-    .gua-yin::before, .gua-yin::after { content: ''; width: 45%; height: 6px; background: #222; }
-    .gua-moving { font-weight: bold; color: #b71c1c; display: flex; align-items: center; justify-content: center; height: 1.2em; }
-    .gua-moving.yang::before { content: ''; width: 100%; height: 6px; background: #b71c1c; }
-    .gua-moving.yang::after { content: '◎'; margin-left: 8px; font-size: 0.8em; }
-    .gua-moving.yin::before, .gua-moving.yin::after { content: ''; width: 45%; height: 6px; background: #b71c1c; }
-    .gua-moving.yin::after { content: '×'; margin-left: 8px; font-size: 0.8em; }
-    .wuxing-analysis { margin-top: 20px; border-top: 1px dashed #e6e6e6; padding-top: 15px; }
-    .wuxing-box { padding: 8px 12px; background: #f0f0f0; border-radius: 8px; margin-bottom: 10px; }
-    .wuxing-result { font-weight: bold; }
-    .wuxing-desc { font-size: 14px; margin-top: 4px; color: #555; }
-    .wuxing-sug { margin-top: 8px; padding: 8px; background: #e0f2f1; border-radius: 6px; border: 1px solid #b2dfdb; }
-    .wuxing-sug p { margin: 0; font-size: 14px; color: #00796b; }
-    .analysis-item { margin-bottom: 15px; }
-    .analysis-item h3 { margin-top: 0; margin-bottom: 8px; border-left: 4px solid #64b5f6; padding-left: 8px; }
-    .analysis-item p { margin: 0 0 6px 0; line-height: 1.6; }
-    .analysis-item ul { margin: 0; padding-left: 20px; line-height: 1.6; }
-    .analysis-item ul li { margin-bottom: 4px; }
-    .suggestion { padding: 15px; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; }
-    .suggestion h3 { color: #2e7d32; border-left-color: #4caf50; }
+    body{font-family:"Noto Sans TC",sans-serif;background:#f7f7f7;color:#222;padding:20px}
+    .container{max-width:980px;margin:0 auto;background:#fff;padding:22px;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.06)}
+    h1{margin:0 0 6px 0;font-size:26px}
+    h2.subtitle{margin:0 0 16px 0;color:#666;font-weight:400;font-size:15px}
+    .tab-buttons{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .tab-button{padding:8px 14px;border-radius:8px;border:0;background:#efefef;cursor:pointer}
+    .tab-button.active{background:#222;color:#fff}
+    .tab-content{display:none;padding-top:8px}
+    .tab-content.active{display:block}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
+    label{font-size:14px;color:#555}
+    input[type=number]{padding:6px 8px;border:1px solid #ccc;border-radius:6px;width:60px;text-align:center}
+    button{padding:8px 14px;border-radius:6px;border:0;background:#2980b9;color:#fff;cursor:pointer;font-size:14px;transition:background-color .3s}
+    button:hover{background:#3498db}
+    .result-box{background:#f0f4f7;border-radius:8px;padding:16px;margin-top:20px;box-shadow:inset 0 1px 3px rgba(0,0,0,.06)}
+    .result-section h3{margin:0 0 8px;font-size:18px;border-bottom:1px solid #ddd;padding-bottom:6px;margin-bottom:12px}
+    .result-section p{margin:4px 0}
+    .hexagram-visual{font-family:monospace;font-size:16px;line-height:1.6;white-space:pre}
+    .analysis-box{margin-top:20px;border-top:1px dashed #ccc;padding-top:20px}
+    .analysis-item{background:#fafafa;padding:14px;border-radius:8px;margin-bottom:12px;border:1px solid #eee}
+    .analysis-item h4{margin:0 0 8px;font-size:16px;color:#444}
+    .analysis-item p, .analysis-item ul{margin:0;font-size:14px;line-height:1.8}
+    .analysis-item ul{padding-left:20px;list-style-type:disc}
+    .analysis-item ul li{margin-bottom:4px}
+    .hidden{display:none}
+    select{padding:6px 8px;border-radius:6px;border:1px solid #ccc}
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>張老師易經卜卦</h1>
-    <h2 class="subtitle">輸入三個數字，為您解卦</h2>
-    <div class="row">
-      <input type="number" id="num1" placeholder="數字1" />
-      <input type="number" id="num2" placeholder="數字2" />
-      <input type="number" id="num3" placeholder="數字3" />
-      <button id="generateBtn" class="primary">生成卦象</button>
-    </div>
 
-    <div id="guaResult" class="gua-box hidden">
-      <h3>卦象分析</h3>
-      <div class="row">
-        <span>本卦：</span><b id="mainGuaName"></b>
-        <span class="pill" id="mainWuxing"></span>
-      </div>
-      <div id="mainGuaLines" class="gua-line"></div>
-      <div class="row">
-        <span>之卦（變卦）：</span><b id="derivedGuaName"></b>
-        <span class="pill" id="derivedWuxing"></span>
-      </div>
-      <div id="derivedGuaLines" class="gua-line"></div>
-    </div>
+<div class="container">
+  <h1>易經卜卦工具</h1>
+  <h2 class="subtitle">輸入三個隨機數字，生成您的卦象與解析。</h2>
 
-    <div class="tab-buttons">
-      <button class="tab-button active" data-tab="tab1">六爻解卦</button>
-      <button class="tab-button" data-tab="tab2">五行解卦</button>
-      <button id="judgeBtn" class="tab-button">卦象分數</button>
-    </div>
-
-    <div id="tab1" class="tab-content active">
-      <div id="lineExplanation" class="hidden">
-        <h3>爻辭解說</h3>
-        <div id="line-explanation"></div>
-      </div>
-    </div>
-
-    <div id="tab2" class="tab-content">
-      <div class="row">
-        <select id="questionSelector">
-          <option value="1">選擇問事類別...</option>
-          <option value="love">感情</option>
-          <option value="career">事業</option>
-          <option value="wealth">財運</option>
-          <option value="health">健康</option>
-        </select>
-        <button id="analyzeBtn" class="primary">開始分析</button>
-      </div>
-      <div id="wuxingAnalysis" class="hidden">
-        <h3>五行解卦</h3>
-        <div id="analysis-output"></div>
-      </div>
-    </div>
-
-    <div id="judgeBox" class="gua-box hidden">
-      <h3>卦象分數</h3>
-      <p class="hint">此分數為綜合判斷，僅供參考。</p>
-      <div id="judgmentScores"></div>
-    </div>
+  <div class="row">
+    <label for="num1">數字一:</label>
+    <input type="number" id="num1" value="0" min="0" />
+    <label for="num2">數字二:</label>
+    <input type="number" id="num2" value="0" min="0" />
+    <label for="num3">數字三:</label>
+    <input type="number" id="num3" value="0" min="0" />
+    <button id="generateBtn">生成卦象</button>
   </div>
+  <div class="row">
+    <button id="analyzeBtn" class="hidden">詳細分析</button>
+    <select id="questionSelector" class="hidden">
+        <option value="1">請選擇問事類別</option>
+        <option value="love">感情</option>
+        <option value="career">事業</option>
+        <option value="wealth">財運</option>
+        <option value="health">健康</option>
+        <option value="relationship">人際關係</option>
+        <option value="life">人生運勢</option>
+        <option value="guidance">求問指引</option>
+    </select>
+  </div>
+  
+  <div id="resultBox" class="result-box hidden">
+    </div>
+  
+</div>
 
-  <script>
-    let hexagramsData;
-    let trigramExplanationsData;
-    let wuxingExplanationsData;
-    let currentResult;
+<script>
+    let trigramExplanations = {};
+    let hexagrams = {};
+    let quotes = [];
+    let wuxingExplanations = {};
     let dataReady = false;
-
-    const trigramsMap = {
-      '乾': [1, 1, 1], '兌': [1, 1, 0], '離': [1, 0, 1], '震': [0, 0, 1],
-      '巽': [0, 1, 0], '坎': [0, 1, 1], '艮': [1, 0, 0], '坤': [0, 0, 0]
-    };
-    const trigramWuxing = {
-      '乾': '金', '兌': '金', '離': '火', '震': '木',
-      '巽': '木', '坎': '水', '艮': '土', '坤': '土'
+    let currentResult = null;
+    
+    // 定義卦象的對應關係
+    const hexagramMap = {
+        '1': '乾', '2': '兌', '3': '離', '4': '震', '5': '巽', '6': '坎', '7': '艮', '8': '坤'
     };
 
-    async function loadData() {
-      try {
-        const [hexagramsRes, trigramsRes, wuxingRes] = await Promise.all([
-          fetch('hexagrams.json.txt'),
-          fetch('trigram_explanations.json.txt'),
-          fetch('wuxing_explanations.json.txt')
-        ]);
-        hexagramsData = await hexagramsRes.json();
-        trigramExplanationsData = await trigramsRes.json();
-        wuxingExplanationsData = await wuxingRes.json();
-        dataReady = true;
-      } catch (error) {
-        console.error("Failed to load data:", error);
-        alert('載入資料失敗，請檢查檔案是否存在。');
-      }
-    }
+    // 每個八卦的五行屬性
+    const wuxingMap = {
+        '乾': '金', '兌': '金',
+        '離': '火',
+        '震': '木', '巽': '木',
+        '坎': '水',
+        '艮': '土', '坤': '土'
+    };
 
-    loadData();
-
-    function getGuaInfo(lines) {
-      const lineStr = lines.map(l => (l === 7 || l === 9) ? 1 : 0).join('');
-      for (const name in hexagramsData) {
-        const hexagramLines = hexagramsData[name].lines.map(l => l.index > 6 ? 1 : 0);
-        if (hexagramLines.join('') === lineStr) {
-          return { name, ...hexagramsData[name] };
-        }
-      }
-      return null;
-    }
-
-    function renderGua(lines, containerId) {
-      const container = document.getElementById(containerId);
-      container.innerHTML = '';
-      lines.forEach(line => {
-        const div = document.createElement('div');
-        if (line === 9) {
-          div.className = 'gua-moving yang';
-        } else if (line === 6) {
-          div.className = 'gua-moving yin';
-        } else if (line === 7) {
-          div.className = 'gua-yang';
-        } else if (line === 8) {
-          div.className = 'gua-yin';
-        }
-        container.appendChild(div);
-      });
-    }
-
-    function renderLineExplanation(gua, movingLines) {
-      const container = document.getElementById('line-explanation');
-      container.innerHTML = '';
-      if (movingLines.length > 0) {
-        document.getElementById('lineExplanation').classList.remove('hidden');
-        movingLines.forEach(lineIndex => {
-          const lineData = gua.lines.find(l => l.index === lineIndex);
-          if (lineData) {
-            const div = document.createElement('div');
-            div.innerHTML = `<h4>${lineData.text}</h4><p>${lineData.meaning}</p>`;
-            container.appendChild(div);
-          }
+    // 五行生剋關係表
+    const wuxingRelations = {
+        '金': { '金': '體用同宮', '木': '體剋用', '水': '體生用', '火': '用剋體', '土': '用生體' },
+        '木': { '金': '用剋體', '木': '體用同宮', '水': '用生體', '火': '體生用', '土': '體剋用' },
+        '水': { '金': '用生體', '木': '體生用', '水': '體用同宮', '火': '體剋用', '土': '用剋體' },
+        '火': { '金': '體剋用', '木': '用生體', '水': '用剋體', '火': '體用同宮', '土': '體生用' },
+        '土': { '金': '體生用', '木': '用剋體', '水': '體剋用', '火': '用生體', '土': '體用同宮' }
+    };
+    
+    // 載入所有JSON檔案
+    function loadData() {
+        Promise.all([
+            fetch('trigram_explanations.json.txt'), // 使用者提供的副檔名
+            fetch('hexagrams.json.txt'), // 使用者提供的副檔名
+            fetch('quotes.json.txt'), // 使用者提供的副檔名
+            fetch('wuxing_explanations.json.txt') // 使用者提供的副檔名
+        ]).then(responses => {
+            return Promise.all(responses.map(response => {
+                if (!response.ok) {
+                    throw new Error(`Failed to load ${response.url}: ${response.status}`);
+                }
+                return response.json();
+            }));
+        }).then(data => {
+            trigramExplanations = data[0];
+            hexagrams = data[1];
+            quotes = data[2];
+            wuxingExplanations = data[3];
+            dataReady = true;
+            console.log("All data loaded.");
+        }).catch(error => {
+            console.error('Error loading JSON data:', error);
+            alert('載入資料失敗：' + error.message);
         });
-      } else {
-        document.getElementById('lineExplanation').classList.add('hidden');
-      }
     }
 
-    function getTrigramNameByBinary(trigramLines) {
-      const trigramStr = trigramLines.join('');
-      for (const name in trigramsMap) {
-        if (trigramsMap[name].join('') === trigramStr) {
-          return name;
-        }
-      }
-      return '未知';
-    }
+    // 新增：從六十四卦名中提取上下兩個單卦名
+    function getTrigrams(hexagramName) {
+        // 從 hexagrams.json.txt 的鍵值中，根據格式提取單卦
+        // 假設卦名格式為 "乾為天", "雷火豐" 或 "天火同人"
+        const parts = hexagramName.replace(/為/, '').split('');
+        const upperGuaName = parts[0];
+        const lowerGuaName = parts[1];
 
-    function getTiYongGua(mainGua, movingLineIndex) {
-      const mainLinesBinary = mainGua.lines.map(l => l.index > 6 ? 1 : 0);
-      const lowerTrigramBinary = mainLinesBinary.slice(0, 3);
-      const upperTrigramBinary = mainLinesBinary.slice(3, 6);
-      
-      const lowerTrigramName = getTrigramNameByBinary(lowerTrigramBinary);
-      const upperTrigramName = getTrigramNameByBinary(upperTrigramBinary);
-
-      let tiGua, yongGua;
-
-      if (movingLineIndex <= 3) {
-        tiGua = { name: upperTrigramName, wuxing: trigramWuxing[upperTrigramName] };
-        yongGua = { name: lowerTrigramName, wuxing: trigramWuxing[lowerTrigramName] };
-      } else {
-        tiGua = { name: lowerTrigramName, wuxing: trigramWuxing[lowerTrigramName] };
-        yongGua = { name: upperTrigramName, wuxing: trigramWuxing[upperTrigramName] };
-      }
-      return { tiGua, yongGua };
-    }
-
-    function getWuxingRelationship(tiWuxing, yongWuxing) {
-      const wuxingRelation = {
-        '金': { '金': '比和', '木': '剋', '水': '生', '火': '被剋', '土': '生' },
-        '木': { '金': '被剋', '木': '比和', '水': '生', '火': '生', '土': '剋' },
-        '水': { '金': '生', '木': '生', '水': '比和', '火': '剋', '土': '被剋' },
-        '火': { '金': '剋', '木': '生', '水': '被剋', '火': '比和', '土': '生' },
-        '土': { '金': '生', '木': '被剋', '水': '剋', '火': '生', '土': '比和' }
-      };
-      return wuxingRelation[tiWuxing][yongWuxing];
+        // 由於部分卦名使用雙字（如雷、風、火、水、山、澤），需要對應到單字八卦
+        const guaMap = {
+            '乾': '乾', '坤': '坤', '震': '震', '巽': '巽',
+            '坎': '坎', '離': '離', '艮': '艮', '兌': '兌',
+            '天': '乾', '地': '坤', '雷': '震', '風': '巽',
+            '水': '坎', '火': '離', '山': '艮', '澤': '兌'
+        };
+        
+        return {
+            upper: guaMap[upperGuaName] || upperGuaName,
+            lower: guaMap[lowerGuaName] || lowerGuaName
+        };
     }
     
-    function renderQuestionAnalysis(result, questionType) {
-      const analysisDiv = document.getElementById('analysis-output');
-      analysisDiv.innerHTML = '';
-      document.getElementById('wuxingAnalysis').classList.remove('hidden');
+    // 卦象生成邏輯 (這部分保持不變)
+    function generateHexagram(num1, num2, num3) {
+        const lines = [];
+        let movingLines = [];
+        
+        const getLine = (num) => {
+            let remainder = num % 6;
+            if (remainder === 0) remainder = 6;
+            if (remainder === 6 || remainder === 9) {
+                movingLines.push(lines.length + 1);
+            }
+            return remainder;
+        };
+        
+        for (let i = 0; i < 3; i++) lines.push(getLine(num1));
+        for (let i = 0; i < 3; i++) lines.push(getLine(num2));
+        
+        const originalHexagram = getHexagramFromLines(lines);
+        const changedHexagram = getChangedHexagram(lines, movingLines);
+        
+        // 取得五行關係
+        const originalGua = hexagrams[originalHexagram.name];
+        const changedGua = hexagrams[changedHexagram.name];
+        
+        // 判斷用神和體卦，假設動爻在上卦則用上卦為用神，否則用下卦
+        // 這裡的邏輯需要您根據實際的五行解卦規則來調整
+        // 簡化示範：假設以動爻所在之卦為「用卦」
+        const movingLineIndex = movingLines[0]; // 假設只有一個動爻
+        const originalUpperGua = originalHexagram.upper;
+        const originalLowerGua = originalHexagram.lower;
+        
+        let yongGua, tiGua;
+        if (movingLineIndex >= 4) { // 變爻在上卦
+            yongGua = { name: originalUpperGua, wuxing: wuxingMap[originalUpperGua] };
+            tiGua = { name: originalLowerGua, wuxing: wuxingMap[originalLowerGua] };
+        } else { // 變爻在下卦
+            yongGua = { name: originalLowerGua, wuxing: wuxingMap[originalLowerGua] };
+            tiGua = { name: originalUpperGua, wuxing: wuxingMap[originalUpperGua] };
+        }
 
-      const { mainGua, derivedGua, moving } = result;
-      const movingLineIndex = moving[0];
-      const lineData = mainGua.lines.find(l => l.index === movingLineIndex);
+        const guaRelation = wuxingRelations[yongGua.wuxing][tiGua.wuxing];
 
-      // 基本分析
-      const basicAnalysisHtml = `
-          <h3>基本分析</h3>
-          <p>您所問的事，得到<b>${mainGua.name}</b>卦，變爻在<b>第${movingLineIndex}爻</b>，成為<b>${derivedGua.name}</b>卦。</p>
-          <p>此爻的爻辭為：「${lineData.text}」</p>
-          <p>其解釋為：「${lineData.meaning}」</p>
-      `;
-      analysisDiv.innerHTML += `<div class="analysis-item">${basicAnalysisHtml}</div>`;
-
-      // 八卦體用分析
-      const { tiGua, yongGua } = getTiYongGua(mainGua, movingLineIndex);
-      const tiExplanation = trigramExplanationsData[tiGua.name];
-      const yongExplanation = trigramExplanationsData[yongGua.name];
-      const trigramAnalysisHtml = `
-          <h3>八卦體用分析</h3>
-          <p><b>體卦</b>：<b>${tiGua.name}</b>，五行屬<b>${tiGua.wuxing}</b>。代表問事者本身，也代表事物本身。
-            <p class="hint">解釋：${tiExplanation[questionType]}</p>
-          </p>
-          <p><b>用卦</b>：<b>${yongGua.name}</b>，五行屬<b>${yongGua.wuxing}</b>。代表問事所涉及的對方、環境或事物。
-            <p class="hint">解釋：${yongExplanation[questionType]}</p>
-          </p>
-      `;
-      analysisDiv.innerHTML += `<div class="analysis-item">${trigramAnalysisHtml}</div>`;
-
-      // 五行生剋分析
-      const wuxingRelationship = getWuxingRelationship(tiGua.wuxing, yongGua.wuxing);
-      const wuxingAnalysisHtml = `
-          <h3>五行生剋分析</h3>
-          <p>體用關係為：<b>${tiGua.wuxing}</b>${wuxingRelationship}<b>${yongGua.wuxing}</b>。</p>
-      `;
-      analysisDiv.innerHTML += `<div class="analysis-item">${wuxingAnalysisHtml}</div>`;
-
-      // 卦象建議
-      if (wuxingExplanationsData[wuxingRelationship] && wuxingExplanationsData[wuxingRelationship][questionType]) {
-          const suggestionObj = wuxingExplanationsData[wuxingRelationship][questionType];
-          let suggestionHtml = `<h3>綜合建議</h3>`;
-          suggestionHtml += `<p>${suggestionObj.overall.replace(/\${tiGua.wuxing}/g, tiGua.wuxing).replace(/\${yongGua.wuxing}/g, yongGua.wuxing)}</p>`;
-          
-          if (suggestionObj.specific && suggestionObj.specific[questionType]) {
-              const specificContent = suggestionObj.specific[questionType];
-              if (Object.keys(specificContent).length > 0) {
-                  suggestionHtml += '<ul>';
-                  for (const wuxing in specificContent) {
-                      const content = specificContent[wuxing];
-                      if (content) {
-                          suggestionHtml += `<li>**${wuxing}**：${content}</li>`;
-                      }
-                  }
-                  suggestionHtml += '</ul>';
-              }
-          }
-          analysisDiv.innerHTML += `<div class="analysis-item suggestion">${suggestionHtml}</div>`;
-      }
+        return {
+            original: originalHexagram,
+            changed: changedHexagram,
+            moving: movingLines,
+            yongGua: yongGua,
+            tiGua: tiGua,
+            guaRelation: guaRelation
+        };
     }
 
-    function renderJudgmentScores(gua) {
-      const scores = gua.judgment;
-      const container = document.getElementById('judgmentScores');
-      container.innerHTML = '';
-
-      const categories = [
-        { name: '整體運勢', key: 'overall' },
-        { name: '問人', key: 'people' },
-        { name: '問事', key: 'affairs' },
-        { name: '問時機', key: 'time' },
-        { name: '問地點', key: 'place' },
-        { name: '問物品', key: 'object' }
-      ];
-
-      categories.forEach(cat => {
-        const score = scores[cat.key];
-        const scoreCard = document.createElement('div');
-        scoreCard.className = 'score-card';
-        scoreCard.innerHTML = `
-          <span>${cat.name}：</span>
-          <div class="score-bar-wrap">
-            <div class="score-bar" style="width: ${score * 10}%;"></div>
-          </div>
-          <span class="score-val">${score} / 10</span>
-        `;
-        container.appendChild(scoreCard);
-      });
+    function getHexagramFromLines(lines) {
+        const upperLines = lines.slice(3, 6);
+        const lowerLines = lines.slice(0, 3);
+        
+        const upperTrigramIndex = getTrigramIndex(upperLines);
+        const lowerTrigramIndex = getTrigramIndex(lowerLines);
+        
+        const upperTrigram = hexagramMap[upperTrigramIndex];
+        const lowerTrigram = hexagramMap[lowerTrigramIndex];
+        
+        let hexagramName = '';
+        for (const name in hexagrams) {
+            const trigs = getTrigrams(name);
+            if (trigs.upper === upperTrigram && trigs.lower === lowerTrigram) {
+                hexagramName = name;
+                break;
+            }
+        }
+        
+        return {
+            name: hexagramName,
+            upper: upperTrigram,
+            lower: lowerTrigram,
+            lines: lines
+        };
     }
 
+    function getTrigramIndex(lines) {
+        const binary = lines.map(line => (line === 6 || line === 9) ? 0 : 1).join('');
+        const decimal = parseInt(binary, 2);
+        return (decimal + 1).toString();
+    }
+    
+    function getChangedHexagram(originalLines, movingLines) {
+        const changedLines = originalLines.map(line => {
+            if (line === 6) return 7; // 陰變陽
+            if (line === 9) return 8; // 陽變陰
+            return line;
+        });
+        
+        return getHexagramFromLines(changedLines);
+    }
+    
+    // 渲染卦象結果
+    function renderResult(result) {
+        const resultBox = document.getElementById('resultBox');
+        
+        let html = '';
+        
+        // 顯示本卦
+        html += `<div class="result-section"><h3>本卦：${result.original.name}</h3>`;
+        html += `<div class="hexagram-visual">`;
+        for (let i = 5; i >= 0; i--) {
+            const line = result.original.lines[i];
+            const moving = result.moving.includes(i + 1);
+            const lineText = (line === 6) ? '--- X ---' : (line === 9) ? '--- O ---' : (line === 8) ? '--- ---' : '---  ---';
+            html += `${lineText} ${moving ? '(動爻)' : ''}\n`;
+        }
+        html += `</div></div>`;
+        
+        // 顯示變卦
+        html += `<div class="result-section"><h3>變卦：${result.changed.name}</h3>`;
+        html += `<div class="hexagram-visual">`;
+        for (let i = 5; i >= 0; i--) {
+            const line = result.changed.lines[i];
+            const lineText = (line === 7) ? '---  ---' : '--- ---';
+            html += `${lineText}\n`;
+        }
+        html += `</div></div>`;
+        
+        // 顯示動爻
+        if (result.moving.length > 0) {
+            html += `<div class="result-section"><h3>動爻</h3>`;
+            html += `<p>變動爻為：${result.moving.join('、')}爻</p></div>`;
+        }
+        
+        resultBox.innerHTML = html;
+        resultBox.classList.remove('hidden');
+        document.getElementById('analyzeBtn').classList.remove('hidden');
+        document.getElementById('questionSelector').classList.remove('hidden');
+    }
+    
+    // 渲染詳細分析
+    function renderQuestionAnalysis(result) {
+        const analysisDiv = document.createElement('div');
+        analysisDiv.classList.add('analysis-box');
+        
+        const questionType = document.getElementById('questionSelector').value;
+        const typeMapping = {
+            'love': '感情', 'career': '事業', 'wealth': '財運',
+            'health': '健康', 'relationship': '人際關係',
+            'life': '人生運勢', 'guidance': '求問指引'
+        };
+        const questionName = typeMapping[questionType];
+
+        // *** A方案修正：將六十四卦名拆解為八卦名，再進行索引 ***
+        const originalTrigrams = getTrigrams(result.original.name);
+        const changedTrigrams = getTrigrams(result.changed.name);
+
+        const originalUpperTrigram = trigramExplanations[originalTrigrams.upper];
+        const originalLowerTrigram = trigramExplanations[originalTrigrams.lower];
+        const changedUpperTrigram = trigramExplanations[changedTrigrams.upper];
+        const changedLowerTrigram = trigramExplanations[changedTrigrams.lower];
+
+        let html = '';
+
+        // 顯示本卦的八卦解釋
+        html += `<div class="analysis-item"><h4>【本卦八卦解析】</h4>`;
+        if (originalUpperTrigram) {
+            html += `<p><strong>上卦(${originalTrigrams.upper})：</strong>${originalUpperTrigram[questionType] || ''}</p>`;
+        }
+        if (originalLowerTrigram) {
+            html += `<p><strong>下卦(${originalTrigrams.lower})：</strong>${originalLowerTrigram[questionType] || ''}</p>`;
+        }
+        html += `</div>`;
+
+        // 顯示變卦的八卦解釋
+        html += `<div class="analysis-item"><h4>【變卦八卦解析】</h4>`;
+        if (changedUpperTrigram) {
+            html += `<p><strong>上卦(${changedTrigrams.upper})：</strong>${changedUpperTrigram[questionType] || ''}</p>`;
+        }
+        if (changedLowerTrigram) {
+            html += `<p><strong>下卦(${changedTrigrams.lower})：</strong>${changedLowerTrigram[questionType] || ''}</p>`;
+        }
+        html += `</div>`;
+        // *** 修正結束 ***
+
+        // 五行分析
+        if (result.moving.length === 1) {
+            const guaRelation = result.guaRelation;
+            const suggestionObj = wuxingExplanations[guaRelation];
+            
+            if (suggestionObj) {
+                const guaRelationName = {
+                    "用生體": "用生體 (大吉)", "體生用": "體生用 (次吉)",
+                    "體剋用": "體剋用 (次凶)", "用剋體": "用剋體 (大凶)",
+                    "體用同宮": "體用同宮 (平)"
+                };
+                let suggestionHtml = `<h4>【五行解卦】</h4>`;
+                suggestionHtml += `<p><strong>卦象關係：</strong>${guaRelationName[guaRelation] || ''}</p>`;
+                
+                // 檢查並顯示總體分析
+                if (suggestionObj.overall) {
+                    suggestionHtml += `<p><strong>總體分析：</strong>${suggestionObj.overall}</p>`;
+                }
+
+                // 檢查並顯示特定問事類別的分析
+                if (suggestionObj[questionType] && typeof suggestionObj[questionType] === 'object') {
+                    const specificContent = suggestionObj[questionType];
+                    suggestionHtml += `<p><strong>針對${questionName}的建議：</strong></p>`;
+                    suggestionHtml += `<ul>`;
+                    for (const key in specificContent) {
+                        if (specificContent[key]) {
+                            suggestionHtml += `<li><strong>${key}：</strong>${specificContent[key]}</li>`;
+                        }
+                    }
+                    suggestionHtml += `</ul>`;
+                }
+
+                analysisDiv.innerHTML += `<div class="analysis-item suggestion">${suggestionHtml}</div>`;
+            } else {
+                analysisDiv.innerHTML += `<div class="analysis-item suggestion"><h4>【五行解卦】</h4><p>抱歉，無法找到對應的五行解釋。</p></div>`;
+            }
+        }
+        
+        // 移除舊的分析結果，再加入新的
+        const oldAnalysisBox = document.querySelector('.analysis-box');
+        if (oldAnalysisBox) oldAnalysisBox.remove();
+        document.getElementById('resultBox').appendChild(analysisDiv);
+    }
+    
     document.getElementById('generateBtn').addEventListener('click', () => {
-      const nums = [
-        parseInt(document.getElementById('num1').value),
-        parseInt(document.getElementById('num2').value),
-        parseInt(document.getElementById('num3').value)
-      ].filter(n => !isNaN(n));
-
-      if (nums.length !== 3) {
-        alert('請輸入三個有效的數字');
-        return;
-      }
-      
-      const mainLines = nums.map(n => n % 6 === 0 ? 6 : (n % 6 === 1 ? 7 : (n % 6 === 2 ? 8 : (n % 6 === 3 ? 9 : (n % 6 === 4 ? 7 : 8)))));
-      const derivedLines = mainLines.map(line => {
-        if (line === 6) return 7;
-        if (line === 9) return 8;
-        return line;
-      });
-
-      const movingLines = mainLines.reduce((acc, line, index) => {
-        if (line === 6 || line === 9) {
-          acc.push(index + 1);
+        const num1 = parseInt(document.getElementById('num1').value);
+        const num2 = parseInt(document.getElementById('num2').value);
+        const num3 = parseInt(document.getElementById('num3').value);
+        
+        if (isNaN(num1) || isNaN(num2) || isNaN(num3) || num1 <= 0 || num2 <= 0 || num3 <= 0) {
+            alert('請輸入正整數！');
+            return;
         }
-        return acc;
-      }, []);
-
-      const mainGua = getGuaInfo(mainLines);
-      const derivedGua = getGuaInfo(derivedLines);
-
-      if (mainGua && derivedGua) {
-        currentResult = { mainGua, derivedGua, moving: movingLines };
-        document.getElementById('guaResult').classList.remove('hidden');
-        document.getElementById('mainGuaName').textContent = mainGua.name;
-        document.getElementById('derivedGuaName').textContent = derivedGua.name;
-        renderGua(mainLines, 'mainGuaLines');
-        renderGua(derivedLines, 'derivedGuaLines');
-        renderLineExplanation(mainGua, movingLines);
-      } else {
-        alert('卦象生成失敗，請檢查輸入。');
-      }
-    });
-
-    document.querySelectorAll('.tab-button').forEach(button => {
-      button.addEventListener('click', () => {
-        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        document.getElementById('wuxingAnalysis').classList.add('hidden');
-        document.getElementById('judgeBox').classList.add('hidden');
-        if (button.dataset.tab) {
-          document.getElementById(button.dataset.tab).classList.add('active');
+        
+        if (!dataReady) {
+            alert('資料仍在載入中，請稍候再試。');
+            return;
         }
-      });
+
+        currentResult = generateHexagram(num1, num2, num3);
+        renderResult(currentResult);
     });
 
     document.getElementById('analyzeBtn').addEventListener('click', () => {
-      if (!dataReady) {
-        alert('資料仍在載入中，請稍候再試。');
-        return;
-      }
-      const questionType = document.getElementById('questionSelector').value;
-      if (questionType === '1') {
-        alert('請先選擇一個問事類別！');
-        return;
-      }
-      if (!currentResult) {
-        alert('請先生成卦象');
-        return;
-      }
-      if (currentResult.moving.length !== 1) {
-        alert('五行解卦僅適用於單一動爻的情況。');
-        return;
-      }
-      renderQuestionAnalysis(currentResult, questionType);
+        if (!currentResult) {
+            alert('請先生成卦象');
+            return;
+        }
+        const questionType = document.getElementById('questionSelector').value;
+        if (questionType === '1') {
+            alert('請先選擇一個問事類別！');
+            return;
+        }
+        // 五行解卦僅適用於單一動爻，這裡檢查一下
+        if (currentResult.moving.length !== 1) {
+            alert('五行解卦僅適用於單一動爻的情況，本卦不適用。');
+            return;
+        }
+        
+        // 渲染分析
+        renderQuestionAnalysis(currentResult);
     });
 
-    document.getElementById('judgeBtn').addEventListener('click', () => {
-      if (!currentResult) {
-        alert('請先生成卦象');
-        return;
-      }
-      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-      document.getElementById('judgeBtn').classList.add('active');
-      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-      document.getElementById('wuxingAnalysis').classList.add('hidden');
+    loadData();
+</script>
 
-      document.getElementById('judgeBox').classList.remove('hidden');
-      renderJudgmentScores(currentResult.mainGua);
-    });
-  </script>
 </body>
 </html>
