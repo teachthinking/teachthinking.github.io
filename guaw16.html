@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -101,10 +102,10 @@
     // 載入所有JSON檔案
     function loadData() {
         Promise.all([
-            fetch('trigram_explanations.json.txt'),
-            fetch('hexagrams.json.txt'),
-            fetch('quotes.json.txt'),
-            fetch('wuxing_explanations.json.txt')
+            fetch('trigram_explanations.json'),
+            fetch('hexagrams.json'),
+            fetch('quotes.json'),
+            fetch('wuxing_explanations.json')
         ]).then(responses => {
             return Promise.all(responses.map(response => {
                 if (!response.ok) {
