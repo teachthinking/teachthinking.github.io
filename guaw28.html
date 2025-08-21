@@ -217,6 +217,12 @@
         font-weight: bold;
         color: #e74c3c;
     }
+    .gua-moving.yang {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
     .gua-moving.yang::before {
       content: '';
       width: 100%;
@@ -225,8 +231,17 @@
     }
     .gua-moving.yang::after {
       content: '◎';
-      margin-left: 10px;
+      position: absolute;
+      right: -20px; /* 调整位置 */
       font-size: 0.8em;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .gua-moving.yin {
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
     .gua-moving.yin::before,
     .gua-moving.yin::after {
@@ -234,12 +249,6 @@
         width: 45%;
         height: 6px;
         background: #e74c3c;
-    }
-    .gua-moving.yin {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
     }
     .gua-moving.yin span {
         position: absolute;
@@ -249,7 +258,15 @@
         color: #e74c3c;
         font-size: 0.8em;
     }
-    
+    .gua-moving.yin::after {
+      content: '×';
+      position: absolute;
+      right: -20px;
+      font-size: 0.8em;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #e74c3c;
+    }
 
     /* 五行分析區 */
     .wuxing-analysis { margin-top: 25px; border-top: 2px solid var(--border-color); padding-top: 20px; }
@@ -579,13 +596,15 @@
             for (const hexName in hexList) {
                 const entry = hexList[hexName];
                 const entryWithNames = { ...entry, name: hexName, title: entry.title || hexName };
+                // 修正：從 lines 屬性建立二進位陣列，並確保順序正確
                 const linesBinary = entryWithNames.lines.map(line => {
-                    const text = line.text;
-                    if (text.includes('九') || text.includes('七')) return 1;
-                    if (text.includes('六') || text.includes('八')) return 0;
+                    if (line.text.includes('九') || line.text.includes('七')) return 1;
+                    if (line.text.includes('六') || line.text.includes('八')) return 0;
                     return null;
                 });
-                if (linesBinary.every(val => val !== null)) {
+                
+                // 確保六爻資料完整
+                if (linesBinary.length === 6 && linesBinary.every(val => val !== null)) {
                     hexByLines.set(JSON.stringify(linesBinary), entryWithNames);
                     const uIdx = triIndexByLines.get(JSON.stringify(linesBinary.slice(3, 6)));
                     const lIdx = triIndexByLines.get(JSON.stringify(linesBinary.slice(0, 3)));
@@ -627,12 +646,21 @@
   }
   document.querySelectorAll('.tab-button').forEach(btn => btn.addEventListener('click', () => showTabById(btn.dataset.target)));
 
+  // 修正：直接從 hexByLines 查找，確保變卦也能正確找到卦名
+  function findHexEntryByLines(lines){
+    if (!lines || lines.length !== 6) return null;
+    return hexByLines.get(JSON.stringify(lines));
+  }
+  
+  // 修正：卦名格式化函式，優先從 hexByLines 查找
   function formatGuaNameByLines(lines){
-    if (!lines || lines.length !== 6) return '卦象錯誤';
+    const hexEntry = findHexEntryByLines(lines);
+    if (hexEntry) {
+        return hexEntry.name;
+    }
     const uIdx = triIndexByLines.get(JSON.stringify(lines.slice(3, 6)));
     const lIdx = triIndexByLines.get(JSON.stringify(lines.slice(0, 3)));
     
-    // 從卦象資料庫中直接查找，而非組合名稱
     if (hexByTrigrams.has(`${uIdx}-${lIdx}`)) {
       return hexByTrigrams.get(`${uIdx}-${lIdx}`);
     } else {
@@ -641,10 +669,7 @@
     }
   }
 
-  function findHexEntryByLines(lines){
-    return hexByLines.get(JSON.stringify(lines));
-  }
-  
+  // 修正：動爻樣式
   function getGuaHtml(lines, moving=[]){
     let html = '';
     for (let i = 5; i >= 0; i--) {
@@ -653,7 +678,11 @@
       const isMoving = (moving || []).includes(yaoNo);
       
       if (isMoving) {
-          html += `<div class="gua-moving ${val === 1 ? 'yang' : 'yin'}"><span>${val === 1 ? '◎' : '×'}</span></div>`;
+          if (val === 1) { // 陽爻變陰爻 (◎)
+            html += `<div class="gua-moving yang"></div>`;
+          } else { // 陰爻變陽爻 (×)
+            html += `<div class="gua-moving yin"></div>`;
+          }
       } else {
           html += `<div class="${val === 1 ? 'gua-yang' : 'gua-yin'}"></div>`;
       }
@@ -662,7 +691,9 @@
   }
 
   function getLineEntryFor(hexEntry, yaoIndex){
-    return hexEntry?.lines.find(line => line && line.index === yaoIndex) || null;
+    // 修正：hexEntry.lines 可能不存在或不是陣列
+    if (!hexEntry || !Array.isArray(hexEntry.lines)) return null;
+    return hexEntry.lines.find(line => line && line.index === yaoIndex) || null;
   }
 
   function escapeHtml(s){
@@ -671,11 +702,12 @@
   }
   
   function getTrigramInfo(guaIdx) {
+      if (!guaIdx || !trigramName[guaIdx]) return null;
       const name = trigramName[guaIdx];
       return {
           id: guaIdx,
           name: name,
-          wuxing: guaTable[guaIdx][3],
+          wuxing: guaTable[guaIdx]?.[3] || '未知',
           explanations: trigramExplanations[name] || {}
       };
   }
@@ -686,6 +718,9 @@
       const lGua = getTrigramInfo(result.lIdx);
       const movingYao = result.moving[0];
       
+      if (!uGua || !lGua) return { tiGua: null, yongGua: null };
+
+      // 根據變爻位置判斷體用：上卦動，下卦為體，上卦為用；下卦動，上卦為體，下卦為用。
       if (movingYao >= 4 && movingYao <= 6) {
           return { tiGua: lGua, yongGua: uGua };
       } else {
@@ -714,19 +749,20 @@
     document.getElementById('detailedAnalysis').classList.add('hidden');
     document.getElementById('questionSelector').value = '1';
 
+    // 驗證輸入的動爻
     const moving = Array.isArray(movingArr) ? movingArr.filter(x=>Number.isFinite(x) && x>=1 && x<=6) : [];
+    
     const lines = makeFromUpperLower(uIdx, lIdx);
     
+    // 從資料庫中查找本卦
     const hexMain = findHexEntryByLines(lines);
     const mainName = hexMain ? hexMain.name : formatGuaNameByLines(lines);
     
     const changeLines = lines.slice();
-    // 根據爻數（1-6）來改變陣列中對應位置的值
     moving.forEach(n => { const idx = n - 1; if (idx>=0 && idx<6) changeLines[idx] = 1 - changeLines[idx]; });
     const hexChange = findHexEntryByLines(changeLines);
     const changeName = hexChange ? hexChange.name : formatGuaNameByLines(changeLines);
 
-    // 互卦：由本卦的2、3、4爻組成下互卦，3、4、5爻組成上互卦
     const huLines = [ lines[1], lines[2], lines[3], lines[2], lines[3], lines[4] ];
     const hexHu = findHexEntryByLines(huLines);
     const huName = hexHu ? hexHu.name : formatGuaNameByLines(huLines);
@@ -1165,6 +1201,7 @@
       contentDiv.innerHTML += `<div class="detailed-section">${trigramHtml}</div>`;
   }
   
+  // 新增：處理多動爻的分析邏輯
   function renderMultiMovingAnalysis(result) {
     const analysisDiv = document.getElementById('questionAnalysisResult');
     analysisDiv.innerHTML = '';
@@ -1311,19 +1348,34 @@
           alert('資料仍在載入中，請稍候再試。');
           return;
       }
+      if (!currentResult) {
+          alert('請先生成卦象！');
+          return;
+      }
+      
       const questionType = document.getElementById('questionSelector').value;
       if (questionType === '1') {
           alert('請先選擇一個問事類別！');
           return;
       }
-
+      
       // 根據動爻數量，決定呼叫哪個函式
       if (currentResult.moving.length === 1) {
           renderQuestionAnalysis(currentResult, questionType);
+          // 隱藏多爻分析區
+          document.getElementById('wuxingAnalysis').classList.remove('hidden');
+          document.getElementById('detailedAnalysis').classList.remove('hidden');
       } else if (currentResult.moving.length > 1) {
           renderMultiMovingAnalysis(currentResult);
+          // 隱藏單爻分析區
+          document.getElementById('wuxingAnalysis').classList.add('hidden');
+          document.getElementById('detailedAnalysis').classList.add('hidden');
       } else {
-          alert('此卦沒有動爻，請參考主卦及爻辭即可。');
+          // 無動爻
+          document.getElementById('questionAnalysisResult').classList.remove('hidden');
+          document.getElementById('questionAnalysisResult').innerHTML = `<div class="analysis-message">此卦沒有動爻，只看本卦，請參考卦辭與象徵意義。</div>`;
+          document.getElementById('wuxingAnalysis').classList.add('hidden');
+          document.getElementById('detailedAnalysis').classList.add('hidden');
       }
   });
   </script>
