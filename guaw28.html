@@ -342,7 +342,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>張老師易經卜卦33</h1>
+    <h1>張老師易經卜卦</h1>
     <h2 id="subtitle" class="subtitle">載入中…（若無 quotes.json 顯示預設句）</h2>
 
     <div class="tab-buttons">
@@ -524,6 +524,7 @@
   
   let hexList = {};
   const hexByLines = new Map();
+  const hexNameByTrigram = new Map();
   let wuxingExplanations = {};
   let trigramExplanations = {};
   let dataReady = false;
@@ -586,6 +587,12 @@
                 });
                 if (linesBinary.every(val => val !== null)) {
                     hexByLines.set(JSON.stringify(linesBinary), entryWithNames);
+                    const uIdx = triIndexByLines.get(JSON.stringify(linesBinary.slice(3, 6)));
+                    const lIdx = triIndexByLines.get(JSON.stringify(linesBinary.slice(0, 3)));
+                    if (uIdx && lIdx) {
+                        const key = `${trigramName[uIdx]}_${trigramName[lIdx]}`;
+                        hexNameByTrigram.set(key, hexName);
+                    }
                 }
             }
         } else if (res.value && Array.isArray(res.value) && typeof res.value[0] === 'string') {
@@ -621,7 +628,17 @@
   }
   document.querySelectorAll('.tab-button').forEach(btn => btn.addEventListener('click', () => showTabById(btn.dataset.target)));
 
-  // 移除了 formatGuaNameByLines 函式，因為它會導致卦名顯示錯誤
+  // 修正後的卦名格式化函式
+  function formatGuaNameByLines(lines){
+    if (!lines || lines.length !== 6) return '卦象錯誤';
+    const uIdx = triIndexByLines.get(JSON.stringify(lines.slice(3, 6)));
+    const lIdx = triIndexByLines.get(JSON.stringify(lines.slice(0, 3)));
+    
+    // 使用新的 Map 查找完整的卦名
+    const combinedNameKey = `${trigramName[uIdx]}_${trigramName[lIdx]}`;
+    return hexNameByTrigram.get(combinedNameKey) || `${trigramName[uIdx]}${trigramName[lIdx]}`;
+  }
+
   function findHexEntryByLines(lines){
     return hexByLines.get(JSON.stringify(lines));
   }
@@ -699,18 +716,18 @@
     const lines = makeFromUpperLower(uIdx, lIdx);
     
     const hexMain = findHexEntryByLines(lines);
-    const mainName = hexMain ? hexMain.name : '未知卦象'; // 修正：直接從找到的物件取名，找不到則顯示未知
-
+    const mainName = hexMain ? hexMain.name : formatGuaNameByLines(lines);
+    
     const changeLines = lines.slice();
     // 根據爻數（1-6）來改變陣列中對應位置的值
     moving.forEach(n => { const idx = n - 1; if (idx>=0 && idx<6) changeLines[idx] = 1 - changeLines[idx]; });
     const hexChange = findHexEntryByLines(changeLines);
-    const changeName = hexChange ? hexChange.name : '未知卦象'; // 修正：直接從找到的物件取名，找不到則顯示未知
+    const changeName = hexChange ? hexChange.name : formatGuaNameByLines(changeLines);
 
     // 互卦：由本卦的2、3、4爻組成下互卦，3、4、5爻組成上互卦
     const huLines = [ lines[1], lines[2], lines[3], lines[2], lines[3], lines[4] ];
     const hexHu = findHexEntryByLines(huLines);
-    const huName = hexHu ? hexHu.name : '未知卦象'; // 修正：直接從找到的物件取名，找不到則顯示未知
+    const huName = hexHu ? hexHu.name : formatGuaNameByLines(huLines);
 
     document.getElementById('guaName').textContent = mainName;
     document.getElementById('guaImage').innerHTML = getGuaHtml(lines, moving);
@@ -1310,4 +1327,3 @@
   </script>
 </body>
 </html>
-
