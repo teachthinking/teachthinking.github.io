@@ -474,6 +474,11 @@
         alert('資料載入失敗，請檢查檔案是否存在。');
       }
     }
+    
+    // 新增的輔助函數：將卦爻名稱陣列轉換為二進位字串
+    function getBinaryFromLines(linesArray) {
+        return linesArray.map(line => line === 'yang' ? '1' : '0').join('');
+    }
 
     function generateGua() {
       const numbers = [];
@@ -515,18 +520,25 @@
             changedLines.push(yao);
         }
       }
-
-      const mainHex = lines.join('');
-      const movingHex = changedLines.join('');
+      
+      const mainTrigramBinary = {
+          lower: getBinaryFromLines(lines.slice(3, 6)),
+          upper: getBinaryFromLines(lines.slice(0, 3))
+      };
+      
+      const movingTrigramBinary = {
+          lower: getBinaryFromLines(changedLines.slice(3, 6)),
+          upper: getBinaryFromLines(changedLines.slice(0, 3))
+      };
       
       const mainTrigrams = {
-          lower: getTrigramName(lines.slice(3, 6).join('')),
-          upper: getTrigramName(lines.slice(0, 3).join(''))
+          lower: getTrigramName(mainTrigramBinary.lower),
+          upper: getTrigramName(mainTrigramBinary.upper)
       };
       
       const movingTrigrams = {
-          lower: getTrigramName(changedLines.slice(3, 6).join('')),
-          upper: getTrigramName(changedLines.slice(0, 3).join(''))
+          lower: getTrigramName(movingTrigramBinary.lower),
+          upper: getTrigramName(movingTrigramBinary.upper)
       };
 
       return {
@@ -534,8 +546,6 @@
           lines,
           moving,
           changedLines,
-          mainHex,
-          movingHex,
           mainTrigrams,
           movingTrigrams
       };
@@ -564,14 +574,13 @@
             lineDiv.classList.add('gua-line-item');
             
             const yaoDiv = document.createElement('div');
-            yaoDiv.classList.add('gua-line', `gua-${lineClass}`);
+            
             if (isMoving) {
+                yaoDiv.classList.add('gua-moving');
                 if(lineClass === 'yang') {
-                    yaoDiv.classList.add('gua-moving');
-                    yaoDiv.innerHTML = '<div></div><span>◎</span>';
+                    yaoDiv.innerHTML = '<div class="gua-yang"></div><span>◎</span>';
                 } else {
-                    yaoDiv.classList.add('gua-moving');
-                    yaoDiv.innerHTML = '<div style="flex-grow:1;"></div><span>x</span><div style="flex-grow:1;"></div>';
+                    yaoDiv.innerHTML = '<div class="gua-yin"></div><span>x</span>';
                 }
             } else {
                  yaoDiv.classList.add(`gua-${lineClass}`);
@@ -788,7 +797,7 @@
                 <strong>下卦</strong>（人、內在自我）：<br>
                 ${mainTrigramLower}：${trigramExplanations[mainTrigramLower]?.life || '無'}<br><br>
                 <strong>互卦</strong>（地、過程）：<br>
-                ${trigramExplanations[getTrigramName(result.changedLines.slice(1,4).join(''))]?.life || '無'}<br>
+                ${trigramExplanations[getTrigramName(getBinaryFromLines(result.changedLines.slice(1,4)))]?.life || '無'}<br>
             </div>
         </div>
       `;
