@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>卜卦系統</title>
+  <style>
+    body { font-family: "微軟正黑體", sans-serif; padding: 20px; }
+    .result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+    h2 { margin-bottom: 5px; }
+    .section { margin-bottom: 10px; }
+    .yao { margin-left: 15px; }
+  </style>
+</head>
+<body>
+  <h1>卜卦系統</h1>
+  <button onclick="generateHexagram()">生成卦象</button>
+
+  <div id="hexagramResult" class="result"></div>
+  <div id="yaoResult" class="result"></div>
+  <div id="wuxingResult" class="result"></div>
+
+  <script>
+    let hexagramData = {}; // 存放 hexagrams_data.json 內容
+
+    // 預設 64 卦五行對照 (可補全)
+    const hexagramWuxing = {
+      "乾為天": "金",
+      "坤為地": "土",
+      "坎為水": "水",
+      "離為火": "火",
+      "震為雷": "木",
+      "巽為風": "木",
+      "艮為山": "土",
+      "兌為澤": "金"
+    };
+
+    const wuxing = ["木", "火", "土", "金", "水"];
+
+    function relation(a, b) {
+      if (a === b) return "比和";
+      const aIndex = wuxing.indexOf(a);
+      const bIndex = wuxing.indexOf(b);
+      if ((aIndex + 1) % 5 === bIndex) return "相生";
+      if ((aIndex + 2) % 5 === bIndex) return "相剋";
+      if ((bIndex + 1) % 5 === aIndex) return "被生";
+      if ((bIndex + 2) % 5 === aIndex) return "被剋";
+      return "無關";
+    }
+
+    function interpretWuxing(main, change) {
+      const rel = relation(main, change);
+      const interpretations = {
+        "相生": {
+          "事業": "事業有貴人扶持，進展順利。",
+          "財運": "財運漸旺，有外來助力。",
+          "感情": "感情和諧，互相支持。",
+          "健康": "身心逐漸康復，宜保養。",
+          "家庭": "家運興旺，氛圍和諧。",
+          "學業": "學業進步，適合深造。",
+          "整體": "大吉之象，凡事可成。"
+        },
+        "相剋": {
+          "事業": "事業遇阻，競爭壓力大。",
+          "財運": "財運受損，容易破財。",
+          "感情": "感情多爭執，難以融合。",
+          "健康": "健康受損，需防病痛。",
+          "家庭": "家中不和，口角爭執多。",
+          "學業": "學業受阻，難有進展。",
+          "整體": "小凶之象，宜守不宜攻。"
+        },
+        "比和": {
+          "事業": "事業平穩，需靠自己努力。",
+          "財運": "財運平平，收入支出均衡。",
+          "感情": "感情穩定，互相理解。",
+          "健康": "健康無大礙，需維持生活規律。",
+          "家庭": "家庭安定，和樂無事。",
+          "學業": "學業普通，成績平穩。",
+          "整體": "中平之象，平穩發展。"
+        },
+        "被剋": {
+          "事業": "事業受壓制，難以伸展。",
+          "財運": "財運不佳，易被奪財。",
+          "感情": "感情受阻，缺乏理解。",
+          "健康": "健康欠佳，容易受外界影響。",
+          "家庭": "家運受壓，矛盾暗藏。",
+          "學業": "學業受挫，需要外力幫助。",
+          "整體": "凶象，需低調應對。"
+        },
+        "被生": {
+          "事業": "事業雖受幫助，但自身被消耗。",
+          "財運": "財來財去，收支難平。",
+          "感情": "感情有依賴，需平衡付出。",
+          "健康": "精力消耗大，注意休息。",
+          "家庭": "家庭雖和，但責任加重。",
+          "學業": "學業進步但辛苦，需要耐力。",
+          "整體": "中吉，雖有助力，但自身負擔加重。"
+        }
+      };
+      return interpretations[rel];
+    }
+
+    async function loadHexagramData() {
+      const response = await fetch("hexagrams_data.json");
+      hexagramData = await response.json();
+    }
+
+    async function generateHexagram() {
+      if (Object.keys(hexagramData).length === 0) {
+        await loadHexagramData();
+      }
+
+      const hexagrams = Object.keys(hexagramWuxing);
+      const mainHex = hexagrams[Math.floor(Math.random() * hexagrams.length)];
+      const changeHex = hexagrams[Math.floor(Math.random() * hexagrams.length)];
+
+      const mainWuxing = hexagramWuxing[mainHex];
+      const changeWuxing = hexagramWuxing[changeHex];
+
+      // 顯示卦象基本資訊
+      document.getElementById("hexagramResult").innerHTML = `
+        <h2>本卦：${mainHex} (${mainWuxing})</h2>
+        <h2>變卦：${changeHex} (${changeWuxing})</h2>
+        <p>五行關係：${relation(mainWuxing, changeWuxing)}</p>
+      `;
+
+      // 顯示本卦爻辭
+      let yaoHtml = `<h2>${mainHex} 爻辭</h2>`;
+      if (hexagramData[mainHex]) {
+        hexagramData[mainHex].forEach(yao => {
+          yaoHtml += `<div class="yao"><b>${yao.text}</b> - ${yao.meaning}</div>`;
+        });
+      } else {
+        yaoHtml += "<p>尚無資料</p>";
+      }
+      document.getElementById("yaoResult").innerHTML = yaoHtml;
+
+      // 梅花心易七面向
+      const interpretation = interpretWuxing(mainWuxing, changeWuxing);
+      let html = "<h2>梅花心易七面向</h2>";
+      for (const key in interpretation) {
+        html += `<div class="section"><b>${key}：</b>${interpretation[key]}</div>`;
+      }
+      document.getElementById("wuxingResult").innerHTML = html;
+    }
+  </script>
+</body>
+</html>
