@@ -200,6 +200,12 @@
       height: 6px;
       background: var(--primary-color);
     }
+    /* 修正後的陰爻樣式 */
+    .gua-yin {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
     .gua-yin::before,
     .gua-yin::after {
       content: '';
@@ -224,17 +230,26 @@
     }
     .gua-moving.yin::before,
     .gua-moving.yin::after {
-        content: '×';
-        margin: 0;
+        content: '';
+        width: 45%;
+        height: 6px;
+        background: #e74c3c;
+    }
+    .gua-moving.yin {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+    }
+    .gua-moving.yin span {
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
+        color: #e74c3c;
         font-size: 0.8em;
     }
-    .gua-moving.yin::before { content: ''; width: 45%; height: 6px; background: #e74c3c; left: 0; transform: translateY(-50%); }
-    .gua-moving.yin::after { content: ''; width: 45%; height: 6px; background: #e74c3c; right: 0; left: auto; transform: translateY(-50%); }
-    .gua-moving.yin span { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #e74c3c; }
+    
 
     /* 五行分析區 */
     .wuxing-analysis { margin-top: 25px; border-top: 2px solid var(--border-color); padding-top: 20px; }
@@ -327,7 +342,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>張老師易經卜卦3</h1>
+    <h1>張老師易經卜卦4</h1>
     <h2 id="subtitle" class="subtitle">載入中…（若無 quotes.json 顯示預設句）</h2>
 
     <div class="tab-buttons">
@@ -365,7 +380,7 @@
     </div>
 
     <div id="tab-time" class="tab-content">
-      <h3>時間取卦（梅花易）</h3>
+      <h3>時間取卦</h3>
       <div class="row" style="align-items: center; gap: 15px;">
         <label>
           <input type="radio" name="time-method" value="modern" checked> 現代時間
