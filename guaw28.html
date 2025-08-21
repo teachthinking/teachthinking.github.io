@@ -520,13 +520,13 @@
       const movingHex = changedLines.join('');
       
       const mainTrigrams = {
-          lower: lines.slice(3, 6).join(''),
-          upper: lines.slice(0, 3).join('')
+          lower: getTrigramName(lines.slice(3, 6).join('')),
+          upper: getTrigramName(lines.slice(0, 3).join(''))
       };
       
       const movingTrigrams = {
-          lower: changedLines.slice(3, 6).join(''),
-          upper: changedLines.slice(0, 3).join('')
+          lower: getTrigramName(changedLines.slice(3, 6).join('')),
+          upper: getTrigramName(changedLines.slice(0, 3).join(''))
       };
 
       return {
@@ -551,7 +551,7 @@
         return hexagramNamesByTrigram[combined] || null;
     }
 
-    function renderGua(hexLines, elementId, name, trigrams, hex) {
+    function renderGua(hexLines, elementId, trigrams) {
         const container = document.getElementById(elementId);
         container.innerHTML = '';
         
@@ -566,8 +566,15 @@
             const yaoDiv = document.createElement('div');
             yaoDiv.classList.add('gua-line', `gua-${lineClass}`);
             if (isMoving) {
-                yaoDiv.classList.add('gua-moving');
-                yaoDiv.innerHTML = lineClass === 'yin' ? '<span>x</span>' : '<span>o</span>';
+                if(lineClass === 'yang') {
+                    yaoDiv.classList.add('gua-moving');
+                    yaoDiv.innerHTML = '<div></div><span>◎</span>';
+                } else {
+                    yaoDiv.classList.add('gua-moving');
+                    yaoDiv.innerHTML = '<div style="flex-grow:1;"></div><span>x</span><div style="flex-grow:1;"></div>';
+                }
+            } else {
+                 yaoDiv.classList.add(`gua-${lineClass}`);
             }
             lineDiv.appendChild(yaoDiv);
             container.appendChild(lineDiv);
@@ -695,13 +702,13 @@
       
       const questionType = document.getElementById('questionSelector').value;
       
-      const mainTrigramUpper = getTrigramName(result.mainTrigrams.upper);
-      const mainTrigramLower = getTrigramName(result.mainTrigrams.lower);
+      const mainTrigramUpper = result.mainTrigrams.upper;
+      const mainTrigramLower = result.mainTrigrams.lower;
       const mainWuxingUpper = trigram_wuxing[mainTrigramUpper];
       const mainWuxingLower = trigram_wuxing[mainTrigramLower];
 
-      const movingTrigramUpper = getTrigramName(result.movingTrigrams.upper);
-      const movingTrigramLower = getTrigramName(result.movingTrigrams.lower);
+      const movingTrigramUpper = result.movingTrigrams.upper;
+      const movingTrigramLower = result.movingTrigrams.lower;
       const movingWuxingUpper = trigram_wuxing[movingTrigramUpper];
       const movingWuxingLower = trigram_wuxing[movingTrigramLower];
 
@@ -802,14 +809,14 @@
         
         currentResult = generateGua();
         
-        const mainHexName = getHexagramName(getTrigramName(currentResult.mainTrigrams.upper), getTrigramName(currentResult.mainTrigrams.lower));
-        const movingHexName = getHexagramName(getTrigramName(currentResult.movingTrigrams.upper), getTrigramName(currentResult.movingTrigrams.lower));
+        const mainHexName = getHexagramName(currentResult.mainTrigrams.upper, currentResult.mainTrigrams.lower);
+        const movingHexName = getHexagramName(currentResult.movingTrigrams.upper, currentResult.movingTrigrams.lower);
 
-        renderGua(currentResult.lines, 'mainGuaDisplay', mainHexName, currentResult.mainTrigrams, currentResult.mainHex);
+        renderGua(currentResult.lines, 'mainGuaDisplay', currentResult.mainTrigrams);
         
         if (currentResult.moving.length > 0) {
             document.getElementById('movingGuaItem').classList.remove('hidden');
-            renderGua(currentResult.changedLines, 'movingGuaDisplay', movingHexName, currentResult.movingTrigrams, currentResult.movingHex);
+            renderGua(currentResult.changedLines, 'movingGuaDisplay', currentResult.movingTrigrams);
         } else {
             document.getElementById('movingGuaItem').classList.add('hidden');
         }
