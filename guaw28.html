@@ -342,7 +342,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>張老師易經卜卦77</h1>
+    <h1>張老師易經卜卦</h1>
     <h2 id="subtitle" class="subtitle">載入中…（若無 quotes.json 顯示預設句）</h2>
 
     <div class="tab-buttons">
@@ -524,8 +524,7 @@
   
   let hexList = {};
   const hexByLines = new Map();
-  // 修正：用來儲存上卦和下卦數字組合與卦名的對應
-  const hexNameByTriNums = new Map();
+  const hexNameByCombinedName = new Map();
   let wuxingExplanations = {};
   let trigramExplanations = {};
   let dataReady = false;
@@ -580,7 +579,8 @@
             for (const hexName in hexList) {
                 const entry = hexList[hexName];
                 const entryWithNames = { ...entry, name: hexName, title: entry.title || hexName };
-                const linesBinary = entryWithNames.lines.map(line => {
+                // 修正後：直接使用 hexagrams.json 中的 lines 欄位來建立映射
+                const linesBinary = entry.lines.map(line => {
                     const text = line.text;
                     if (text.includes('九') || text.includes('七')) return 1;
                     if (text.includes('六') || text.includes('八')) return 0;
@@ -588,12 +588,6 @@
                 });
                 if (linesBinary.every(val => val !== null)) {
                     hexByLines.set(JSON.stringify(linesBinary), entryWithNames);
-                    // 修正：用來創建上卦下卦數字與卦名對應的 Map
-                    const uIdx = triIndexByLines.get(JSON.stringify(linesBinary.slice(3, 6)));
-                    const lIdx = triIndexByLines.get(JSON.stringify(linesBinary.slice(0, 3)));
-                    if (uIdx && lIdx) {
-                        hexNameByTriNums.set(`${uIdx}-${lIdx}`, hexName);
-                    }
                 }
             }
         } else if (res.value && Array.isArray(res.value) && typeof res.value[0] === 'string') {
@@ -629,12 +623,9 @@
   }
   document.querySelectorAll('.tab-button').forEach(btn => btn.addEventListener('click', () => showTabById(btn.dataset.target)));
 
-  // 修正：根據上卦和下卦的數字來取得六十四卦的卦名
-  function getHexNameByTriNums(uIdx, lIdx) {
-      return hexNameByTriNums.get(`${uIdx}-${lIdx}`) || `上${trigramName[uIdx]}下${trigramName[lIdx]}`;
-  }
-
+  // 修正後：新的尋找卦象物件函數
   function findHexEntryByLines(lines){
+    // 直接從 map 裡找，比舊的先組名稱再找更精確可靠
     return hexByLines.get(JSON.stringify(lines));
   }
   
@@ -710,29 +701,22 @@
     const moving = Array.isArray(movingArr) ? movingArr.filter(x=>Number.isFinite(x) && x>=1 && x<=6) : [];
     const lines = makeFromUpperLower(uIdx, lIdx);
     
-    // 修正：從 hexNameByTriNums Map 中查找主卦卦名
-    const mainName = getHexNameByTriNums(uIdx, lIdx);
+    // 修正：直接查找卦象物件，而不是先組名
     const hexMain = findHexEntryByLines(lines);
-
+    const mainName = hexMain ? hexMain.name : `${trigramName[uIdx]}為${trigramName[lIdx]}`;
+    
     const changeLines = lines.slice();
     // 根據爻數（1-6）來改變陣列中對應位置的值
     moving.forEach(n => { const idx = n - 1; if (idx>=0 && idx<6) changeLines[idx] = 1 - changeLines[idx]; });
     
-    // 修正：從變卦的爻線陣列中取得上卦和下卦的數字，然後查找變卦卦名
-    const changeUpperIdx = triIndexByLines.get(JSON.stringify(changeLines.slice(3,6)));
-    const changeLowerIdx = triIndexByLines.get(JSON.stringify(changeLines.slice(0,3)));
-    const changeName = getHexNameByTriNums(changeUpperIdx, changeLowerIdx);
+    // 修正：直接查找變卦物件
     const hexChange = findHexEntryByLines(changeLines);
-
+    const changeName = hexChange ? hexChange.name : `變卦：${trigramName[triIndexByLines.get(JSON.stringify(changeLines.slice(3,6)))]}為${trigramName[triIndexByLines.get(JSON.stringify(changeLines.slice(0,3)))]}`;
 
     // 互卦：由本卦的2、3、4爻組成下互卦，3、4、5爻組成上互卦
     const huLines = [ lines[1], lines[2], lines[3], lines[2], lines[3], lines[4] ];
-    
-    // 修正：從互卦的爻線陣列中取得上卦和下卦的數字，然後查找互卦卦名
-    const huUpperIdx = triIndexByLines.get(JSON.stringify(huLines.slice(3,6)));
-    const huLowerIdx = triIndexByLines.get(JSON.stringify(huLines.slice(0,3)));
-    const huName = getHexNameByTriNums(huUpperIdx, huLowerIdx);
     const hexHu = findHexEntryByLines(huLines);
+    const huName = hexHu ? hexHu.name : `互卦：${trigramName[triIndexByLines.get(JSON.stringify(huLines.slice(3,6)))]}為${trigramName[triIndexByLines.get(JSON.stringify(huLines.slice(0,3)))]}`;
 
     document.getElementById('guaName').textContent = mainName;
     document.getElementById('guaImage').innerHTML = getGuaHtml(lines, moving);
@@ -1297,7 +1281,7 @@
     analysisDiv.innerHTML += trigramHtml;
 
     if (!mainHexEntry || !result.moving.length) {
-      analysisDiv.innerHTML = `<div class="analysis-message">無法載入卦象資料或沒有動爻，請檢查 hexagrams.json 檔案。</div>`;
+      analysisDiv.innerHTML = `<div class="analysis-message">無法載入卦象資料或沒有動爻，請參考主卦及爻辭即可。</div>`;
     }
   }
 
