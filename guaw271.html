@@ -97,13 +97,13 @@
     button:hover {
       transform: translateY(-2px);
     }
-
-    #generateBtn {
-      background-color: var(--primary-color);
-      color: white;
+    
+    #timeDivinationBtn, #generateBtn {
+        background-color: var(--primary-color);
+        color: white;
     }
     
-    #generateBtn:hover {
+    #timeDivinationBtn:hover, #generateBtn:hover {
         background-color: #34495e;
     }
 
@@ -279,7 +279,8 @@
             </select>
         </div>
         <div class="button-group">
-            <button id="generateBtn">生成卦象</button>
+            <button id="generateBtn">銅錢卜卦</button>
+            <button id="timeDivinationBtn">時間取卦</button>
             <button id="judgeBtn" class="hidden">判斷五行關係</button>
             <button id="analyzeBtn" class="hidden">開始解卦</button>
             <button id="resetBtn">重新開始</button>
@@ -305,21 +306,25 @@
     let hexagramsData = {};
     let trigramsData = {};
     let wuxingData = {};
+    let tianShiZhanData = {};
     let currentResult = null;
     let dataReady = false;
+    let divinationMethod = '';
 
     // Load data from files
     async function loadData() {
       try {
-        const [hexagramsResponse, trigramsResponse, wuxingResponse] = await Promise.all([
+        const [hexagramsResponse, trigramsResponse, wuxingResponse, tianShiZhanResponse] = await Promise.all([
           fetch('hexagrams.txt'),
           fetch('trigram_explanations.json.txt'),
-          fetch('wuxing_explanations.json.txt')
+          fetch('wuxing_explanations.json.txt'),
+          fetch('tian_shi_zhan_explanations.json.txt')
         ]);
         
         hexagramsData = await hexagramsResponse.json();
         trigramsData = await trigramsResponse.json();
         wuxingData = await wuxingResponse.json();
+        tianShiZhanData = await tianShiZhanResponse.json();
         
         dataReady = true;
         console.log("Data loaded successfully.");
@@ -336,6 +341,12 @@
       '乾': '乾', '兌': '兌', '離': '離', '震': '震',
       '巽': '巽', '坎': '坎', '艮': '艮', '坤': '坤'
     };
+    
+    // Mapping for number to trigram
+    const trigramNumbers = {
+      '乾': 1, '兌': 2, '離': 3, '震': 4,
+      '巽': 5, '坎': 6, '艮': 7, '坤': 8
+    };
 
     // Mapping for five elements (金, 木, 水, 火, 土)
     const wuxingMap = {
@@ -345,9 +356,15 @@
       '坎': '水',
       '艮': '土', '坤': '土'
     };
+    
+    // Reverse map for numbers to trigrams
+    const numberToTrigram = {
+        1: '乾', 2: '兌', 3: '離', 4: '震',
+        5: '巽', 6: '坎', 7: '艮', 8: '坤'
+    };
 
-    // The core logic of I Ching hexagram generation
-    function generateHexagram() {
+    // The core logic of I Ching hexagram generation (Coin method)
+    function generateHexagramByCoin() {
       const lines = [];
       const movingYao = [];
       for (let i = 0; i < 6; i++) {
@@ -370,6 +387,58 @@
         lines.push(yao);
       }
       return { lines, moving: movingYao };
+    }
+    
+    // The core logic of I Ching hexagram generation (Time method)
+    function generateHexagramByTime() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        const day = now.getDate();
+        const hour = now.getHours();
+        
+        const lunarMonth = getLunarMonth(year, month);
+        const lunarDay = getLunarDay(year, month, day);
+
+        const shangGuaNum = (year + lunarMonth + lunarDay) % 8;
+        const xiaGuaNum = (year + lunarMonth + lunarDay + hour) % 8;
+        const dongYaoNum = (year + lunarMonth + lunarDay + hour) % 6;
+        
+        const shangGuaIndex = shangGuaNum === 0 ? 8 : shangGuaNum;
+        const xiaGuaIndex = xiaGuaNum === 0 ? 8 : xiaGuaNum;
+        const dongYaoIndex = dongYaoNum === 0 ? 6 : dongYaoNum;
+        
+        const shangGua = numberToTrigram[shangGuaIndex];
+        const xiaGua = numberToTrigram[xiaGuaIndex];
+
+        const lines = [];
+        const movingYao = [];
+        
+        const getLineType = (trigram, yaoIndex) => {
+            const lines = trigramsData[trigram].lines;
+            return lines[yaoIndex - 1] === 1 ? 9 : 6;
+        };
+        
+        for (let i = 1; i <= 6; i++) {
+            if (i <= 3) { // Lower trigram
+                lines.push(getLineType(xiaGua, i));
+            } else { // Upper trigram
+                lines.push(getLineType(shangGua, i - 3));
+            }
+        }
+        
+        movingYao.push(dongYaoIndex - 1);
+        
+        return { lines, moving: movingYao };
+    }
+    
+    // Placeholder functions for lunar calendar (simplification)
+    // In a real app, you would need a proper lunar calendar library.
+    function getLunarMonth(year, month) {
+        return month;
+    }
+    function getLunarDay(year, month, day) {
+        return day;
     }
 
     // Function to find the hexagram name based on its lines
@@ -515,45 +584,11 @@
         wuxingDiv.innerHTML = '';
         
         const mainHexInfo = findHexagramName(lines);
-        const mainHexName = mainHexInfo.name;
-        const mainHexEntry = hexagramsData[mainHexName];
         
-        const cUgua = trigramsData[mainHexInfo.upper];
-        const cLgua = trigramsData[mainHexInfo.lower];
-        
-        if (!cUgua || !cLgua) {
-            wuxingDiv.innerHTML = `<div class="analysis-message">無法載入卦象資料，請檢查 trigram_explanations.json 檔案。</div>`;
-            return;
-        }
-
         const upperWuxing = wuxingMap[mainHexInfo.upper];
         const lowerWuxing = wuxingMap[mainHexInfo.lower];
         
-        let wuxingRelationship = '';
-        
-        if (upperWuxing === lowerWuxing) {
-            wuxingRelationship = '體用同宮';
-        } else {
-            const wuxingRules = {
-                '木': {'火': '生', '土': '剋', '金': '受剋', '水': '生'},
-                '火': {'土': '生', '金': '剋', '水': '受剋', '木': '生'},
-                '土': {'金': '生', '水': '剋', '木': '受剋', '火': '生'},
-                '金': {'水': '生', '木': '剋', '火': '受剋', '土': '生'},
-                '水': {'木': '生', '火': '剋', '土': '受剋', '金': '生'},
-            };
-            
-            const relationshipType = wuxingRules[lowerWuxing] && wuxingRules[lowerWuxing][upperWuxing];
-            
-            if (relationshipType === '生') {
-                wuxingRelationship = '用生體';
-            } else if (relationshipType === '剋') {
-                wuxingRelationship = '用剋體';
-            } else if (relationshipType === '受剋') {
-                wuxingRelationship = '體剋用';
-            } else {
-                wuxingRelationship = '無特定關係';
-            }
-        }
+        const wuxingRelationship = getWuxingRelationship(mainHexInfo);
         
         const wuxingExplanation = wuxingData[wuxingRelationship]?.overall || '無此卦象解說。';
         
@@ -585,21 +620,29 @@
       const cLgua = trigramsData[changingHexInfo.lower];
       
       const mainHexEntry = hexagramsData[mainHexName];
+      const interHexagram = getInterTrigram(lines);
+      const wuxingRel = getWuxingRelationship(mainHexInfo);
 
       if (!mainHexEntry) {
-        analysisDiv.innerHTML = `<div class="analysis-message">無法找到卦象資料，請檢查 hexagrams.json 檔案。</div>`;
+        analysisDiv.innerHTML = `<div class="analysis-message">無法找到卦象資料，請檢查 hexagrams.txt 檔案。</div>`;
         return;
       }
       
-      const questionExplanation = wuxingData[getWuxingRelationship(mainHexInfo, changingHexInfo, lines, moving)]?.[questionType];
+      let analysisData = {};
+      if (divinationMethod === 'time') {
+          analysisData = tianShiZhanData[wuxingRel];
+      } else {
+          analysisData = wuxingData[wuxingRel];
+      }
       
-      const wuxingRel = getWuxingRelationship(mainHexInfo, changingHexInfo, lines, moving);
-      const generalSuggestion = wuxingData[wuxingRel]?.建議?.general || '無此卦象建議。';
+      const questionExplanation = analysisData?.[questionType];
+      const generalSuggestion = analysisData?.建議?.general || '無此卦象建議。';
 
       let analysisHtml = `
         <h3>卦象綜合解讀</h3>
         <p><strong>問事類別：</strong> ${document.getElementById('questionSelector').options[document.getElementById('questionSelector').selectedIndex].text}</p>
         <p><strong>您的問題：</strong> ${document.getElementById('questionInput').value}</p>
+        <p><strong>卜卦方式：</strong> ${divinationMethod === 'time' ? '時間取卦 (天時占)' : '銅錢卜卦'}</p>
         <hr>
         <h4>【本卦主運】</h4>
         <p>代表當前狀況的總體運勢，您的處境如同「${mainHexName}」卦所示。</p>
@@ -618,10 +661,10 @@
         analysisHtml += `
           <hr>
           <h4>【動爻與變卦解讀】</h4>
-          <p>卦中有動爻，代表目前情勢正在變化，最終結果將轉變為「${changingHexName}」卦。</p>
+          <p>卦中有動爻，代表目前情勢正在變化，最終結果將轉變為「${changingHexagram.name}」卦。</p>
           <p><strong>本卦 (${mainHexName})：</strong> ${questionExplanation?.本卦 || '無相關解說'}</p>
-          <p><strong>互卦：</strong> 代表過程中會遇到的狀況，過程如同「${getInterTrigram(lines, moving).name}」卦。 ${questionExplanation?.互卦 || '無相關解說'}</p>
-          <p><strong>變卦 (${changingHexName})：</strong> 代表最終的結果。 ${questionExplanation?.變卦 || '無相關解說'}</p>
+          <p><strong>互卦：</strong> 代表過程中會遇到的狀況，過程如同「${interHexagram.name}」卦。 ${questionExplanation?.互卦 || '無相關解說'}</p>
+          <p><strong>變卦 (${changingHexagram.name})：</strong> 代表最終的結果。 ${questionExplanation?.變卦 || '無相關解說'}</p>
         `;
         
         // Add moving line details
@@ -651,8 +694,8 @@
 
       if (moving.length > 0) {
         trigramHtml += `<div class="trigram-details" style="margin-top:10px;"><strong>變卦取象：</strong><br>`;
-        trigramHtml += `**上變卦**（${cUgua.name}）：${cUgua.explanations?.life || '無'}<br>`;
-        trigramHtml += `**下變卦**（${cLgua.name}）：${cLgua.explanations?.life || '無'}`;
+        trigramHtml += `**上變卦**（${cUgua.name}）：${trigramsData[cUgua.name]?.[questionType] || '無'}<br>`;
+        trigramHtml += `**下變卦**（${cLgua.name}）：${trigramsData[cLgua.name]?.[questionType] || '無'}`;
         trigramHtml += `</div>`;
       }
 
@@ -669,13 +712,12 @@
     }
     
     // Helper function to get the inter-trigram (互卦)
-    function getInterTrigram(lines, moving) {
-      const interLines = lines.slice(1, 5); // Take lines 2, 3, 4, 5
-      const upperInter = interLines.slice(2, 4); // Lines 4 and 5
-      const lowerInter = interLines.slice(0, 2); // Lines 2 and 3
-      
-      const interTrigramLines = [];
+    function getInterTrigram(lines) {
       const changedLines = lines.map(line => (line === 6 || line === 9) ? 1 : 0);
+      const trigrams = {
+        '111': '乾', '110': '兌', '101': '離', '100': '震',
+        '011': '巽', '010': '坎', '001': '艮', '000': '坤'
+      };
       
       // Lines 3-5 form the upper inter-trigram
       const upperInterTrigramLines = changedLines.slice(2, 5);
@@ -690,59 +732,31 @@
     }
     
     // Helper function to determine the Wuxing relationship
-    function getWuxingRelationship(mainHexInfo, changingHexInfo, lines, moving) {
-        if (moving.length === 0) {
-            // Static hexagram, use the relationship between lower trigram and lower trigram
-            const lowerWuxing = wuxingMap[mainHexInfo.lower];
-            const upperWuxing = wuxingMap[mainHexInfo.upper];
-            
-            if (upperWuxing === lowerWuxing) return '體用同宮';
-            
-            const wuxingRules = {
-                '木': {'火': '生', '土': '剋', '金': '受剋', '水': '生'},
-                '火': {'土': '生', '金': '剋', '水': '受剋', '木': '生'},
-                '土': {'金': '生', '水': '剋', '木': '受剋', '火': '生'},
-                '金': {'水': '生', '木': '剋', '火': '受剋', '土': '生'},
-                '水': {'木': '生', '火': '剋', '土': '受剋', '金': '生'},
-            };
-            
-            const relationshipType = wuxingRules[lowerWuxing] && wuxingRules[lowerWuxing][upperWuxing];
-            
-            if (relationshipType === '生') {
-                return '用生體';
-            } else if (relationshipType === '剋') {
-                return '用剋體';
-            } else if (relationshipType === '受剋') {
-                return '體剋用';
-            } else {
-                return '體用無關';
-            }
-        } else {
-            // Moving hexagram, use the relationship between changing lower trigram and changing lower trigram
-            const upperWuxing = wuxingMap[changingHexInfo.upper];
-            const lowerWuxing = wuxingMap[changingHexInfo.lower];
-            
-            if (upperWuxing === lowerWuxing) return '體用同宮';
-            
-            const wuxingRules = {
-                '木': {'火': '生', '土': '剋', '金': '受剋', '水': '生'},
-                '火': {'土': '生', '金': '剋', '水': '受剋', '木': '生'},
-                '土': {'金': '生', '水': '剋', '木': '受剋', '火': '生'},
-                '金': {'水': '生', '木': '剋', '火': '受剋', '土': '生'},
-                '水': {'木': '生', '火': '剋', '土': '受剋', '金': '生'},
-            };
-            
-            const relationshipType = wuxingRules[lowerWuxing] && wuxingRules[lowerWuxing][upperWuxing];
-            
-            if (relationshipType === '生') {
-                return '用生體';
-            } else if (relationshipType === '剋') {
-                return '用剋體';
-            } else if (relationshipType === '受剋') {
-                return '體剋用';
-            } else {
-                return '體用無關';
-            }
+    function getWuxingRelationship(mainHexInfo) {
+        const upperWuxing = wuxingMap[mainHexInfo.upper];
+        const lowerWuxing = wuxingMap[mainHexInfo.lower];
+        
+        if (upperWuxing === lowerWuxing) return '體用比和';
+        
+        const wuxingRules = {
+            '木': {'火': '生', '土': '剋', '金': '受剋', '水': '生'},
+            '火': {'土': '生', '金': '剋', '水': '受剋', '木': '生'},
+            '土': {'金': '生', '水': '剋', '木': '受剋', '火': '生'},
+            '金': {'水': '生', '木': '剋', '火': '受剋', '土': '生'},
+            '水': {'木': '生', '火': '剋', '土': '受剋', '金': '生'},
+        };
+        
+        // Relationship of "用"(upper) to "體"(lower)
+        const relationshipType = wuxingRules[lowerWuxing] && wuxingRules[lowerWuxing][upperWuxing];
+        
+        if (relationshipType === '生') {
+            return '用生體'; // 用生體，吉
+        } else if (relationshipType === '剋') {
+            return '用剋體'; // 用剋體，凶
+        } else if (relationshipType === '受剋') {
+            return '體剋用'; // 體剋用，凶
+        } else if (relationshipType === '生') {
+            return '體生用'; // 體生用，吉
         }
     }
 
@@ -761,7 +775,31 @@
             return;
         }
 
-        currentResult = generateHexagram();
+        divinationMethod = 'coin';
+        currentResult = generateHexagramByCoin();
+        renderMainHexagrams(currentResult);
+        renderLineMeanings(currentResult);
+        document.getElementById('judgeBtn').classList.remove('hidden');
+        document.getElementById('judgeBox').classList.add('hidden');
+        document.getElementById('analysisBox').classList.add('hidden');
+    });
+
+    document.getElementById('timeDivinationBtn').addEventListener('click', () => {
+        const questionType = document.getElementById('questionSelector').value;
+        const questionInput = document.getElementById('questionInput').value;
+        
+        if (questionType === '1' || questionInput.trim() === '') {
+            alert('請完整填寫您的問題與類別！');
+            return;
+        }
+
+        if (!dataReady) {
+            alert('資料仍在載入中，請稍候再試。');
+            return;
+        }
+        
+        divinationMethod = 'time';
+        currentResult = generateHexagramByTime();
         renderMainHexagrams(currentResult);
         renderLineMeanings(currentResult);
         document.getElementById('judgeBtn').classList.remove('hidden');
