@@ -543,23 +543,23 @@
       }
       
       const relations = {
-          '金': { '生': '水', '剋': '木', '比和': '金' },
-          '木': { '生': '火', '剋': '土', '比和': '木' },
-          '水': { '生': '木', '剋': '火', '比和': '水' },
-          '火': { '生': '土', '剋': '金', '比和': '火' },
-          '土': { '生': '金', '剋': '水', '比和': '土' }
+          '金': { '生': '水', '克': '木', '比和': '金' },
+          '木': { '生': '火', '克': '土', '比和': '木' },
+          '水': { '生': '木', '克': '火', '比和': '水' },
+          '火': { '生': '土', '克': '金', '比和': '火' },
+          '土': { '生': '金', '克': '水', '比和': '土' }
       };
 
       if (relations[yongWuxing]['生'] === tiWuxing) {
           const subRel = `${yongName}卦生體`;
           return { relation: '用生體', subRelation: subRel, status: '大吉' };
-      } else if (relations[tiWuxing]['剋'] === yongWuxing) {
+      } else if (relations[tiWuxing]['克'] === yongWuxing) {
           const subRel = `體卦${tiName}克用`;
           return { relation: '體克用', subRelation: subRel, status: '吉' };
       } else if (relations[tiWuxing]['生'] === yongWuxing) {
           const subRel = `體卦${tiName}生用`;
           return { relation: '體生用', subRelation: subRel, status: '凶' };
-      } else if (relations[yongWuxing]['剋'] === tiWuxing) {
+      } else if (relations[yongWuxing]['克'] === tiWuxing) {
           const subRel = `用卦${yongName}克體`;
           return { relation: '用克體', subRelation: subRel, status: '大凶' };
       } else {
