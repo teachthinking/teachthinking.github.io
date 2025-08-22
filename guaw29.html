@@ -1227,9 +1227,187 @@
         analysisDiv.innerHTML += changeHtml;
       }
 
-      const huHexEntry = result.hexHu;
-      if (huHexEntry) {
-        const huJudgment = huHexEntry.judgment || {};
-        const huSymbolism = huHexEntry.symbolism || {};
+const huHexEntry = result.hexHu;
+    if (huHexEntry) {
+      const huJudgment = huHexEntry.judgment || {};
+      const huSymbolism = huHexEntry.symbolism || {};
 
-        let huHtml = `<div class="analysis-item"><h4>互卦分析（過程）</h4><p><strong>卦辭：</strong>${huHexEntry.judgment?.overall || '無卦辭'}</p>`;
+      let huHtml = `<div class="analysis-item"><h4>互卦分析（過程）</h4><p><strong>卦辭：</strong>${huHexEntry.judgment?.overall || '無卦辭'}</p>`;
+      huHtml += `<div class="score-container">`;
+      categories.forEach(cat => {
+        if (huJudgment[cat] !== undefined) {
+          huHtml += renderScoreBar(categoryLabels[cat], huJudgment[cat]);
+        }
+      });
+      huHtml += `</div>${renderSymbolismList(huSymbolism)}`;
+      huHtml += `</div>`;
+      analysisDiv.innerHTML += huHtml;
+    }
+
+    // 八卦取象
+    const uGua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.lines.slice(3, 6))));
+    const lGua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.lines.slice(0, 3))));
+    const cUgua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))));
+    const cLgua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))));
+
+    let trigramHtml = `<div class="analysis-item"><h4>八卦取象</h4>`;
+    trigramHtml += `<div class="trigram-details"><strong>本卦取象：</strong><br>`;
+    trigramHtml += `**上卦**（${uGua.name}）：${uGua.explanations?.life || '無'}<br>`;
+    trigramHtml += `**下卦**（${lGua.name}）：${lGua.explanations?.life || '無'}</div>`;
+    trigramHtml += `<div class="trigram-details" style="margin-top:10px;"><strong>變卦取象：</strong><br>`;
+    trigramHtml += `**上變卦**（${cUgua.name}）：${cUgua.explanations?.life || '無'}<br>`;
+    trigramHtml += `**下變卦**（${cLgua.name}）：${cLgua.explanations?.life || '無'}</div>`;
+    trigramHtml += `</div>`;
+    analysisDiv.innerHTML += trigramHtml;
+  }
+
+  // 事件處理
+  document.getElementById('analyzeBtn').addEventListener('click', () => {
+    const questionType = document.getElementById('questionSelector').value;
+    if (questionType === '1') {
+      alert('請選擇一個問事類別');
+      return;
+    }
+    if (!currentResult) {
+      alert('請先生成卦象');
+      return;
+    }
+    document.getElementById('judgeBox').classList.remove('hidden');
+    renderQuestionAnalysis(currentResult, questionType);
+  });
+
+  document.getElementById('judgeBtn').addEventListener('click', () => {
+    if (!currentResult) {
+      alert('請先生成卦象');
+      return;
+    }
+    document.getElementById('judgeBox').classList.remove('hidden');
+    if (currentResult.moving.length > 1) {
+      renderMultiMovingAnalysis(currentResult);
+    } else {
+      renderWuxingAnalysis(currentResult);
+      renderDetailedAnalysis(currentResult);
+    }
+  });
+
+  // 頁面初始化
+  document.addEventListener('DOMContentLoaded', () => {
+      // 隱藏分析區域
+      document.getElementById('judgeBox').classList.add('hidden');
+      document.getElementById('questionAnalysisResult').classList.add('hidden');
+      document.getElementById('wuxingAnalysis').classList.add('hidden');
+      document.getElementById('detailedAnalysis').classList.add('hidden');
+
+      // 設置數字取卦的預設隨機值
+      const rand100to999 = () => Math.floor(Math.random() * 900) + 100;
+      document.getElementById('numUpper').value = rand100to999();
+      document.getElementById('numLower').value = rand100to999();
+      document.getElementById('numMoving').value = rand100to999();
+
+      // 設置時間取卦的預設值（當前時間：2025-08-22 15:43）
+      const now = new Date('2025-08-22T15:43:00');
+      const pad = n => String(n).padStart(2, '0');
+      document.getElementById('dtInput').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+      // 檢查 JSON 資料是否載入完成
+      if (!dataReady) {
+        document.getElementById('subtitle').textContent = '資料載入中，請稍候…';
+        const checkDataInterval = setInterval(() => {
+          if (dataReady) {
+            clearInterval(checkDataInterval);
+            document.getElementById('subtitle').textContent = quotes[Math.floor(Math.random() * quotes.length)] || '易有太極，是生兩儀，兩儀生四象，四象生八卦。';
+          }
+        }, 500);
+      } else {
+        document.getElementById('subtitle').textContent = quotes[Math.floor(Math.random() * quotes.length)] || '易有太極，是生兩儀，兩儀生四象，四象生八卦。';
+      }
+    });
+
+    // 額外輔助函數：檢查 JSON 資料是否可用
+    function checkDataBeforeAction(callback) {
+      if (!dataReady) {
+        alert('資料仍在載入中，請稍候再試。');
+        return false;
+      }
+      return callback();
+    }
+
+    // 更新時間取卦的「使用現在時間」按鈕
+    document.getElementById('nowQuick').addEventListener('click', () => {
+      const now = new Date('2025-08-22T15:43:00'); // 使用當前時間
+      const pad = n => String(n).padStart(2, '0');
+      document.getElementById('dtInput').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    });
+
+    // 確保所有事件處理器穩定運行
+    document.getElementById('analyzeBtn').addEventListener('click', () => {
+      checkDataBeforeAction(() => {
+        const questionType = document.getElementById('questionSelector').value;
+        if (questionType === '1') {
+          alert('請選擇一個問事類別');
+          return;
+        }
+        if (!currentResult) {
+          alert('請先生成卦象');
+          return;
+        }
+        document.getElementById('judgeBox').classList.remove('hidden');
+        renderQuestionAnalysis(currentResult, questionType);
+      });
+    });
+
+    document.getElementById('judgeBtn').addEventListener('click', () => {
+      checkDataBeforeAction(() => {
+        if (!currentResult) {
+          alert('請先生成卦象');
+          return;
+        }
+        document.getElementById('judgeBox').classList.remove('hidden');
+        if (currentResult.moving.length > 1) {
+          renderMultiMovingAnalysis(currentResult);
+        } else {
+          renderWuxingAnalysis(currentResult);
+          renderDetailedAnalysis(currentResult);
+        }
+      });
+    });
+
+    // 確保時間取卦按鈕正確處理當前時間
+    document.getElementById('btnTime').addEventListener('click', () => {
+      checkDataBeforeAction(() => {
+        const method = document.querySelector('input[name="time-method"]:checked').value;
+        let y, mo, da, h, mi;
+
+        if (method === 'modern') {
+          const val = document.getElementById('dtInput').value;
+          if (!val) {
+            alert('請先選擇日期時間');
+            return;
+          }
+          const d = new Date(val);
+          y = d.getFullYear();
+          mo = d.getMonth() + 1;
+          da = d.getDate();
+          h = d.getHours();
+          mi = d.getMinutes();
+        } else {
+          const dateVal = document.getElementById('dateInput').value;
+          const shichenVal = Number(document.getElementById('shichenInput').value);
+          const minuteVal = Number(document.getElementById('minuteInput').value);
+          if (!dateVal || !shichenVal || !Number.isInteger(minuteVal) || minuteVal < 0 || minuteVal > 59) {
+            alert('請輸入有效的日期、時辰和分。');
+            return;
+          }
+          const d = new Date(dateVal);
+          y = d.getFullYear();
+          mo = d.getMonth() + 1;
+          da = d.getDate();
+          h = shichenVal;
+          mi = minuteVal;
+        }
+
+        const ymd = y + mo + da;
+        const u = (ymd % 8) || 8;
+        const l = ((ymd + h) % 8) || 8;
+        const m = ((ymd + h + mi) % 6) || 6;
+        generateGua(u, l, [m]);
