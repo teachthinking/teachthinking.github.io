@@ -734,19 +734,7 @@ function generateGua(upperIdx, lowerIdx, moving, method = '未知') {
   if (!hexagrams[mainHexName]) console.warn(`本卦 ${mainHexName} 在 hexagrams.json 中未找到`);
   if (!hexagrams[changeHexName]) console.warn(`變卦 ${changeHexName} 在 hexagrams.json 中未找到`);
 
-  currentResult = {
-    lines,
-    changeLines,
-    huLines,
-    moving,
-    hexMain: mainHex,
-    hexChange: changeHex,
-    hexHu: huHex,
-    uIdx: upperIdx,
-    lIdx: lowerIdx,
-    method,
-    timestamp: new Date().toLocaleString('zh-TW')
-  };
+ 
   
   // 獲取「問何事？」輸入
   let question = '';
