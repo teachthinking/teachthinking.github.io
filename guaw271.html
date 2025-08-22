@@ -844,6 +844,7 @@ function renderHistory() {
     historyList.innerHTML += `
       <div class="history-item">
         <h4>記錄 ${index + 1} - ${entry.timestamp}</h4>
+        <p><strong>問何事：</strong>${entry.question || '未輸入問題'}</p>
         <p><strong>本卦：</strong>${mainHexName}（${trigramName[entry.lIdx]}為下，${trigramName[entry.uIdx]}為上）</p>
         <p><strong>變卦：</strong>${changeHexName}</p>
         <p><strong>互卦：</strong>${huHexName}</p>
