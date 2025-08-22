@@ -701,40 +701,19 @@ function renderLineExplanation(moving, hexMain) {
   });
 }
 
-// 生成卦象並記錄
-function generateGua(upperIdx, lowerIdx, moving, method = '未知') {
-  const upperLines = guaTable[upperIdx].slice(0, 3);
-  const lowerLines = guaTable[lowerIdx].slice(0, 3);
-  const lines = [...lowerLines, ...upperLines];
-  console.log('本卦線:', lines, '上卦:', upperLines, '下卦:', lowerLines);
+// 獲取「問何事？」輸入
+  let question = '';
+  if (method === '數字取卦') {
+    question = document.getElementById('questionNumber').value.trim();
+  } else if (method === '手動取卦') {
+    question = document.getElementById('questionManual').value.trim();
+  } else if (method === '現代時間取卦' || method === '傳統時辰取卦') {
+    question = document.getElementById('questionTime').value.trim();
+  } else if (method === '以象取卦') {
+    question = document.getElementById('questionImage').value.trim();
+  }
 
-  const changeLines = [...lines];
-  moving.forEach(idx => {
-    changeLines[idx - 1] = changeLines[idx - 1] === 1 ? 0 : 1;
-  });
-  console.log('變卦線:', changeLines, '動爻:', moving);
-
-  const huLines = [lines[1], lines[2], lines[3], lines[2], lines[3], lines[4]];
-  console.log('互卦線:', huLines);
-
-  const mainHexName = getHexagramName(upperIdx, lowerIdx);
-  const changeUpperIdx = triIndexByLines.get(JSON.stringify(changeLines.slice(3, 6))) || 8;
-  const changeLowerIdx = triIndexByLines.get(JSON.stringify(changeLines.slice(0, 3))) || 8;
-  const changeHexName = getHexagramName(changeUpperIdx, changeLowerIdx);
-  const huUpperIdx = triIndexByLines.get(JSON.stringify(huLines.slice(3, 6))) || 8;
-  const huLowerIdx = triIndexByLines.get(JSON.stringify(huLines.slice(0, 3))) || 8;
-  const huHexName = getHexagramName(huUpperIdx, huLowerIdx);
-
-  console.log('卦名:', { main: mainHexName, change: changeHexName, hu: huHexName });
-
-  const mainHex = hexagrams[mainHexName] || { name: mainHexName, judgment: {}, symbolism: {}, lines: [] };
-  const changeHex = hexagrams[changeHexName] || { name: changeHexName, judgment: {}, symbolism: {} };
-  const huHex = hexagrams[huHexName] || { name: huHexName, judgment: {}, symbolism: {} };
-
-  if (!hexagrams[mainHexName]) console.warn(`本卦 ${mainHexName} 在 hexagrams.json 中未找到`);
-  if (!hexagrams[changeHexName]) console.warn(`變卦 ${changeHexName} 在 hexagrams.json 中未找到`);
-
- currentResult = {
+  currentResult = {
     lines,
     changeLines,
     huLines,
@@ -748,19 +727,6 @@ function generateGua(upperIdx, lowerIdx, moving, method = '未知') {
     timestamp: new Date().toLocaleString('zh-TW'),
     question // 新增問題字段
   };
-  
-  // 獲取「問何事？」輸入
-  let question = '';
-  if (method === '數字取卦') {
-    question = document.getElementById('questionNumber').value.trim();
-  } else if (method === '手動取卦') {
-    question = document.getElementById('questionManual').value.trim();
-  } else if (method === '現代時間取卦' || method === '傳統時辰取卦') {
-    question = document.getElementById('questionTime').value.trim();
-  } else if (method === '以象取卦') {
-    question = document.getElementById('questionImage').value.trim();
-  }
-
   
   // 儲存到記錄
   history.push(currentResult);
@@ -777,7 +743,6 @@ function generateGua(upperIdx, lowerIdx, moving, method = '未知') {
   renderGuaImage(huLines, 'huGuaImage');
   renderLineExplanation(moving, mainHex);
 }
-  }
 // 儲存記錄到 localStorage
 function saveHistory() {
   try {
