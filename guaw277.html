@@ -536,6 +536,11 @@ let trigramExplanations = {};
 let quotes = [];
 let currentResult = null;
 
+// 正規化鍵名（去除空格、轉換編碼）
+function normalizeKey(key) {
+  return key.replace(/\s+/g, '').trim();
+}
+
 // 獲取卦象資訊
 function getTrigramInfo(id) {
   return {
@@ -554,9 +559,10 @@ function getLineEntryFor(hexagram, lineIndex) {
 function getHexagramName(upperIdx, lowerIdx) {
   const upperName = trigramName[upperIdx] || '未知';
   const lowerName = trigramName[lowerIdx] || '未知';
-  // 修正命名規則，確保與 hexagrams.json 鍵匹配
   if (upperName === '未知' || lowerName === '未知') return '未知';
-  return `${upperName}為${lowerName === '乾' ? '天' : lowerName === '坤' ? '地' : lowerName}`;
+  // 修正命名規則，確保與 hexagrams.json 鍵匹配
+  const hexName = `${upperName}為${lowerName === '乾' ? '天' : lowerName === '坤' ? '地' : lowerName}`;
+  return normalizeKey(hexName); // 正規化鍵名
 }
 
 // 異步載入所有 JSON 檔案
@@ -575,6 +581,10 @@ async function loadResources() {
     wuxingExplanations = await wuxingResponse.json();
     trigramExplanations = await trigramResponse.json();
     quotes = await quotesResponse.json();
+    // 正規化 hexagrams 的鍵名
+    hexagrams = Object.fromEntries(
+      Object.entries(hexagrams).map(([key, value]) => [normalizeKey(key), value])
+    );
     console.log('JSON 檔案載入成功', { hexagramsKeys: Object.keys(hexagrams), quotesLength: quotes.length });
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)] || '請選擇取卦方式以開始占卜';
     document.getElementById('subtitle').textContent = randomQuote;
@@ -669,9 +679,9 @@ function generateGua(upperIdx, lowerIdx, moving) {
   };
   
   document.getElementById('result').classList.remove('hidden');
-  document.getElementById('guaName').textContent = mainHex.name || '未知';
-  document.getElementById('changeGuaName').textContent = changeHex.name || '未知';
-  document.getElementById('huGuaName').textContent = huHex.name || '未知';
+  document.getElementById('guaName').textContent = mainHex.name || mainHexName || '未知';
+  document.getElementById('changeGuaName').textContent = changeHex.name || changeHexName || '未知';
+  document.getElementById('huGuaName').textContent = huHex.name || huHexName || '未知';
   document.getElementById('guaNote').textContent = `本卦：${trigramName[lowerIdx]}為下，${trigramName[upperIdx]}為上，動爻：${moving.join('、') || '無'}`;
   renderGuaImage(lines, 'guaImage', moving);
   renderGuaImage(changeLines, 'changeGuaImage', moving);
@@ -997,7 +1007,7 @@ function renderQuestionAnalysis(result, questionType) {
   guaAnalysisHtml = `
     <div class="analysis-item">
       <h4>第二層：互卦（過程分析）</h4>
-      <p>體卦屬 **${tiGua.wuxing}**，互卦（代表過程）屬 **${huLGua.wuxing}**。<br>五行關係為：**${huOutcome.relation}**。這顯示事情在過程中將會：<br><span class="analysis-status ${huOutcome.status}">${huExplanation}${huOutcome.details.title ? `<br><strong>相關卦象：</strong> ${huOutcome.details.title}` : ''}</span></p>`;
+      <p>體卦屬 **${tiGua.wuxing}**，互卦（代表過程）屬 **${huLGua.wuxing}**。<br>五行關係為：**${huOutcome.relation}**。這顯示事情在過程中將會：<br><span class="analysis-status ${huOutcome.status}">${huOutcome.explanation}${huOutcome.details.title ? `<br><strong>相關卦象：</strong> ${huOutcome.details.title}` : ''}</span></p>`;
   if (trigramExplanations[huLGua.name]?.[questionType] || trigramExplanations[trigramName[huUpperId]]?.[questionType]) {
     guaAnalysisHtml += `<div class="trigram-details"><strong>互卦取象：</strong><br>`;
     if (trigramExplanations[huLGua.name]?.[questionType]) {
