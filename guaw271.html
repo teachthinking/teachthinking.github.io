@@ -746,9 +746,10 @@ function generateGua(upperIdx, lowerIdx, moving, method = '未知') {
     lIdx: lowerIdx,
     method,
     timestamp: new Date().toLocaleString('zh-TW')
+    question // 新增問題字段
   };
   
-  // 儲存到記錄
+ // 儲存到記錄
   history.push(currentResult);
   saveHistory();
   renderHistory();
@@ -757,7 +758,7 @@ function generateGua(upperIdx, lowerIdx, moving, method = '未知') {
   document.getElementById('guaName').textContent = mainHex.name || mainHexName || '未知';
   document.getElementById('changeGuaName').textContent = changeHex.name || changeHexName || '未知';
   document.getElementById('huGuaName').textContent = huHex.name || huHexName || '未知';
-  document.getElementById('guaNote').textContent = `本卦：${trigramName[lowerIdx]}為下，${trigramName[upperIdx]}為上，動爻：${moving.join('、') || '無'}，取卦方式：${method}`;
+  document.getElementById('guaNote').textContent = `本卦：${trigramName[lowerIdx]}為下，${trigramName[upperIdx]}為上，動爻：${moving.join('、') || '無'}，取卦方式：${method}${question ? `，問：${question}` : ''}`;
   renderGuaImage(lines, 'guaImage', moving);
   renderGuaImage(changeLines, 'changeGuaImage', moving);
   renderGuaImage(huLines, 'huGuaImage');
@@ -844,6 +845,7 @@ function renderHistory() {
     historyList.innerHTML += `
       <div class="history-item">
         <h4>記錄 ${index + 1} - ${entry.timestamp}</h4>
+        <p><strong>問何事：</strong>${entry.question || '未輸入問題'}</p>
         <p><strong>本卦：</strong>${mainHexName}（${trigramName[entry.lIdx]}為下，${trigramName[entry.uIdx]}為上）</p>
         <p><strong>變卦：</strong>${changeHexName}</p>
         <p><strong>互卦：</strong>${huHexName}</p>
