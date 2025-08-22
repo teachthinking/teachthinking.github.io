@@ -340,7 +340,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>張老師易經卜卦9</h1>
+    <h1>張老師易經卜卦</h1>
     <h2 id="subtitle" class="subtitle">載入中…（若無 quotes 顯示預設句）</h2>
 
     <div class="tab-buttons">
@@ -554,6 +554,8 @@ function getLineEntryFor(hexagram, lineIndex) {
 function getHexagramName(upperIdx, lowerIdx) {
   const upperName = trigramName[upperIdx] || '未知';
   const lowerName = trigramName[lowerIdx] || '未知';
+  // 修正命名規則，確保與 hexagrams.json 鍵匹配
+  if (upperName === '未知' || lowerName === '未知') return '未知';
   return `${upperName}為${lowerName === '乾' ? '天' : lowerName === '坤' ? '地' : lowerName}`;
 }
 
@@ -567,14 +569,13 @@ async function loadResources() {
       fetch('quotes.json')
     ]);
     if (!hexResponse.ok || !wuxingResponse.ok || !trigramResponse.ok || !quotesResponse.ok) {
-      throw new Error('檔案載入失敗，狀態碼不正確');
+      throw new Error(`檔案載入失敗，狀態碼：hex=${hexResponse.status}, wuxing=${wuxingResponse.status}, trigram=${trigramResponse.status}, quotes=${quotesResponse.status}`);
     }
     hexagrams = await hexResponse.json();
     wuxingExplanations = await wuxingResponse.json();
     trigramExplanations = await trigramResponse.json();
     quotes = await quotesResponse.json();
-    console.log('JSON 檔案載入成功');
-    // 隨機顯示一句 quotes.json 中的話
+    console.log('JSON 檔案載入成功', { hexagramsKeys: Object.keys(hexagrams), quotesLength: quotes.length });
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)] || '請選擇取卦方式以開始占卜';
     document.getElementById('subtitle').textContent = randomQuote;
   } catch (error) {
@@ -627,26 +628,34 @@ function generateGua(upperIdx, lowerIdx, moving) {
   const upperLines = guaTable[upperIdx].slice(0, 3);
   const lowerLines = guaTable[lowerIdx].slice(0, 3);
   const lines = [...lowerLines, ...upperLines];
+  console.log('本卦線:', lines, '上卦:', upperLines, '下卦:', lowerLines);
+
   const changeLines = [...lines];
   moving.forEach(idx => {
     changeLines[idx - 1] = changeLines[idx - 1] === 1 ? 0 : 1;
   });
+  console.log('變卦線:', changeLines, '動爻:', moving);
+
   const huLines = [lines[1], lines[2], lines[3], lines[2], lines[3], lines[4]];
-  
+  console.log('互卦線:', huLines);
+
   const mainHexName = getHexagramName(upperIdx, lowerIdx);
-  const changeHexName = getHexagramName(
-    triIndexByLines.get(JSON.stringify(changeLines.slice(3, 6))),
-    triIndexByLines.get(JSON.stringify(changeLines.slice(0, 3)))
-  );
-  const huHexName = getHexagramName(
-    triIndexByLines.get(JSON.stringify(huLines.slice(3, 6))),
-    triIndexByLines.get(JSON.stringify(huLines.slice(0, 3)))
-  );
-  
+  const changeUpperIdx = triIndexByLines.get(JSON.stringify(changeLines.slice(3, 6))) || 8;
+  const changeLowerIdx = triIndexByLines.get(JSON.stringify(changeLines.slice(0, 3))) || 8;
+  const changeHexName = getHexagramName(changeUpperIdx, changeLowerIdx);
+  const huUpperIdx = triIndexByLines.get(JSON.stringify(huLines.slice(3, 6))) || 8;
+  const huLowerIdx = triIndexByLines.get(JSON.stringify(huLines.slice(0, 3))) || 8;
+  const huHexName = getHexagramName(huUpperIdx, huLowerIdx);
+
+  console.log('卦名:', { main: mainHexName, change: changeHexName, hu: huHexName });
+
   const mainHex = hexagrams[mainHexName] || { name: mainHexName, judgment: {}, symbolism: {}, lines: [] };
   const changeHex = hexagrams[changeHexName] || { name: changeHexName, judgment: {}, symbolism: {} };
   const huHex = hexagrams[huHexName] || { name: huHexName, judgment: {}, symbolism: {} };
-  
+
+  if (!hexagrams[mainHexName]) console.warn(`本卦 ${mainHexName} 在 hexagrams.json 中未找到`);
+  if (!hexagrams[changeHexName]) console.warn(`變卦 ${changeHexName} 在 hexagrams.json 中未找到`);
+
   currentResult = {
     lines,
     changeLines,
