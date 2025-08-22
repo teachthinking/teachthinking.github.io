@@ -786,6 +786,41 @@ function loadHistory() {
   }
 }
 
+// 複製記錄項目到剪貼簿
+function copyHistoryItem(index) {
+  const entry = history[index];
+  if (!entry) {
+    alert('無法複製，記錄不存在！');
+    return;
+  }
+
+  const mainHexName = entry.hexMain.name || getHexagramName(entry.uIdx, entry.lIdx) || '未知';
+  const changeHexName = entry.hexChange.name || getHexagramName(
+    triIndexByLines.get(JSON.stringify(entry.changeLines.slice(3, 6))) || 8,
+    triIndexByLines.get(JSON.stringify(entry.changeLines.slice(0, 3))) || 8
+  ) || '未知';
+  const huHexName = entry.hexHu.name || getHexagramName(
+    triIndexByLines.get(JSON.stringify(entry.huLines.slice(3, 6))) || 8,
+    triIndexByLines.get(JSON.stringify(entry.huLines.slice(0, 3))) || 8
+  ) || '未知';
+
+  const copyText = `
+卜卦記錄 ${index + 1} - ${entry.timestamp}
+本卦：${mainHexName}（${trigramName[entry.lIdx]}為下，${trigramName[entry.uIdx]}為上）
+變卦：${changeHexName}
+互卦：${huHexName}
+動爻：${entry.moving.join('、') || '無'}
+取卦方式：${entry.method}
+`.trim();
+
+  navigator.clipboard.writeText(copyText).then(() => {
+    alert('已成功複製記錄到剪貼簿！');
+  }).catch(err => {
+    console.error('複製失敗:', err);
+    alert('複製失敗，請稍後再試！');
+  });
+}
+
 // 渲染記錄列表
 function renderHistory() {
   const historyList = document.getElementById('historyList');
@@ -816,6 +851,7 @@ function renderHistory() {
         <p><strong>取卦方式：</strong>${entry.method}</p>
         <div class="history-controls">
           <button class="primary" onclick="loadGuaFromHistory(${index})">載入</button>
+          <button class="primary" onclick="copyHistoryItem(${index})">複製</button>
           <button class="primary" onclick="deleteHistoryItem(${index})">刪除</button>
         </div>
       </div>`;
