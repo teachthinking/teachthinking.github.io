@@ -252,19 +252,25 @@
       "金": "火", "水": "土", "木": "金", "火": "水", "土": "木"
     };
 
-    // 八宮映射（簡化為首卦，實際可擴展）
-    const palaceMap = {
-      "乾": ["乾"], "坤": ["坤"], "震": ["震"], "巽": ["巽"],
-      "坎": ["坎"], "離": ["離"], "艮": ["艮"], "兌": ["兌"]
+    // 八宮映射（根據上卦/本卦）
+    const guaToPalace = {
+      "乾為天": "乾", "天澤履": "乾", "天火同人": "乾", "天雷無妄": "乾", "天風姤": "乾", "天水訟": "乾", "天山遁": "乾", "天地否": "乾",
+      "坤為地": "坤", "地澤臨": "坤", "地火明夷": "坤", "地雷復": "坤", "地風升": "坤", "地水師": "坤", "地山謙": "坤", "地天泰": "坤",
+      "艮為山": "艮", "山澤損": "艮", "山火賁": "艮", "山雷頤": "艮", "山風蠱": "艮", "山水蒙": "艮", "山天大畜": "艮", "山地剝": "艮",
+      "兌為澤": "兌", "澤火革": "兌", "澤雷隨": "兌", "澤風大過": "兌", "澤水困": "兌", "澤山咸": "兌", "澤天夬": "兌", "澤地萃": "兌",
+      "坎為水": "坎", "水澤節": "坎", "水火既濟": "坎", "水雷屯": "坎", "水風井": "坎", "水天需": "坎", "水山蹇": "坎", "水地比": "坎",
+      "離為火": "離", "火澤睽": "離", "火雷噬嗑": "離", "火風鼎": "離", "火水未濟": "離", "火山旅": "離", "火天大有": "離", "火地晉": "離",
+      "震為雷": "震", "雷澤歸妹": "震", "雷火豐": "震", "雷風恆": "震", "雷水解": "震", "雷山小過": "震", "雷天大壯": "震", "雷地豫": "震",
+      "巽為風": "巽", "風澤中孚": "巽", "風火家人": "巽", "風雷益": "巽", "風水渙": "巽", "風山漸": "巽", "風天小畜": "巽", "風地觀": "巽"
     };
 
     // 檢查是否同宮
     function isSamePalace(bodyGua, useGua) {
-      const guaToPalace = {
-        "乾": "乾", "兌": "兌", "離": "離", "震": "震",
-        "巽": "巽", "坎": "坎", "艮": "艮", "坤": "坤"
-      };
-      return guaToPalace[bodyGua] === guaToPalace[useGua];
+      const guaKey = bodyGua + useGua;
+      const guaName = guaNameMap[guaKey] || "未知卦名";
+      const bodyPalace = guaToPalace[guaName];
+      const usePalace = guaToPalace[useGua + bodyGua] || guaToWuxing[useGua];
+      return bodyPalace === usePalace;
     }
 
     // 八純卦到64卦名稱的映射（完整8×8）
@@ -421,7 +427,7 @@
 
     // 時間取卦
     function useCurrentTime() {
-      const now = new Date(); // 實際使用時切回當前時間
+      const now = new Date();
       document.getElementById('time-select').value = Math.floor(now.getHours() / 2) * 2 + 1;
     }
 
@@ -433,7 +439,7 @@
       const method = document.querySelector('input[name="time-method"]:checked').value;
       let year, month, day, hour, minute;
       if (method === 'modern') {
-        const now = new Date(); // 實際使用時切回當前時間
+        const now = new Date();
         year = now.getFullYear();
         month = now.getMonth() + 1;
         day = now.getDate();
