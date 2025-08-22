@@ -734,21 +734,7 @@ function generateGua(upperIdx, lowerIdx, moving, method = '未知') {
   if (!hexagrams[mainHexName]) console.warn(`本卦 ${mainHexName} 在 hexagrams.json 中未找到`);
   if (!hexagrams[changeHexName]) console.warn(`變卦 ${changeHexName} 在 hexagrams.json 中未找到`);
 
- 
-  
-  // 獲取「問何事？」輸入
-  let question = '';
-  if (method === '數字取卦') {
-    question = document.getElementById('questionNumber').value.trim();
-  } else if (method === '手動取卦') {
-    question = document.getElementById('questionManual').value.trim();
-  } else if (method === '現代時間取卦' || method === '傳統時辰取卦') {
-    question = document.getElementById('questionTime').value.trim();
-  } else if (method === '以象取卦') {
-    question = document.getElementById('questionImage').value.trim();
-  }
-
-  currentResult = {
+ currentResult = {
     lines,
     changeLines,
     huLines,
@@ -762,6 +748,20 @@ function generateGua(upperIdx, lowerIdx, moving, method = '未知') {
     timestamp: new Date().toLocaleString('zh-TW'),
     question // 新增問題字段
   };
+  
+  // 獲取「問何事？」輸入
+  let question = '';
+  if (method === '數字取卦') {
+    question = document.getElementById('questionNumber').value.trim();
+  } else if (method === '手動取卦') {
+    question = document.getElementById('questionManual').value.trim();
+  } else if (method === '現代時間取卦' || method === '傳統時辰取卦') {
+    question = document.getElementById('questionTime').value.trim();
+  } else if (method === '以象取卦') {
+    question = document.getElementById('questionImage').value.trim();
+  }
+
+  
   
   // 儲存到記錄
   history.push(currentResult);
