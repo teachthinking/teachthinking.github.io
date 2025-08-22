@@ -746,7 +746,7 @@ function generateGua(upperIdx, lowerIdx, moving, method = '未知') {
     question = document.getElementById('questionTime').value.trim();
   } else if (method === '以象取卦') {
     question = document.getElementById('questionImage').value.trim();
-  };
+  }
 
   currentResult = {
     lines,
@@ -761,7 +761,7 @@ function generateGua(upperIdx, lowerIdx, moving, method = '未知') {
     method,
     timestamp: new Date().toLocaleString('zh-TW'),
     question // 新增問題字段
-  };
+  }
   
   // 儲存到記錄
   history.push(currentResult);
