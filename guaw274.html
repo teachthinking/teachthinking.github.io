@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <title>張老師易經卜卦</title>
     <style>
-        /* Add some basic styling for better presentation */
         body { font-family: Arial, sans-serif; margin: 20px; }
         .tab { display: none; }
         .tab.active { display: block; }
-        button { margin: 5px; }
+        button { margin: 5px; padding: 8px 16px; }
+        select, input[type="number"] { margin: 5px; padding: 5px; }
         #result { margin-top: 20px; border: 1px solid #ccc; padding: 10px; }
         #wuxing-analysis, #symbol-analysis, #comprehensive { margin-top: 20px; }
+        #quote { font-style: italic; color: #555; }
     </style>
 </head>
 <body>
@@ -39,12 +40,14 @@
         <h2>手動取卦</h2>
         <div>上卦：
             <select id="upper-manual">
-                <option>乾</option><option>兌</option><option>離</option><option>震</option><option>巽</option><option>坎</option><option>艮</option><option>坤</option>
+                <option>乾</option><option>兌</option><option>離</option><option>震</option>
+                <option>巽</option><option>坎</option><option>艮</option><option>坤</option>
             </select>
         </div>
         <div>下卦：
             <select id="lower-manual">
-                <option>乾</option><option>兌</option><option>離</option><option>震</option><option>巽</option><option>坎</option><option>艮</option><option>坤</option>
+                <option>乾</option><option>兌</option><option>離</option><option>震</option>
+                <option>巽</option><option>坎</option><option>艮</option><option>坤</option>
             </select>
         </div>
         <button onclick="generateFromManual()">生成卦象</button>
@@ -56,10 +59,17 @@
             <input type="radio" name="time-mode" value="modern" checked> 現代時間
             <input type="radio" name="time-mode" value="traditional"> 傳統時辰
         </div>
-        <button onclick="useCurrentTime()">使用現在時間</button>
-        <select id="traditional-hour">
-            <option>子時 (23-1)</option><option>丑時 (1-3)</option><!-- ... other options --> 
-        </select>
+        <div id="modern-time">
+            <button onclick="useCurrentTime()">使用現在時間</button>
+        </div>
+        <div id="traditional-time">
+            <select id="traditional-hour">
+                <option>子時 (23-1)</option><option>丑時 (1-3)</option><option>寅時 (3-5)</option>
+                <option>卯時 (5-7)</option><option>辰時 (7-9)</option><option>巳時 (9-11)</option>
+                <option>午時 (11-13)</option><option>未時 (13-15)</option><option>申時 (15-17)</option>
+                <option>酉時 (17-19)</option><option>戌時 (19-21)</option><option>亥時 (21-23)</option>
+            </select>
+        </div>
         <button onclick="generateFromTime()">生成卦象</button>
         <p>算法：上卦 = (年+月+日) % 8；下卦 = (年+月+日+時) % 8；動爻 = (年+月+日+時+分) % 6；餘數為 0 則視為 8 或 6。</p>
     </div>
@@ -68,12 +78,16 @@
         <h2>以象取卦</h2>
         <div>上卦：
             <select id="upper-symbol">
-                <option>乾（金）—天、圓、馬、父</option><!-- ... other options -->
+                <option>乾（金）—天、圓、馬、父</option><option>兌（金）—澤、口、悅、羊</option>
+                <option>離（火）—日、電、目、中女</option><option>震（木）—雷、動、竹、長男</option>
+                <option>巽（木）—風、入、雞、長女</option><option>坎（水）—水、陷、耳、中男</option>
+                <option>艮（土）—山、止、手、少男</option><option>坤（土）—地、母、牛、腹</option>
             </select>
         </div>
         <div>下卦（後天方位）：
             <select id="lower-symbol">
-                <option>北（坎）</option><!-- ... other options -->
+                <option>北（坎）</option><option>南（離）</option><option>東（震）</option><option>西（兌）</option>
+                <option>東北（艮）</option><option>西北（乾）</option><option>東南（巽）</option><option>西南（坤）</option>
             </select>
         </div>
         <input type="checkbox" id="use-minute"> 用當前分鐘取動爻
@@ -82,20 +96,17 @@
 
     <div id="gua-result">
         <h2>卦象結果</h2>
-        <div id="ben-gua"></div>
-        <div id="hu-gua"></div>
-        <div id="bian-gua"></div>
-        <div id="dong-yao"></div>
+        <div id="ben-gua">本卦：<span></span></div>
+        <div id="hu-gua">互卦：<span></span></div>
+        <div id="bian-gua">變卦：<span></span></div>
+        <div id="dong-yao">動爻解釋（多變爻逐條列出）：<span></span></div>
     </div>
 
     <div>
         <select id="category">
-            <option value="love">1. 感情問題</option>
-            <option value="career">2. 工作/學業</option>
-            <option value="wealth">3. 財運問題</option>
-            <option value="health">4. 健康問題</option>
-            <option value="relationship">5. 人際關係</option>
-            <option value="life">6. 生活/運勢</option>
+            <option value="love">1. 感情問題</option><option value="career">2. 工作/學業</option>
+            <option value="wealth">3. 財運問題</option><option value="health">4. 健康問題</option>
+            <option value="relationship">5. 人際關係</option><option value="life">6. 生活/運勢</option>
             <option value="guidance">7. 尋找指引</option>
         </select>
         <button onclick="analyze()">分析</button>
@@ -127,118 +138,241 @@
     }).catch(() => document.getElementById('quote').innerText = '預設句: 易有太極，是生兩儀。');
     fetch('hexagrams.json').then(res => res.json()).then(data => hexagramsData = data);
 
-    // 定義八卦、五行、生克關係
+    // 定義八卦與五行映射
     const trigrams = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
     const wuxingMap = { '乾': '金', '兌': '金', '離': '火', '震': '木', '巽': '木', '坎': '水', '艮': '土', '坤': '土' };
     const shengMap = { '金': '水', '水': '木', '木': '火', '火': '土', '土': '金' };
     const keMap = { '金': '木', '木': '土', '土': '水', '水': '火', '火': '金' };
+    const trigramToSymbol = {
+        '乾': '☰', '兌': '☱', '離': '☲', '震': '☳',
+        '巽': '☴', '坎': '☵', '艮': '☶', '坤': '☷'
+    };
 
-    // 定義64卦名 (簡化示例，需完整填充)
+    // 定義64卦名 (部分示例，需完整實現)
     const guaNames = {
-        '乾乾': '乾為天',
-        '乾兌': '天澤履',
-        // ... 完整64卦名映射，上卦+下卦 -> 卦名
+        '乾乾': '乾為天', '乾兌': '天澤履', '乾離': '天火同人', '乾震': '天雷無妄',
+        '乾巽': '天風姤', '乾坎': '天水訟', '乾艮': '天山遁', '乾坤': '天地否',
+        '兌乾': '澤天夬', '兌兌': '兌為澤', '兌離': '澤火革', '兌震': '澤雷隨',
+        '兌巽': '澤風大過', '兌坎': '澤水困', '兌艮': '澤山咸', '兌坤': '澤地萃',
+        '離乾': '火天大有', '離兌': '火澤睽', '離離': '離為火', '離震': '火雷噬嗑',
+        '離巽': '火風鼎', '離坎': '火水未濟', '離艮': '火山旅', '離坤': '火地晉',
+        '震乾': '雷天大壯', '震兌': '雷澤歸妹', '震離': '雷火豐', '震震': '震為雷',
+        '震巽': '雷風恆', '震坎': '雷水解', '震艮': '雷山小過', '震坤': '雷地豫',
+        '巽乾': '風天小畜', '巽兌': '風澤中孚', '巽離': '風火家人', '巽震': '風雷益',
+        '巽巽': '巽為風', '巽坎': '風水渙', '巽艮': '風山漸', '巽坤': '風地觀',
+        '坎乾': '水天需', '坎兌': '水澤節', '坎離': '水火既濟', '坎震': '水雷屯',
+        '坎巽': '水風井', '坎坎': '坎為水', '坎艮': '水山蹇', '坎坤': '水地比',
+        '艮乾': '山天大畜', '艮兌': '山澤損', '艮離': '山火賁', '艮震': '山雷頤',
+        '艮巽': '山風蠱', '艮坎': '山水蒙', '艮艮': '艮為山', '艮坤': '山地剝',
+        '坤乾': '地天泰', '坤兌': '地澤臨', '坤離': '地火明夷', '坤震': '地雷復',
+        '坤巽': '地風升', '坤坎': '地水師', '坤艮': '地山謙', '坤坤': '坤為地'
     };
 
-    // 定義宮映射 (完整8宮64卦)
+    // 定義八宮映射
     const palaceMap = {
-        '乾為天': '乾',
-        '天風姤': '乾',
-        '天山遁': '乾',
-        '天地否': '乾',
-        '風地觀': '乾',
-        '山地剝': '乾',
-        '火地晉': '乾',
-        '火天大有': '乾',
-        '坤為地': '坤',
-        '地雷復': '坤',
-        '地澤臨': '坤',
-        '地天泰': '坤',
-        '雷天大壯': '坤',
-        '澤天夬': '坤',
-        '水天需': '坤',
-        '水地比': '坤',
-        // ... 完整填充其他宮: 震宮, 巽宮, 離宮, 坎宮, 艮宮, 兌宮
+        '乾為天': '乾', '天風姤': '乾', '天山遁': '乾', '天地否': '乾', '風地觀': '乾',
+        '山地剝': '乾', '火地晉': '乾', '火天大有': '乾',
+        '坤為地': '坤', '地雷復': '坤', '地澤臨': '坤', '地天泰': '坤', '雷天大壯': '坤',
+        '澤天夬': '坤', '水天需': '坤', '水地比': '坤',
+        '震為雷': '震', '雷地豫': '震', '雷水解': '震', '雷風恆': '震', '雷天大壯': '震',
+        '雷火豐': '震', '雷澤歸妹': '震', '雷山小過': '震',
+        '巽為風': '巽', '風地觀': '巽', '風水渙': '巽', '風雷益': '巽', '風天小畜': '巽',
+        '風火家人': '巽', '風澤中孚': '巽', '風山漸': '巽',
+        '坎為水': '坎', '水地比': '坎', '水天需': '坎', '水雷屯': '坎', '水風井': '坎',
+        '水火既濟': '坎', '水澤節': '坎', '水山蹇': '坎',
+        '離為火': '離', '火地晉': '離', '火天大有': '離', '火雷噬嗑': '離', '火風鼎': '離',
+        '火水未濟': '離', '火澤睽': '離', '火山旅': '離',
+        '艮為山': '艮', '山地剝': '艮', '山天大畜': '艮', '山雷頤': '艮', '山風蠱': '艮',
+        '山水蒙': '艮', '山澤損': '艮', '山火賁': '艮',
+        '兌為澤': '兌', '澤地萃': '兌', '澤天夬': '兌', '澤雷隨': '兌', '澤風大過': '兌',
+        '澤水困': '兌', '澤山咸': '兌', '澤火革': '兌'
     };
 
-    // 全局變量 for 卦象
-    let upperGua, lowerGua, dongYao = [], benGuaName, bianGuaName, huGuaName;
+    // 全局變量
+    let upperGua, lowerGua, dongYao = [], benGuaName, huGuaName, bianGuaName;
 
-    // 顯示tab
+    // 顯示特定標籤
     function showTab(tabId) {
         document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
     }
 
-    // 生成卦象函數 (簡化，需根據各取卦方式實現)
-    function generateGua(upper, lower, dong) {
-        upperGua = upper;
-        lowerGua = lower;
-        dongYao = dong; // 陣列 for 多動爻
-        benGuaName = guaNames[upper + lower];
-        // 計算互卦: 上卦的下兩爻 + 下卦的上兩爻 等，需實現
-        // 計算變卦: 根據dongYao改變爻
-        bianGuaName = /* 計算變卦名 */;
-        // 顯示卦象 in #gua-result
-    }
+    // 隨機數字初始化
+    window.onload = () => {
+        const inputs = ['num1', 'num2', 'num3'];
+        inputs.forEach(id => {
+            document.getElementById(id).value = Math.floor(Math.random() * 900) + 100;
+        });
+    };
 
-    // 取卦函數示例
+    // 數字取卦
     function generateFromNumbers() {
-        // 實現邏輯
-        generateGua(/* ... */);
+        const nums = [
+            parseInt(document.getElementById('num1').value) || (Math.floor(Math.random() * 900) + 100),
+            parseInt(document.getElementById('num2').value) || (Math.floor(Math.random() * 900) + 100),
+            parseInt(document.getElementById('num3').value) || (Math.floor(Math.random() * 900) + 100)
+        ];
+        const upperIndex = nums[0] % 8 || 8;
+        const lowerIndex = nums[1] % 8 || 8;
+        const yaoIndex = nums[2] % 6 || 6;
+        upperGua = trigrams[upperIndex - 1];
+        lowerGua = trigrams[lowerIndex - 1];
+        dongYao = [yaoIndex];
+        generateGua();
     }
-    // 其他generate函數類似...
 
-    // 分析函數
+    // 手動取卦
+    function generateFromManual() {
+        upperGua = document.getElementById('upper-manual').value;
+        lowerGua = document.getElementById('lower-manual').value;
+        dongYao = [Math.floor(Math.random() * 6) + 1]; // 隨機動爻
+        generateGua();
+    }
+
+    // 時間取卦
+    function useCurrentTime() {
+        const now = new Date();
+        document.getElementById('num1').value = now.getFullYear();
+        document.getElementById('num2').value = now.getMonth() + 1;
+        document.getElementById('num3').value = now.getDate();
+        const hour = now.getHours();
+        const traditionalHour = Math.floor(hour / 2);
+        document.getElementById('traditional-hour').selectedIndex = traditionalHour;
+    }
+
+    function generateFromTime() {
+        const mode = document.querySelector('input[name="time-mode"]:checked').value;
+        let year, month, day, hour, minute;
+        if (mode === 'modern') {
+            const now = new Date();
+            year = now.getFullYear();
+            month = now.getMonth() + 1;
+            day = now.getDate();
+            hour = now.getHours();
+            minute = now.getMinutes();
+        } else {
+            year = parseInt(document.getElementById('num1').value) || new Date().getFullYear();
+            month = parseInt(document.getElementById('num2').value) || new Date().getMonth() + 1;
+            day = parseInt(document.getElementById('num3').value) || new Date().getDate();
+            const hourIndex = document.getElementById('traditional-hour').selectedIndex;
+            hour = hourIndex * 2;
+            minute = Math.floor(Math.random() * 60);
+        }
+        const upperIndex = (year + month + day) % 8 || 8;
+        const lowerIndex = (year + month + day + hour) % 8 || 8;
+        const yaoIndex = (year + month + day + hour + minute) % 6 || 6;
+        upperGua = trigrams[upperIndex - 1];
+        lowerGua = trigrams[lowerIndex - 1];
+        dongYao = [yaoIndex];
+        generateGua();
+    }
+
+    // 以象取卦
+    function generateFromSymbol() {
+        const upperSelect = document.getElementById('upper-symbol').value.split('（')[0];
+        const lowerSelect = document.getElementById('lower-symbol').value.split('（')[1].slice(0, -1);
+        upperGua = upperSelect;
+        lowerGua = lowerSelect;
+        if (document.getElementById('use-minute').checked) {
+            dongYao = [(new Date().getMinutes() % 6) || 6];
+        } else {
+            dongYao = [Math.floor(Math.random() * 6) + 1];
+        }
+        generateGua();
+    }
+
+    // 生成卦象
+    function generateGua() {
+        benGuaName = guaNames[upperGua + lowerGua] || '未知卦';
+        // 計算互卦
+        const trigramOrder = trigrams.indexOf(lowerGua) * 8 + trigrams.indexOf(upperGua);
+        const huGuaIndex = [2, 3, 4, 1, 2, 3, 4, 5].map(i => Math.floor(trigramOrder / Math.pow(2, i)) % 2);
+        const huUpper = trigrams[huGuaIndex[0] * 4 + huGuaIndex[1] * 2 + huGuaIndex[2]];
+        const huLower = trigrams[huGuaIndex[3] * 4 + huGuaIndex[4] * 2 + huGuaIndex[5]];
+        huGuaName = guaNames[huUpper + huLower] || '未知互卦';
+        // 計算變卦
+        let bianUpper = upperGua, bianLower = lowerGua;
+        if (dongYao.length) {
+            const yao = dongYao[0];
+            if (yao <= 3) {
+                bianLower = trigrams[(trigrams.indexOf(lowerGua) ^ (1 << (yao - 1))) % 8];
+            } else {
+                bianUpper = trigrams[(trigrams.indexOf(upperGua) ^ (1 << (yao - 4))) % 8];
+            }
+        }
+        bianGuaName = guaNames[bianUpper + bianLower] || '未知變卦';
+
+        // 顯示結果
+        document.getElementById('ben-gua').innerHTML = `本卦：${benGuaName} (${trigramToSymbol[upperGua]} 上, ${trigramToSymbol[lowerGua]} 下)`;
+        document.getElementById('hu-gua').innerHTML = `互卦：${huGuaName} (${trigramToSymbol[huUpper]} 上, ${trigramToSymbol[huLower]} 下)`;
+        document.getElementById('bian-gua').innerHTML = `變卦：${bianGuaName} (${trigramToSymbol[bianUpper]} 上, ${trigramToSymbol[bianLower]} 下)`;
+        document.getElementById('dong-yao').innerHTML = `動爻解釋（多變爻逐條列出）：${dongYao.map(y => `第${y}爻`).join(', ')}`;
+    }
+
+    // 分析卦象
     function analyze() {
+        if (!benGuaName || !wuxingData || !trigramData || !hexagramsData) {
+            alert('請先生成卦象或等待資料載入');
+            return;
+        }
         const category = document.getElementById('category').value;
 
         // 五行分析
-        const relation = getWuxingRelation(lowerGua, upperGua); // 下體上用
+        const relation = getWuxingRelation(lowerGua, upperGua);
         let subkey;
         const details = wuxingData[relation]?.details || {};
         switch (relation) {
             case '用生體':
-                subkey = upperGua + '卦生體';
+                subkey = `${upperGua}卦生體`;
                 break;
             case '體生用':
-                subkey = lowerGua + '卦生用';
+                subkey = `${lowerGua}卦生用`;
                 break;
             case '用剋體':
-                subkey = upperGua + '卦克體';
+                subkey = `${upperGua}卦克體`;
                 break;
             case '體剋用':
-                subkey = lowerGua + '卦克用';
+                subkey = `${lowerGua}卦克用`;
                 break;
             case '體用比和':
-                subkey = lowerGua + '卦比和';
+                subkey = `${lowerGua}卦比和`;
                 break;
             case '體用同宮':
-                subkey = palaceMap[benGuaName] + '卦同宮';
+                subkey = `${palaceMap[benGuaName]}卦同宮`;
                 break;
+            default:
+                subkey = '';
         }
 
-        let wuxingHtml = `<p>${wuxingData[relation]?.overall || '無資料'}</p>`;
+        let wuxingHtml = `<p><strong>整體運勢：</strong>${wuxingData[relation]?.overall || '無資料'}</p>`;
         if (details[subkey]) {
-            wuxingHtml += `<h4>${details[subkey].title || ''}</h4><p>${details[subkey].description || ''}</p>`;
-            wuxingHtml += `<p>${details[subkey][category] || '無特定建議'}</p>`;
+            wuxingHtml += `<h4>${details[subkey].title}</h4><p>${details[subkey].description}</p>`;
+            wuxingHtml += `<p><strong>${document.getElementById('category').options[document.getElementById('category').selectedIndex].text}：</strong>${details[subkey][category] || '無特定建議'}</p>`;
         }
         document.getElementById('wuxing-content').innerHTML = wuxingHtml;
 
-        // 詳細象徵分析 (單動爻)
+        // 詳細象徵分析
+        let symbolHtml = '';
         if (dongYao.length === 1) {
-            let symbolHtml = `<p>體卦(${lowerGua}): ${trigramData[lowerGua][category] || ''}</p>`;
-            symbolHtml += `<p>用卦(${upperGua}): ${trigramData[upperGua][category] || ''}</p>`;
-            document.getElementById('symbol-content').innerHTML = symbolHtml;
+            symbolHtml += `<p><strong>體卦(${lowerGua})：</strong>${trigramData[lowerGua][category] || '無資料'}</p>`;
+            symbolHtml += `<p><strong>用卦(${upperGua})：</strong>${trigramData[upperGua][category] || '無資料'}</p>`;
+        } else {
+            symbolHtml = '<p>僅適用於單一動爻的情況</p>';
         }
+        document.getElementById('symbol-content').innerHTML = symbolHtml;
 
-        // 綜合判斷 (爻辭、score等)
-        const hexData = hexagramsData[benGuaName];
-        let compHtml = `<p>整體分數: ${hexData.judgment.overall}</p>`;
-        dongYao.forEach(yao => {
-            const line = hexData.lines[yao - 1];
-            compHtml += `<p>爻辭: ${line.text} - 解: ${line.meaning} (分數: ${line.score})</p>`;
-        });
+        // 綜合判斷
+        const hexData = hexagramsData[benGuaName] || {};
+        let compHtml = `<p><strong>整體分數：</strong>${hexData.judgment?.overall || '無資料'}</p>`;
+        compHtml += `<p><strong>象徵意義：</strong>${hexData.symbolism?.overall || '無資料'}</p>`;
+        if (dongYao.length) {
+            compHtml += '<h4>動爻詳解：</h4>';
+            dongYao.forEach(yao => {
+                const line = hexData.lines?.[yao - 1] || {};
+                compHtml += `<p>第${yao}爻：${line.text || '無爻辭'} - ${line.meaning || '無解釋'} (分數: ${line.score || '無分數'})</p>`;
+                compHtml += `<p>象徵意義：${line.symbolism?.[category] || '無特定象徵'}</p>`;
+            });
+        }
         document.getElementById('comprehensive-content').innerHTML = compHtml;
     }
 
@@ -248,7 +382,7 @@
         const useWu = wuxingMap[use];
         const benPalace = palaceMap[benGuaName];
         const bianPalace = palaceMap[bianGuaName];
-        if (benPalace === bianPalace) return '體用同宮';
+        if (benPalace && bianPalace && benPalace === bianPalace) return '體用同宮';
         if (bodyWu === useWu) return '體用比和';
         if (shengMap[useWu] === bodyWu) return '用生體';
         if (shengMap[bodyWu] === useWu) return '體生用';
@@ -256,11 +390,6 @@
         if (keMap[bodyWu] === useWu) return '體剋用';
         return '未知';
     }
-
-    // 頁面載入隨機數字等...
-    window.onload = () => {
-        // 隨機預設數字等
-    };
 </script>
 
 </body>
