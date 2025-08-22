@@ -421,7 +421,7 @@
 
     // 時間取卦
     function useCurrentTime() {
-      const now = new Date('2025-08-22T14:22:00');
+      const now = new Date(); // 實際使用時切回當前時間
       document.getElementById('time-select').value = Math.floor(now.getHours() / 2) * 2 + 1;
     }
 
@@ -433,7 +433,7 @@
       const method = document.querySelector('input[name="time-method"]:checked').value;
       let year, month, day, hour, minute;
       if (method === 'modern') {
-        const now = new Date('2025-08-22T14:22:00');
+        const now = new Date(); // 實際使用時切回當前時間
         year = now.getFullYear();
         month = now.getMonth() + 1;
         day = now.getDate();
@@ -462,7 +462,7 @@
       const upperGua = document.getElementById('upper-symbol').value;
       const lowerGua = document.getElementById('lower-symbol').value;
       const useMinute = document.getElementById('use-current-minute').checked;
-      const movingLine = useMinute ? (new Date('2025-08-22T14:22:00').getMinutes() % 6 === 0 ? 6 : new Date('2025-08-22T14:22:00').getMinutes() % 6) : Math.floor(Math.random() * 6) + 1;
+      const movingLine = useMinute ? (new Date().getMinutes() % 6 === 0 ? 6 : new Date().getMinutes() % 6) : Math.floor(Math.random() * 6) + 1;
       displayResult(upperGua, lowerGua, movingLine);
     }
 
