@@ -200,7 +200,6 @@
       height: 6px;
       background: var(--primary-color);
     }
-    /* 修正後的陰爻樣式 */
     .gua-yin {
         display: flex;
         justify-content: space-between;
@@ -249,7 +248,6 @@
         color: #e74c3c;
         font-size: 0.8em;
     }
-    
 
     /* 五行分析區 */
     .wuxing-analysis { margin-top: 25px; border-top: 2px solid var(--border-color); padding-top: 20px; }
@@ -522,6 +520,18 @@
   const trigramName = {1:'乾',2:'兌',3:'離',4:'震',5:'巽',6:'坎',7:'艮',8:'坤'};
   const triIndexByLines = new Map(Object.entries(guaTable).map(([i,arr])=>[JSON.stringify(arr.slice(0,3)), +i]));
   
+  // 八宮映射
+  const palaceMap = {
+    '乾': ['乾為天', '天風姤', '天山遁', '天地否', '風地觀', '山地剝', '火地晉', '火天大有'],
+    '坤': ['坤為地', '地雷復', '地澤臨', '地天泰', '雷天大壯', '澤天夬', '水天需', '水地比'],
+    '震': ['震為雷', '雷地豫', '雷水解', '雷風恆', '地風升', '水風井', '澤風大過', '澤雷隨'],
+    '巽': ['巽為風', '風天小畜', '風火家人', '風雷益', '天雷無妄', '火雷噬嗑', '山雷頤', '山風蠱'],
+    '坎': ['坎為水', '水澤節', '水雷屯', '水火既濟', '澤火革', '雷火豐', '地火明夷', '地水師'],
+    '離': ['離為火', '火山旅', '火風鼎', '火水未濟', '山水蒙', '風水渙', '天水訟', '天火同人'],
+    '艮': ['艮為山', '山火賁', '山天大畜', '山澤損', '火澤睽', '天澤履', '風澤中孚', '風山漸'],
+    '兌': ['兌為澤', '澤水困', '澤地萃', '澤山咸', '水山蹇', '地山謙', '雷山小過', '雷澤歸妹']
+  };
+
   let hexList = {};
   const hexByLines = new Map();
   const hexNameByCombinedName = new Map();
@@ -530,39 +540,67 @@
   let dataReady = false;
   
   // 輔助函數：根據五行關係判斷吉凶
-  function getWuxingOutcome(tiWuxing, yongWuxing) {
+  function getWuxingOutcome(tiGua, yongGua, mainHexName, changeHexName) {
+      if (!tiGua || !yongGua) return { relation: '未知', status: '平', explanation: '五行資料不完整。', subkey: '' };
+
       const relations = {
           '金': { '生': '水', '剋': '木', '被生': '土', '被剋': '火', '比和': '金' },
           '木': { '生': '火', '剋': '土', '被生': '水', '被剋': '金', '比和': '木' },
           '水': { '生': '木', '剋': '火', '被生': '金', '被剋': '土', '比和': '水' },
-          '火': { '生': '土', '剋': '金', '被生': '木', '被剋': '水', '比和': '火' },
+          '火': { '生': '土', '�克': '金', '被生': '木', '被剋': '水', '比和': '火' },
           '土': { '生': '金', '剋': '水', '被生': '火', '被剋': '木', '比和': '土' }
       };
 
-      if (!tiWuxing || !yongWuxing) return { relation: '未知', status: '平', explanation: '五行資料不完整。' };
+      // 檢查是否為「體用同宮」
+      let palace = null;
+      for (const [palaceName, guaList] of Object.entries(palaceMap)) {
+          if (guaList.includes(mainHexName) && guaList.includes(changeHexName)) {
+              palace = palaceName;
+              break;
+          }
+      }
 
-      let relationType, status;
-      if (relations[yongWuxing]['生'] === tiWuxing) {
+      if (palace) {
+          const subkey = `${palace}卦同宮`;
+          const explanation = wuxingExplanations['體用同宮']?.[subkey]?.overall || '同宮卦象，無詳細解釋。';
+          return {
+              relation: '體用同宮',
+              status: '平', // 同宮通常視為中性，具體吉凶依子鍵解釋
+              explanation: explanation,
+              subkey: subkey
+          };
+      }
+
+      // 五行生剋關係
+      let relationType, status, subkey;
+      if (relations[yongGua.wuxing]['生'] === tiGua.wuxing) {
           relationType = '用生體';
           status = '大吉';
-      } else if (relations[tiWuxing]['剋'] === yongWuxing) {
-          relationType = '體克用';
+          subkey = `${yongGua.name}卦生體`;
+      } else if (relations[tiGua.wuxing]['剋'] === yongGua.wuxing) {
+          relationType = '體剋用';
           status = '吉';
-      } else if (tiWuxing === yongWuxing) {
+          subkey = `${tiGua.name}卦剋用`;
+      } else if (tiGua.wuxing === yongGua.wuxing) {
           relationType = '比和';
           status = '平';
-      } else if (relations[tiWuxing]['生'] === yongWuxing) {
+          subkey = `${tiGua.name}卦比和`;
+      } else if (relations[tiGua.wuxing]['生'] === yongGua.wuxing) {
           relationType = '體生用';
           status = '凶';
-      } else if (relations[yongWuxing]['剋'] === tiWuxing) {
-          relationType = '用克體';
+          subkey = `${tiGua.name}卦生用`;
+      } else if (relations[yongGua.wuxing]['剋'] === tiGua.wuxing) {
+          relationType = '用剋體';
           status = '大凶';
+          subkey = `${yongGua.name}卦剋體`;
       } else {
           relationType = '未知';
           status = '平';
+          subkey = '';
       }
 
-      return { relation: relationType, status: status };
+      const explanation = wuxingExplanations[relationType]?.[subkey]?.overall || '（此類別無詳細解釋）';
+      return { relation: relationType, status: status, explanation: explanation, subkey: subkey };
   }
   
   // 異步載入所有 JSON 資料
@@ -597,7 +635,7 @@
             }
         } else if (res.value && Array.isArray(res.value) && typeof res.value[0] === 'string') {
           document.getElementById('subtitle').textContent = res.value[Math.floor(Math.random() * res.value.length)] || '易有太極，是生兩儀，兩儀生四象，四象生八卦。';
-        } else if (res.value && typeof res.value === 'object' && res.value['體克用']) {
+        } else if (res.value && typeof res.value === 'object' && res.value['體用同宮']) {
           wuxingExplanations = res.value;
         } else if (res.value && typeof res.value === 'object' && res.value['乾']) {
           trigramExplanations = res.value;
@@ -615,7 +653,6 @@
     console.error('檔案載入失敗，可能原因：檔案路徑錯誤或網路問題。', error);
     document.getElementById('subtitle').textContent = '資料載入失敗。請檢查檔案路徑。';
   });
-
 
   /* ---------------------------
      工具函數
@@ -688,7 +725,6 @@
       }
   }
 
-
   /* ---------------------------
      生成並顯示卦象（主流程）
      --------------------------- */
@@ -697,7 +733,6 @@
   function makeFromUpperLower(uIdx, lIdx){
     const upper = guaTable[uIdx] || guaTable[1];
     const lower = guaTable[lIdx] || guaTable[1];
-    // 陣列排列為 [初爻, 二爻, 三爻, 四爻, 五爻, 上爻]
     return [...lower.slice(0,3), ...upper.slice(0,3)];
   }
 
@@ -716,7 +751,6 @@
     const mainName = hexMain ? hexMain.name : formatGuaNameByLines(lines);
     
     const changeLines = lines.slice();
-    // 根據爻數（1-6）來改變陣列中對應位置的值
     moving.forEach(n => { const idx = n - 1; if (idx>=0 && idx<6) changeLines[idx] = 1 - changeLines[idx]; });
     const hexChange = findHexEntryByLines(changeLines);
     const changeName = hexChange ? hexChange.name : formatGuaNameByLines(changeLines);
@@ -799,7 +833,6 @@
   function pad(n){ return String(n).padStart(2,'0'); }
   function localDatetimeForInput(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
 
-  // 新增：處理時間取卦的UI切換
   document.querySelectorAll('input[name="time-method"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
       const method = e.target.value;
@@ -829,7 +862,7 @@
       if (!val) { alert('請先選擇日期時間'); return; }
       const d = new Date(val);
       y = d.getFullYear(), mo = d.getMonth()+1, da = d.getDate(), h = d.getHours(), mi = d.getMinutes();
-    } else { // Traditional method
+    } else {
       const dateVal = document.getElementById('dateInput').value;
       const shichenVal = Number(document.getElementById('shichenInput').value);
       const minuteVal = Number(document.getElementById('minuteInput').value);
@@ -839,7 +872,7 @@
       }
       const d = new Date(dateVal);
       y = d.getFullYear(), mo = d.getMonth()+1, da = d.getDate();
-      h = shichenVal; // 使用時辰的數字值
+      h = shichenVal;
       mi = minuteVal;
     }
 
@@ -880,8 +913,8 @@
 
       const uGua = getTrigramInfo(result.uIdx);
       const lGua = getTrigramInfo(result.lIdx);
-      const mainOutcome = getWuxingOutcome(lGua.wuxing, uGua.wuxing);
-      const mainExplanation = wuxingExplanations[mainOutcome.relation]?.['overall'] || '（此類別無詳細解釋）';
+      const mainOutcome = getWuxingOutcome(lGua, uGua, result.hexMain?.name, result.hexChange?.name);
+      const mainExplanation = mainOutcome.explanation;
       const mainDesc = `**體卦**（您）為 **${lGua.name}** 屬 **${lGua.wuxing}**，**用卦**（外在事物）為 **${uGua.name}** 屬 **${uGua.wuxing}**。`;
       contentDiv.innerHTML += `<div class="wuxing-box">**本卦：**<span class="wuxing-status ${mainOutcome.status}">${mainOutcome.relation}</span><div class="wuxing-desc">${mainDesc}<br>${mainExplanation}</div></div>`;
 
@@ -892,8 +925,8 @@
       const huLGua = getTrigramInfo(huLowerId);
       const huUGua = getTrigramInfo(huUpperId);
       
-      const huOutcome = getWuxingOutcome(lGua.wuxing, huLGua.wuxing);
-      const huExplanation = wuxingExplanations[huOutcome.relation]?.['overall'] || '（此類別無詳細解釋）';
+      const huOutcome = getWuxingOutcome(lGua, huLGua, result.hexMain?.name, result.hexHu?.name);
+      const huExplanation = huOutcome.explanation;
       
       let guaAnalysisHtml = `<div class="analysis-item"><h4>互卦（過程分析）</h4><p>體卦屬 **${lGua.wuxing}**，互卦（代表過程）屬 **${huLGua.wuxing}** 與 **${huUGua.wuxing}**。<br>五行關係為：**${huOutcome.relation}**。這顯示事情在過程中將會：<br><span class="analysis-status ${huOutcome.status}">${huExplanation}</span></p>`;
 
@@ -916,8 +949,8 @@
       const changeUpperId = triIndexByLines.get(JSON.stringify(changeLines.slice(3,6)));
       const changeLGua = getTrigramInfo(changeLowerId);
       const changeUGua = getTrigramInfo(changeUpperId);
-      const changeOutcome = getWuxingOutcome(lGua.wuxing, result.moving.length > 0 ? (result.moving[0] <= 3 ? changeLGua.wuxing : changeUGua.wuxing) : uGua.wuxing);
-      const changeExplanation = wuxingExplanations[changeOutcome.relation]?.['overall'] || '（此類別無詳細解釋）';
+      const changeOutcome = getWuxingOutcome(lGua, result.moving.length > 0 ? (result.moving[0] <= 3 ? changeLGua : changeUGua) : uGua, result.hexMain?.name, result.hexChange?.name);
+      const changeExplanation = changeOutcome.explanation;
       
       guaAnalysisHtml = `<div class="analysis-item"><h4>變卦（結果分析）</h4><p>體卦屬 **${lGua.wuxing}**，變卦（代表結果）屬 **${result.moving.length > 0 ? (result.moving[0] <= 3 ? changeLGua.wuxing : changeUGua.wuxing) : uGua.wuxing}**。<br>五行關係為：**${changeOutcome.relation}**。這代表最終的結果將會是：<br><span class="analysis-status ${changeOutcome.status}">${changeExplanation}</span></p>`;
       
@@ -969,8 +1002,8 @@
 
       // 2. 五行生剋分層次分析
       // 本卦：現況分析
-      const mainOutcome = getWuxingOutcome(tiGua.wuxing, yongGua.wuxing);
-      const mainExplanation = wuxingExplanations[mainOutcome.relation]?.[questionType]?.本卦 || '（此類別無詳細解釋）';
+      const mainOutcome = getWuxingOutcome(tiGua, yongGua, result.hexMain?.name, result.hexChange?.name);
+      const mainExplanation = wuxingExplanations[mainOutcome.relation]?.[mainOutcome.subkey]?.[questionType] || '（此類別無詳細解釋）';
       
       let guaAnalysisHtml = `<div class="analysis-item"><h4>第一層：本卦（現況分析）</h4><p>您的問事面向為 **${questionTitle}**。<br>體卦（您）為 **${tiGua.name}** 屬 **${tiGua.wuxing}**，用卦（外在事物）為 **${yongGua.name}** 屬 **${yongGua.wuxing}**。<br>五行關係為：**${mainOutcome.relation}**。此卦象代表：<br><span class="analysis-status ${mainOutcome.status}">${mainExplanation}</span></p>`;
       
@@ -994,8 +1027,8 @@
       const huLGua = getTrigramInfo(huLowerId);
       const huUGua = getTrigramInfo(huUpperId);
       
-      const huOutcome = getWuxingOutcome(tiGua.wuxing, huLGua.wuxing);
-      const huExplanation = wuxingExplanations[huOutcome.relation]?.[questionType]?.互卦 || '（此類別無詳細解釋）';
+      const huOutcome = getWuxingOutcome(tiGua, huLGua, result.hexMain?.name, result.hexHu?.name);
+      const huExplanation = wuxingExplanations[huOutcome.relation]?.[huOutcome.subkey]?.[questionType] || '（此類別無詳細解釋）';
       
       guaAnalysisHtml = `<div class="analysis-item"><h4>第二層：互卦（過程分析）</h4><p>體卦屬 **${tiGua.wuxing}**，互卦（代表過程）屬 **${huLGua.wuxing}** 與 **${huUGua.wuxing}**。<br>五行關係為：**${huOutcome.relation}**。這顯示事情在過程中將會：<br><span class="analysis-status ${huOutcome.status}">${huExplanation}</span></p>`;
 
@@ -1012,14 +1045,13 @@
       guaAnalysisHtml += `</div>`;
       analysisDiv.innerHTML += guaAnalysisHtml;
 
-
       // 變卦：最終結果
       const changeLines = result.changeLines;
       const changeLowerId = triIndexByLines.get(JSON.stringify(changeLines.slice(0,3)));
       const changeUpperId = triIndexByLines.get(JSON.stringify(changeLines.slice(3,6)));
       const changeGua = (result.moving[0] <= 3) ? getTrigramInfo(changeLowerId) : getTrigramInfo(changeUpperId);
-      const changeOutcome = getWuxingOutcome(tiGua.wuxing, changeGua.wuxing);
-      const changeExplanation = wuxingExplanations[changeOutcome.relation]?.[questionType]?.變卦 || '（此類別無詳細解釋）';
+      const changeOutcome = getWuxingOutcome(tiGua, changeGua, result.hexMain?.name, result.hexChange?.name);
+      const changeExplanation = wuxingExplanations[changeOutcome.relation]?.[changeOutcome.subkey]?.[questionType] || '（此類別無詳細解釋）';
       
       guaAnalysisHtml = `<div class="analysis-item"><h4>第三層：變卦（結果分析）</h4><p>體卦屬 **${tiGua.wuxing}**，變卦（代表結果）屬 **${changeGua.wuxing}**。<br>五行關係為：**${changeOutcome.relation}**。這代表最終的結果將會是：<br><span class="analysis-status ${changeOutcome.status}">${changeExplanation}</span></p>`;
       
@@ -1031,9 +1063,8 @@
       guaAnalysisHtml += `</div>`;
       analysisDiv.innerHTML += guaAnalysisHtml;
 
-
       // 針對性建議
-      const suggestionObj = wuxingExplanations[mainOutcome.relation]?.['建議'];
+      const suggestionObj = wuxingExplanations[mainOutcome.relation]?.[mainOutcome.subkey]?.['建議'];
       if (suggestionObj) {
           let suggestionHtml = `<h5>◎ 針對性建議</h5><p>${suggestionObj.general
               .replace(/\${tiGua.wuxing}/g, tiGua.wuxing)
@@ -1074,7 +1105,6 @@
           'overall': '總體', 'people': '人', 'affairs': '事', 'time': '時', 'place': '地', 'object': '物'
       };
       
-      // 輔助函數：渲染評分條
       function renderScoreBar(label, score) {
           const scorePercent = Math.max(0, Math.min(10, score)) / 10 * 100;
           return `
@@ -1100,7 +1130,7 @@
           return html;
       }
 
-      // 渲染本卦評分與象徵意義
+      // 本卦評分與象徵意義
       const mainJudgment = result.hexMain?.judgment || {};
       const mainSymbolism = result.hexMain?.symbolism || {};
       let mainHtml = `<h5>本卦（現況分析）</h5><div class="score-container">`;
@@ -1112,7 +1142,7 @@
       mainHtml += `</div>${renderSymbolismList(mainSymbolism)}`;
       contentDiv.innerHTML += `<div class="detailed-section">${mainHtml}</div>`;
 
-      // 渲染變卦評分與象徵意義
+      // 變卦評分與象徵意義
       const changeJudgment = result.hexChange?.judgment || {};
       const changeSymbolism = result.hexChange?.symbolism || {};
       let changeHtml = `<h5>變卦（結果分析）</h5><div class="score-container">`;
@@ -1124,7 +1154,7 @@
       changeHtml += `</div>${renderSymbolismList(changeSymbolism)}`;
       contentDiv.innerHTML += `<div class="detailed-section">${changeHtml}</div>`;
       
-      // 渲染動爻的象徵意義
+      // 動爻象徵意義
       const movingYao = result.moving[0];
       const yaoEntry = result.hexMain?.lines.find(line => line.index === movingYao);
       const yaoSymbolism = yaoEntry?.symbolism || {};
@@ -1134,7 +1164,7 @@
         contentDiv.innerHTML += `<div class="detailed-section">${yaoHtml}${yaoSymbolismHtml}</div>`;
       }
       
-      // 渲染卦象取象
+      // 卦象取象
       let trigramHtml = `<h5>卦象取象</h5>`;
       const uGua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.lines.slice(3, 6))));
       const lGua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.lines.slice(0, 3))));
@@ -1165,7 +1195,6 @@
         'overall': '總體', 'people': '人', 'affairs': '事', 'time': '時', 'place': '地', 'object': '物'
     };
     
-    // 輔助函數：渲染評分條
     function renderScoreBar(label, score) {
         const scorePercent = Math.max(0, Math.min(10, score)) / 10 * 100;
         return `
@@ -1178,144 +1207,113 @@
             </div>
         `;
     }
-    
-    function renderSymbolismList(symbolism) {
-        if (!symbolism || Object.keys(symbolism).length === 0) return '';
-        let html = '<div class="symbolism-section"><h6>象徵意義</h6><ul>';
-        categories.forEach(cat => {
-            if (symbolism[cat]) {
-                html += `<li><strong>${categoryLabels[cat]}：</strong>${symbolism[cat]}</li>`;
-            }
-        });
-        html += '</ul></div>';
-        return html;
+
+    // 多爻變分析：逐條顯示動爻爻辭與五行關係
+    const mainJudgment = result.hexMain?.judgment || {};
+    const mainSymbolism = result.hexMain?.symbolism || {};
+    let multiMovingHtml = `<div class="analysis-item"><h4>多爻變動分析</h4><p>因有多個動爻（${result.moving.join('、')}），以下逐條分析各動爻的意義與五行關係：</p>`;
+
+    // 動爻逐條分析
+    result.moving.forEach(mv => {
+        const yaoEntry = result.hexMain?.lines.find(line => line.index === mv);
+        const yaoText = yaoEntry?.text || '（無爻辭）';
+        const yaoMeaning = yaoEntry?.meaning || '（無解釋）';
+        const yaoScore = yaoEntry?.score || 0;
+        const yaoSymbolism = yaoEntry?.symbolism || {};
+
+        multiMovingHtml += `
+            <div class="trigram-details">
+                <strong>第 ${mv} 爻：</strong> ${yaoText}<br>
+                <strong>解釋：</strong> ${yaoMeaning}<br>
+                <strong>評分：</strong> ${renderScoreBar('爻辭評分', yaoScore)}
+                ${renderSymbolismList(yaoSymbolism)}
+            </div>`;
+    });
+
+    // 本卦五行分析
+    const uGua = getTrigramInfo(result.uIdx);
+    const lGua = getTrigramInfo(result.lIdx);
+    const mainOutcome = getWuxingOutcome(lGua, uGua, result.hexMain?.name, result.hexChange?.name);
+    const mainExplanation = wuxingExplanations[mainOutcome.relation]?.[mainOutcome.subkey]?.overall || '（無詳細解釋）';
+    multiMovingHtml += `
+        <div class="trigram-details" style="margin-top:15px;">
+            <strong>本卦五行關係：</strong> 體卦（${lGua.name}，${lGua.wuxing}）與用卦（${uGua.name}，${uGua.wuxing}）為 <span class="analysis-status ${mainOutcome.status}">${mainOutcome.relation}</span>。<br>
+            <strong>解釋：</strong> ${mainExplanation}
+        </div>`;
+
+    // 變卦五行分析
+    const changeLines = result.changeLines;
+    const changeLowerId = triIndexByLines.get(JSON.stringify(changeLines.slice(0,3)));
+    const changeUpperId = triIndexByLines.get(JSON.stringify(changeLines.slice(3,6)));
+    const changeLGua = getTrigramInfo(changeLowerId);
+    const changeUGua = getTrigramInfo(changeUpperId);
+    const changeOutcome = getWuxingOutcome(lGua, changeUGua, result.hexMain?.name, result.hexChange?.name);
+    const changeExplanation = wuxingExplanations[changeOutcome.relation]?.[changeOutcome.subkey]?.overall || '（無詳細解釋）';
+    multiMovingHtml += `
+        <div class="trigram-details" style="margin-top:15px;">
+            <strong>變卦五行關係：</strong> 體卦（${lGua.name}，${lGua.wuxing}）與變卦（${changeUGua.name}，${changeUGua.wuxing}）為 <span class="analysis-status ${changeOutcome.status}">${changeOutcome.relation}</span>。<br>
+            <strong>解釋：</strong> ${changeExplanation}
+        </div>`;
+
+    multiMovingHtml += `</div>`;
+    analysisDiv.innerHTML += multiMovingHtml;
+
+    // 本卦評分與象徵
+    let mainHtml = `<div class="analysis-item"><h5>本卦總體分析</h5><div class="score-container">`;
+    categories.forEach(cat => {
+        if (mainJudgment[cat] !== undefined) {
+            mainHtml += renderScoreBar(categoryLabels[cat], mainJudgment[cat]);
+        }
+    });
+    mainHtml += `</div>${renderSymbolismList(mainSymbolism)}</div>`;
+    analysisDiv.innerHTML += mainHtml;
+
+    // 變卦評分與象徵
+    const changeJudgment = result.hexChange?.judgment || {};
+    const changeSymbolism = result.hexChange?.symbolism || {};
+    let changeHtml = `<div class="analysis-item"><h5>變卦總體分析</h5><div class="score-container">`;
+    categories.forEach(cat => {
+        if (changeJudgment[cat] !== undefined) {
+            changeHtml += renderScoreBar(categoryLabels[cat], changeJudgment[cat]);
+        }
+    });
+    changeHtml += `</div>${renderSymbolismList(changeSymbolism)}</div>`;
+    analysisDiv.innerHTML += changeHtml;
+}
+
+// 綁定：分析按鈕
+document.getElementById('analyzeBtn').addEventListener('click', () => {
+    if (!currentResult) {
+        alert('請先生成卦象！');
+        return;
     }
-    
-    // 1. 顯示本卦卦象分析
-    const mainHexEntry = result.hexMain;
-    if (mainHexEntry) {
-        const mainJudgment = mainHexEntry.judgment || {};
-        const mainSymbolism = mainHexEntry.symbolism || {};
-
-        let mainHtml = `<div class="analysis-item"><h4>本卦分析（現況）</h4><p><strong>卦辭：</strong>${mainHexEntry.judgment?.overall || '無卦辭'}</p>`;
-        
-        mainHtml += `<div class="score-container">`;
-        categories.forEach(cat => {
-            if (mainJudgment[cat] !== undefined) {
-                mainHtml += renderScoreBar(categoryLabels[cat], mainJudgment[cat]);
-            }
-        });
-        mainHtml += `</div>${renderSymbolismList(mainSymbolism)}`;
-        mainHtml += `</div>`;
-        analysisDiv.innerHTML += mainHtml;
+    const questionType = document.getElementById('questionSelector').value;
+    if (questionType === '1') {
+        alert('請選擇一個問事類別！');
+        return;
     }
-
-    // 2. 顯示動爻爻辭與象徵意義
-    if (result.hexMain && Array.isArray(result.hexMain.lines)) {
-      result.moving.forEach((lineIndex) => {
-          const line = result.hexMain.lines[lineIndex - 1];
-          const lineSymbolism = line?.symbolism || {};
-
-          let lineContent = `
-              <div class="analysis-item">
-                  <h4>動爻 ${lineIndex}：${line?.text || '爻辭未找到'}</h4>
-                  <p><strong>爻辭解釋：</strong>${line?.meaning || '無解釋'}</p>
-                  <div class="symbolism-container">
-                      <p><strong>人事時地物：</strong></p>
-                      <ul>
-          `;
-
-          const lineCategories = ['people', 'affairs', 'time', 'place', 'object'];
-          const lineCategoryLabels = {
-              'people': '人', 'affairs': '事', 'time': '時', 'place': '地', 'object': '物'
-          };
-
-          lineCategories.forEach(key => {
-              if (lineSymbolism[key]) {
-                  lineContent += `<li><strong>${lineCategoryLabels[key]}</strong>：${lineSymbolism[key]}</li>`;
-              }
-          });
-
-          lineContent += `
-                      </ul>
-                  </div>
-              </div>
-          `;
-          analysisDiv.innerHTML += lineContent;
-      });
+    if (currentResult.moving.length > 1) {
+        renderMultiMovingAnalysis(currentResult);
+    } else {
+        renderQuestionAnalysis(currentResult, questionType);
     }
+});
 
-    // 3. 顯示變卦卦象分析
-    const changeHexEntry = result.hexChange;
-    if (changeHexEntry) {
-        const changeJudgment = changeHexEntry.judgment || {};
-        const changeSymbolism = changeHexEntry.symbolism || {};
-        
-        let changeContent = `<div class="analysis-item"><h4>變卦分析（結果）</h4><p><strong>卦辭：</strong>${changeHexEntry.judgment?.overall || '無卦辭'}</p>`;
-        changeContent += `<div class="score-container">`;
-        categories.forEach(cat => {
-            if (changeJudgment[cat] !== undefined) {
-                changeContent += renderScoreBar(categoryLabels[cat], changeJudgment[cat]);
-            }
-        });
-        changeContent += `</div>${renderSymbolismList(changeSymbolism)}`;
-        changeContent += `</div>`;
-        analysisDiv.innerHTML += changeContent;
+// 綁定：綜合判斷按鈕
+document.getElementById('judgeBtn').addEventListener('click', () => {
+    if (!currentResult) {
+        alert('請先生成卦象！');
+        return;
     }
-    
-    // 渲染卦象取象
-    let trigramHtml = `<div class="analysis-item"><h4>卦象取象</h4>`;
-    const uGua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.lines.slice(3, 6))));
-    const lGua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.lines.slice(0, 3))));
-    const cUgua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))));
-    const cLgua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))));
-
-    trigramHtml += `<div class="trigram-details"><strong>本卦取象：</strong><br>`;
-    trigramHtml += `**上卦**（${uGua.name}）：${uGua.explanations?.life || '無'}<br>`;
-    trigramHtml += `**下卦**（${lGua.name}）：${lGua.explanations?.life || '無'}`;
-    trigramHtml += `</div>`;
-    
-    trigramHtml += `<div class="trigram-details" style="margin-top:10px;"><strong>變卦取象：</strong><br>`;
-    trigramHtml += `**上變卦**（${cUgua.name}）：${cUgua.explanations?.life || '無'}<br>`;
-    trigramHtml += `**下變卦**（${cLgua.name}）：${cLgua.explanations?.life || '無'}`;
-    trigramHtml += `</div>`;
-    trigramHtml += `</div>`;
-    
-    analysisDiv.innerHTML += trigramHtml;
-
-    if (!mainHexEntry || !result.moving.length) {
-      analysisDiv.innerHTML = `<div class="analysis-message">無法載入卦象資料或沒有動爻，請檢查 hexagrams.json 檔案。</div>`;
-    }
-  }
-
-
-  document.getElementById('judgeBtn').addEventListener('click', ()=>{
-    if (!currentResult) { alert('請先生成卦象'); return; }
     document.getElementById('judgeBox').classList.remove('hidden');
     renderWuxingAnalysis(currentResult);
-    renderDetailedAnalysis(currentResult);
-  });
-  
-  document.getElementById('analyzeBtn').addEventListener('click', ()=>{
-      if (!dataReady) {
-          alert('資料仍在載入中，請稍候再試。');
-          return;
-      }
-      const questionType = document.getElementById('questionSelector').value;
-      if (questionType === '1') {
-          alert('請先選擇一個問事類別！');
-          return;
-      }
-
-      // 根據動爻數量，決定呼叫哪個函式
-      if (currentResult.moving.length === 1) {
-          renderQuestionAnalysis(currentResult, questionType);
-      } else if (currentResult.moving.length > 1) {
-          renderMultiMovingAnalysis(currentResult);
-      } else {
-          alert('此卦沒有動爻，請參考主卦及爻辭即可。');
-      }
-  });
-  </script>
+    if (currentResult.moving.length === 1) {
+        renderDetailedAnalysis(currentResult);
+    } else {
+        document.getElementById('detailedAnalysis').classList.remove('hidden');
+        document.getElementById('detailedContent').innerHTML = '<div class="analysis-message">多爻變不適用詳細象徵分析，請參考動爻與變卦分析。</div>';
+    }
+});
+</script>
 </body>
 </html>
