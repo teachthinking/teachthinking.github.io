@@ -340,7 +340,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>張老師易經卜卦2</h1>
+    <h1>張老師易經卜卦555</h1>
     <h2 id="subtitle" class="subtitle">載入中…（若無 quotes.json 顯示預設句）</h2>
 
     <div class="tab-buttons">
@@ -539,7 +539,7 @@
   let trigramExplanations = {};
   let dataReady = false;
   
- // 輔助函數：根據五行關係判斷吉凶
+// 輔助函數：根據五行關係判斷吉凶
 function getWuxingOutcome(tiGua, yongGua, mainHexName, changeHexName) {
     if (!tiGua || !yongGua) return { relation: '未知', status: '平', explanation: '五行資料不完整。', subkey: '' };
 
@@ -603,7 +603,7 @@ function getWuxingOutcome(tiGua, yongGua, mainHexName, changeHexName) {
     return { relation: relationType, status: status, explanation: explanation, subkey: subkey };
 }
 
-// 修改 getTiYong 函數：體卦為本卦，用卦為變卦
+// 修改 getTiYong 函數：體卦為本卦下卦，用卦為變卦上卦
 function getTiYong(result) {
     const mainUpperId = triIndexByLines.get(JSON.stringify(result.lines.slice(3, 6)));
     const mainLowerId = triIndexByLines.get(JSON.stringify(result.lines.slice(0, 3)));
@@ -640,7 +640,7 @@ function renderWuxingAnalysis(result) {
     
     let guaAnalysisHtml = `<div class="analysis-item"><h4>互卦（過程分析）</h4><p>體卦屬 **${tiGua.wuxing}**，互卦（代表過程）屬 **${huLGua.wuxing}**。<br>五行關係為：**${huOutcome.relation}**。這顯示事情在過程中將會：<br><span class="analysis-status ${huOutcome.status}">${huExplanation}</span></p>`;
 
-    if (trigramExplanations[huLGua.name] || trigramExplanations[huUpperId]) {
+    if (trigramExplanations[huLGua.name] || trigramExplanations[trigramName[huUpperId]]) {
         guaAnalysisHtml += `<div class="trigram-details"><strong>互卦取象：</strong><br>`;
         if (trigramExplanations[huLGua.name]?.life) {
             guaAnalysisHtml += `**下互卦**（${huLGua.name}）：${trigramExplanations[huLGua.name].life}<br>`;
@@ -655,7 +655,6 @@ function renderWuxingAnalysis(result) {
 
     // 變卦分析（結果）
     const changeLines = result.changeLines;
-    const changeLowerId = triIndexByLines.get(JSON.stringify(changeLines.slice(0, 3)));
     const changeUpperId = triIndexByLines.get(JSON.stringify(changeLines.slice(3, 6)));
     const changeUGua = getTrigramInfo(changeUpperId);
     const changeOutcome = getWuxingOutcome(tiGua, changeUGua, result.hexMain?.name, result.hexChange?.name);
@@ -976,7 +975,7 @@ function renderMultiMovingAnalysis(result) {
             mainHtml += renderScoreBar(categoryLabels[cat], mainJudgment[cat]);
         }
     });
-    mainHtml += `</div>${renderSymbolismList(mainSymbolism)}</div>`;
+    mainHtml += `</div>${renderSymbolismList(mainSymbolism)}`;
     analysisDiv.innerHTML += mainHtml;
 
     // 變卦評分與象徵
@@ -988,7 +987,7 @@ function renderMultiMovingAnalysis(result) {
             changeHtml += renderScoreBar(categoryLabels[cat], changeJudgment[cat]);
         }
     });
-    changeHtml += `</div>${renderSymbolismList(changeSymbolism)}</div>`;
+    changeHtml += `</div>${renderSymbolismList(changeSymbolism)}`;
     analysisDiv.innerHTML += changeHtml;
 }
 
@@ -1028,4 +1027,3 @@ document.getElementById('judgeBtn').addEventListener('click', () => {
 </script>
 </body>
 </html>
-
