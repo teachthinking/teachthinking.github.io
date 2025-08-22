@@ -762,7 +762,6 @@ function generateGua(upperIdx, lowerIdx, moving, method = '未知') {
   }
 
   
-  
   // 儲存到記錄
   history.push(currentResult);
   saveHistory();
@@ -778,7 +777,7 @@ function generateGua(upperIdx, lowerIdx, moving, method = '未知') {
   renderGuaImage(huLines, 'huGuaImage');
   renderLineExplanation(moving, mainHex);
 }
-
+  }
 // 儲存記錄到 localStorage
 function saveHistory() {
   try {
