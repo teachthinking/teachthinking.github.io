@@ -773,6 +773,32 @@ function generateGua(upperIdx, lowerIdx, moving, method = '未知') {
     timestamp: new Date().toLocaleString('zh-TW'),
     question
   };
+
+// 新增函數：計算變卦上/下影響
+function getChangeInfluences(tiGua, changeUGua, changeLGua) {
+  const upperRelation = getRelation(tiGua.wuxing, changeUGua.wuxing);  // 五行關係計算（需定義 getRelation，如生/剋）
+  const lowerRelation = getRelation(tiGua.wuxing, changeLGua.wuxing);
+  
+  const upperInfluence = wuxingExplanations.change_influences.upper_change[upperRelation] || { overall: '未知' };
+  const lowerInfluence = wuxingExplanations.change_influences.lower_change[lowerRelation] || { overall: '未知' };
+  
+  let combinedStatus;
+  if (upperRelation.includes('生') && lowerRelation.includes('生')) combinedStatus = '吉';
+  else if (upperRelation.includes('剋') && lowerRelation.includes('剋')) combinedStatus = '凶';
+  else combinedStatus = '中';
+  
+  const combined = wuxingExplanations.change_influences.combined[combinedStatus] || { details: '未知' };
+  
+  return { upper: upperInfluence, lower: lowerInfluence, combined };
+}
+
+// 輔助：getRelation (五行生剋簡化邏輯，基於現有 wuxing)
+function getRelation(tiWuxing, changeWuxing) {
+  // 基於五行規則：金生水、水生木 等，返回 '生體'/'剋體' 等
+  // ... (實現細節，參考現有 getWuxingOutcome)
+}
+
+
   
   // 儲存到記錄
   history.push(currentResult);
@@ -1209,7 +1235,7 @@ function renderWuxingAnalysis(result) {
     <div class="analysis-item">
 
       <h4>變卦（結果分析）</h4>
-      <p>體卦屬 **${tiGua.wuxing}**，變卦（代表結果）屬 **${changeUGua.wuxing}**。<br>五行關係為：**${changeOutcome.relation}**。這代表最終的結果將會是：<br><span class="analysis-status ${changeOutcome.status}">${changeOutcome.explanation}${changeOutcome.details.title ? `<br><strong>相關卦象：</strong> ${changeOutcome.details.title}` : ''}</span></p>`;
+      <p>體卦屬 **${tiGua.wuxing}**，變卦（代表結果）屬 **${changeUGua.wuxing}**。<br>五行關係為：**${changeOutcome.relation}**。這代表最終發展趨向於：<br><span class="analysis-status ${changeOutcome.status}">${changeOutcome.explanation}${changeOutcome.details.title ? `<br><strong>相關卦象：</strong> ${changeOutcome.details.title}` : ''}</span></p>`;
   if (trigramExplanations[changeUGua.name]?.life) {
     guaAnalysisHtml += `<div class="trigram-details"><strong>變卦取象：</strong><br>`;
     guaAnalysisHtml += `**上變卦**（${changeUGua.name}）：${trigramExplanations[changeUGua.name].life}`;
@@ -1219,6 +1245,20 @@ function renderWuxingAnalysis(result) {
 
   guaAnalysisHtml += `</div>`;
   contentDiv.innerHTML += guaAnalysisHtml;
+
+// 在 renderWuxingAnalysis 的變卦分析後添加
+const changeLGua = getTrigramInfo(changeLowerIdx);  // 下變卦
+const changeUGua = getTrigramInfo(changeUpperIdx);  // 上變卦
+const influences = getChangeInfluences(tiGua, changeUGua, changeLGua);
+
+guaAnalysisHtml += `
+  <div class="analysis-item">
+    <h4>變卦分層影響（梅花心易）</h4>
+    <p><strong>上卦變卦（天時/外在）：</strong> ${influences.upper.overall}<br>${influences.upper.details.external || ''}</p>
+    <p><strong>下卦變卦（地利/內在）：</strong> ${influences.lower.overall}<br>${influences.lower.details.internal || ''}</p>
+    <p><strong>綜合走向：</strong> <span class="analysis-status">${influences.combined.details}</span></p>
+  </div>`;
+  
 }
 
 // 渲染問題分析（針對特定問事類別）
@@ -1315,6 +1355,16 @@ function renderQuestionAnalysis(result, questionType) {
   }
   guaAnalysisHtml += `</div>`;
   contentDiv.innerHTML += guaAnalysisHtml;
+
+
+// 在 renderQuestionAnalysis 的變卦分析後添加
+const influences = getChangeInfluences(tiGua, changeUGua, changeLGua);
+guaAnalysisHtml += `
+  <p><strong>上卦變卦影響（外部）：</strong> ${influences.upper.details[questionType] || influences.upper.overall}</p>
+  <p><strong>下卦變卦影響（內部）：</strong> ${influences.lower.details[questionType] || influences.lower.overall}</p>`;
+
+
+  
 }
 
 // 渲染問題分析（針對特定問事類別）
