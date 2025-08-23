@@ -1156,7 +1156,7 @@ function renderWuxingAnalysis(result) {
   analysisDiv.classList.remove('hidden');
 }
 
-/* 渲染問題分析（多爻變顯示本卦、變卦、互卦的象徵分析，包括 hexagrams.json 的 symbolism） */
+/* 渲染問題分析（修正卦名顯示，包含本卦、互卦、變卦的象徵分析） */
 function renderQuestionAnalysis(result, questionType) {
   const analysisDiv = document.getElementById('questionAnalysisResult');
   analysisDiv.innerHTML = '';
@@ -1168,8 +1168,20 @@ function renderQuestionAnalysis(result, questionType) {
   };
 
   const questionTitle = analysisMap[questionType] || '未指定問題';
-  if (!result.hexMain || !result.hexChange || !result.hexHu) {
-    analysisDiv.innerHTML = `<div class="analysis-message">無法獲取卦象資料，請檢查輸入或 hexagrams.json。</div>`;
+
+  // 計算本卦、互卦、變卦名稱
+  const mainGuaName = getHexagramName(result.lines) || '無法計算本卦名稱';
+  const huGuaName = getHexagramName(result.huLines) || '無法計算互卦名稱';
+  const changeGuaName = getHexagramName(result.changeLines) || '無法計算變卦名稱';
+
+  // 從 hexagrams.json 獲取卦象資料
+  const hexMain = hexagrams[mainGuaName] || {};
+  const hexHu = hexagrams[huGuaName] || {};
+  const hexChange = hexagrams[changeGuaName] || {};
+
+  // 檢查是否缺少卦象資料
+  if (!hexMain.judgment || !hexChange.judgment || !hexHu.judgment) {
+    analysisDiv.innerHTML = `<div class="analysis-message">無法獲取完整卦象資料，請檢查 hexagrams.json 或卦爻輸入（本卦：${mainGuaName}, 互卦：${huGuaName}, 變卦：${changeGuaName}）。</div>`;
     analysisDiv.classList.remove('hidden');
     return;
   }
@@ -1177,19 +1189,19 @@ function renderQuestionAnalysis(result, questionType) {
   let guaAnalysisHtml = '';
 
   // 本卦分析
-  const uGua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.lines.slice(3, 6))));
-  const lGua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.lines.slice(0, 3))));
-  let judgmentText = result.hexMain?.judgment?.overall || '（卦辭未提供詳細判斷）';
+  const uGua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.lines.slice(3, 6))) || 8);
+  const lGua = getTrigramInfo(triIndexByLines.get(JSON.stringify(result.lines.slice(0, 3))) || 8);
+  let judgmentText = hexMain.judgment?.overall || '（卦辭未提供詳細判斷）';
   guaAnalysisHtml += `
     <div class="analysis-item">
       <h4>${questionTitle}：本卦（現況分析）</h4>
-      <p><strong>本卦</strong>：${result.hexMain?.name || '未知'}<br>卦辭：${judgmentText} (評分: ${result.hexMain?.judgment?.score || 0}/10)</p>`;
+      <p><strong>本卦</strong>：${mainGuaName}<br>卦辭：${judgmentText} (評分: ${hexMain.judgment?.score || 0}/10)</p>`;
   
   // 動爻爻辭
   if (result.moving.length > 0) {
     guaAnalysisHtml += `<p><strong>動爻爻辭</strong>：<br>`;
     result.moving.forEach(lineIndex => {
-      const yaoCi = getLineEntryFor(result.hexMain, lineIndex);
+      const yaoCi = getLineEntryFor(hexMain, lineIndex);
       guaAnalysisHtml += `第${lineIndex}爻：${yaoCi?.text || '無'} (評分: ${yaoCi?.score || 0}/10)<br>`;
     });
     guaAnalysisHtml += `</p>`;
@@ -1206,45 +1218,45 @@ function renderQuestionAnalysis(result, questionType) {
   guaAnalysisHtml += `</div>`;
 
   // 本卦象徵（hexagrams.json symbolism）
-  if (result.hexMain?.symbolism) {
+  if (hexMain.symbolism) {
     guaAnalysisHtml += `<div class="symbolism-details"><strong>本卦象徵（人事時地物）</strong>：<br>`;
-    guaAnalysisHtml += `總體：${result.hexMain.symbolism.overall || '（無總體解釋）'}<br>`;
-    guaAnalysisHtml += `人物：${result.hexMain.symbolism.people || '（無人物解釋）'}<br>`;
-    guaAnalysisHtml += `事務：${result.hexMain.symbolism.affairs || '（無事務解釋）'}<br>`;
-    guaAnalysisHtml += `時機：${result.hexMain.symbolism.time || '（無時機解釋）'}<br>`;
-    guaAnalysisHtml += `地點：${result.hexMain.symbolism.place || '（無地點解釋）'}<br>`;
-    guaAnalysisHtml += `物件：${result.hexMain.symbolism.object || '（無物件解釋）'}<br>`;
+    guaAnalysisHtml += `總體：${hexMain.symbolism.overall || '（無總體解釋）'}<br>`;
+    guaAnalysisHtml += `人物：${hexMain.symbolism.people || '（無人物解釋）'}<br>`;
+    guaAnalysisHtml += `事務：${hexMain.symbolism.affairs || '（無事務解釋）'}<br>`;
+    guaAnalysisHtml += `時機：${hexMain.symbolism.time || '（無時機解釋）'}<br>`;
+    guaAnalysisHtml += `地點：${hexMain.symbolism.place || '（無地點解釋）'}<br>`;
+    guaAnalysisHtml += `物件：${hexMain.symbolism.object || '（無物件解釋）'}<br>`;
     guaAnalysisHtml += `</div>`;
   }
   guaAnalysisHtml += `</div>`;
 
   // 互卦分析
-  const huLines = result.huLines;
-  const huLowerId = triIndexByLines.get(JSON.stringify(huLines.slice(0, 3)));
-  const huUpperId = triIndexByLines.get(JSON.stringify(huLines.slice(3, 6)));
+  const huLowerId = triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8;
+  const huUpperId = triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8;
   const huLGua = getTrigramInfo(huLowerId);
+  const huUGuaName = trigramName[huUpperId] || '未知';
   guaAnalysisHtml += `
     <div class="analysis-item">
       <h4>${questionTitle}：互卦（過程分析）</h4>
-      <p><strong>互卦</strong>：${result.hexHu?.name || '未知'}</p>`;
+      <p><strong>互卦</strong>：${huGuaName}</p>`;
   
   // 互卦取象（trigram_explanations.json）
   guaAnalysisHtml += `<div class="trigram-details"><strong>互卦取象</strong>：<br>`;
-  const huUExplanation = trigramExplanations[trigramName[huUpperId]]?.[questionType] || trigramExplanations[trigramName[huUpperId]]?.life || '（無詳細解釋）';
-  guaAnalysisHtml += `**上互卦**（${trigramName[huUpperId]}）：${huUExplanation}<br>`;
+  const huUExplanation = trigramExplanations[huUGuaName]?.[questionType] || trigramExplanations[huUGuaName]?.life || '（無詳細解釋）';
+  guaAnalysisHtml += `**上互卦**（${huUGuaName}）：${huUExplanation}<br>`;
   const huLExplanation = trigramExplanations[huLGua.name]?.[questionType] || trigramExplanations[huLGua.name]?.life || '（無詳細解釋）';
   guaAnalysisHtml += `**下互卦**（${huLGua.name}）：${huLExplanation}<br>`;
   guaAnalysisHtml += `</div>`;
 
   // 互卦象徵（hexagrams.json symbolism）
-  if (result.hexHu?.symbolism) {
+  if (hexHu.symbolism) {
     guaAnalysisHtml += `<div class="symbolism-details"><strong>互卦象徵（人事時地物）</strong>：<br>`;
-    guaAnalysisHtml += `總體：${result.hexHu.symbolism.overall || '（無總體解釋）'}<br>`;
-    guaAnalysisHtml += `人物：${result.hexHu.symbolism.people || '（無人物解釋）'}<br>`;
-    guaAnalysisHtml += `事務：${result.hexHu.symbolism.affairs || '（無事務解釋）'}<br>`;
-    guaAnalysisHtml += `時機：${result.hexHu.symbolism.time || '（無時機解釋）'}<br>`;
-    guaAnalysisHtml += `地點：${result.hexHu.symbolism.place || '（無地點解釋）'}<br>`;
-    guaAnalysisHtml += `物件：${result.hexHu.symbolism.object || '（無物件解釋）'}<br>`;
+    guaAnalysisHtml += `總體：${hexHu.symbolism.overall || '（無總體解釋）'}<br>`;
+    guaAnalysisHtml += `人物：${hexHu.symbolism.people || '（無人物解釋）'}<br>`;
+    guaAnalysisHtml += `事務：${hexHu.symbolism.affairs || '（無事務解釋）'}<br>`;
+    guaAnalysisHtml += `時機：${hexHu.symbolism.time || '（無時機解釋）'}<br>`;
+    guaAnalysisHtml += `地點：${hexHu.symbolism.place || '（無地點解釋）'}<br>`;
+    guaAnalysisHtml += `物件：${hexHu.symbolism.object || '（無物件解釋）'}<br>`;
     guaAnalysisHtml += `</div>`;
   }
   guaAnalysisHtml += `</div>`;
@@ -1254,11 +1266,11 @@ function renderQuestionAnalysis(result, questionType) {
   const changeLowerId = triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8;
   const changeUGua = getTrigramInfo(changeUpperId);
   const changeLGua = getTrigramInfo(changeLowerId);
-  const changeJudgment = result.hexChange?.judgment?.overall || '（變卦無詳細卦辭）';
+  const changeJudgment = hexChange.judgment?.overall || '（變卦無詳細卦辭）';
   guaAnalysisHtml += `
     <div class="analysis-item">
       <h4>${questionTitle}：變卦（結果分析）</h4>
-      <p><strong>變卦</strong>：${result.hexChange?.name || '未知'}<br>卦辭：${changeJudgment} (評分: ${result.hexChange?.judgment?.score || 0}/10)</p>`;
+      <p><strong>變卦</strong>：${changeGuaName}<br>卦辭：${changeJudgment} (評分: ${hexChange.judgment?.score || 0}/10)</p>`;
   
   // 變卦取象（trigram_explanations.json）
   guaAnalysisHtml += `<div class="trigram-details"><strong>變卦取象</strong>：<br>`;
@@ -1269,14 +1281,14 @@ function renderQuestionAnalysis(result, questionType) {
   guaAnalysisHtml += `</div>`;
 
   // 變卦象徵（hexagrams.json symbolism）
-  if (result.hexChange?.symbolism) {
+  if (hexChange.symbolism) {
     guaAnalysisHtml += `<div class="symbolism-details"><strong>變卦象徵（人事時地物）</strong>：<br>`;
-    guaAnalysisHtml += `總體：${result.hexChange.symbolism.overall || '（無總體解釋）'}<br>`;
-    guaAnalysisHtml += `人物：${result.hexChange.symbolism.people || '（無人物解釋）'}<br>`;
-    guaAnalysisHtml += `事務：${result.hexChange.symbolism.affairs || '（無事務解釋）'}<br>`;
-    guaAnalysisHtml += `時機：${result.hexChange.symbolism.time || '（無時機解釋）'}<br>`;
-    guaAnalysisHtml += `地點：${result.hexChange.symbolism.place || '（無地點解釋）'}<br>`;
-    guaAnalysisHtml += `物件：${result.hexChange.symbolism.object || '（無物件解釋）'}<br>`;
+    guaAnalysisHtml += `總體：${hexChange.symbolism.overall || '（無總體解釋）'}<br>`;
+    guaAnalysisHtml += `人物：${hexChange.symbolism.people || '（無人物解釋）'}<br>`;
+    guaAnalysisHtml += `事務：${hexChange.symbolism.affairs || '（無事務解釋）'}<br>`;
+    guaAnalysisHtml += `時機：${hexChange.symbolism.time || '（無時機解釋）'}<br>`;
+    guaAnalysisHtml += `地點：${hexChange.symbolism.place || '（無地點解釋）'}<br>`;
+    guaAnalysisHtml += `物件：${hexChange.symbolism.object || '（無物件解釋）'}<br>`;
     guaAnalysisHtml += `</div>`;
   }
   guaAnalysisHtml += `</div>`;
