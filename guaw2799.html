@@ -1130,7 +1130,7 @@ function renderWuxingAnalysis(result) {
   guaAnalysisHtml += `
     <div class="analysis-item">
       <h4>變卦（結果分析）</h4>
-      <p>體卦屬 **${tiGua.wuxing}**，變卦（代表結果）屬 **${changeUGua.wuxing}**。<br>五行關係為：**${changeOutcome.relation}**。這代表最終發展趨向於：<br><span class="analysis-status ${changeOutcome.status}">${changeOutcome.explanation}${changeOutcome.details.title ? `<br><strong>相關卦象：</strong> ${mainOutcome.details.title}` : ''}</span></p>`;
+      <p>體卦屬 **${tiGua.wuxing}**，變卦（代表結果）屬 **${changeUGua.wuxing}**。<br>五行關係為：**${changeOutcome.relation}**。這代表最終發展趨向於：<br><span class="analysis-status ${changeOutcome.status}">${changeOutcome.explanation}${changeOutcome.details.title ? `<br><strong>相關卦象：</strong> ${changeOutcome.details.title}` : ''}</span></p>`;
   if (trigramExplanations[changeUGua.name]?.life || trigramExplanations[changeLGua.name]?.life) {
     guaAnalysisHtml += `<div class="trigram-details"><strong>變卦取象：</strong><br>`;
     if (trigramExplanations[changeUGua.name]?.life) {
@@ -1156,7 +1156,7 @@ function renderWuxingAnalysis(result) {
   analysisDiv.classList.remove('hidden');
 }
 
-/* 渲染問題分析（修正卦名顯示，優先使用 result 中的卦名） */
+/* 渲染問題分析（直接使用 result 中的卦名，移除 getHexagramName 依賴） */
 function renderQuestionAnalysis(result, questionType) {
   const analysisDiv = document.getElementById('questionAnalysisResult');
   analysisDiv.innerHTML = '';
@@ -1169,19 +1169,29 @@ function renderQuestionAnalysis(result, questionType) {
 
   const questionTitle = analysisMap[questionType] || '未指定問題';
 
-  // 優先使用 result 中已有的卦名，若無則重新計算
-  const mainGuaName = result.hexMain?.name || getHexagramName(result.lines) || '無法計算本卦名稱';
-  const huGuaName = result.hexHu?.name || getHexagramName(result.huLines) || '無法計算互卦名稱';
-  const changeGuaName = result.hexChange?.name || getHexagramName(result.changeLines) || '無法計算變卦名稱';
+  // 直接使用 result 中的卦名
+  const mainGuaName = result.hexMain?.name || '本卦名稱未提供';
+  const huGuaName = result.hexHu?.name || '互卦名稱未提供';
+  const changeGuaName = result.hexChange?.name || '變卦名稱未提供';
 
   // 從 hexagrams.json 獲取卦象資料
   const hexMain = hexagrams[mainGuaName] || {};
   const hexHu = hexagrams[huGuaName] || {};
   const hexChange = hexagrams[changeGuaName] || {};
 
-  // 檢查是否缺少卦象資料
-  if (!hexMain.judgment || !hexHu.judgment || !hexChange.judgment) {
-    analysisDiv.innerHTML = `<div class="analysis-message">無法獲取完整卦象資料，請檢查 hexagrams.json 或卦爻輸入（本卦：${mainGuaName}, 互卦：${huGuaName}, 變卦：${changeGuaName}）。建議確認取卦邏輯是否正確生成 result.hexMain.name 等欄位。</div>`;
+  // 檢查是否缺少卦象資料或卦名無效
+  if (!mainGuaName || mainGuaName === '本卦名稱未提供' || 
+      !huGuaName || huGuaName === '互卦名稱未提供' || 
+      !changeGuaName || changeGuaName === '變卦名稱未提供' || 
+      !hexMain.judgment || !hexHu.judgment || !hexChange.judgment) {
+    const errorMsg = `
+      無法正確顯示卦象資料，請檢查取卦邏輯是否正確生成卦名：<br>
+      - 本卦名稱：${mainGuaName}，六爻：${result.lines ? result.lines.join(',') : '未提供'}<br>
+      - 互卦名稱：${huGuaName}，六爻：${result.huLines ? result.huLines.join(',') : '未提供'}<br>
+      - 變卦名稱：${changeGuaName}，六爻：${result.changeLines ? result.changeLines.join(',') : '未提供'}<br>
+      請確認 result.hexMain.name、result.hexHu.name、result.hexChange.name 是否正確設置，並檢查 hexagrams.json 的鍵是否與卦名匹配。
+    `;
+    analysisDiv.innerHTML = `<div class="analysis-message">${errorMsg}</div>`;
     analysisDiv.classList.remove('hidden');
     return;
   }
@@ -1302,21 +1312,6 @@ function renderQuestionAnalysis(result, questionType) {
     </div>`;
 
   analysisDiv.innerHTML = guaAnalysisHtml;
-}
-
-/* 範例 getHexagramName 函數（若原程式無此函數，請加入） */
-function getHexagramName(lines) {
-  const hexagramMap = {
-    '111111': '乾為天',
-    '000000': '坤為地',
-    '100010': '天山遯',
-    '101110': '天風姤',
-    '001000': '地水師',
-    '010111': '風天小畜',
-    // ... 其他64卦的映射，需完整填寫
-  };
-  const key = lines.join('');
-  return hexagramMap[key] || '無法計算卦名';
 }
 
 // 渲染詳細象徵分析（僅單爻）
