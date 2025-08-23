@@ -1183,7 +1183,10 @@ function renderQuestionAnalysis(result, questionType) {
   guaAnalysisHtml += `
     <div class="analysis-item">
       <h4>${questionTitle}：本卦（現況分析）</h4>
-      <p><strong id="guaName">本卦：</strong><br>卦辭：${judgmentText} (評分: ${result.hexMain?.judgment?.score || 0}/10)</p>`;
+      <p><strong id="guaName">本卦：</strong>
+       <div id="result" class="hidden">
+      <h3 id="guaName">本卦：</h3></div>
+      <br>卦辭：${judgmentText} (評分: ${result.hexMain?.judgment?.score || 0}/10)</p>`;
   
   // 動爻爻辭
   if (result.moving.length > 0) {
