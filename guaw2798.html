@@ -1271,7 +1271,7 @@ function renderQuestionAnalysis(result, questionType) {
   }
   guaAnalysisHtml += `</div>`;
 
-  // 變卦分層影響 // 變卦分層影響
+  // 變卦分層影響
   const influences = getChangeInfluences(tiGua, changeUGua, changeLGua);
   guaAnalysisHtml += `
     <div class="analysis-item">
@@ -1553,8 +1553,6 @@ document.getElementById('analyzeBtn').addEventListener('click', () => {
   }
   renderQuestionAnalysis(currentResult, questionType);
 });
-
 </script>
 </body>
 </html>
-
