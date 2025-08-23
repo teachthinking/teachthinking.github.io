@@ -1128,6 +1128,16 @@ function getWuxingOutcome(tiGua, yongGua, mainHexName, changeHexName) {
 }
 
 // 修改 getTiYong 函數：體卦為本卦下卦，用卦為變卦上卦
+//function getTiYong(result) {
+//  const mainUpperId = triIndexByLines.get(JSON.stringify(result.lines.slice(3, 6)));
+//  const mainLowerId = triIndexByLines.get(JSON.stringify(result.lines.slice(0, 3)));
+//  const changeUpperId = triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6)));
+//  const changeLowerId = triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3)));
+//  const tiGua = getTrigramInfo(mainLowerId);
+ // const yongGua = getTrigramInfo(changeUpperId);
+//  return { tiGua, yongGua };
+//}
+//修改 getTiYong 函數：用卦為變爻所在卦
 function getTiYong(result) {
   const mainUpperId = triIndexByLines.get(JSON.stringify(result.lines.slice(3, 6)));
   const mainLowerId = triIndexByLines.get(JSON.stringify(result.lines.slice(0, 3)));
