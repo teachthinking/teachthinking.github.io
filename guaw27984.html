@@ -1183,8 +1183,7 @@ function renderQuestionAnalysis(result, questionType) {
   guaAnalysisHtml += `
     <div class="analysis-item">
       <h4>${questionTitle}：本卦（現況分析）</h4>
-      <p><strong>本卦：${mainHexName}()</strong>
-     
+         <p><strong>本卦：</strong>${mainHexName}（）</p>
       <h3 id="guaName"></h3>
       <br>卦辭：${judgmentText} (評分: ${result.hexMain?.judgment?.score || 0}/10)</p>`;
   
