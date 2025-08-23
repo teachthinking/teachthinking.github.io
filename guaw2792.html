@@ -1206,13 +1206,19 @@ function renderWuxingAnalysis(result) {
   const changeOutcome = getWuxingOutcome(tiGua, changeUGua, result.hexMain?.name, result.hexChange?.name);
   guaAnalysisHtml = `
     <div class="analysis-item">
-      <h4>變卦（結果分析）</h4>
-      <p>體卦屬 **${tiGua.wuxing}**，變卦（代表結果）屬 **${changeUGua.wuxing}**。<br>五行關係為：**${changeOutcome.relation}**。這代表最終的結果將會是：<br><span class="analysis-status ${changeOutcome.status}">${changeOutcome.explanation}${changeOutcome.details.title ? `<br><strong>相關卦象：</strong> ${changeOutcome.details.title}` : ''}</span></p>`;
-  if (trigramExplanations[changeUGua.name]?.life) {
-    guaAnalysisHtml += `<div class="trigram-details"><strong>變卦取象：</strong><br>`;
-    guaAnalysisHtml += `**上變卦**（${changeUGua.name}）：${trigramExplanations[changeUGua.name].life}`;
-    guaAnalysisHtml += `</div>`;
-  }
+<h4>變卦（結果分析）</h4>
+<p>體卦屬 **${tiGua.wuxing}**，受變卦上下卦影響：<br>
+  - **上卦（天時影響）** 屬 **${changeUpperGua.wuxing}**，${trigramExplanations[changeUpperGua.name]?.life || '外在環境影響待分析'}。<br>
+  - **下卦（地利影響）** 屬 **${changeLowerGua.wuxing}**，${trigramExplanations[changeLowerGua.name]?.life || '內在環境影響待分析'}。<br>
+五行關係為：**${changeOutcome.relation}**。這代表最終的結果將會是：<br>
+<span class="analysis-status ${changeOutcome.status}">${changeOutcome.explanation}${changeOutcome.details.title ? `<br><strong>相關卦象：</strong> ${changeOutcome.details.title}` : ''}</span></p>
+//      <h4>變卦（結果分析）</h4>
+//      <p>體卦屬 **${tiGua.wuxing}**，變卦（代表結果）屬 **${changeUGua.wuxing}**。<br>五行關係為：**${changeOutcome.relation}**。這代表最終的結果將會是：<br><span class="analysis-status ${changeOutcome.status}">${changeOutcome.explanation}${changeOutcome.details.title ? `<br><strong>相關卦象：</strong> ${changeOutcome.details.title}` : ''}</span></p>`;
+//  if (trigramExplanations[changeUGua.name]?.life) {
+//    guaAnalysisHtml += `<div class="trigram-details"><strong>變卦取象：</strong><br>`;
+//    guaAnalysisHtml += `**上變卦**（${changeUGua.name}）：${trigramExplanations[changeUGua.name].life}`;
+//    guaAnalysisHtml += `</div>`;
+//  }
   guaAnalysisHtml += `</div>`;
   contentDiv.innerHTML += guaAnalysisHtml;
 }
