@@ -1156,7 +1156,7 @@ function renderWuxingAnalysis(result) {
   analysisDiv.classList.remove('hidden');
 }
 
-/* 渲染問題分析（多爻變顯示本卦與變卦的象徵分析，包括 hexagrams.json 的 symbolism） */
+/* 渲染問題分析（多爻變顯示本卦、變卦、互卦的象徵分析，包括 hexagrams.json 的 symbolism） */
 function renderQuestionAnalysis(result, questionType) {
   const analysisDiv = document.getElementById('questionAnalysisResult');
   analysisDiv.innerHTML = '';
@@ -1168,7 +1168,7 @@ function renderQuestionAnalysis(result, questionType) {
   };
 
   const questionTitle = analysisMap[questionType] || '未指定問題';
-  if (!result.hexMain || !result.hexChange) {
+  if (!result.hexMain || !result.hexChange || !result.hexHu) {
     analysisDiv.innerHTML = `<div class="analysis-message">無法獲取卦象資料，請檢查輸入或 hexagrams.json。</div>`;
     analysisDiv.classList.remove('hidden');
     return;
@@ -1218,6 +1218,37 @@ function renderQuestionAnalysis(result, questionType) {
   }
   guaAnalysisHtml += `</div>`;
 
+  // 互卦分析
+  const huLines = result.huLines;
+  const huLowerId = triIndexByLines.get(JSON.stringify(huLines.slice(0, 3)));
+  const huUpperId = triIndexByLines.get(JSON.stringify(huLines.slice(3, 6)));
+  const huLGua = getTrigramInfo(huLowerId);
+  guaAnalysisHtml += `
+    <div class="analysis-item">
+      <h4>${questionTitle}：互卦（過程分析）</h4>
+      <p><strong>互卦</strong>：${result.hexHu?.name || '未知'}</p>`;
+  
+  // 互卦取象（trigram_explanations.json）
+  guaAnalysisHtml += `<div class="trigram-details"><strong>互卦取象</strong>：<br>`;
+  const huUExplanation = trigramExplanations[trigramName[huUpperId]]?.[questionType] || trigramExplanations[trigramName[huUpperId]]?.life || '（無詳細解釋）';
+  guaAnalysisHtml += `**上互卦**（${trigramName[huUpperId]}）：${huUExplanation}<br>`;
+  const huLExplanation = trigramExplanations[huLGua.name]?.[questionType] || trigramExplanations[huLGua.name]?.life || '（無詳細解釋）';
+  guaAnalysisHtml += `**下互卦**（${huLGua.name}）：${huLExplanation}<br>`;
+  guaAnalysisHtml += `</div>`;
+
+  // 互卦象徵（hexagrams.json symbolism）
+  if (result.hexHu?.symbolism) {
+    guaAnalysisHtml += `<div class="symbolism-details"><strong>互卦象徵（人事時地物）</strong>：<br>`;
+    guaAnalysisHtml += `總體：${result.hexHu.symbolism.overall || '（無總體解釋）'}<br>`;
+    guaAnalysisHtml += `人物：${result.hexHu.symbolism.people || '（無人物解釋）'}<br>`;
+    guaAnalysisHtml += `事務：${result.hexHu.symbolism.affairs || '（無事務解釋）'}<br>`;
+    guaAnalysisHtml += `時機：${result.hexHu.symbolism.time || '（無時機解釋）'}<br>`;
+    guaAnalysisHtml += `地點：${result.hexHu.symbolism.place || '（無地點解釋）'}<br>`;
+    guaAnalysisHtml += `物件：${result.hexHu.symbolism.object || '（無物件解釋）'}<br>`;
+    guaAnalysisHtml += `</div>`;
+  }
+  guaAnalysisHtml += `</div>`;
+
   // 變卦分析
   const changeUpperId = triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8;
   const changeLowerId = triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8;
@@ -1248,23 +1279,6 @@ function renderQuestionAnalysis(result, questionType) {
     guaAnalysisHtml += `物件：${result.hexChange.symbolism.object || '（無物件解釋）'}<br>`;
     guaAnalysisHtml += `</div>`;
   }
-  guaAnalysisHtml += `</div>`;
-
-  // 互卦分析（過程參考，保持原邏輯）
-  const huLines = result.huLines;
-  const huLowerId = triIndexByLines.get(JSON.stringify(huLines.slice(0, 3)));
-  const huUpperId = triIndexByLines.get(JSON.stringify(huLines.slice(3, 6)));
-  const huLGua = getTrigramInfo(huLowerId);
-  guaAnalysisHtml += `
-    <div class="analysis-item">
-      <h4>${questionTitle}：互卦（過程分析）</h4>
-      <p><strong>互卦</strong>：${result.hexHu?.name || '未知'}</p>`;
-  guaAnalysisHtml += `<div class="trigram-details"><strong>互卦取象</strong>：<br>`;
-  const huUExplanation = trigramExplanations[trigramName[huUpperId]]?.[questionType] || trigramExplanations[trigramName[huUpperId]]?.life || '（無詳細解釋）';
-  guaAnalysisHtml += `**上互卦**（${trigramName[huUpperId]}）：${huUExplanation}<br>`;
-  const huLExplanation = trigramExplanations[huLGua.name]?.[questionType] || trigramExplanations[huLGua.name]?.life || '（無詳細解釋）';
-  guaAnalysisHtml += `**下互卦**（${huLGua.name}）：${huLExplanation}<br>`;
-  guaAnalysisHtml += `</div>`;
   guaAnalysisHtml += `</div>`;
 
   // 指引（從本卦上/下卦的 guidance 選取，優先上卦）
