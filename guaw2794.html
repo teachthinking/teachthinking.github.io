@@ -1189,12 +1189,13 @@ function renderWuxingAnalysis(result) {
       <p>體卦屬 **${tiGua.wuxing}**，互卦（代表過程）屬 **${huLGua.wuxing}**。<br>五行關係為：**${huOutcome.relation}**。這顯示事情在過程中將會：<br><span class="analysis-status ${huOutcome.status}">${huOutcome.explanation}${huOutcome.details.title ? `<br><strong>相關卦象：</strong> ${huOutcome.details.title}` : ''}</span></p>`;
   if (trigramExplanations[huLGua.name] || trigramExplanations[trigramName[huUpperId]]) {
     guaAnalysisHtml += `<div class="trigram-details"><strong>互卦取象：</strong><br>`;
+        if (trigramExplanations[trigramName[huUpperId]]?.life) {
+      guaAnalysisHtml += `**上互卦**（${trigramName[huUpperId]}）：${trigramExplanations[trigramName[huUpperId]].life}`;
+    }
     if (trigramExplanations[huLGua.name]?.life) {
       guaAnalysisHtml += `**下互卦**（${huLGua.name}）：${trigramExplanations[huLGua.name].life}<br>`;
     }
-    if (trigramExplanations[trigramName[huUpperId]]?.life) {
-      guaAnalysisHtml += `**上互卦**（${trigramName[huUpperId]}）：${trigramExplanations[trigramName[huUpperId]].life}`;
-    }
+
     guaAnalysisHtml += `</div>`;
   }
   guaAnalysisHtml += `</div>`;
@@ -1212,11 +1213,10 @@ function renderWuxingAnalysis(result) {
   if (trigramExplanations[changeUGua.name]?.life) {
     guaAnalysisHtml += `<div class="trigram-details"><strong>變卦取象：</strong><br>`;
     guaAnalysisHtml += `**上變卦**（${changeUGua.name}）：${trigramExplanations[changeUGua.name].life}`;
+    guaAnalysisHtml += `**下變卦**（${changeLGua.name}）：${trigramExplanations[changeLGua.name].life}`;    
     guaAnalysisHtml += `</div>`;
   }
-      if (trigramExplanations[changeLGua.name]?.life) {
-      guaAnalysisHtml += `**下變卦**（${changeLGua.name}）：${trigramExplanations[changeLGua.name].life}<br>`;
-    }
+
   guaAnalysisHtml += `</div>`;
   contentDiv.innerHTML += guaAnalysisHtml;
 }
