@@ -1647,156 +1647,234 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // 數字取卦
-  document.getElementById('btnNumber').addEventListener('click', () => {
-    const numUpper = parseInt(document.getElementById('numUpper').value);
-    const numLower = parseInt(document.getElementById('numLower').value);
-    const numMoving = parseInt(document.getElementById('numMoving').value);
-    
-    if (isNaN(numUpper) || isNaN(numLower) || isNaN(numMoving) || numUpper < 100 || numUpper > 999 || numLower < 100 || numLower > 999 || numMoving < 100 || numMoving > 999) {
-      alert('請輸入 100–999 的有效數字！');
-      return;
-    }
-    
-    const upperIdx = numUpper % 8 || 8;
-    const lowerIdx = numLower % 8 || 8;
-    const moving = [numMoving % 6 || 6];
-    generateGua(upperIdx, lowerIdx, moving, '數字取卦');
-  });
-  // 隨機預設數字
-  document.getElementById('numUpper').value = Math.floor(Math.random() * 900) + 100;
-  document.getElementById('numLower').value = Math.floor(Math.random() * 900) + 100;
-  document.getElementById('numMoving').value = Math.floor(Math.random() * 900) + 100;
-});
-  
-  // 手動取卦
-  document.getElementById('btnManual').addEventListener('click', () => {
-    const upperIdx = parseInt(document.getElementById('selUpper').value);
-    const lowerIdx = parseInt(document.getElementById('selLower').value);
-    const movingInput = document.getElementById('inputMoving').value.trim();
-    
-    if (!upperIdx || !lowerIdx || !movingInput) {
-      alert('請輸入完整的卦象資訊！');
-      return;
-    }
-    
-    const moving = movingInput.split(',').map(Number).filter(n => n >= 1 && n <= 6);
-    if (moving.length === 0 || moving.some(n => isNaN(n))) {
-      alert('動爻格式錯誤，請輸入 1–6 的數字，例如 "1" 或 "1,3"');
-      return;
-    }
-    
-    generateGua(upperIdx, lowerIdx, moving, '手動取卦');
-  });
-
-  // 時間取卦
-  document.getElementById('btnTime').addEventListener('click', () => {
-    const method = document.querySelector('input[name="time-method"]:checked').value;
-    let year, month, day, hour, minute;
-    
-    if (method === 'modern') {
-      const dt = new Date(document.getElementById('dtInput').value);
-      if (isNaN(dt)) {
-        alert('請選擇有效的日期時間！');
-        return;
-      }
-      year = dt.getFullYear();
-      month = dt.getMonth() + 1;
-      day = dt.getDate();
-      hour = dt.getHours();
-      minute = dt.getMinutes();
-    } else {
-      const date = new Date(document.getElementById('dateInput').value);
-      const shichen = parseInt(document.getElementById('shichenInput').value);
-      minute = parseInt(document.getElementById('minuteInput').value);
-      if (isNaN(date) || isNaN(shichen) || isNaN(minute) || minute < 0 || minute > 59) {
-        alert('請輸入有效的日期、時辰或分鐘！');
-        return;
-      }
-      year = date.getFullYear();
-      month = date.getMonth() + 1;
-      day = date.getDate();
-      hour = shichen * 2 - 1;
-    }
-    
-    const upperIdx = (year + month + day) % 8 || 8;
-    const lowerIdx = (year + month + day + hour) % 8 || 8;
-    const moving = [(year + month + day + hour + minute) % 6 || 6];
-    generateGua(upperIdx, lowerIdx, moving, method === 'modern' ? '現代時間取卦' : '傳統時辰取卦');
-  });
-
-  // 使用現在時間
-  document.getElementById('nowQuick').addEventListener('click', () => {
-    const now = new Date();
-    document.getElementById('dtInput').value = now.toISOString().slice(0, 16);
-  });
-
-  // 以象取卦
-  document.getElementById('btnImage').addEventListener('click', () => {
-    const upperIdx = parseInt(document.getElementById('upperImageSelect').value);
-    const lowerIdx = parseInt(document.getElementById('lowerDirectionSelect').value);
-    let moving = [];
-    
-    if (document.getElementById('imageUseMinute').checked) {
-      moving = [(new Date().getMinutes() % 6) || 6];
-    } else {
-      const movingInput = parseInt(document.getElementById('imageMovingInput').value);
-      if (isNaN(movingInput) || movingInput < 1 || movingInput > 6) {
-        alert('請輸入 1–6 的有效動爻，或勾選使用當前分鐘！');
-        return;
-      }
-      moving = [movingInput];
-    }
-    
-    generateGua(upperIdx, lowerIdx, moving, '以象取卦');
-  });
-
-  // 時間方式切換
-  document.querySelectorAll('input[name="time-method"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      document.getElementById('time-modern').classList.toggle('hidden', radio.value !== 'modern');
-      document.getElementById('time-traditional').classList.toggle('hidden', radio.value !== 'traditional');
-    });
-  });
-
-  // 清除記錄
-  document.getElementById('clearHistoryBtn').addEventListener('click', () => {
-    if (confirm('確定要清除所有記錄？此操作無法復原！')) {
-      history = [];
-      saveHistory();
-      renderHistory();
-    }
-  });
-
-  
-// 匯出記錄
-  document.getElementById('exportHistoryBtn').addEventListener('click', exportHistory);
-
-
-
-  
-
-// 顯示綜合判斷
-document.getElementById('judgeBtn').addEventListener('click', () => {
-  if (!currentResult) {
-    alert('請先生成卦象！');
-    return;
+  // 頁面載入時為數字取卦輸入框設置隨機數字
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('頁面載入，初始化隨機數字和 judgeBtn 事件');
+  const randomNum = () => Math.floor(Math.random() * 900) + 100; // 生成 100–999 的隨機數
+  const numUpper = document.getElementById('numUpper');
+  const numLower = document.getElementById('numLower');
+  const numMoving = document.getElementById('numMoving');
+  if (numUpper && numLower && numMoving) {
+    numUpper.value = randomNum();
+    numLower.value = randomNum();
+    numMoving.value = randomNum();
+    console.log('數字取卦輸入框已設置隨機數字');
+  } else {
+    console.error('找不到數字取卦輸入框');
   }
-  document.getElementById('judgeBox').classList.remove('hidden');
-  renderWuxingAnalysis(currentResult);
-  renderDetailedAnalysis(currentResult);
+
+  // 確保 judgeBtn 事件綁定
+  const judgeBtn = document.getElementById('judgeBtn');
+  if (judgeBtn) {
+    judgeBtn.addEventListener('click', showComprehensiveJudgment);
+    console.log('judgeBtn 事件已綁定');
+  } else {
+    console.error('未找到 judgeBtn 元素');
+  }
 });
 
-// 問題分析按鈕
-document.getElementById('analyzeBtn').addEventListener('click', () => {
-  const questionType = document.getElementById('questionSelector').value;
-  if (!currentResult || questionType === '1') {
-    alert('請先選擇問事類別並生成卦象！');
+// 數字取卦 - 隨機數生成按鈕
+document.getElementById('btnRandomNumber')?.addEventListener('click', () => {
+  console.log('點擊 btnRandomNumber，生成隨機數字');
+  const randomNum = () => Math.floor(Math.random() * 900) + 100;
+  const numUpper = document.getElementById('numUpper');
+  const numLower = document.getElementById('numLower');
+  const numMoving = document.getElementById('numMoving');
+  if (numUpper && numLower && numMoving) {
+    numUpper.value = randomNum();
+    numLower.value = randomNum();
+    numMoving.value = randomNum();
+    console.log('隨機數字已更新:', numUpper.value, numLower.value, numMoving.value);
+  } else {
+    console.error('找不到數字取卦輸入框');
+  }
+});
+
+// 數字取卦
+document.getElementById('btnNumber').addEventListener('click', () => {
+  console.log('點擊 btnNumber，執行數字取卦');
+  const numUpper = parseInt(document.getElementById('numUpper').value);
+  const numLower = parseInt(document.getElementById('numLower').value);
+  const numMoving = parseInt(document.getElementById('numMoving').value);
+
+  if (isNaN(numUpper) || isNaN(numLower) || isNaN(numMoving) || numUpper < 100 || numUpper > 999 || numLower < 100 || numLower > 999 || numMoving < 100 || numMoving > 999) {
+    console.warn('無效數字輸入:', numUpper, numLower, numMoving);
+    alert('請輸入 100–999 的有效數字！');
     return;
   }
+
+  const upperIdx = (numUpper % 8 === 0 ? 8 : numUpper % 8);
+  const lowerIdx = (numLower % 8 === 0 ? 8 : numLower % 8);
+  const moving = numMoving % 6 === 0 ? [6] : [numMoving % 6];
+
+  console.log('生成卦象:', { upperIdx, lowerIdx, moving });
+  generateGua(upperIdx, lowerIdx, moving, '數字取卦');
+  const questionType = document.getElementById('questionSelector')?.value || 'life';
   renderQuestionAnalysis(currentResult, questionType);
+  renderDetailedAnalysis(currentResult);
+  renderWuxingAnalysis(currentResult);
+  console.log('currentResult 已設置:', currentResult);
 });
 
+// 手動取卦
+document.getElementById('btnManual').addEventListener('click', () => {
+  console.log('點擊 btnManual，執行手動取卦');
+  const upperIdx = parseInt(document.getElementById('selUpper').value);
+  const lowerIdx = parseInt(document.getElementById('selLower').value);
+  const movingInput = document.getElementById('inputMoving').value.trim();
+  const moving = movingInput ? movingInput.split(',').map(num => parseInt(num.trim())).filter(num => num >= 1 && num <= 6 && !isNaN(num)) : [];
+
+  if (!upperIdx || !lowerIdx) {
+    console.warn('未選擇上卦或下卦');
+    alert('請選擇上卦和下卦！');
+    return;
+  }
+  if (movingInput && moving.length === 0) {
+    console.warn('動爻格式錯誤:', movingInput);
+    alert('動爻格式錯誤，請輸入 1–6 的數字，以逗號分隔（如 1,3）！');
+    return;
+  }
+
+  console.log('生成卦象:', { upperIdx, lowerIdx, moving });
+  generateGua(upperIdx, lowerIdx, moving, '手動取卦');
+  const questionType = document.getElementById('questionSelector')?.value || 'life';
+  renderQuestionAnalysis(currentResult, questionType);
+  renderDetailedAnalysis(currentResult);
+  renderWuxingAnalysis(currentResult);
+  console.log('currentResult 已設置:', currentResult);
+});
+
+// 時間取卦 - 切換現代/傳統時間輸入
+document.querySelectorAll('input[name="time-method"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    console.log('時間取卦方式切換:', radio.value);
+    const modernGroup = document.getElementById('time-modern');
+    const traditionalGroup = document.getElementById('time-traditional');
+    if (radio.value === 'modern') {
+      modernGroup.classList.remove('hidden');
+      traditionalGroup.classList.add('hidden');
+    } else {
+      modernGroup.classList.add('hidden');
+      traditionalGroup.classList.remove('hidden');
+    }
+  });
+});
+
+// 時間取卦 - 使用現在時間
+document.getElementById('nowQuick')?.addEventListener('click', () => {
+  console.log('點擊 nowQuick，使用當前時間');
+  const now = new Date().toISOString().slice(0, 16);
+  document.getElementById('dtInput').value = now;
+});
+
+// 時間取卦
+document.getElementById('btnTime').addEventListener('click', () => {
+  console.log('點擊 btnTime，執行時間取卦');
+  const method = document.querySelector('input[name="time-method"]:checked').value;
+  let upperIdx, lowerIdx, moving;
+
+  if (method === 'modern') {
+    const dtInput = document.getElementById('dtInput').value;
+    if (!dtInput) {
+      console.warn('未選擇日期時間');
+      alert('請選擇日期和時間！');
+      return;
+    }
+    const date = new Date(dtInput);
+    if (isNaN(date.getTime())) {
+      console.warn('無效日期時間:', dtInput);
+      alert('無效的日期或時間格式！');
+      return;
+    }
+
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const hour = date.getHours();
+    const minute = date.getMinutes();
+
+    const upperNum = year + month + day;
+    const lowerNum = month + day + hour;
+    const movingNum = year + month + day + hour + minute;
+
+    upperIdx = (upperNum % 8 === 0 ? 8 : upperNum % 8);
+    lowerIdx = (lowerNum % 8 === 0 ? 8 : lowerNum % 8);
+    moving = movingNum % 6 === 0 ? [6] : [movingNum % 6];
+  } else {
+    const dateInput = document.getElementById('dateInput').value;
+    const shichen = parseInt(document.getElementById('shichenInput').value);
+    const minute = parseInt(document.getElementById('minuteInput').value);
+
+    if (!dateInput || isNaN(shichen) || isNaN(minute) || minute < 0 || minute > 59) {
+      console.warn('無效傳統時間輸入:', { dateInput, shichen, minute });
+      alert('請輸入有效日期、時辰和分鐘！');
+      return;
+    }
+
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) {
+      console.warn('無效日期格式:', dateInput);
+      alert('無效的日期格式！');
+      return;
+    }
+
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+
+    const upperNum = year + month + day;
+    const lowerNum = month + day + shichen;
+    const movingNum = year + month + day + shichen + minute;
+
+    upperIdx = (upperNum % 8 === 0 ? 8 : upperNum % 8);
+    lowerIdx = (lowerNum % 8 === 0 ? 8 : lowerNum % 8);
+    moving = movingNum % 6 === 0 ? [6] : [movingNum % 6];
+  }
+
+  console.log('生成卦象:', { upperIdx, lowerIdx, moving });
+  generateGua(upperIdx, lowerIdx, moving, method === 'modern' ? '現代時間取卦' : '傳統時辰取卦');
+  const questionType = document.getElementById('questionSelector')?.value || 'life';
+  renderQuestionAnalysis(currentResult, questionType);
+  renderDetailedAnalysis(currentResult);
+  renderWuxingAnalysis(currentResult);
+  console.log('currentResult 已設置:', currentResult);
+});
+
+// 以象取卦
+document.getElementById('btnImage').addEventListener('click', () => {
+  console.log('點擊 btnImage，執行以象取卦');
+  const upperIdx = parseInt(document.getElementById('upperImageSelect').value);
+  const lowerIdx = parseInt(document.getElementById('lowerDirectionSelect').value);
+  const useMinute = document.getElementById('imageUseMinute').checked;
+  let moving;
+
+  if (useMinute) {
+    const minute = new Date().getMinutes();
+    moving = minute % 6 === 0 ? [6] : [minute % 6];
+  } else {
+    const movingInput = document.getElementById('imageMovingInput').value.trim();
+    if (!movingInput || isNaN(movingInput) || movingInput < 1 || movingInput > 6) {
+      console.warn('無效動爻輸入:', movingInput);
+      alert('請輸入有效的動爻（1–6）或勾選使用當前分鐘！');
+      return;
+    }
+    moving = [parseInt(movingInput)];
+  }
+
+  if (!upperIdx || !lowerIdx) {
+    console.warn('未選擇上卦或下卦');
+    alert('請選擇上卦和下卦！');
+    return;
+  }
+
+  console.log('生成卦象:', { upperIdx, lowerIdx, moving });
+  generateGua(upperIdx, lowerIdx, moving, '以象取卦');
+  const questionType = document.getElementById('questionSelector')?.value || 'life';
+  renderQuestionAnalysis(currentResult, questionType);
+  renderDetailedAnalysis(currentResult);
+  renderWuxingAnalysis(currentResult);
+  console.log('currentResult 已設置:', currentResult);
+});
 
 // 分析按鈕
 document.getElementById('analyzeBtn').addEventListener('click', () => {
@@ -1889,9 +1967,6 @@ document.getElementById('questionSelector')?.addEventListener('change', (e) => {
   }
 });
 });
-
-
-  
 </script>
   
 </body>
