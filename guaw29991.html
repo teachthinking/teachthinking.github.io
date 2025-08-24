@@ -375,17 +375,89 @@
     }
 
     .gua-full-result {
-    margin-top: 20px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
+  margin-top: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
 }
-.otherResult {
-    margin: 20px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    background-color: #f0f0f0;
+#otherResult {
+  margin: 20px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  background-color: #f0f0f0;
+}
+.gua-yang, .gua-yin, .gua-moving {
+  height: 10px;
+  margin: 5px 0;
+}
+.gua-yang {
+  background-color: #000;
+}
+.gua-yin {
+  background-color: #000;
+  border-right: 10px solid #fff;
+  border-left: 10px solid #fff;
+}
+.gua-moving::before {
+  content: '◎';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.score-card {
+  display: flex;
+  align-items: center;
+}
+.score-bar-wrap {
+  width: 100px;
+  height: 10px;
+  background-color: #eee;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.score-bar {
+  height: 100%;
+  background-color: #4caf50;
+}
+.score-val {
+  margin-left: 10px;
+}
+.history-item {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin: 10px 0;
+}
+.history-controls {
+  margin-top: 10px;
+}
+.hidden {
+  display: none;
+}
+.hint {
+  color: #666;
+  font-size: 0.9em;
+}
+.wuxing-box, .analysis-item, .detailed-section {
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #eee;
+  border-radius: 5px;
+}
+.wuxing-status, .analysis-status {
+  font-weight: bold;
+}
+.wuxing-status.大吉, .analysis-status.大吉 { color: #2e7d32; }
+.wuxing-status.吉, .analysis-status.吉 { color: #4caf50; }
+.wuxing-status.平, .analysis-status.平 { color: #757575; }
+.wuxing-status.凶, .analysis-status.凶 { color: #ef5350; }
+.wuxing-status.大凶, .analysis-status.大凶 { color: #d32f2f; }
+.trigram-details, .symbolism-details {
+  margin-top: 10px;
+  font-size: 0.9em;
+}
+.suggestion {
+  background-color: #e3f2fd;
 }
   </style>
 </head>
@@ -1493,19 +1565,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  document.querySelectorAll('input[name="time-method"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      const modern = document.getElementById('time-modern');
-      const traditional = document.getElementById('time-traditional');
-      if (radio.value === 'modern') {
-        modern.classList.remove('hidden');
-        traditional.classList.add('hidden');
-      } else {
-        modern.classList.add('hidden');
-        traditional.classList.remove('hidden');
-      }
-    });
+document.querySelectorAll('input[name="time-method"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    const modern = document.getElementById('time-modern');
+    const traditional = document.getElementById('time-traditional');
+    
+    // 檢查元素是否存在，否則記錄錯誤並退出
+    if (!modern || !traditional) {
+      console.error('找不到時間選擇元素', { modern, traditional });
+      alert('頁面元素缺失，請檢查 HTML 結構是否包含 time-modern 和 time-traditional！');
+      return;
+    }
+
+    if (radio.value === 'modern') {
+      modern.classList.remove('hidden');
+      traditional.classList.add('hidden');
+    } else {
+      modern.classList.add('hidden');
+      traditional.classList.remove('hidden');
+    }
   });
+});
+
+// 檢查是否有未捕獲的錯誤並記錄
+window.addEventListener('error', (event) => {
+  console.error('未捕獲的錯誤:', event.message, event.filename, event.lineno);
+  alert('程式發生錯誤，請檢查控制台以獲取詳細資訊！');
+});
+
+// 確認程式初始化完成
+console.log('JavaScript 初始化完成，時間選擇功能已綁定。');
+
 });
 
   
