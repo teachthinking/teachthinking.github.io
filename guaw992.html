@@ -401,19 +401,35 @@
       <button class="tab-button" data-target="tab-manual">手動取卦</button>
     </div>
 
-    <div id="tab-number" class="tab-content active">
-      <h3>數字取卦</h3>
-      <div class="row">
-        <textarea id="questionNumber" placeholder="問何事？（例如：感情順利否？）" rows="2" maxlength="200" style="resize: vertical;"></textarea>
-      </div>
-      <div class="row">
-        <input id="numUpper" type="number" placeholder="上卦數字 (100-999)" min="100" max="999" />
-        <input id="numLower" type="number" placeholder="下卦數字 (100-999)" min="100" max="999" />
-        <input id="numMoving" type="number" placeholder="動爻數字 (100-999)" min="100" max="999" />
-        <button id="btnNumber" class="primary">生成卦象</button>
-      </div>
-      <div class="row"><span class="hint">提示：輸入 100–999。上/下卦 = 數字 % 8（0 視為 8），動爻 = 數字 % 6（0 視為 6）。頁面載入會隨機預設三個數字。</span></div>
-    </div>
+   <!-- 數字取卦區域 -->
+<div id="numberTab" class="tab-content">
+  <input type="number" id="numUpper" placeholder="上卦數 (100–999)" min="100" max="999">
+  <input type="number" id="numLower" placeholder="下卦數 (100–999)" min="100" max="999">
+  <input type="number" id="numMoving" placeholder="動爻數 (100–999)" min="100" max="999">
+  <select id="questionTypeNumber" class="question-type-select">
+    <option value="life">生活/運勢</option>
+    <option value="love">感情問題</option>
+    <option value="career">工作/學業</option>
+    <option value="wealth">財運問題</option>
+    <option value="health">健康問題</option>
+    <option value="relationship">人際關係</option>
+    <option value="guidance">尋找指引</option>
+  </select>
+  <button id="btnRandomNumber">隨機生成數字</button>
+  <button id="btnNumber">取卦</button>
+</div>
+
+<!-- 結果顯示區域 -->
+<div id="result" class="hidden">
+  <!-- 現有卦象顯示元素：guaName, changeGuaName, huGuaName, guaImage, changeGuaImage, huGuaImage, guaNote, fullGuaResult, lineTextDisplay -->
+  <button id="btnShowComprehensive">顯示綜合判斷</button>
+</div>
+
+<!-- 五行分析區域 -->
+<div id="wuxingAnalysis" class="hidden">
+  <h3>五行分析</h3>
+  <div id="wuxingContent"></div>
+</div>
 
     <div id="tab-manual" class="tab-content">
       <h3>手動取卦</h3>
