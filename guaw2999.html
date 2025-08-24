@@ -821,7 +821,6 @@ function generateGua(upperIdx, lowerIdx, moving, method = '未知') {
   // 儲存到歷史記錄
   history.push(currentResult);
   saveHistory();
-  renderHistory();
 
   // 渲染卦象圖
   renderGuaImage(lines, 'guaImage', moving);
@@ -857,7 +856,6 @@ function loadHistory() {
     const saved = localStorage.getItem('guaHistory');
     if (saved) {
       history = JSON.parse(saved);
-      renderHistory();
     }
   } catch (e) {
     console.error('無法從 localStorage 載入記錄:', e);
@@ -865,6 +863,7 @@ function loadHistory() {
   }
 }
 
+  
 // 顯示動爻解釋（包含爻辭和評分）
 function renderLineExplanation(moving, hexMain) {
   const lineTextDisplay = document.getElementById('lineTextDisplay');
@@ -1059,7 +1058,7 @@ function getWuxingOutcome(tiWuxing, yongWuxing, changeWuxing) {
 // 變卦影響
 function getChangeInfluences(tiGua, changeUGua, changeLGua) {
   const relations = {
-    '金': { '金': '比和', '木': '剋體', '水': '生體', '火': '體剋', '土': '被生' },
+    '金': { '金': '比和', '木': '剋體', '水': '生體', '火': '體�克', '土': '被生' },
     '木': { '金': '被剋', '木': '比和', '水': '生體', '火': '體剋', '土': '剋體' },
     '水': { '金': '被生', '木': '體剋', '水': '比和', '火': '生體', '土': '剋體' },
     '火': { '金': '剋體', '木': '被生', '水': '體剋', '火': '比和', '土': '生體' },
