@@ -824,7 +824,7 @@ function generateGua(upperIdx, lowerIdx, moving, method = '未知') {
   // 獲取「問何事？」輸入
   let question = '';
   const questionInputs = {
-    '數字取卦': 'questionNumber',
+    '': 'questionNumber',
     '手動取卦': 'questionManual',
     '現代時間取卦': 'questionTime',
     '傳統時辰取卦': 'questionTime',
@@ -1636,10 +1636,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // 頁面載入時為數字取卦輸入框設置隨機數字
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('頁面載入，初始化隨機數字和 judgeBtn 事件');
   const randomNum = () => Math.floor(Math.random() * 900) + 100; // 生成 100–999 的隨機數
-  document.getElementById('numUpper').value = randomNum();
-  document.getElementById('numLower').value = randomNum();
-  document.getElementById('numMoving').value = randomNum();
+  const numUpper = document.getElementById('numUpper');
+  const numLower = document.getElementById('numLower');
+  const numMoving = document.getElementById('numMoving');
+  if (numUpper && numLower && numMoving) {
+    numUpper.value = randomNum();
+    numLower.value = randomNum();
+    numMoving.value = randomNum();
+    console.log('數字取卦輸入框已設置隨機數字');
+  } else {
+    console.error('找不到數字取卦輸入框');
+  }
 
   // 確保 judgeBtn 事件綁定
   const judgeBtn = document.getElementById('judgeBtn');
@@ -1653,19 +1662,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 數字取卦 - 隨機數生成按鈕
 document.getElementById('btnRandomNumber')?.addEventListener('click', () => {
-  const randomNum = () => Math.floor(Math.random() * 900) + 100; // 生成 100–999 的隨機數
-  document.getElementById('numUpper').value = randomNum();
-  document.getElementById('numLower').value = randomNum();
-  document.getElementById('numMoving').value = randomNum();
+  console.log('點擊 btnRandomNumber，生成隨機數字');
+  const randomNum = () => Math.floor(Math.random() * 900) + 100;
+  const numUpper = document.getElementById('numUpper');
+  const numLower = document.getElementById('numLower');
+  const numMoving = document.getElementById('numMoving');
+  if (numUpper && numLower && numMoving) {
+    numUpper.value = randomNum();
+    numLower.value = randomNum();
+    numMoving.value = randomNum();
+    console.log('隨機數字已更新:', numUpper.value, numLower.value, numMoving.value);
+  } else {
+    console.error('找不到數字取卦輸入框');
+  }
 });
 
 // 數字取卦
 document.getElementById('btnNumber').addEventListener('click', () => {
+  console.log('點擊 btnNumber，執行數字取卦');
   const numUpper = parseInt(document.getElementById('numUpper').value);
   const numLower = parseInt(document.getElementById('numLower').value);
   const numMoving = parseInt(document.getElementById('numMoving').value);
 
   if (isNaN(numUpper) || isNaN(numLower) || isNaN(numMoving) || numUpper < 100 || numUpper > 999 || numLower < 100 || numLower > 999 || numMoving < 100 || numMoving > 999) {
+    console.warn('無效數字輸入:', numUpper, numLower, numMoving);
     alert('請輸入 100–999 的有效數字！');
     return;
   }
@@ -1674,39 +1694,47 @@ document.getElementById('btnNumber').addEventListener('click', () => {
   const lowerIdx = (numLower % 8 === 0 ? 8 : numLower % 8);
   const moving = numMoving % 6 === 0 ? [6] : [numMoving % 6];
 
+  console.log('生成卦象:', { upperIdx, lowerIdx, moving });
   generateGua(upperIdx, lowerIdx, moving, '數字取卦');
   const questionType = document.getElementById('questionSelector')?.value || 'life';
   renderQuestionAnalysis(currentResult, questionType);
   renderDetailedAnalysis(currentResult);
   renderWuxingAnalysis(currentResult);
+  console.log('currentResult 已設置:', currentResult);
 });
 
 // 手動取卦
 document.getElementById('btnManual').addEventListener('click', () => {
+  console.log('點擊 btnManual，執行手動取卦');
   const upperIdx = parseInt(document.getElementById('selUpper').value);
   const lowerIdx = parseInt(document.getElementById('selLower').value);
   const movingInput = document.getElementById('inputMoving').value.trim();
   const moving = movingInput ? movingInput.split(',').map(num => parseInt(num.trim())).filter(num => num >= 1 && num <= 6 && !isNaN(num)) : [];
 
   if (!upperIdx || !lowerIdx) {
+    console.warn('未選擇上卦或下卦');
     alert('請選擇上卦和下卦！');
     return;
   }
   if (movingInput && moving.length === 0) {
+    console.warn('動爻格式錯誤:', movingInput);
     alert('動爻格式錯誤，請輸入 1–6 的數字，以逗號分隔（如 1,3）！');
     return;
   }
 
+  console.log('生成卦象:', { upperIdx, lowerIdx, moving });
   generateGua(upperIdx, lowerIdx, moving, '手動取卦');
   const questionType = document.getElementById('questionSelector')?.value || 'life';
   renderQuestionAnalysis(currentResult, questionType);
   renderDetailedAnalysis(currentResult);
   renderWuxingAnalysis(currentResult);
+  console.log('currentResult 已設置:', currentResult);
 });
 
 // 時間取卦 - 切換現代/傳統時間輸入
 document.querySelectorAll('input[name="time-method"]').forEach(radio => {
   radio.addEventListener('change', () => {
+    console.log('時間取卦方式切換:', radio.value);
     const modernGroup = document.getElementById('time-modern');
     const traditionalGroup = document.getElementById('time-traditional');
     if (radio.value === 'modern') {
@@ -1721,23 +1749,27 @@ document.querySelectorAll('input[name="time-method"]').forEach(radio => {
 
 // 時間取卦 - 使用現在時間
 document.getElementById('nowQuick')?.addEventListener('click', () => {
+  console.log('點擊 nowQuick，使用當前時間');
   const now = new Date().toISOString().slice(0, 16);
   document.getElementById('dtInput').value = now;
 });
 
 // 時間取卦
 document.getElementById('btnTime').addEventListener('click', () => {
+  console.log('點擊 btnTime，執行時間取卦');
   const method = document.querySelector('input[name="time-method"]:checked').value;
   let upperIdx, lowerIdx, moving;
 
   if (method === 'modern') {
     const dtInput = document.getElementById('dtInput').value;
     if (!dtInput) {
+      console.warn('未選擇日期時間');
       alert('請選擇日期和時間！');
       return;
     }
     const date = new Date(dtInput);
     if (isNaN(date.getTime())) {
+      console.warn('無效日期時間:', dtInput);
       alert('無效的日期或時間格式！');
       return;
     }
@@ -1761,12 +1793,14 @@ document.getElementById('btnTime').addEventListener('click', () => {
     const minute = parseInt(document.getElementById('minuteInput').value);
 
     if (!dateInput || isNaN(shichen) || isNaN(minute) || minute < 0 || minute > 59) {
+      console.warn('無效傳統時間輸入:', { dateInput, shichen, minute });
       alert('請輸入有效日期、時辰和分鐘！');
       return;
     }
 
     const date = new Date(dateInput);
     if (isNaN(date.getTime())) {
+      console.warn('無效日期格式:', dateInput);
       alert('無效的日期格式！');
       return;
     }
@@ -1784,15 +1818,18 @@ document.getElementById('btnTime').addEventListener('click', () => {
     moving = movingNum % 6 === 0 ? [6] : [movingNum % 6];
   }
 
+  console.log('生成卦象:', { upperIdx, lowerIdx, moving });
   generateGua(upperIdx, lowerIdx, moving, method === 'modern' ? '現代時間取卦' : '傳統時辰取卦');
   const questionType = document.getElementById('questionSelector')?.value || 'life';
   renderQuestionAnalysis(currentResult, questionType);
   renderDetailedAnalysis(currentResult);
   renderWuxingAnalysis(currentResult);
+  console.log('currentResult 已設置:', currentResult);
 });
 
 // 以象取卦
 document.getElementById('btnImage').addEventListener('click', () => {
+  console.log('點擊 btnImage，執行以象取卦');
   const upperIdx = parseInt(document.getElementById('upperImageSelect').value);
   const lowerIdx = parseInt(document.getElementById('lowerDirectionSelect').value);
   const useMinute = document.getElementById('imageUseMinute').checked;
@@ -1804,6 +1841,7 @@ document.getElementById('btnImage').addEventListener('click', () => {
   } else {
     const movingInput = document.getElementById('imageMovingInput').value.trim();
     if (!movingInput || isNaN(movingInput) || movingInput < 1 || movingInput > 6) {
+      console.warn('無效動爻輸入:', movingInput);
       alert('請輸入有效的動爻（1–6）或勾選使用當前分鐘！');
       return;
     }
@@ -1811,31 +1849,38 @@ document.getElementById('btnImage').addEventListener('click', () => {
   }
 
   if (!upperIdx || !lowerIdx) {
+    console.warn('未選擇上卦或下卦');
     alert('請選擇上卦和下卦！');
     return;
   }
 
+  console.log('生成卦象:', { upperIdx, lowerIdx, moving });
   generateGua(upperIdx, lowerIdx, moving, '以象取卦');
   const questionType = document.getElementById('questionSelector')?.value || 'life';
   renderQuestionAnalysis(currentResult, questionType);
   renderDetailedAnalysis(currentResult);
   renderWuxingAnalysis(currentResult);
+  console.log('currentResult 已設置:', currentResult);
 });
 
 // 分析按鈕
 document.getElementById('analyzeBtn').addEventListener('click', () => {
+  console.log('點擊 analyzeBtn，執行分析');
   if (!currentResult) {
+    console.warn('currentResult 未定義');
     alert('請先進行取卦以生成卦象！');
     return;
   }
   const questionType = document.getElementById('questionSelector').value;
   if (questionType === '1') {
+    console.warn('未選擇有效問題類型');
     alert('請選擇有效的問事類別！');
     return;
   }
   renderQuestionAnalysis(currentResult, questionType);
   renderDetailedAnalysis(currentResult);
   renderWuxingAnalysis(currentResult);
+  console.log('分析已渲染，問題類型:', questionType);
 });
 
 // 顯示綜合判斷（簡化版）
@@ -1843,7 +1888,7 @@ function showComprehensiveJudgment() {
   console.log('judgeBtn 點擊觸發');
   const analysisDiv = document.getElementById('wuxingAnalysis');
   const contentDiv = document.getElementById('wuxingContent');
-  
+
   if (!analysisDiv || !contentDiv) {
     console.error('找不到 wuxingAnalysis 或 wuxingContent 元素');
     alert('無法顯示綜合判斷，UI 元素缺失！');
@@ -1873,7 +1918,8 @@ function showComprehensiveJudgment() {
         <p><strong>總體建議</strong>：<span class="analysis-status">${overallAdvice}</span></p>
       </div>`;
     analysisDiv.classList.remove('hidden');
-    console.log('綜合判斷已渲染至 wuxingContent');
+    console.log('綜合判斷已渲染至 wuxingContent:', contentDiv.innerHTML);
+    console.log('wuxingAnalysis 顯示狀態:', getComputedStyle(analysisDiv).display);
   } catch (error) {
     console.error('顯示綜合判斷時發生錯誤:', error);
     alert('無法生成綜合判斷，可能缺少卦象數據！');
@@ -1881,23 +1927,30 @@ function showComprehensiveJudgment() {
 }
 
 // 匯出記錄按鈕
-document.getElementById('exportHistoryBtn')?.addEventListener('click', exportHistory);
+document.getElementById('exportHistoryBtn')?.addEventListener('click', () => {
+  console.log('點擊 exportHistoryBtn，匯出記錄');
+  exportHistory();
+});
 
 // 清空記錄按鈕
 document.getElementById('clearHistoryBtn')?.addEventListener('click', () => {
+  console.log('點擊 clearHistoryBtn，清空記錄');
   if (confirm('確定要清空所有記錄？此操作無法復原！')) {
     history = [];
     saveHistory();
     renderHistory();
+    console.log('記錄已清空');
   }
 });
 
 // 問題類型變更時重新渲染分析
 document.getElementById('questionSelector')?.addEventListener('change', (e) => {
+  console.log('questionSelector 變更，問題類型:', e.target.value);
   if (currentResult && e.target.value !== '1') {
     renderQuestionAnalysis(currentResult, e.target.value);
     renderDetailedAnalysis(currentResult);
     renderWuxingAnalysis(currentResult);
+    console.log('分析已重新渲染');
   }
 });
 });
