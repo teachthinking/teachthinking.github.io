@@ -1035,7 +1035,7 @@
       const normalizedScore = Math.max(0, Math.min(100, Math.round((totalScore + 60) / 1.2))); // 正規化到 0-100
       const auspiciousnessIndex = document.getElementById('auspiciousnessIndex');
       const auspiciousnessBar = document.getElementById('auspiciousnessBar');
-      auspiciousnessIndex.textContent = `吉凶指數：${normalizedScore}（100為大吉）`;
+      auspiciousnessIndex.textContent = `吉凶指數：${normalizedScore}`;
       auspiciousnessBar.style.background = `linear-gradient(to right, #e74c3c 0%, #2ecc71 ${normalizedScore}%, #2ecc71 100%)`;
 
       renderDetailedAnalysis(result);
@@ -1098,7 +1098,7 @@
             source = node.id;
             target = 'ti';
             markers = { end: 'url(#arrow-generate)' };
-          } else if (relation === '用�克體') {
+          } else if (relation === '用剋體') {
             className = 'wuxing-edge-overcome';
             source = node.id;
             target = 'ti';
@@ -1184,7 +1184,7 @@ function renderDetailedAnalysis(result) {
         }
 
         const radarData = {
-          labels: ['人事', '事務', '時間', '地點', '物品'],
+          labels: ['人', '事', '時', '地', '物'],
           datasets: [
             {
               label: '本卦象徵',
