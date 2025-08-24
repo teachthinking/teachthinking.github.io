@@ -1185,7 +1185,7 @@ function getWuxingOutcome(tiGua, yongGua, mainHexName, changeHexName) {
     status = '大吉';
     subkey = `${yongGua.name}卦生體`;
   } else if (relations[tiGua.wuxing]['剋'] === yongGua.wuxing) {
-    relationType = '體�克用';
+    relationType = '體剋用';
     status = '吉';
     subkey = `${tiGua.name}卦剋用`;
   } else if (tiGua.wuxing === yongGua.wuxing) {
@@ -1268,14 +1268,14 @@ function renderWuxingAnalysis(result) {
   guaAnalysisHtml += `
     <div class="analysis-item">
       <h4>互卦（過程分析）</h4>
-      <p>體卦屬 **${tiGua.wuxing}**，互卦（代表過程）屬 **${huLGua.wuxing}**。<br>五行關係為：**${huOutcome.relation}**。這顯示事情在過程中將會：<br><span class="analysis-status ${huOutcome.status}">${huOutcome.explanation}${huOutcome.details.title ? `<br><strong>相關卦象：</strong> ${huOutcome.details.title}` : ''}</span></p>`;
+      <p>體卦屬 【${tiGua.wuxing}】，互卦屬 【${huLGua.wuxing}】。<br>五行關係為：【${huOutcome.relation}】。表示事件發展過程：<br><span class="analysis-status ${huOutcome.status}">${huOutcome.explanation}${huOutcome.details.title ? `<br><strong>相關卦象：</strong> ${huOutcome.details.title}` : ''}</span></p>`;
   if (trigramExplanations[huLGua.name] || trigramExplanations[trigramName[huUpperId]]) {
     guaAnalysisHtml += `<div class="trigram-details"><strong>互卦取象：</strong><br>`;
     if (trigramExplanations[trigramName[huUpperId]]?.life) {
-      guaAnalysisHtml += `**上互卦**（${trigramName[huUpperId]}）：${trigramExplanations[trigramName[huUpperId]].life || '（無詳細解釋）'}<br>`;
+      guaAnalysisHtml += `【上互卦】（${trigramName[huUpperId]}）：${trigramExplanations[trigramName[huUpperId]].life || '（無詳細解釋）'}<br>`;
     }
     if (trigramExplanations[huLGua.name]?.life) {
-      guaAnalysisHtml += `**下互卦**（${huLGua.name}）：${trigramExplanations[huLGua.name].life || '（無詳細解釋）'}<br>`;
+      guaAnalysisHtml += `【下互卦】（${huLGua.name}）：${trigramExplanations[huLGua.name].life || '（無詳細解釋）'}<br>`;
     }
     guaAnalysisHtml += `</div>`;
   }
@@ -1290,14 +1290,14 @@ function renderWuxingAnalysis(result) {
   guaAnalysisHtml += `
     <div class="analysis-item">
       <h4>變卦（結果分析）</h4>
-      <p>體卦屬 **${tiGua.wuxing}**，變卦（代表結果）屬 **${changeUGua.wuxing}**。<br>五行關係為：**${changeOutcome.relation}**。這代表最終發展趨向於：<br><span class="analysis-status ${changeOutcome.status}">${changeOutcome.explanation}${changeOutcome.details.title ? `<br><strong>相關卦象：</strong> ${changeOutcome.details.title}` : ''}</span></p>`;
+      <p>體卦屬 【${tiGua.wuxing}】，變卦屬 【${changeUGua.wuxing}】。<br>五行關係為：【${changeOutcome.relation}】。表示事件發展結果趨向於：<br><span class="analysis-status ${changeOutcome.status}">${changeOutcome.explanation}${changeOutcome.details.title ? `<br><strong>相關卦象：</strong> ${changeOutcome.details.title}` : ''}</span></p>`;
   if (trigramExplanations[changeUGua.name]?.life || trigramExplanations[changeLGua.name]?.life) {
     guaAnalysisHtml += `<div class="trigram-details"><strong>變卦取象：</strong><br>`;
     if (trigramExplanations[changeUGua.name]?.life) {
-      guaAnalysisHtml += `**上變卦**（${changeUGua.name}）：${trigramExplanations[changeUGua.name].life || '（無詳細解釋）'}<br>`;
+      guaAnalysisHtml += `【變卦上卦】（${changeUGua.name}）：${trigramExplanations[changeUGua.name].life || '（無詳細解釋）'}<br>`;
     }
     if (trigramExplanations[changeLGua.name]?.life) {
-      guaAnalysisHtml += `**下變卦**（${changeLGua.name}）：${trigramExplanations[changeLGua.name].life || '（無詳細解釋）'}<br>`;
+      guaAnalysisHtml += `{變卦下卦】（${changeLGua.name}）：${trigramExplanations[changeLGua.name].life || '（無詳細解釋）'}<br>`;
     }
     guaAnalysisHtml += `</div>`;
   }
@@ -1306,9 +1306,9 @@ function renderWuxingAnalysis(result) {
   const influences = getChangeInfluences(tiGua, changeUGua, changeLGua);
   guaAnalysisHtml += `
     <div class="analysis-item">
-      <h4>變卦分層影響（梅花心易）</h4>
-      <p><strong>上卦變卦（天時/外在）：</strong> ${influences.upper.overall}<br>${influences.upper.details.external || '無詳細外在解釋'}</p>
-      <p><strong>下卦變卦（地利/內在）：</strong> ${influences.lower.overall}<br>${influences.lower.details.internal || '無詳細內在解釋'}</p>
+      <h4>變卦分層影響體卦</h4>
+      <p><strong>變卦上卦（天時/外在）：</strong> ${influences.upper.overall}<br>${influences.upper.details.external || '無詳細外在解釋'}</p>
+      <p><strong>變卦下卦（地利/內在）：</strong> ${influences.lower.overall}<br>${influences.lower.details.internal || '無詳細內在解釋'}</p>
       <p><strong>綜合走向：</strong> <span class="analysis-status">${influences.combined.details}</span></p>
     </div>`;
 
