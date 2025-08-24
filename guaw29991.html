@@ -1131,6 +1131,11 @@ function getChangeInfluences(tiGua, changeUGua, changeLGua) {
 
   return { upper: upperInfluence, lower: lowerInfluence, combined };
 }
+
+
+
+  
+// 輔助函數：根據五行關係判斷吉凶
 // 輔助函數：根據五行關係判斷吉凶
 function getWuxingOutcome(relation, movingCount) {
   if (!relation || relation === '未知') {
@@ -1368,127 +1373,140 @@ function renderDetailedAnalysis() {
     </div>`;
 }
 
-// 初始化應用程式
-document.addEventListener('DOMContentLoaded', async () => {
-  await loadResources();
+// 初始化
+document.addEventListener('DOMContentLoaded', () => {
+  loadResources();
   loadHistory();
 
-  // Tab 切換
-  document.querySelectorAll('.tab-button').forEach(button => {
-    button.addEventListener('click', () => {
-      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-      button.classList.add('active');
-      document.getElementById(button.dataset.target).classList.add('active');
+  document.getElementById('btnNumber')?.addEventListener('click', () => {
+    const upper = +document.getElementById('numUpper')?.value;
+    const lower = +document.getElementById('numLower')?.value;
+    const moving = +document.getElementById('numMoving')?.value;
+    if (upper && lower && moving) {
+      const upperIdx = Math.floor((upper % 8) || 8);
+      const lowerIdx = Math.floor((lower % 8) || 8);
+      const movingIdx = Math.floor((moving % 6) || 6);
+      generateGua(upperIdx, lowerIdx, movingIdx === 6 ? [] : [movingIdx], '數字取卦');
+    } else {
+      alert('請輸入有效的數字！');
+    }
+  });
+
+  document.getElementById('btnManual')?.addEventListener('click', () => {
+    const upperIdx = +document.getElementById('selUpper')?.value;
+    const lowerIdx = +document.getElementById('selLower')?.value;
+    const moving = document.getElementById('inputMoving')?.value.split(',').map(Number).filter(n => n >= 1 && n <= 6);
+    if (upperIdx && lowerIdx) {
+      generateGua(upperIdx, lowerIdx, moving, '手動取卦');
+    } else {
+      alert('請選擇上卦和下卦！');
+    }
+  });
+
+  document.getElementById('btnTime')?.addEventListener('click', () => {
+    const method = document.querySelector('input[name="time-method"]:checked')?.value;
+    let upperIdx, lowerIdx, movingIdx;
+    if (method === 'modern') {
+      const dt = document.getElementById('dtInput')?.value ? new Date(document.getElementById('dtInput').value) : new Date();
+      upperIdx = Math.floor(((dt.getHours() * 60 + dt.getMinutes()) % 8) || 8);
+      lowerIdx = Math.floor(((dt.getDate() + dt.getMonth() + 1) % 8) || 8);
+      movingIdx = Math.floor((dt.getSeconds() % 6) || 6);
+    } else {
+      const date = new Date(document.getElementById('dateInput')?.value || Date.now());
+      const shichen = +document.getElementById('shichenInput')?.value;
+      const minute = +document.getElementById('minuteInput')?.value;
+      upperIdx = Math.floor(((shichen * 60 + minute) % 8) || 8);
+      lowerIdx = Math.floor(((date.getDate() + date.getMonth() + 1) % 8) || 8);
+      movingIdx = Math.floor((minute % 6) || 6);
+    }
+    if (upperIdx && lowerIdx) {
+      generateGua(upperIdx, lowerIdx, movingIdx === 6 ? [] : [movingIdx], `${method === 'modern' ? '現代時間取卦' : '傳統時辰取卦'}`);
+    } else {
+      alert('請輸入有效的時間資料！');
+    }
+  });
+
+  document.getElementById('nowQuick')?.addEventListener('click', () => {
+    document.getElementById('dtInput').value = new Date().toISOString().slice(0, 16);
+  });
+
+  document.getElementById('btnImage')?.addEventListener('click', () => {
+    const upperIdx = +document.getElementById('upperImageSelect')?.value;
+    const lowerIdx = +document.getElementById('lowerDirectionSelect')?.value;
+    const useMinute = document.getElementById('imageUseMinute')?.checked;
+    let moving;
+    if (useMinute) {
+      moving = [Math.floor((new Date().getMinutes() % 6) || 6)];
+    } else {
+      moving = document.getElementById('imageMovingInput')?.value.split(',').map(Number).filter(n => n >= 1 && n <= 6);
+    }
+    if (upperIdx && lowerIdx) {
+      generateGua(upperIdx, lowerIdx, moving, '以象取卦');
+    } else {
+      alert('請選擇上卦和下卦！');
+    }
+  });
+
+  document.getElementById('analyzeBtn')?.addEventListener('click', () => {
+    const questionType = document.getElementById('questionSelector')?.value;
+    if (questionType && questionType !== '1') {
+      renderQuestionAnalysis(questionType);
+    } else {
+      alert('請選擇問題類型！');
+    }
+  });
+
+  document.getElementById('judgeBtn')?.addEventListener('click', () => {
+    renderWuxingAnalysis();
+    renderDetailedAnalysis();
+  });
+
+  document.getElementById('clearHistoryBtn')?.addEventListener('click', () => {
+    if (confirm('確定要清除所有記錄？')) {
+      history = [];
+      saveHistory();
+      renderHistory();
+    }
+  });
+
+  document.getElementById('exportHistoryBtn')?.addEventListener('click', exportHistory);
+
+  const tabs = document.querySelectorAll('.tab-button');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+      document.getElementById(tab.dataset.target)?.classList.remove('hidden');
+      if (tab.dataset.target === 'time-tab') {
+        const modern = document.getElementById('time-modern');
+        const traditional = document.getElementById('time-traditional');
+        const method = document.querySelector('input[name="time-method"]:checked')?.value;
+        if (method === 'modern') {
+          modern.classList.remove('hidden');
+          traditional.classList.add('hidden');
+        } else {
+          modern.classList.add('hidden');
+          traditional.classList.remove('hidden');
+        }
+      }
     });
   });
 
-  // 數字取卦
-  document.getElementById('btnNumber').addEventListener('click', () => {
-    const numUpper = parseInt(document.getElementById('numUpper').value);
-    const numLower = parseInt(document.getElementById('numLower').value);
-    const numMoving = parseInt(document.getElementById('numMoving').value);
-    
-    if (isNaN(numUpper) || isNaN(numLower) || isNaN(numMoving) || numUpper < 100 || numUpper > 999 || numLower < 100 || numLower > 999 || numMoving < 100 || numMoving > 999) {
-      alert('請輸入 100–999 的有效數字！');
-      return;
-    }
-    
-    const upperIdx = numUpper % 8 || 8;
-    const lowerIdx = numLower % 8 || 8;
-    const moving = [numMoving % 6 || 6];
-    generateGua(upperIdx, lowerIdx, moving, '數字取卦');
-  });
-
-  // 手動取卦
-  document.getElementById('btnManual').addEventListener('click', () => {
-    const upperIdx = parseInt(document.getElementById('selUpper').value);
-    const lowerIdx = parseInt(document.getElementById('selLower').value);
-    const movingInput = document.getElementById('inputMoving').value.trim();
-    
-    if (!upperIdx || !lowerIdx || !movingInput) {
-      alert('請輸入完整的卦象資訊！');
-      return;
-    }
-    
-    const moving = movingInput.split(',').map(Number).filter(n => n >= 1 && n <= 6);
-    if (moving.length === 0 || moving.some(n => isNaN(n))) {
-      alert('動爻格式錯誤，請輸入 1–6 的數字，例如 "1" 或 "1,3"');
-      return;
-    }
-    
-    generateGua(upperIdx, lowerIdx, moving, '手動取卦');
-  });
-
-  // 時間取卦
-  document.getElementById('btnTime').addEventListener('click', () => {
-    const method = document.querySelector('input[name="time-method"]:checked').value;
-    let year, month, day, hour, minute;
-    
-    if (method === 'modern') {
-      const dt = new Date(document.getElementById('dtInput').value);
-      if (isNaN(dt)) {
-        alert('請選擇有效的日期時間！');
-        return;
-      }
-      year = dt.getFullYear();
-      month = dt.getMonth() + 1;
-      day = dt.getDate();
-      hour = dt.getHours();
-      minute = dt.getMinutes();
-    } else {
-      const date = new Date(document.getElementById('dateInput').value);
-      const shichen = parseInt(document.getElementById('shichenInput').value);
-      minute = parseInt(document.getElementById('minuteInput').value);
-      if (isNaN(date) || isNaN(shichen) || isNaN(minute) || minute < 0 || minute > 59) {
-        alert('請輸入有效的日期、時辰或分鐘！');
-        return;
-      }
-      year = date.getFullYear();
-      month = date.getMonth() + 1;
-      day = date.getDate();
-      hour = shichen * 2 - 1;
-    }
-    
-    const upperIdx = (year + month + day) % 8 || 8;
-    const lowerIdx = (year + month + day + hour) % 8 || 8;
-    const moving = [(year + month + day + hour + minute) % 6 || 6];
-    generateGua(upperIdx, lowerIdx, moving, method === 'modern' ? '現代時間取卦' : '傳統時辰取卦');
-  });
-
-  // 使用現在時間
-  document.getElementById('nowQuick').addEventListener('click', () => {
-    const now = new Date();
-    document.getElementById('dtInput').value = now.toISOString().slice(0, 16);
-  });
-
-  // 以象取卦
-  document.getElementById('btnImage').addEventListener('click', () => {
-    const upperIdx = parseInt(document.getElementById('upperImageSelect').value);
-    const lowerIdx = parseInt(document.getElementById('lowerDirectionSelect').value);
-    let moving = [];
-    
-    if (document.getElementById('imageUseMinute').checked) {
-      moving = [(new Date().getMinutes() % 6) || 6];
-    } else {
-      const movingInput = parseInt(document.getElementById('imageMovingInput').value);
-      if (isNaN(movingInput) || movingInput < 1 || movingInput > 6) {
-        alert('請輸入 1–6 的有效動爻，或勾選使用當前分鐘！');
-        return;
-      }
-      moving = [movingInput];
-    }
-    
-    generateGua(upperIdx, lowerIdx, moving, '以象取卦');
-  });
-
-  // 時間方式切換
   document.querySelectorAll('input[name="time-method"]').forEach(radio => {
     radio.addEventListener('change', () => {
-      document.getElementById('time-modern').classList.toggle('hidden', radio.value !== 'modern');
-      document.getElementById('time-traditional').classList.toggle('hidden', radio.value !== 'traditional');
+      const modern = document.getElementById('time-modern');
+      const traditional = document.getElementById('time-traditional');
+      if (radio.value === 'modern') {
+        modern.classList.remove('hidden');
+        traditional.classList.add('hidden');
+      } else {
+        modern.classList.add('hidden');
+        traditional.classList.remove('hidden');
+      }
     });
   });
+});
 
   // 清除記錄
   document.getElementById('clearHistoryBtn').addEventListener('click', () => {
