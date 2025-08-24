@@ -1569,35 +1569,47 @@ document.querySelectorAll('input[name="time-method"]').forEach(radio => {
   radio.addEventListener('change', () => {
     const modern = document.getElementById('time-modern');
     const traditional = document.getElementById('time-traditional');
-    
-    // 檢查元素是否存在，否則記錄錯誤並退出
+
+    // 檢查元素是否存在
     if (!modern || !traditional) {
       console.error('找不到時間選擇元素', { modern, traditional });
-      alert('頁面元素缺失，請檢查 HTML 結構是否包含 time-modern 和 time-traditional！');
+      alert('頁面元素缺失，請檢查 HTML 是否包含 time-modern 和 time-traditional！');
       return;
     }
 
+    // 檢查 radio value 是否有效
+    if (radio.value !== 'modern' && radio.value !== 'traditional') {
+      console.warn('無效的時間選擇值', { value: radio.value });
+      return;
+    }
+
+    // 切換顯示狀態
     if (radio.value === 'modern') {
       modern.classList.remove('hidden');
       traditional.classList.add('hidden');
+      console.log('切換到現代時間模式');
     } else {
       modern.classList.add('hidden');
       traditional.classList.remove('hidden');
+      console.log('切換到傳統時辰模式');
     }
   });
 });
 
 // 檢查是否有未捕獲的錯誤並記錄
 window.addEventListener('error', (event) => {
-  console.error('未捕獲的錯誤:', event.message, event.filename, event.lineno);
+  console.error('未捕獲的錯誤:', {
+    message: event.message,
+    file: event.filename,
+    line: event.lineno
+  });
   alert('程式發生錯誤，請檢查控制台以獲取詳細資訊！');
 });
 
 // 確認程式初始化完成
-console.log('JavaScript 初始化完成，時間選擇功能已綁定。');
+console.log('JavaScript 初始化完成，時間選擇功能已綁定，監聽 radio 元素:', document.querySelectorAll('input[name="time-method"]').length);
 
 });
-
   
 </script>
   
