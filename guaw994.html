@@ -1645,6 +1645,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const judgeBtn = document.getElementById('judgeBtn');
   if (judgeBtn) {
     judgeBtn.addEventListener('click', showComprehensiveJudgment);
+    console.log('judgeBtn 事件已綁定');
   } else {
     console.error('未找到 judgeBtn 元素');
   }
@@ -1837,10 +1838,12 @@ document.getElementById('analyzeBtn').addEventListener('click', () => {
   renderWuxingAnalysis(currentResult);
 });
 
-// 顯示綜合判斷
+// 顯示綜合判斷（簡化版）
 function showComprehensiveJudgment() {
+  console.log('judgeBtn 點擊觸發');
   const analysisDiv = document.getElementById('wuxingAnalysis');
   const contentDiv = document.getElementById('wuxingContent');
+  
   if (!analysisDiv || !contentDiv) {
     console.error('找不到 wuxingAnalysis 或 wuxingContent 元素');
     alert('無法顯示綜合判斷，UI 元素缺失！');
@@ -1848,65 +1851,32 @@ function showComprehensiveJudgment() {
   }
 
   if (!currentResult) {
+    console.warn('currentResult 未定義');
     alert('請先進行取卦以生成卦象！');
     return;
   }
 
+  console.log('currentResult:', currentResult);
   try {
-    // 提取綜合判斷部分
-    const { tiGua, yongGua } = getTiYong(currentResult);
-    const mainOutcome = getWuxingOutcome(tiGua, yongGua, currentResult.hexMain?.name, currentResult.hexChange?.name);
-    const huLines = currentResult.huLines;
-    const huUpperId = triIndexByLines.get(JSON.stringify(huLines.slice(3, 6))) || 8;
-    const huLowerId = triIndexByLines.get(JSON.stringify(huLines.slice(0, 3))) || 8;
-    const huUGua = getTrigramInfo(huUpperId);
-    const huLGua = getTrigramInfo(huLowerId);
-    const huUpperOutcome = getWuxingOutcome(tiGua, huUGua, currentResult.hexMain?.name, currentResult.hexHu?.name);
-    const huLowerOutcome = getWuxingOutcome(tiGua, huLGua, currentResult.hexMain?.name, currentResult.hexHu?.name);
-    const changeLines = currentResult.changeLines;
-    const changeUpperId = triIndexByLines.get(JSON.stringify(changeLines.slice(3, 6))) || 8;
-    const changeLowerId = triIndexByLines.get(JSON.stringify(changeLines.slice(0, 3))) || 8;
-    const changeUGua = getTrigramInfo(changeUpperId);
-    const changeLGua = getTrigramInfo(changeLowerId);
-    const changeInfluences = getChangeInfluences(tiGua, changeUGua, changeLGua);
+    // 簡單五行判斷
+    const mainGua = currentResult.hexMain?.name || '未知';
+    const huGua = currentResult.hexHu?.name || '未知';
+    const changeGua = currentResult.hexChange?.name || '未知';
+    const overallAdvice = '簡化測試：基於本卦、互卦、變卦的綜合建議，請檢查五行資料是否正確載入。';
 
-    // 計算綜合判斷
-    const relations = [
-      mainOutcome?.relation || '',
-      huUpperOutcome?.relation || '',
-      huLowerOutcome?.relation || '',
-      changeInfluences?.upper?.overall || '',
-      changeInfluences?.lower?.overall || ''
-    ].filter(r => r);
-    const favorableCount = relations.filter(r => r === '用生體' || r === '體剋用').length;
-    const unfavorableCount = relations.filter(r => r === '用剋體' || r === '體生用').length;
-    let overallAdvice = '';
-    if (favorableCount >= 4) {
-      overallAdvice = '整體趨勢有利，現況穩定，過程有助力，結果樂觀，建議積極行動，把握機遇。';
-    } else if (unfavorableCount >= 4) {
-      overallAdvice = '整體趨勢不利，現況有挑戰，過程與結果皆需謹慎，建議穩紮穩打，加強內部準備。';
-    } else if (favorableCount > unfavorableCount) {
-      overallAdvice = '整體趨勢偏吉，過程有外部支持，但需克服內在挑戰，建議利用外部資源，謹慎推進。';
-    } else if (unfavorableCount > favorableCount) {
-      overallAdvice = '整體趨勢偏凶，內外條件有阻力，建議謹慎應對，注重內部資源管理。';
-    } else {
-      overallAdvice = '整體趨勢平穩，內外條件均衡，建議結合卦辭與爻辭，靈活應對後續變化。';
-    }
-
-    // 顯示綜合判斷
     contentDiv.innerHTML = `
       <div class="analysis-item">
         <h4>綜合判斷</h4>
-        <p><strong>現況（本卦）</strong>：${mainOutcome?.explanation || '無總體解釋'}</p>
-        <p><strong>過程（互卦）</strong>：外在（${huUGua?.name || '未知'}）：${huUpperOutcome?.explanation || '無總體解釋'}<br>
-           內在（${huLGua?.name || '未知'}）：${huLowerOutcome?.explanation || '無總體解釋'}</p>
-        <p><strong>結果（變卦）</strong>：${changeInfluences?.combined?.details || '無變卦解釋'}</p>
+        <p><strong>現況（本卦）</strong>：${mainGua}</p>
+        <p><strong>過程（互卦）</strong>：${huGua}</p>
+        <p><strong>結果（變卦）</strong>：${changeGua}</p>
         <p><strong>總體建議</strong>：<span class="analysis-status">${overallAdvice}</span></p>
       </div>`;
     analysisDiv.classList.remove('hidden');
+    console.log('綜合判斷已渲染至 wuxingContent');
   } catch (error) {
     console.error('顯示綜合判斷時發生錯誤:', error);
-    alert('無法生成綜合判斷，可能缺少五行資料或卦象數據！');
+    alert('無法生成綜合判斷，可能缺少卦象數據！');
   }
 }
 
