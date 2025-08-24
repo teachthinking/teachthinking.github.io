@@ -747,6 +747,7 @@ function generateGua(upperIdx, lowerIdx, moving, method) {
   
   renderHistory();
 }
+
   document.getElementById('result').classList.remove('hidden');
   document.getElementById('guaName').textContent = mainHex.name || mainHexName || '未知';
   document.getElementById('changeGuaName').textContent = changeHex.name || changeHexName || '未知';
@@ -1150,7 +1151,28 @@ function renderQuestionAnalysis(result, questionType) {
       <h4>${questionTitle}：本卦（現況分析）</h4>
       <p><strong>本卦</strong>：${result.hexMain?.name || '未知'}<br>卦辭：${judgmentText} (評分: ${result.hexMain?.judgment?.score || 0}/10)</p>`;
 
-  
+  <div id="result" class="hidden">
+    <h2>卦象結果</h2>
+    <div class="gua-display-container">
+        <div class="gua-display-item">
+            <h3>本卦：</h3>
+            <h2 id="guaName"></h2>
+            <div id="guaImage"></div>
+        </div>
+        <div class="gua-display-item">
+            <h3>互卦：</h3>
+            <h2 id="guaHuName"></h2>
+            <div id="guaHuImage"></div>
+        </div>
+        <div class="gua-display-item">
+            <h3>變卦：</h3>
+            <h2 id="guaChangeName"></h2>
+            <div id="guaChangeImage"></div>
+        </div>
+        <!-- 新增元素顯示完整卦象結果 -->
+        <div id="fullGuaResult" class="gua-full-result"></div>
+    </div>
+</div>
   // 動爻爻辭
   if (result.moving.length > 0) {
     guaAnalysisHtml += `<p><strong>動爻爻辭</strong>：<br>`;
