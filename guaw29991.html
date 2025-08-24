@@ -1508,44 +1508,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-  // 清除記錄
-  document.getElementById('clearHistoryBtn').addEventListener('click', () => {
-    if (confirm('確定要清除所有記錄？此操作無法復原！')) {
-      history = [];
-      saveHistory();
-      renderHistory();
-    }
-  });
-
-  // 匯出記錄
-  document.getElementById('exportHistoryBtn').addEventListener('click', exportHistory);
-
-  // 隨機預設數字
-  document.getElementById('numUpper').value = Math.floor(Math.random() * 900) + 100;
-  document.getElementById('numLower').value = Math.floor(Math.random() * 900) + 100;
-  document.getElementById('numMoving').value = Math.floor(Math.random() * 900) + 100;
-});
-
-// 顯示綜合判斷
-document.getElementById('judgeBtn').addEventListener('click', () => {
-  if (!currentResult) {
-    alert('請先生成卦象！');
-    return;
-  }
-  document.getElementById('judgeBox').classList.remove('hidden');
-  renderWuxingAnalysis(currentResult);
-  renderDetailedAnalysis(currentResult);
-});
-
-// 問題分析按鈕
-document.getElementById('analyzeBtn').addEventListener('click', () => {
-  const questionType = document.getElementById('questionSelector').value;
-  if (!currentResult || questionType === '1') {
-    alert('請先選擇問事類別並生成卦象！');
-    return;
-  }
-  renderQuestionAnalysis(currentResult, questionType);
-});
+  
 </script>
   
 </body>
