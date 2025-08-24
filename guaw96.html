@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="utf-8" />
@@ -28,7 +27,7 @@
     }
 
     .container {
-      max-width: 1000px;
+      max-width: 1200px;
       margin: 0 auto;
       background: var(--card-bg);
       padding: 25px;
@@ -216,7 +215,10 @@
 
     canvas {
       max-width: 100%;
-      margin: 10px 0;
+      margin: 10px auto;
+      display: block;
+      width: 600px !important;
+      height: 400px !important;
     }
 
     .line-explanation {
@@ -357,7 +359,7 @@
             <option value="17">酉時 (17:00-19:00)</option>
             <option value="19">戌時 (19:00-21:00)</option>
             <option value="21">亥時 (21:00-23:00)</option>
-          </select>
+        </select>
         </div>
         <div class="row">
           <label>分鐘（可選）：</label>
@@ -480,9 +482,9 @@
         </div>
         <div id="detailedAnalysis" class="hidden">
           <h4>象徵分析</h4>
-          <canvas id="symbolismRadarChart" width="600" height="600"></canvas>
-          <canvas id="overallBarChart" width="400" height="200"></canvas>
-          <canvas id="movingLineBarChart" width="400" height="200"></canvas>
+          <canvas id="symbolismRadarChart" width="600" height="400"></canvas>
+          <canvas id="overallBarChart" width="600" height="400"></canvas>
+          <canvas id="movingLineBarChart" width="600" height="400"></canvas>
         </div>
       </div>
     </div>
@@ -498,16 +500,16 @@
       1: [1, 1, 1, '金', '乾'],
       2: [1, 1, 0, '金', '兌'],
       3: [1, 0, 1, '火', '離'],
-      4: [0, 1, 1, '木', '震'],
-      5: [0, 1, 0, '木', '巽'],
-      6: [0, 0, 1, '水', '坎'],
-      7: [1, 0, 0, '土', '艮'],
+      4: [1, 0, 0, '木', '震'],
+      5: [0, 1, 1, '木', '巽'],
+      6: [0, 1, 0, '水', '坎'],
+      7: [0, 0, 1, '土', '艮'],
       8: [0, 0, 0, '土', '坤']
     };
 
     const triIndexByLines = new Map(Object.entries({
-      '[1,1,1]': 1, '[1,1,0]': 2, '[1,0,1]': 3, '[0,1,1]': 4,
-      '[0,1,0]': 5, '[0,0,1]': 6, '[1,0,0]': 7, '[0,0,0]': 8
+      '[1,1,1]': 1, '[1,1,0]': 2, '[1,0,1]': 3, '[1,0,0]': 4,
+      '[0,1,1]': 5, '[0,1,0]': 6, '[0,0,1]': 7, '[0,0,0]': 8
     }).map(([k, v]) => [k, parseInt(v)]));
 
     const hexagramNameMap = new Map([
@@ -515,27 +517,27 @@
       ['[0,0,0,1,1,1]', '天地否'], ['[0,0,0,0,0,1]', '風地觀'], ['[0,0,0,0,0,0]', '坤為地'], ['[1,0,0,0,0,0]', '地雷復'],
       ['[1,1,0,0,0,0]', '地澤臨'], ['[1,1,1,0,0,0]', '地天泰'], ['[1,1,1,1,0,0]', '雷天大壯'], ['[1,1,1,1,1,0]', '澤天夬'],
       ['[1,1,1,0,0,1]', '山天大畜'], ['[1,1,1,1,0,1]', '火天大有'], ['[0,0,0,0,1,0]', '水地比'], ['[0,0,0,1,1,0]', '澤地萃'],
-      ['[0,1,0,0,0,0]', '地水師'], ['[0,1,1,0,0,0]', '地風升'], ['[0,0,1,0,0,0]', '地山謙'], ['[1,0,1,0,0,0]', '地火明夷'],
-      ['[1,0,1,0,1,0]', '水火既濟'], ['[0,0,0,1,0,0]', '雷地豫'], ['[0,0,0,0,0,1]', '山地剝'], ['[1,1,0,0,1,0]', '澤水困'],
-      ['[0,1,0,1,0,1]', '火水未濟'], ['[1,0,0,0,1,0]', '水雷屯'], ['[1,0,0,0,1,0]', '雷水解'], ['[1,1,1,0,1,0]', '水天需'],
-      ['[0,0,0,1,0,1]', '火地晉'], ['[1,0,1,0,1,1]', '風火家人'], ['[1,0,1,0,1,0]', '水火既濟'], ['[0,1,1,1,1,0]', '澤風大過'],
-      ['[0,0,0,1,1,0]', '風地觀'], ['[1,1,0,1,0,1]', '火風鼎'], ['[1,0,0,1,0,0]', '震為雷'], ['[1,0,1,1,1,0]', '澤火革'],
-      ['[0,1,0,1,0,0]', '山水蒙'], ['[1,0,0,1,1,0]', '風山漸'], ['[0,1,1,0,0,1]', '山風蠱'], ['[1,0,0,1,0,1]', '火雷噬嗑'],
-      ['[1,0,1,1,0,0]', '雷火豐'], ['[1,0,1,1,0,1]', '離為火'], ['[0,0,1,1,1,0]', '澤山咸'], ['[0,1,0,0,0,1]', '風水渙'],
-      ['[0,0,1,1,0,1]', '火山旅'], ['[1,1,0,1,1,1]', '天澤履'], ['[1,0,1,1,1,1]', '天火同人'], ['[0,1,0,1,1,1]', '天水訟'],
-      ['[1,1,1,1,0,0]', '雷天大壯'], ['[1,1,1,1,0,1]', '火天大有'], ['[0,0,1,1,1,1]', '天山遯'], ['[1,1,0,1,1,0]', '兌為澤'],
-      ['[0,1,1,0,1,1]', '巽為風']
+      ['[0,1,1,0,0,0]', '地風升'], ['[0,1,0,0,0,0]', '地水師'], ['[1,0,0,0,0,0]', '地雷復'], ['[0,0,1,0,0,0]', '地山謙'],
+      ['[1,0,1,0,0,0]', '地火明夷'], ['[1,0,1,0,1,0]', '水火既濟'], ['[0,0,0,1,0,0]', '雷地豫'], ['[0,0,0,0,0,1]', '山地剝'],
+      ['[1,1,0,0,1,0]', '澤水困'], ['[0,1,0,1,0,1]', '火水未濟'], ['[1,0,0,0,1,0]', '水雷屯'], ['[1,0,0,0,1,0]', '雷水解'],
+      ['[1,1,1,0,1,0]', '水天需'], ['[0,0,0,1,0,1]', '火地晉'], ['[1,0,1,0,1,1]', '風火家人'], ['[1,0,1,0,1,0]', '水火既濟'],
+      ['[0,1,1,1,1,0]', '澤風大過'], ['[0,0,0,1,1,0]', '風地觀'], ['[1,1,0,1,0,1]', '火風鼎'], ['[1,0,0,1,0,1]', '風雷益'],
+      ['[1,0,0,1,0,0]', '震為雷'], ['[1,0,1,1,1,0]', '澤火革'], ['[0,1,0,1,0,0]', '山水蒙'], ['[1,0,0,1,1,0]', '風山漸'],
+      ['[0,1,1,0,0,1]', '山風蠱'], ['[1,0,0,1,0,1]', '火雷噬嗑'], ['[1,0,1,1,0,0]', '雷火豐'], ['[1,0,1,1,0,1]', '離為火'],
+      ['[0,0,1,1,1,0]', '澤山咸'], ['[0,1,0,0,0,1]', '風水渙'], ['[0,0,1,1,0,1]', '火山旅'], ['[1,1,0,1,1,1]', '天澤履'],
+      ['[1,0,1,1,1,1]', '天火同人'], ['[0,1,0,1,1,1]', '天水訟'], ['[1,1,1,1,0,0]', '雷天大壯'], ['[1,1,1,1,0,1]', '火天大有'],
+      ['[1,0,0,0,0,0]', '地雷復'], ['[0,0,1,1,1,1]', '天山遯'], ['[1,1,0,1,1,0]', '兌為澤'], ['[0,1,1,0,1,1]', '巽為風']
     ]);
 
     const palaceMap = {
-      '乾為天': ['乾為天', '天風姤', '天水訟', '天山遯', '天地否', '風地觀', '地山謙', '火天大有'],
-      '坤為地': ['坤為地', '地水師', '地雷復', '地天泰', '雷天大壯', '澤天夬', '澤地萃', '水地比'],
-      '水雷屯': ['水雷屯', '水火既濟', '水天需', '水地比', '雷地豫', '澤水困', '天水訟', '火水未濟'],
-      '震為雷': ['震為雷', '雷火豐', '雷地豫', '雷天大壯', '水天需', '火天大有', '天山遯', '山天大畜'],
-      '巽為風': ['巽為風', '風雷益', '風水渙', '風地觀', '水地比', '火地晉', '天水訟', '澤水困'],
-      '艮為山': ['艮為山', '山雷頤', '山水蒙', '山風蠱', '風雷益', '水雷屯', '地雷復', '雷風恆'],
-      '離為火': ['離為火', '火山旅', '火地晉', '火風鼎', '風火家人', '地火明夷', '水火既濟', '雷火豐'],
-      '兌為澤': ['兌為澤', '澤雷隨', '澤風大過', '澤水困', '雷水解', '水山蹇', '地水師', '風水渙']
+      '乾為天': ['乾為天','天澤履','天火同人','天雷無妄','天風姤','天水訟','天山遯','天地否'],
+      '兌為澤': ['澤天夬','兌為澤','澤火革','澤雷隨','澤風大過','澤水困','澤山咸','澤地萃'],
+      '離為火': ['火天大有','火澤睽','離為火','火雷噬嗑','火風鼎','火水未濟','火山旅','火地晉'],
+      '震為雷': ['雷天大壯','雷澤歸妹','雷火豐','震為雷','雷風恆','雷水解','雷山小過','雷地豫'],
+      '巽為風': ['風天小畜','風澤中孚','風火家人','風雷益','巽為風','風水渙','風山漸','風地觀'],
+      '坎為水': ['水天需','水澤節','水火既濟','水雷屯','水風井','坎為水','水山蹇','水地比'],
+      '艮為山': ['山天大畜','山澤損','山火賁','山雷頤','山風蠱','山水蒙','艮為山','山地剝'],
+      '坤為地': ['地天泰','地澤臨','地火明夷','地雷復','地風升','地水師','地山謙','坤為地']
     };
 
     const lunarCalendar = {
@@ -580,11 +582,9 @@
     function getHexagramName(upperIdx, lowerIdx) {
       const upperLines = guaTable[upperIdx]?.slice(0, 3) || [0, 0, 0];
       const lowerLines = guaTable[lowerIdx]?.slice(0, 3) || [0, 0, 0];
-      const lines = [...lowerLines, ...upperLines]; // 下卦在前，上卦在後
+      const lines = [...lowerLines, ...upperLines];
       const key = JSON.stringify(lines);
-      const name = hexagramNameMap.get(key) || `${trigramName[lowerIdx] || '未知'}${trigramName[upperIdx] || '未知'}`;
-      console.log(`計算卦名：上卦 ${trigramName[upperIdx]}(${upperLines}), 下卦 ${trigramName[lowerIdx]}(${lowerLines}), 合併 ${lines}, 名稱 ${name}`);
-      return name;
+      return hexagramNameMap.get(key) || `${trigramName[upperIdx] || '未知'}${trigramName[lowerIdx] || '未知'}`;
     }
 
     function getSamePalaceHexagrams(hexName) {
@@ -616,7 +616,7 @@
     function getRelationScore(relation) {
       switch (relation) {
         case '用生體': return 10;
-        case '體�剋用': return 3;
+        case '體剋用': return 3;
         case '比和': return 0;
         case '體生用': return -5;
         case '用剋體': return -10;
@@ -638,34 +638,34 @@
     function getWuxingStatus(wuxing, lunarMonthNumber) {
       const statuses = {
         '木': {
-          1: '旺', 2: '旺', 3: '旺', // 春
-          4: '休', 5: '休', 6: '休', // 夏
-          7: '囚', 8: '囚', 9: '囚', // 秋
-          10: '死', 11: '死', 12: '死' // 冬
+          1: '旺', 2: '旺', 3: '旺',
+          4: '休', 5: '休', 6: '休',
+          7: '囚', 8: '囚', 9: '囚',
+          10: '死', 11: '死', 12: '死'
         },
         '火': {
-          1: '死', 2: '相', 3: '相', // 春
-          4: '旺', 5: '旺', 6: '旺', // 夏
-          7: '休', 8: '休', 9: '休', // 秋
-          10: '囚', 11: '囚', 12: '囚' // 冬
+          1: '死', 2: '相', 3: '相',
+          4: '旺', 5: '旺', 6: '旺',
+          7: '休', 8: '休', 9: '休',
+          10: '囚', 11: '囚', 12: '囚'
         },
         '土': {
-          1: '囚', 2: '囚', 3: '旺', // 春
-          4: '相', 5: '相', 6: '旺', // 夏
-          7: '死', 8: '死', 9: '旺', // 秋
-          10: '休', 11: '休', 12: '旺' // 冬
+          1: '囚', 2: '囚', 3: '旺',
+          4: '相', 5: '相', 6: '旺',
+          7: '死', 8: '死', 9: '旺',
+          10: '休', 11: '休', 12: '旺'
         },
         '金': {
-          1: '囚', 2: '囚', 3: '相', // 春
-          4: '死', 5: '死', 6: '相', // 夏
-          7: '旺', 8: '旺', 9: '旺', // 秋
-          10: '休', 11: '休', 12: '相' // 冬
+          1: '囚', 2: '囚', 3: '相',
+          4: '死', 5: '死', 6: '相',
+          7: '旺', 8: '旺', 9: '旺',
+          10: '休', 11: '休', 12: '相'
         },
         '水': {
-          1: '休', 2: '休', 3: '死', // 春
-          4: '囚', 5: '囚', 6: '死', // 夏
-          7: '相', 8: '相', 9: '死', // 秋
-          10: '旺', 11: '旺', 12: '旺' // 冬
+          1: '休', 2: '休', 3: '死',
+          4: '囚', 5: '囚', 6: '死',
+          7: '相', 8: '相', 9: '死',
+          10: '旺', 11: '旺', 12: '旺'
         }
       };
       return statuses[wuxing]?.[lunarMonthNumber] || '未知';
@@ -715,7 +715,6 @@
         );
         quotes = Array.isArray(quotesResponse) ? quotesResponse : [];
         document.getElementById('subtitle').textContent = quotes[Math.floor(Math.random() * quotes.length)] || '請選擇取卦方式以開始占卜';
-        console.log('資源載入完成：hexagrams 和 quotes');
       } catch (error) {
         console.error('載入 JSON 檔案失敗:', error);
         alert('無法載入卦象資料或名言，請檢查檔案路徑或格式！');
@@ -726,7 +725,6 @@
     function saveHistory() {
       try {
         localStorage.setItem('guaHistory', JSON.stringify(history));
-        console.log('歷史記錄已儲存');
       } catch (error) {
         console.error('儲存歷史記錄失敗:', error);
       }
@@ -737,7 +735,6 @@
         const stored = localStorage.getItem('guaHistory');
         history = stored ? JSON.parse(stored) : [];
         renderHistory();
-        console.log('歷史記錄已載入');
       } catch (error) {
         console.error('載入歷史記錄失敗:', error);
       }
@@ -755,7 +752,6 @@
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        console.log('歷史記錄已匯出');
       } catch (error) {
         console.error('匯出歷史記錄失敗:', error);
         alert('無法匯出歷史記錄，請稍後再試！');
@@ -783,7 +779,6 @@
             saveHistory();
             renderHistory();
             alert('歷史記錄匯入成功！');
-            console.log('歷史記錄已匯入');
           } catch (error) {
             console.error('解析匯入檔案失敗:', error);
             alert('匯入歷史記錄失敗，請檢查檔案格式！');
@@ -798,10 +793,6 @@
 
     function renderHistory() {
       const historyList = document.getElementById('historyList');
-      if (!historyList) {
-        console.error('找不到 historyList 元素');
-        return;
-      }
       historyList.innerHTML = history.length === 0 ? '<p>無歷史記錄</p>' : '';
       history.forEach((item, index) => {
         const div = document.createElement('div');
@@ -812,7 +803,6 @@
           <p><strong>問題：</strong> ${item.question || '無'}</p>
         `;
         div.addEventListener('click', () => {
-          console.log(`點擊歷史記錄 ${index}: ${item.hexMain?.name}`);
           currentResult = item;
           generateGua(item.uIdx, item.lIdx, item.moving, item.method, item.timestamp);
           renderWuxingAnalysis(item);
@@ -820,7 +810,6 @@
         });
         historyList.appendChild(div);
       });
-      console.log('歷史記錄已渲染');
     }
 
     function renderGuaImage(lines, elementId, moving = []) {
@@ -840,7 +829,6 @@
         lineDiv.className = `gua-line ${line === 0 ? 'yin' : ''} ${moving.includes(6 - idx) ? 'moving' : ''}`;
         container.appendChild(lineDiv);
       });
-      console.log(`卦象渲染完成: ${elementId}, 線條 ${lines}, 動爻 ${moving}`);
     }
 
     function renderLineExplanation(moving, hex) {
@@ -874,7 +862,6 @@
           </div>
         `;
       });
-      console.log(`爻辭渲染完成: 動爻 ${moving}`);
     }
 
     function generateGua(upperIdx, lowerIdx, moving, method = '未知', timestamp = new Date().toLocaleString('zh-TW')) {
@@ -905,24 +892,9 @@
       const huLowerIdx = triIndexByLines.get(JSON.stringify(huLines.slice(0, 3))) || 8;
       const huHexName = getHexagramName(huUpperIdx, huLowerIdx);
 
-      const mainHex = hexagrams[normalizeKey(mainHexName)] || {
-        name: mainHexName,
-        judgment: { text: '無卦辭', meaning: '無解釋', people: 5, affairs: 5, time: 5, place: 5, object: 5 },
-        symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 },
-        lines: []
-      };
-      const changeHex = hexagrams[normalizeKey(changeHexName)] || {
-        name: changeHexName,
-        judgment: { text: '無卦辭', meaning: '無解釋', people: 5, affairs: 5, time: 5, place: 5, object: 5 },
-        symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 },
-        lines: []
-      };
-      const huHex = hexagrams[normalizeKey(huHexName)] || {
-        name: huHexName,
-        judgment: { text: '無卦辭', meaning: '無解釋', people: 5, affairs: 5, time: 5, place: 5, object: 5 },
-        symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 },
-        lines: []
-      };
+      const mainHex = hexagrams[normalizeKey(mainHexName)] || { name: mainHexName, judgment: { text: '無卦辭', meaning: '無解釋', people: 5, affairs: 5, time: 5, place: 5, object: 5 }, symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 }, lines: [] };
+      const changeHex = hexagrams[normalizeKey(changeHexName)] || { name: changeHexName, judgment: { text: '無卦辭', meaning: '無解釋', people: 5, affairs: 5, time: 5, place: 5, object: 5 }, symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 }, lines: [] };
+      const huHex = hexagrams[normalizeKey(huHexName)] || { name: huHexName, judgment: { text: '無卦辭', meaning: '無解釋', people: 5, affairs: 5, time: 5, place: 5, object: 5 }, symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 }, lines: [] };
 
       const mainPalace = getSamePalaceHexagrams(mainHexName);
       console.log(`本卦 ${mainHexName} 屬於 ${mainPalace.palace} 宮，同宮卦：${mainPalace.hexagrams.join(', ')}`);
@@ -991,7 +963,7 @@
       const wuxingDiv = document.getElementById('wuxingAnalysis');
       const judgeBox = document.getElementById('judgeBox');
       const judgeTitle = document.getElementById('judgeTitle');
-      const timestamp = new Date(result.timestamp || '2025-08-25T02:35:00+08:00');
+      const timestamp = new Date(result.timestamp || '2025-08-25T00:38:00+08:00');
       const { lunarMonth, season, lunarMonthNumber } = lunarCalendar.gregorianToLunar(timestamp);
 
       if (!wuxingDiv || !judgeBox || !judgeTitle) {
@@ -1049,6 +1021,26 @@
       });
 
       renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber);
+
+      const relationScore = relations.reduce((sum, rel) => sum + getRelationScore(rel), 0);
+      const statusScores = [
+        getWuxingStatusScore(getWuxingStatus(mainUpperGua.wuxing, lunarMonthNumber)),
+        getWuxingStatusScore(getWuxingStatus(mainLowerGua.wuxing, lunarMonthNumber)),
+        getWuxingStatusScore(getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber)),
+        getWuxingStatusScore(getWuxingStatus(huLowerGua.wuxing, lunarMonthNumber)),
+        getWuxingStatusScore(getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber)),
+        getWuxingStatusScore(getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber)),
+        getWuxingStatusScore(getWuxingStatus(tiGua.wuxing, lunarMonthNumber))
+      ];
+      const statusScore = statusScores.reduce((sum, score) => sum + score, 0);
+      const totalScore = relationScore + statusScore;
+      const normalizedScore = Math.max(0, Math.min(100, Math.round((totalScore + 60) / 1.2)));
+      const auspiciousnessIndex = document.getElementById('auspiciousnessIndex');
+      const auspiciousnessBar = document.getElementById('auspiciousnessBar');
+      auspiciousnessIndex.textContent = `吉凶指數：${normalizedScore}%`;
+      auspiciousnessBar.style.background = `linear-gradient(to right, #e74c3c 0%, #2ecc71 ${normalizedScore}%, #2ecc71 100%)`;
+
+      renderDetailedAnalysis(result);
     }
 
     function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
@@ -1153,20 +1145,19 @@
         const dy = targetNode.y - sourceNode.y;
         const length = Math.sqrt(dx * dx + dy * dy);
         const offset = 40;
-        const x1 = sourceNode.x + (dx / length) * offset;
-        const y1 = sourceNode.y + (dy / length) * offset;
-        const x2 = targetNode.x - (dx / length) * offset;
-        const y2 = targetNode.y - (dy / length) * offset;
-        const midX = (x1 + x2) / 2;
-        const midY = (y1 + y2) / 2;
+        const sx = sourceNode.x + (dx / length) * offset;
+        const sy = sourceNode.y + (dy / length) * offset;
+        const tx = targetNode.x - (dx / length) * offset;
+        const ty = targetNode.y - (dy / length) * offset;
+        const midX = (sx + tx) / 2;
+        const midY = (sy + ty) / 2;
 
         const strokeWidth = getWuxingStrength(sourceNode.status);
         svg.innerHTML += `
-          <line class="${edge.className}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-width="${strokeWidth}" marker-start="${edge.markers.start || ''}" marker-end="${edge.markers.end || ''}" />
+          <line class="${edge.className}" x1="${sx}" y1="${sy}" x2="${tx}" y2="${ty}" stroke-width="${strokeWidth}" marker-start="${edge.markers.start || ''}" marker-end="${edge.markers.end || ''}" />
           <text class="wuxing-edge-label" x="${midX}" y="${midY - 10}">${edge.label}</text>
         `;
       });
-      console.log('五行圖已渲染');
     }
 
     function renderDetailedAnalysis(result) {
@@ -1174,17 +1165,18 @@
       const radarCanvas = document.getElementById('symbolismRadarChart');
       const overallCanvas = document.getElementById('overallBarChart');
       const movingLineCanvas = document.getElementById('movingLineBarChart');
-      const timestamp = new Date(result.timestamp || '2025-08-25T02:35:00+08:00');
+      const timestamp = new Date(result.timestamp || '2025-08-25T02:49:00+08:00');
       const { lunarMonthNumber } = lunarCalendar.gregorianToLunar(timestamp);
 
       if (!detailedDiv || !radarCanvas || !overallCanvas || !movingLineCanvas) {
-        console.error('找不到圖表相關元素:', { detailedDiv, radarCanvas, overallCanvas, movingLineCanvas });
+        console.error('找不到圖表相關元素');
         alert('頁面元素載入錯誤，請檢查 HTML 結構！');
         return;
       }
 
       detailedDiv.classList.remove('hidden');
 
+      // 檢查 Chart.js 是否載入
       if (typeof Chart === 'undefined') {
         console.error('Chart.js 未正確載入');
         radarCanvas.style.display = 'none';
@@ -1194,17 +1186,43 @@
         return;
       }
 
+      // 確保 canvas 可見並設置尺寸
+      radarCanvas.style.display = 'block';
+      radarCanvas.width = 600;
+      radarCanvas.height = 400;
+      overallCanvas.style.display = 'block';
+      overallCanvas.width = 600;
+      overallCanvas.height = 400;
+      movingLineCanvas.style.display = result.moving.length > 0 ? 'block' : 'none';
+      movingLineCanvas.width = 600;
+      movingLineCanvas.height = 400;
+
+      // 銷毀舊圖表
+      if (radarCanvas.chart) {
+        radarCanvas.chart.destroy();
+        radarCanvas.chart = null;
+      }
+      if (overallCanvas.chart) {
+        overallCanvas.chart.destroy();
+        overallCanvas.chart = null;
+      }
+      if (movingLineCanvas.chart) {
+        movingLineCanvas.chart.destroy();
+        movingLineCanvas.chart = null;
+      }
+
+      // 準備蛛網圖數據
       const radarData = {
         labels: ['人事', '事務', '時間', '地點', '物品'],
         datasets: [
           {
             label: '本卦象徵',
             data: [
-              result.hexMain.symbolism?.people || 5,
-              result.hexMain.symbolism?.affairs || 5,
-              result.hexMain.symbolism?.time || 5,
-              result.hexMain.symbolism?.place || 5,
-              result.hexMain.symbolism?.object || 5
+              result.hexMain?.symbolism?.people ?? 5,
+              result.hexMain?.symbolism?.affairs ?? 5,
+              result.hexMain?.symbolism?.time ?? 5,
+              result.hexMain?.symbolism?.place ?? 5,
+              result.hexMain?.symbolism?.object ?? 5
             ],
             backgroundColor: 'rgba(52, 152, 219, 0.2)',
             borderColor: '#3498db',
@@ -1213,15 +1231,13 @@
             pointBackgroundColor: '#3498db'
           },
           {
-
-
-                      label: '互卦象徵',
+            label: '互卦象徵',
             data: [
-              result.hexHu.symbolism?.people || 5,
-              result.hexHu.symbolism?.affairs || 5,
-              result.hexHu.symbolism?.time || 5,
-              result.hexHu.symbolism?.place || 5,
-              result.hexHu.symbolism?.object || 5
+              result.hexHu?.symbolism?.people ?? 5,
+              result.hexHu?.symbolism?.affairs ?? 5,
+              result.hexHu?.symbolism?.time ?? 5,
+              result.hexHu?.symbolism?.place ?? 5,
+              result.hexHu?.symbolism?.object ?? 5
             ],
             backgroundColor: 'rgba(46, 204, 113, 0.2)',
             borderColor: '#2ecc71',
@@ -1232,11 +1248,10 @@
           {
             label: '變卦象徵',
             data: [
-              result.hexChange.symbolism?.people || 5,
-              result.hexChange.symbolism?.affairs || 5,
-              result.hexChange.symbolism?.time || 5,
-              result.hexChange.symbolism?.place || 5,
-              result.hexChange.symbolism?.object || 5
+result.hexChange?.symbolism?.affairs ?? 5,
+              result.hexChange?.symbolism?.time ?? 5,
+              result.hexChange?.symbolism?.place ?? 5,
+              result.hexChange?.symbolism?.object ?? 5
             ],
             backgroundColor: 'rgba(231, 76, 60, 0.2)',
             borderColor: '#e74c3c',
@@ -1247,129 +1262,309 @@
         ]
       };
 
-      const overallData = {
-        labels: ['本卦', '互卦', '變卦'],
-        datasets: [{
-          label: '總體評分',
-          data: [
-            (Object.values(result.hexMain.symbolism || { people: 5, affairs: 5, time: 5, place: 5, object: 5 }).reduce((a, b) => a + b, 0) / 5),
-            (Object.values(result.hexHu.symbolism || { people: 5, affairs: 5, time: 5, place: 5, object: 5 }).reduce((a, b) => a + b, 0) / 5),
-            (Object.values(result.hexChange.symbolism || { people: 5, affairs: 5, time: 5, place: 5, object: 5 }).reduce((a, b) => a + b, 0) / 5)
-          ],
-          backgroundColor: ['#3498db', '#2ecc71', '#e74c3c'],
-          borderColor: ['#2980b9', '#27ae60', '#c0392b'],
-          borderWidth: 1
-        }]
-      };
-
-      const movingLineData = {
-        labels: result.moving.map(idx => `第 ${idx} 爻`),
-        datasets: [{
-          label: '動爻評分',
-          data: result.moving.map(idx => getLineEntryFor(result.hexMain, idx).score || 5),
-          backgroundColor: '#e74c3c',
-          borderColor: '#c0392b',
-          borderWidth: 1
-        }]
-      };
-
-      // 計算吉凶指數
-      const { tiGua } = getTiYong(result);
-      const relations = [
-        getRelation(tiGua.wuxing, getTrigramInfo(result.uIdx).wuxing),
-        getRelation(tiGua.wuxing, getTrigramInfo(result.lIdx).wuxing),
-        getRelation(tiGua.wuxing, getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8).wuxing),
-        getRelation(tiGua.wuxing, getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8).wuxing),
-        getRelation(tiGua.wuxing, getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8).wuxing),
-        getRelation(tiGua.wuxing, getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8).wuxing)
-      ];
-      const wuxingScores = relations.map(rel => getRelationScore(rel));
-      const wuxingStatusScores = [
-        getWuxingStatusScore(getWuxingStatus(getTrigramInfo(result.uIdx).wuxing, lunarMonthNumber)),
-        getWuxingStatusScore(getWuxingStatus(getTrigramInfo(result.lIdx).wuxing, lunarMonthNumber)),
-        getWuxingStatusScore(getWuxingStatus(getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8).wuxing, lunarMonthNumber)),
-        getWuxingStatusScore(getWuxingStatus(getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8).wuxing, lunarMonthNumber)),
-        getWuxingStatusScore(getWuxingStatus(getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8).wuxing, lunarMonthNumber)),
-        getWuxingStatusScore(getWuxingStatus(getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8).wuxing, lunarMonthNumber))
-      ];
-      const lineScores = result.moving.map(idx => getLineEntryFor(result.hexMain, idx).score || 5);
-      const auspiciousnessIndex = (
-        wuxingScores.reduce((a, b) => a + b, 0) +
-        wuxingStatusScores.reduce((a, b) => a + b, 0) +
-        lineScores.reduce((a, b) => a + b, 0) / (lineScores.length || 1)
-      ) / (6 + 6 + (lineScores.length || 1));
-      const normalizedIndex = Math.round((auspiciousnessIndex + 10) / 20 * 100); // 轉換為 0-100
-
-      document.getElementById('auspiciousnessIndex').textContent = `吉凶指數：${normalizedIndex}%`;
-      const auspiciousnessBar = document.getElementById('auspiciousnessBar');
-      auspiciousnessBar.style.background = `linear-gradient(to right, #2ecc71 ${normalizedIndex}%, #ecf0f1 ${normalizedIndex}%)`;
-
       // 繪製蛛網圖
-      ```chartjs
-      {
+      radarCanvas.chart = new Chart(radarCanvas, {
         type: 'radar',
-        data: {
-          labels: ['人事', '事務', '時間', '地點', '物品'],
-          datasets: [
-            {
-              label: '本卦象徵',
-              data: [
-                ${result.hexMain.symbolism?.people || 5},
-                ${result.hexMain.symbolism?.affairs || 5},
-                ${result.hexMain.symbolism?.time || 5},
-                ${result.hexMain.symbolism?.place || 5},
-                ${result.hexMain.symbolism?.object || 5}
-              ],
-              backgroundColor: 'rgba(52, 152, 219, 0.2)',
-              borderColor: '#3498db',
-              borderWidth: 2,
-              pointRadius: 5,
-              pointBackgroundColor: '#3498db'
-            },
-            {
-              label: '互卦象徵',
-              data: [
-                ${result.hexHu.symbolism?.people || 5},
-                ${result.hexHu.symbolism?.affairs || 5},
-                ${result.hexHu.symbolism?.time || 5},
-                ${result.hexHu.symbolism?.place || 5},
-                ${result.hexHu.symbolism?.object || 5}
-              ],
-              backgroundColor: 'rgba(46, 204, 113, 0.2)',
-              borderColor: '#2ecc71',
-              borderWidth: 2,
-              pointRadius: 5,
-              pointBackgroundColor: '#2ecc71'
-            },
-            {
-              label: '變卦象徵',
-              data: [
-                ${result.hexChange.symbolism?.people || 5},
-                ${result.hexChange.symbolism?.affairs || 5},
-                ${result.hexChange.symbolism?.time || 5},
-                ${result.hexChange.symbolism?.place || 5},
-                ${result.hexChange.symbolism?.object || 5}
-              ],
-              backgroundColor: 'rgba(231, 76, 60, 0.2)',
-              borderColor: '#e74c3c',
-              borderWidth: 2,
-              pointRadius: 5,
-              pointBackgroundColor: '#e74c3c'
-            }
-          ]
-        },
+        data: radarData,
         options: {
+          responsive: true,
+          maintainAspectRatio: false,
           scales: {
             r: {
-              beginAtZero: true,
-              max: 10,
               min: 0,
+              max: 10,
               ticks: { stepSize: 2 },
               pointLabels: { font: { size: 14 } }
             }
           },
           plugins: {
-            legend: { position: 'top', labels: { font: { size: 12 } } }
+            legend: { position: 'top' },
+            title: { display: true, text: '卦象象徵分析', font: { size: 16 } }
           }
         }
+      });
+
+      // 準備總體柱狀圖數據
+      const overallData = {
+        labels: ['人事', '事務', '時間', '地點', '物品'],
+        datasets: [
+          {
+            label: '本卦',
+            data: [
+              result.hexMain?.judgment?.people ?? 5,
+              result.hexMain?.judgment?.affairs ?? 5,
+              result.hexMain?.judgment?.time ?? 5,
+              result.hexMain?.judgment?.place ?? 5,
+              result.hexMain?.judgment?.object ?? 5
+            ],
+            backgroundColor: '#3498db',
+            borderColor: '#2980b9',
+            borderWidth: 1
+          },
+          {
+            label: '互卦',
+            data: [
+              result.hexHu?.judgment?.people ?? 5,
+              result.hexHu?.judgment?.affairs ?? 5,
+              result.hexHu?.judgment?.time ?? 5,
+              result.hexHu?.judgment?.place ?? 5,
+              result.hexHu?.judgment?.object ?? 5
+            ],
+            backgroundColor: '#2ecc71',
+            borderColor: '#27ae60',
+            borderWidth: 1
+          },
+          {
+            label: '變卦',
+            data: [
+              result.hexChange?.judgment?.people ?? 5,
+              result.hexChange?.judgment?.affairs ?? 5,
+              result.hexChange?.judgment?.time ?? 5,
+              result.hexChange?.judgment?.place ?? 5,
+              result.hexChange?.judgment?.object ?? 5
+            ],
+            backgroundColor: '#e74c3c',
+            borderColor: '#c0392b',
+            borderWidth: 1
+          }
+        ]
+      };
+
+      // 繪製總體柱狀圖
+      overallCanvas.chart = new Chart(overallCanvas, {
+        type: 'bar',
+        data: overallData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 10 },
+            x: { stacked: false }
+          },
+          plugins: {
+            legend: { position: 'top' },
+            title: { display: true, text: '卦象總體分析', font: { size: 16 } }
+          }
+        }
+      });
+
+      // 繪製動爻柱狀圖（僅當有動爻時）
+      if (result.moving.length > 0) {
+        const movingLineData = {
+          labels: result.moving.map(lineIdx => `第 ${lineIdx} 爻`),
+          datasets: [
+            {
+              label: '動爻影響',
+              data: result.moving.map(lineIdx => getLineEntryFor(result.hexMain, lineIdx).score || 5),
+              backgroundColor: '#f1c40f',
+              borderColor: '#f39c12',
+              borderWidth: 1
+            }
+          ]
+        };
+
+        movingLineCanvas.chart = new Chart(movingLineCanvas, {
+          type: 'bar',
+          data: movingLineData,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true, max: 10 },
+              x: {}
+            },
+            plugins: {
+              legend: { position: 'top' },
+              title: { display: true, text: '動爻影響分析', font: { size: 16 } }
+            }
+          }
+        });
       }
+    }
+
+    // 初始化事件監聽器
+    function initEventListeners() {
+      // 標籤切換
+      document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+          button.classList.add('active');
+          document.getElementById(button.dataset.target).classList.add('active');
+        });
+      });
+
+      // 數字取卦
+      document.getElementById('btnNumber').addEventListener('click', () => {
+        const upper = parseInt(document.getElementById('numUpper').value);
+        const lower = parseInt(document.getElementById('numLower').value);
+        const moving = parseInt(document.getElementById('numMoving').value);
+        if (isNaN(upper) || isNaN(lower) || isNaN(moving) || upper < 100 || upper > 999 || lower < 100 || lower > 999 || moving < 100 || moving > 999) {
+          alert('請輸入有效的100-999數字！');
+          return;
+        }
+        const upperIdx = ((upper % 8) === 0 ? 8 : upper % 8);
+        const lowerIdx = ((lower % 8) === 0 ? 8 : lower % 8);
+        const movingIdx = ((moving % 6) === 0 ? 6 : moving % 6);
+        generateGua(upperIdx, lowerIdx, [movingIdx], '數字取卦');
+      });
+
+      // 亂數取卦
+      document.getElementById('btnRandomNumber').addEventListener('click', () => {
+        const upper = Math.floor(Math.random() * 900) + 100;
+        const lower = Math.floor(Math.random() * 900) + 100;
+        const moving = Math.floor(Math.random() * 900) + 100;
+        document.getElementById('numUpper').value = upper;
+        document.getElementById('numLower').value = lower;
+        document.getElementById('numMoving').value = moving;
+        const upperIdx = ((upper % 8) === 0 ? 8 : upper % 8);
+        const lowerIdx = ((lower % 8) === 0 ? 8 : lower % 8);
+        const movingIdx = ((moving % 6) === 0 ? 6 : moving % 6);
+        generateGua(upperIdx, lowerIdx, [movingIdx], '數字亂數取卦');
+      });
+
+      // 手動取卦
+      document.getElementById('btnManual').addEventListener('click', () => {
+        const upper = parseInt(document.getElementById('selUpper').value);
+        const lower = parseInt(document.getElementById('selLower').value);
+        const movingInput = document.getElementById('inputMoving').value.trim();
+        if (isNaN(upper) || isNaN(lower) || upper < 1 || upper > 8 || lower < 1 || lower > 8) {
+          alert('請選擇有效的上卦和下卦！');
+          return;
+        }
+        const moving = movingInput ? movingInput.split(',').map(m => {
+          const n = parseInt(m.trim());
+          return (n >= 1 && n <= 6) ? n : null;
+        }).filter(m => m !== null) : [];
+        generateGua(upper, lower, moving, '手動取卦');
+      });
+
+      // 時間取卦
+      document.getElementById('btnTime').addEventListener('click', () => {
+        const method = document.querySelector('input[name="time-method"]:checked').value;
+        let upperIdx, lowerIdx, movingIdx, timestamp;
+        if (method === 'modern') {
+          const dt = document.getElementById('dtInput').value;
+          if (!dt) {
+            alert('請選擇有效的日期時間！');
+            return;
+          }
+          const date = new Date(dt);
+          if (isNaN(date.getTime())) {
+            alert('無效的日期時間格式！');
+            return;
+          }
+          timestamp = date.toLocaleString('zh-TW');
+          const year = date.getFullYear();
+          const month = date.getMonth() + 1;
+          const day = date.getDate();
+          const hour = date.getHours();
+          const minute = date.getMinutes();
+          upperIdx = (((year + month + day) % 8) === 0 ? 8 : (year + month + day) % 8);
+          lowerIdx = (((month + day + hour) % 8) === 0 ? 8 : (month + day + hour) % 8);
+          movingIdx = ((minute % 6) === 0 ? 6 : minute % 6);
+        } else {
+          const dateInput = document.getElementById('dateInput').value;
+          const shichen = parseInt(document.getElementById('shichenInput').value);
+          const minute = parseInt(document.getElementById('minuteInput').value) || 0;
+          if (!dateInput || isNaN(shichen)) {
+            alert('請選擇有效的日期和時辰！');
+            return;
+          }
+          const date = new Date(dateInput);
+          if (isNaN(date.getTime())) {
+            alert('無效的日期格式！');
+            return;
+          }
+          timestamp = `${date.toLocaleDateString('zh-TW')} ${Math.floor(shichen)}:00`;
+          const year = date.getFullYear();
+          const month = date.getMonth() + 1;
+          const day = date.getDate();
+          upperIdx = (((year + month + day) % 8) === 0 ? 8 : (year + month + day) % 8);
+          lowerIdx = (((month + day + shichen) % 8) === 0 ? 8 : (month + day + shichen) % 8);
+          movingIdx = ((minute % 6) === 0 ? 6 : minute % 6);
+        }
+        generateGua(upperIdx, lowerIdx, [movingIdx], method === 'modern' ? '現代時間取卦' : '傳統時辰取卦', timestamp);
+      });
+
+      // 現在按鈕
+      document.getElementById('nowQuick').addEventListener('click', () => {
+        const now = new Date();
+        document.getElementById('dtInput').value = now.toISOString().slice(0, 16);
+      });
+
+      // 以象取卦
+      document.getElementById('btnImage').addEventListener('click', () => {
+        const upper = parseInt(document.getElementById('upperImageSelect').value);
+        const lower = parseInt(document.getElementById('lowerDirectionSelect').value);
+        const useMinute = document.getElementById('imageUseMinute').checked;
+        let movingIdx;
+        if (useMinute) {
+          movingIdx = ((new Date().getMinutes() % 6) === 0 ? 6 : new Date().getMinutes() % 6);
+        } else {
+          movingIdx = parseInt(document.getElementById('imageMovingInput').value);
+          if (isNaN(movingIdx) || movingIdx < 1 || movingIdx > 6) {
+            alert('請輸入有效的動爻（1-6）！');
+            return;
+          }
+        }
+        if (isNaN(upper) || isNaN(lower)) {
+          alert('請選擇有效的物象和方位！');
+          return;
+        }
+        generateGua(upper, lower, [movingIdx], '以象取卦');
+      });
+
+      // 五行與象徵分析
+      document.getElementById('judgeBtn').addEventListener('click', () => {
+        if (currentResult) {
+          renderWuxingAnalysis(currentResult);
+        } else {
+          alert('請先進行占卜以生成卦象！');
+        }
+      });
+
+      // 清除歷史記錄
+      document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+        if (confirm('確定要清除所有歷史記錄嗎？')) {
+          history = [];
+          saveHistory();
+          renderHistory();
+        }
+      });
+
+      // 匯出歷史記錄
+      document.getElementById('exportHistoryBtn').addEventListener('click', () => {
+        exportHistory();
+      });
+
+      // 匯入歷史記錄
+      document.getElementById('importHistoryBtn').addEventListener('click', () => {
+        const input = document.getElementById('importHistoryInput');
+        if (input.files.length > 0) {
+          importHistory(input.files[0]);
+          input.value = ''; // 重置文件輸入
+        } else {
+          alert('請選擇一個 JSON 文件進行匯入！');
+        }
+      });
+
+      // 時辰輸入切換
+      document.querySelectorAll('input[name="time-method"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          document.getElementById('modern-time-inputs').classList.toggle('hidden', radio.value !== 'modern');
+          document.getElementById('traditional-time-inputs').classList.toggle('hidden', radio.value !== 'traditional');
+        });
+      });
+    }
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadResources();
+      loadHistory();
+      initEventListeners();
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</body>
+</html>
