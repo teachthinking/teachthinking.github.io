@@ -541,6 +541,40 @@
       '兌為澤': ['兌為澤', '澤雷隨', '澤風大過', '澤水困', '雷水解', '水山蹇', '地水師', '風水渙']
     };
 
+    const lunarCalendar = {
+      // 簡化農曆季節對照，基於 2025 年農曆月份（實際需農曆算法精確計算）
+      // 以下為近似月份對照，假設 2025 年 8 月 24 日為農曆七月（秋季）
+      gregorianToLunar: (date) => {
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        // 簡化轉換，實際需引入農曆算法庫（如 lunar-javascript）
+        const lunarMonths = [
+          { gregorian: [1, 1, 2, 15], lunarMonth: '臘月', season: '冬' },
+          { gregorian: [2, 16, 3, 15], lunarMonth: '正月', season: '春' },
+          { gregorian: [3, 16, 4, 15], lunarMonth: '二月', season: '春' },
+          { gregorian: [4, 16, 5, 15], lunarMonth: '三月', season: '春' },
+          { gregorian: [5, 16, 6, 15], lunarMonth: '四月', season: '夏' },
+          { gregorian: [6, 16, 7, 15], lunarMonth: '五月', season: '夏' },
+          { gregorian: [7, 16, 8, 15], lunarMonth: '六月', season: '夏' },
+          { gregorian: [8, 16, 9, 15], lunarMonth: '七月', season: '秋' },
+          { gregorian: [9, 16, 10, 15], lunarMonth: '八月', season: '秋' },
+          { gregorian: [10, 16, 11, 15], lunarMonth: '九月', season: '秋' },
+          { gregorian: [11, 16, 12, 15], lunarMonth: '十月', season: '冬' },
+          { gregorian: [12, 16, 12, 31], lunarMonth: '十一月', season: '冬' }
+        ];
+        for (const period of lunarMonths) {
+          const [startMonth, startDay, endMonth, endDay] = period.gregorian;
+          if (
+            (month > startMonth || (month === startMonth && day >= startDay)) &&
+            (month < endMonth || (month === endMonth && day <= endDay))
+          ) {
+            return { lunarMonth: period.lunarMonth, season: period.season, lunarMonthNumber: lunarMonths.indexOf(period) + 1 };
+          }
+        }
+        return { lunarMonth: '七月', season: '秋', lunarMonthNumber: 7 }; // 預設 2025/8/24 為農曆七月
+      }
+    };
+
     function normalizeKey(str) {
       return str ? str.replace(/[\s-]/g, '').toLowerCase() : '';
     }
@@ -549,7 +583,8 @@
       const upperLines = guaTable[upperIdx]?.slice(0, 3) || [0, 0, 0];
       const lowerLines = guaTable[lowerIdx]?.slice(0, 3) || [0, 0, 0];
       const lines = [...lowerLines, ...upperLines];
-      return hexagramNameMap.get(JSON.stringify(lines)) || `${trigramName[upperIdx] || '未知'}${trigramName[lowerIdx] || '未知'}`;
+      const key = JSON.stringify(lines);
+      return hexagramNameMap.get(key) || `${trigramName[upperIdx] || '未知'}${trigramName[lowerIdx] || '未知'}`;
     }
 
     function getSamePalaceHexagrams(hexName) {
@@ -602,7 +637,7 @@
       return { tiGua, yongGua };
     }
 
-    function getWuxingStatus(wuxing, month) {
+    function getWuxingStatus(wuxing, lunarMonthNumber) {
       const statuses = {
         '木': {
           1: '旺', 2: '旺', 3: '旺', // 春
@@ -636,7 +671,7 @@
           10: '旺', 11: '旺', 12: '旺' // 冬
         }
       };
-      return statuses[wuxing]?.[month] || '未知';
+      return statuses[wuxing]?.[lunarMonthNumber] || '未知';
     }
 
     function getWuxingStrength(status) {
@@ -846,6 +881,7 @@
       let question = '';
       const questionInputs = {
         '數字取卦': 'questionNumber',
+        '數字亂數取卦': 'questionNumber',
         '手動取卦': 'questionManual',
         '現代時間取卦': 'questionTime',
         '傳統時辰取卦': 'questionTime',
@@ -901,7 +937,7 @@
       const judgeBox = document.getElementById('judgeBox');
       const judgeTitle = document.getElementById('judgeTitle');
       const timestamp = new Date(result.timestamp || Date.now());
-      const month = timestamp.getMonth() + 1;
+      const { lunarMonth, season, lunarMonthNumber } = lunarCalendar.gregorianToLunar(timestamp);
 
       const { tiGua } = getTiYong(result);
       const mainUpperGua = getTrigramInfo(result.uIdx);
@@ -918,18 +954,18 @@
       judgeBox.classList.remove('hidden');
       judgeTitle.textContent = result.question || '五行與象徵';
 
-      document.getElementById('mainUpperWuxing').textContent = `${mainUpperGua.name}（${mainUpperGua.wuxing}，${getWuxingStatus(mainUpperGua.wuxing, month)}）`;
-      document.getElementById('mainLowerWuxing').textContent = `${mainLowerGua.name}（${mainLowerGua.wuxing}，${getWuxingStatus(mainLowerGua.wuxing, month)}）`;
-      document.getElementById('huUpperWuxing').textContent = `${huUpperGua.name}（${huUpperGua.wuxing}，${getWuxingStatus(huUpperGua.wuxing, month)}）`;
-      document.getElementById('huLowerWuxing').textContent = `${huLowerGua.name}（${huLowerGua.wuxing}，${getWuxingStatus(huLowerGua.wuxing, month)}）`;
-      document.getElementById('changeUpperWuxing').textContent = `${changeUpperGua.name}（${changeUpperGua.wuxing}，${getWuxingStatus(changeUpperGua.wuxing, month)}）`;
-      document.getElementById('changeLowerWuxing').textContent = `${changeLowerGua.name}（${changeLowerGua.wuxing}，${getWuxingStatus(changeLowerGua.wuxing, month)}）`;
-      document.getElementById('tiGuaWuxing').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, month)}）`;
-      document.getElementById('tiGuaWuxing2').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, month)}）`;
-      document.getElementById('tiGuaWuxing3').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, month)}）`;
-      document.getElementById('tiGuaWuxing4').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, month)}）`;
-      document.getElementById('tiGuaWuxing5').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, month)}）`;
-      document.getElementById('tiGuaWuxing6').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, month)}）`;
+      document.getElementById('mainUpperWuxing').textContent = `${mainUpperGua.name}（${mainUpperGua.wuxing}，${getWuxingStatus(mainUpperGua.wuxing, lunarMonthNumber)}）`;
+      document.getElementById('mainLowerWuxing').textContent = `${mainLowerGua.name}（${mainLowerGua.wuxing}，${getWuxingStatus(mainLowerGua.wuxing, lunarMonthNumber)}）`;
+      document.getElementById('huUpperWuxing').textContent = `${huUpperGua.name}（${huUpperGua.wuxing}，${getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber)}）`;
+      document.getElementById('huLowerWuxing').textContent = `${huLowerGua.name}（${huLowerGua.wuxing}，${getWuxingStatus(huLowerGua.wuxing, lunarMonthNumber)}）`;
+      document.getElementById('changeUpperWuxing').textContent = `${changeUpperGua.name}（${changeUpperGua.wuxing}，${getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber)}）`;
+      document.getElementById('changeLowerWuxing').textContent = `${changeLowerGua.name}（${changeLowerGua.wuxing}，${getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber)}）`;
+      document.getElementById('tiGuaWuxing').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`;
+      document.getElementById('tiGuaWuxing2').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`;
+      document.getElementById('tiGuaWuxing3').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`;
+      document.getElementById('tiGuaWuxing4').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`;
+      document.getElementById('tiGuaWuxing5').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`;
+      document.getElementById('tiGuaWuxing6').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`;
 
       const relations = [
         getRelation(tiGua.wuxing, mainUpperGua.wuxing),
@@ -951,10 +987,10 @@
         el.className = `wuxing-status ${status === '用生體' ? '大吉' : status === '體剋用' ? '吉' : status === '比和' ? '平' : status === '體生用' ? '凶' : status === '用剋體' ? '大凶' : ''}`;
       });
 
-      renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, month);
+      renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber);
     }
 
-    function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, month) {
+    function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
       const svg = document.getElementById('wuxingSvg');
       svg.innerHTML = `
         <defs>
@@ -974,13 +1010,13 @@
       `;
 
       const wuxingStatus = {
-        '木': getWuxingStatus('木', month),
-        '火': getWuxingStatus('火', month),
-        '土': getWuxingStatus('土', month),
-        '金': getWuxingStatus('金', month),
-        '水': getWuxingStatus('水', month)
+        '木': getWuxingStatus('木', lunarMonthNumber),
+        '火': getWuxingStatus('火', lunarMonthNumber),
+        '土': getWuxingStatus('土', lunarMonthNumber),
+        '金': getWuxingStatus('金', lunarMonthNumber),
+        '水': getWuxingStatus('水', lunarMonthNumber)
       };
-      const statusText = `當前五行狀態（${month}月）：旺：${Object.keys(wuxingStatus).find(k => wuxingStatus[k] === '旺') || '無'}，` +
+      const statusText = `農曆：${lunarMonth}（${season}），五行狀態：旺：${Object.keys(wuxingStatus).find(k => wuxingStatus[k] === '旺') || '無'}，` +
                         `相：${Object.keys(wuxingStatus).find(k => wuxingStatus[k] === '相') || '無'}，` +
                         `休：${Object.keys(wuxingStatus).find(k => wuxingStatus[k] === '休') || '無'}，` +
                         `囚：${Object.keys(wuxingStatus).find(k => wuxingStatus[k] === '囚') || '無'}，` +
@@ -988,13 +1024,13 @@
       svg.innerHTML += `<text x="300" y="20" text-anchor="middle" font-size="14">${statusText}</text>`;
 
       const nodes = [
-        { id: 'ti', name: tiGua.name, wuxing: tiGua.wuxing, x: 250, y: 200, label: '體卦', status: getWuxingStatus(tiGua.wuxing, month) },
-        { id: 'mainUpper', name: mainUpperGua.name, wuxing: mainUpperGua.wuxing, x: 100, y: 100, label: '本卦上卦', status: getWuxingStatus(mainUpperGua.wuxing, month) },
-        { id: 'mainLower', name: mainLowerGua.name, wuxing: mainLowerGua.wuxing, x: 100, y: 300, label: '本卦下卦', status: getWuxingStatus(mainLowerGua.wuxing, month) },
-        { id: 'huUpper', name: huUpperGua.name, wuxing: huUpperGua.wuxing, x: 400, y: 100, label: '互卦上卦', status: getWuxingStatus(huUpperGua.wuxing, month) },
-        { id: 'huLower', name: huLowerGua.name, wuxing: huLowerGua.wuxing, x: 400, y: 300, label: '互卦下卦', status: getWuxingStatus(huLowerGua.wuxing, month) },
-        { id: 'changeUpper', name: changeUpperGua.name, wuxing: changeUpperGua.wuxing, x: 550, y: 100, label: '變卦上卦', status: getWuxingStatus(changeUpperGua.wuxing, month) },
-        { id: 'changeLower', name: changeLowerGua.name, wuxing: changeLowerGua.wuxing, x: 550, y: 300, label: '變卦下卦', status: getWuxingStatus(changeLowerGua.wuxing, month) }
+        { id: 'ti', name: tiGua.name, wuxing: tiGua.wuxing, x: 250, y: 200, label: '體卦', status: getWuxingStatus(tiGua.wuxing, lunarMonthNumber) },
+        { id: 'mainUpper', name: mainUpperGua.name, wuxing: mainUpperGua.wuxing, x: 100, y: 100, label: '本卦上卦', status: getWuxingStatus(mainUpperGua.wuxing, lunarMonthNumber) },
+        { id: 'mainLower', name: mainLowerGua.name, wuxing: mainLowerGua.wuxing, x: 100, y: 300, label: '本卦下卦', status: getWuxingStatus(mainLowerGua.wuxing, lunarMonthNumber) },
+        { id: 'huUpper', name: huUpperGua.name, wuxing: huUpperGua.wuxing, x: 400, y: 100, label: '互卦上卦', status: getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber) },
+        { id: 'huLower', name: huLowerGua.name, wuxing: huLowerGua.wuxing, x: 400, y: 300, label: '互卦下卦', status: getWuxingStatus(huLowerGua.wuxing, lunarMonthNumber) },
+        { id: 'changeUpper', name: changeUpperGua.name, wuxing: changeUpperGua.wuxing, x: 550, y: 100, label: '變卦上卦', status: getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber) },
+        { id: 'changeLower', name: changeLowerGua.name, wuxing: changeLowerGua.wuxing, x: 550, y: 300, label: '變卦下卦', status: getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber) }
       ];
 
       const edges = [];
@@ -1007,7 +1043,7 @@
             source = node.id;
             target = 'ti';
             markers = { end: 'url(#arrow-generate)' };
-          } else if (relation === '用剋體') {
+          } else if (relation === '用�克體') {
             className = 'wuxing-edge-overcome';
             source = node.id;
             target = 'ti';
@@ -1022,7 +1058,7 @@
             source = 'ti';
             target = node.id;
             markers = { end: 'url(#arrow-generate)' };
-          } else if (relation === '體�克用') {
+          } else if (relation === '體剋用') {
             className = 'wuxing-edge-overcome';
             source = 'ti';
             target = node.id;
@@ -1075,11 +1111,11 @@
       const auspiciousnessIndex = document.getElementById('auspiciousnessIndex');
       const auspiciousnessBar = document.getElementById('auspiciousnessBar');
       const timestamp = new Date(result.timestamp || Date.now());
-      const month = timestamp.getMonth() + 1;
+      const { lunarMonth, season, lunarMonthNumber } = lunarCalendar.gregorianToLunar(timestamp);
 
       detailedDiv.classList.remove('hidden');
 
-      const { tiGua } = getTiYong(result);
+const { tiGua } = getTiYong(result);
       const mainUpperGua = getTrigramInfo(result.uIdx);
       const mainLowerGua = getTrigramInfo(result.lIdx);
       const changeUpperIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8;
@@ -1091,36 +1127,31 @@
       const huUpperGua = getTrigramInfo(huUpperIdx);
       const huLowerGua = getTrigramInfo(huLowerIdx);
 
-      const tiStatus = getWuxingStatus(tiGua.wuxing, month);
       const relations = [
-        { gua: mainUpperGua, relation: getRelation(tiGua.wuxing, mainUpperGua.wuxing), status: getWuxingStatus(mainUpperGua.wuxing, month) },
-        { gua: mainLowerGua, relation: getRelation(tiGua.wuxing, mainLowerGua.wuxing), status: getWuxingStatus(mainLowerGua.wuxing, month) },
-        { gua: huUpperGua, relation: getRelation(tiGua.wuxing, huUpperGua.wuxing), status: getWuxingStatus(huUpperGua.wuxing, month) },
-        { gua: huLowerGua, relation: getRelation(tiGua.wuxing, huLowerGua.wuxing), status: getWuxingStatus(huLowerGua.wuxing, month) },
-        { gua: changeUpperGua, relation: getRelation(tiGua.wuxing, changeUpperGua.wuxing), status: getWuxingStatus(changeUpperGua.wuxing, month) },
-        { gua: changeLowerGua, relation: getRelation(tiGua.wuxing, changeLowerGua.wuxing), status: getWuxingStatus(changeLowerGua.wuxing, month) }
+        getRelation(tiGua.wuxing, mainUpperGua.wuxing),
+        getRelation(tiGua.wuxing, mainLowerGua.wuxing),
+        getRelation(tiGua.wuxing, huUpperGua.wuxing),
+        getRelation(tiGua.wuxing, huLowerGua.wuxing),
+        getRelation(tiGua.wuxing, changeUpperGua.wuxing),
+        getRelation(tiGua.wuxing, changeLowerGua.wuxing)
       ];
 
-      let totalScore = relations.reduce((sum, r) => sum + getRelationScore(r.relation), 0);
-      const tiStrength = getWuxingStrength(tiStatus);
-      const positiveRelations = relations.filter(r => ['用生體', '體剋用'].includes(r.relation)).length;
-      const negativeRelations = relations.filter(r => ['體生用', '用剋體'].includes(r.relation)).length;
-
+      const totalScore = relations.reduce((sum, rel) => sum + getRelationScore(rel), 0);
+      const positiveRelations = relations.filter(r => ['用生體', '體剋用'].includes(r)).length;
+      const negativeRelations = relations.filter(r => ['體生用', '用剋體'].includes(r)).length;
+      const tiStatus = getWuxingStatus(tiGua.wuxing, lunarMonthNumber);
       let auspiciousnessLabel = '平';
       if (tiStatus === '旺' && positiveRelations >= 3) {
         auspiciousnessLabel = '大吉';
-      } else if (['囚', '死'].includes(tiStatus) && negativeRelations >= 3) {
+      } else if (tiStatus === '囚' || tiStatus === '死' && negativeRelations >= 3) {
         auspiciousnessLabel = '大凶';
+      } else if (['旺', '相'].includes(tiStatus) && negativeRelations >= 2) {
+        auspiciousnessLabel = '凶';
       } else if (['休', '囚'].includes(tiStatus) && positiveRelations >= 2) {
         auspiciousnessLabel = '吉';
-      } else if (tiStatus === '旺' && negativeRelations >= 2) {
-        auspiciousnessLabel = '凶';
       }
-
-      auspiciousnessIndex.innerHTML = `吉凶指數：${totalScore}（${auspiciousnessLabel}）`;
-      auspiciousnessIndex.className = `auspiciousness-index ${auspiciousnessLabel}`;
-
-           const normalizedScore = Math.max(-60, Math.min(60, totalScore));
+      auspiciousnessIndex.textContent = `吉凶指數：${auspiciousnessLabel} (${totalScore})`;
+      const normalizedScore = Math.max(-60, Math.min(60, totalScore));
       const percentage = ((normalizedScore + 60) / 120) * 100;
       auspiciousnessBar.style.background = `linear-gradient(to right, #e74c3c 0%, #2ecc71 ${percentage}%, #2ecc71 100%)`;
 
@@ -1130,41 +1161,47 @@
           {
             label: '本卦象徵',
             data: [
-              mainHex.symbolism?.people || 5,
-              mainHex.symbolism?.affairs || 5,
-              mainHex.symbolism?.time || 5,
-              mainHex.symbolism?.place || 5,
-              mainHex.symbolism?.object || 5
+              result.hexMain.symbolism?.people || 5,
+              result.hexMain.symbolism?.affairs || 5,
+              result.hexMain.symbolism?.time || 5,
+              result.hexMain.symbolism?.place || 5,
+              result.hexMain.symbolism?.object || 5
             ],
             backgroundColor: 'rgba(52, 152, 219, 0.2)',
             borderColor: '#3498db',
-            borderWidth: 2
+            borderWidth: 2,
+            pointRadius: 5,
+            pointBackgroundColor: '#3498db'
           },
           {
             label: '互卦象徵',
             data: [
-              huHex.symbolism?.people || 5,
-              huHex.symbolism?.affairs || 5,
-              huHex.symbolism?.time || 5,
-              huHex.symbolism?.place || 5,
-              huHex.symbolism?.object || 5
+              result.hexHu.symbolism?.people || 5,
+              result.hexHu.symbolism?.affairs || 5,
+              result.hexHu.symbolism?.time || 5,
+              result.hexHu.symbolism?.place || 5,
+              result.hexHu.symbolism?.object || 5
             ],
             backgroundColor: 'rgba(46, 204, 113, 0.2)',
             borderColor: '#2ecc71',
-            borderWidth: 2
+            borderWidth: 2,
+            pointRadius: 5,
+            pointBackgroundColor: '#2ecc71'
           },
           {
             label: '變卦象徵',
             data: [
-              changeHex.symbolism?.people || 5,
-              changeHex.symbolism?.affairs || 5,
-              changeHex.symbolism?.time || 5,
-              changeHex.symbolism?.place || 5,
-              changeHex.symbolism?.object || 5
+              result.hexChange.symbolism?.people || 5,
+              result.hexChange.symbolism?.affairs || 5,
+              result.hexChange.symbolism?.time || 5,
+              result.hexChange.symbolism?.place || 5,
+              result.hexChange.symbolism?.object || 5
             ],
             backgroundColor: 'rgba(231, 76, 60, 0.2)',
             borderColor: '#e74c3c',
-            borderWidth: 2
+            borderWidth: 2,
+            pointRadius: 5,
+            pointBackgroundColor: '#e74c3c'
           }
         ]
       };
@@ -1176,16 +1213,25 @@
         options: {
           scales: {
             r: {
-              angleLines: { display: true },
+              angleLines: { display: true, color: '#7f8c8d' },
+              grid: { color: '#7f8c8d' },
               suggestedMin: 0,
               suggestedMax: 10,
-              ticks: { stepSize: 2 }
+              ticks: { stepSize: 2, font: { size: 20 } },
+              pointLabels: { font: { size: 24 } }
             }
           },
           plugins: {
-            legend: { position: 'top' },
-            title: { display: true, text: '本卦、互卦、變卦象徵分析' }
-          }
+            legend: { position: 'top', labels: { font: { size: 20 } } },
+            title: { 
+              display: true, 
+              text: '本卦、互卦、變卦象徵分析', 
+              font: { size: 24 },
+              padding: { top: 20, bottom: 20 }
+            }
+          },
+          responsive: true,
+          maintainAspectRatio: false
         }
       });
 
@@ -1194,9 +1240,9 @@
         datasets: [{
           label: '總體評分',
           data: [
-            (mainHex.judgment?.people + mainHex.judgment?.affairs + mainHex.judgment?.time + mainHex.judgment?.place + mainHex.judgment?.object) / 5 || 5,
-            (huHex.judgment?.people + huHex.judgment?.affairs + huHex.judgment?.time + huHex.judgment?.place + huHex.judgment?.object) / 5 || 5,
-            (changeHex.judgment?.people + changeHex.judgment?.affairs + changeHex.judgment?.time + changeHex.judgment?.place + changeHex.judgment?.object) / 5 || 5
+            (result.hexMain.judgment?.people + result.hexMain.judgment?.affairs + result.hexMain.judgment?.time + result.hexMain.judgment?.place + result.hexMain.judgment?.object) / 5 || 5,
+            (result.hexHu.judgment?.people + result.hexHu.judgment?.affairs + result.hexHu.judgment?.time + result.hexHu.judgment?.place + result.hexHu.judgment?.object) / 5 || 5,
+            (result.hexChange.judgment?.people + result.hexChange.judgment?.affairs + result.hexChange.judgment?.time + result.hexChange.judgment?.place + result.hexChange.judgment?.object) / 5 || 5
           ],
           backgroundColor: (ctx) => {
             const index = ctx.dataIndex;
@@ -1217,12 +1263,25 @@
         data: overallData,
         options: {
           scales: {
-            y: { beginAtZero: true, max: 10 },
-            x: { title: { display: true, text: '卦象' } }
+            y: { 
+              beginAtZero: true, 
+              max: 10, 
+              ticks: { font: { size: 14 } },
+              title: { display: true, text: '評分', font: { size: 16 } }
+            },
+            x: { 
+              title: { display: true, text: '卦象', font: { size: 16 } },
+              ticks: { font: { size: 14 } }
+            }
           },
           plugins: {
             legend: { display: false },
-            title: { display: true, text: '總體評分比較' }
+            title: { 
+              display: true, 
+              text: '總體評分比較', 
+              font: { size: 18 },
+              padding: { top: 10, bottom: 10 }
+            }
           }
         }
       });
@@ -1231,7 +1290,7 @@
         labels: result.moving.map(idx => `第 ${idx} 爻`),
         datasets: [{
           label: '動爻評分',
-          data: result.moving.map(idx => getLineEntryFor(mainHex, idx).score || 5),
+          data: result.moving.map(idx => getLineEntryFor(result.hexMain, idx).score || 5),
           backgroundColor: (ctx) => {
             const score = ctx.dataset.data[ctx.dataIndex];
             const gradient = movingLineCanvas.getContext('2d').createLinearGradient(0, 0, 400, 0);
@@ -1251,15 +1310,29 @@
           data: movingData,
           options: {
             scales: {
-              y: { beginAtZero: true, max: 10 },
-              x: { title: { display: true, text: '動爻' } }
+              y: { 
+                beginAtZero: true, 
+                max: 10, 
+                ticks: { font: { size: 14 } },
+                title: { display: true, text: '評分', font: { size: 16 } }
+              },
+              x: { 
+                title: { display: true, text: '動爻', font: { size: 16 } },
+                ticks: { font: { size: 14 } }
+              }
             },
             plugins: {
               legend: { display: false },
-              title: { display: true, text: '動爻評分' }
+              title: { 
+                display: true, 
+                text: '動爻評分', 
+                font: { size: 18 },
+                padding: { top: 10, bottom: 10 }
+              }
             }
           }
         });
+        movingLineCanvas.style.display = 'block';
       } else {
         movingLineCanvas.style.display = 'none';
       }
@@ -1444,7 +1517,7 @@
           return;
         }
         importHistory(input.files[0]);
-        input.value = ''; // Reset file input
+        input.value = '';
       });
     });
   </script>
