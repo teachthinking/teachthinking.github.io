@@ -1422,62 +1422,7 @@ async function renderWuxingAnalysis(result) {
   huGuaName.textContent = `互卦：${huHex.name} (${huHex.wuxing})`;
   changeGuaName.textContent = `變卦：${changeHex.name} (${changeHex.wuxing})`;
 
-  // 五行分析（簡化示例，根據實際邏輯補充）
-  wuxingDiv.innerHTML = `
-    <h4>五行分析</h4>
-    <p>本卦五行：${mainHex.wuxing || '未知'}</p>
-    <p>互卦五行：${huHex.wuxing || '未知'}</p>
-    <p>變卦五行：${changeHex.wuxing || '未知'}</p>
-    <p>五行生剋關係分析：（根據五行生剋邏輯生成，略...）</p>
-  `;
-  wuxingDiv.classList.remove('hidden');
-}
-
-// 假設的 loadResources 函數（根據您的原始程式碼）
-async function loadResources() {
-  try {
-    const response = await fetch('hexagrams.json');
-    window.hexagrams = await response.json();
-    console.log('hexagrams.json 重新載入:', window.hexagrams);
-  } catch (error) {
-    console.error('載入 hexagrams.json 失敗:', error);
-    window.hexagrams = {};
-  }
-}
-
-// 假設的 clamp 函數
-function clamp(value) {
-  return Math.max(0, Math.min(10, value));
-}
-
-// 假設的 getLineEntryFor 函數
-function getLineEntryFor(hex, lineIdx) {
-  return hex.lines?.[lineIdx - 1] || { score: 5, text: '未知' };
-}
-
-// 假設的 ASPECTS 定義
-const ASPECTS = [
-  { k: 'people', label: '人際' },
-  { k: 'affairs', label: '事業' },
-  { k: 'time', label: '時運' },
-  { k: 'place', label: '環境' },
-  { k: 'object', label: '物件' }
-];
-
-// 假設的 generateGua 函數（簡化版，根據您的需求補充）
-function generateGua(upperIdx, lowerIdx, moving, method, timestamp) {
-  const hexagrams = window.hexagrams || {};
-  const mainHex = hexagrams[`${upperIdx}-${lowerIdx}`] || { idx: `${upperIdx}-${lowerIdx}`, name: '未知', wuxing: '未知', symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 } };
-  const huHex = hexagrams[calculateHuGua(upperIdx, lowerIdx)] || { idx: calculateHuGua(upperIdx, lowerIdx), name: '未知', wuxing: '未知', symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 } };
-  const changeHex = hexagrams[calculateChangeGua(upperIdx, lowerIdx, moving)] || { idx: calculateChangeGua(upperIdx, lowerIdx, moving), name: '未知', wuxing: '未知', symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 } };
-  const result = {
-    hexMain: mainHex,
-    hexHu: huHex,
-    hexChange: changeHex,
-    moving: moving || [],
-    timestamp: timestamp || new Date().toISOString(),
-    method: method || '未知方式'
-  };
+ 
   window.currentResult = result;
   // 更新卦名顯示
   document.getElementById('guaName').textContent = `本卦：${mainHex.name} (${mainHex.wuxing})`;
@@ -1486,16 +1431,6 @@ function generateGua(upperIdx, lowerIdx, moving, method, timestamp) {
   // 其他 DOM 更新（根據您的原始程式碼）
 }
 
-// 假設的 calculateHuGua 和 calculateChangeGua 函數
-function calculateHuGua(upperIdx, lowerIdx) {
-  // 簡化邏輯，根據實際互卦計算規則補充
-  return `${upperIdx}-${lowerIdx}-hu`;
-}
-
-function calculateChangeGua(upperIdx, lowerIdx, moving) {
-  // 簡化邏輯，根據實際變卦計算規則補充
-  return `${upperIdx}-${lowerIdx}-change`;
-}
 
 // 初始化事件監聽器
 document.addEventListener('DOMContentLoaded', () => {
@@ -1682,21 +1617,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// 假設的 quotes 陣列
-const quotes = [
-  '易有太極，是生兩儀，兩儀生四象，四象生八卦。',
-  '聖人設卦觀象，繫辭焉而明吉凶。',
-  '知幾其神乎？幾者，動之微，吉凶之先見者也。'
-];
 
-// 假設的 history 相關函數
-let history = [];
-function saveHistory() {
-  localStorage.setItem('guaHistory', JSON.stringify(history));
-}
-function renderHistory() {
-  // 簡化實現，根據實際需求補充
-}
 function exportHistory() {
   const dataStr = JSON.stringify(history);
   const blob = new Blob([dataStr], { type: 'application/json' });
