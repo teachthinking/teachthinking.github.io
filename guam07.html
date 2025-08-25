@@ -1385,20 +1385,28 @@
         lineExplanation.insertAdjacentElement('afterend', movingContainer);
       }
 
-    // 更新吉凶指數進度條
-  const auspiciousnessBar = document.getElementById('auspiciousnessBar');
-  const auspiciousnessIndex = document.getElementById('auspiciousnessIndex');
-  if (auspiciousnessBar && auspiciousnessIndex) {
-    const scoreText = auspiciousnessIndex.textContent.match(/吉凶指數：(\d+)%/)?.[1];
-    const score = parseInt(scoreText) || 0;
-    const barFill = document.createElement('div');
-    barFill.className = 'auspiciousness-bar-fill';
-    barFill.style.width = `${score}%`;
-    auspiciousnessBar.innerHTML = '';
-    auspiciousnessBar.appendChild(barFill);
-  }
-}
+      // 更新吉凶指數進度條
+      const auspiciousnessBar = document.getElementById('auspiciousnessBar');
+      const auspiciousnessIndex = document.getElementById('auspiciousnessIndex');
+      if (auspiciousnessBar && auspiciousnessIndex) {
+        const scoreText = auspiciousnessIndex.textContent.match(/吉凶指數：(\d+)%/)?.[1];
+        const score = parseInt(scoreText) || 0;
+        auspiciousnessBar.style.background = `linear-gradient(to right, #e74c3c, #4caf50)`;
+        auspiciousnessBar.style.width = `${score}%`; // 設置寬度為分數百分比
+      }
+    }
 
+    // 修改「五行與象徵」按鈕的事件監聽器
+    document.getElementById('judgeBtn')?.addEventListener('click', async () => {
+      if (currentResult) {
+        await loadResources(); // 重新載入 hexagrams.json 更新卦名和數據
+        renderWuxingAnalysis(currentResult);
+        renderDetailedAnalysis(currentResult);
+      } else {
+        alert('請先進行占卜！');
+      }
+    });
+    
 async function renderWuxingAnalysis(result) {
   const wuxingDiv = document.getElementById('wuxingAnalysis');
   const guaName = document.getElementById('guaName');
