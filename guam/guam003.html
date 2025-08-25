@@ -732,10 +732,12 @@
       return { palace: '未知', hexagrams: [hexName] };
     }
 
-    function getTrigramInfo(idx) {
-      const [lines1, lines2, lines3, wuxing, name] = guaTable[idx] || [0, 0, 0, '未知', '未知'];
-      return { name, wuxing, lines: [lines1, lines2, lines3] };
-    }
+function getTrigramInfo(idx) {
+  const info = guaTable[idx] || [0, 0, 0, '未知', '未知'];
+  const [lines1, lines2, lines3, wuxing, name] = info;
+  console.log(`getTrigramInfo(${idx}): name=${name}, wuxing=${wuxing}`);
+  return { name, wuxing, lines: [lines1, lines2, lines3] };
+}
 
     function getRelation(tiWuxing, yongWuxing) {
       if (!tiWuxing || !yongWuxing) return '未知';
