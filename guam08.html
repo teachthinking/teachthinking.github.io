@@ -1396,18 +1396,19 @@
       }
     }
 
-    // 修改「五行與象徵」按鈕的事件監聽器
-    document.getElementById('judgeBtn')?.addEventListener('click', async () => {
-      if (currentResult) {
-        await loadResources(); // 重新載入 hexagrams.json 更新卦名和數據
-        renderWuxingAnalysis(currentResult);
-        renderDetailedAnalysis(currentResult);
-      } else {
-        alert('請先進行占卜！');
-      }
-    });
 
 
+    // 初始化事件監聽器
+    function initEventListeners() {
+      // 標籤切換
+      document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+          button.classList.add('active');
+          document.getElementById(button.dataset.target).classList.add('active');
+        });
+      });
     
 
       // 數字取卦
@@ -1531,14 +1532,17 @@
         generateGua(upper, lower, [movingIdx], '以象取卦');
       });
 
-      // 五行與象徵分析
-      document.getElementById('judgeBtn').addEventListener('click', () => {
-        if (currentResult) {
-          renderWuxingAnalysis(currentResult);
-        } else {
-          alert('請先進行占卜以生成卦象！');
-        }
-      });
+
+          // 修改「五行與象徵」按鈕的事件監聽器
+    document.getElementById('judgeBtn')?.addEventListener('click', async () => {
+      if (currentResult) {
+        await loadResources(); // 重新載入 hexagrams.json 更新卦名和數據
+        renderWuxingAnalysis(currentResult);
+        renderDetailedAnalysis(currentResult);
+      } else {
+        alert('請先進行占卜以生成卦象！');
+      }
+    });
 
       // 清除歷史記錄
       document.getElementById('clearHistoryBtn').addEventListener('click', () => {
