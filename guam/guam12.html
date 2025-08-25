@@ -1434,25 +1434,19 @@
 
       const { tiGua } = getTiYong(result);
 
-      document.getElementById('mainUpperWuxing').textContent = `${mainUpperGua.wuxing}（${getWuxingStatus(mainUpperGua.wuxing, lunarMonthNumber)}）`;
+            document.getElementById('mainUpperWuxing').textContent = `${mainUpperGua.wuxing}（${getWuxingStatus(mainUpperGua.wuxing, lunarMonthNumber)}）`;
       document.getElementById('mainLowerWuxing').textContent = `${mainLowerGua.wuxing}（${getWuxingStatus(mainLowerGua.wuxing, lunarMonthNumber)}）`;
       document.getElementById('huUpperWuxing').textContent = `${huUpperGua.wuxing}（${getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber)}）`;
       document.getElementById('huLowerWuxing').textContent = `${huLowerGua.wuxing}（${getWuxingStatus(huLowerGua.wuxing, lunarMonthNumber)}）`;
       document.getElementById('changeUpperWuxing').textContent = `${changeUpperGua.wuxing}（${getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber)}）`;
       document.getElementById('changeLowerWuxing').textContent = `${changeLowerGua.wuxing}（${getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber)}）`;
-      document.getElementById('tiGuaWuxing').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`;
-      document.getElementById('tiGuaWuxing2').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`;
-      document.getElementById('tiGuaWuxing3').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`;
-      document.getElementById('tiGuaWuxing4').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`;
-      document.getElementById('tiGuaWuxing5').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`;
-      document.getElementById('tiGuaWuxing6').textContent = `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`;
 
-      document.getElementById('mainUpperRelation').textContent = getRelation(tiGua.wuxing, mainUpperGua.wuxing);
-      document.getElementById('mainLowerRelation').textContent = getRelation(tiGua.wuxing, mainLowerGua.wuxing);
-      document.getElementById('huUpperRelation').textContent = getRelation(tiGua.wuxing, huUpperGua.wuxing);
-      document.getElementById('huLowerRelation').textContent = getRelation(tiGua.wuxing, huLowerGua.wuxing);
-      document.getElementById('changeUpperRelation').textContent = getRelation(tiGua.wuxing, changeUpperGua.wuxing);
-      document.getElementById('changeLowerRelation').textContent = getRelation(tiGua.wuxing, changeLowerGua.wuxing);
+      document.getElementById('mainUpperRelation').textContent = relations.mainUpper;
+      document.getElementById('mainLowerRelation').textContent = relations.mainLower;
+      document.getElementById('huUpperRelation').textContent = relations.huUpper;
+      document.getElementById('huLowerRelation').textContent = relations.huLower;
+      document.getElementById('changeUpperRelation').textContent = relations.changeUpper;
+      document.getElementById('changeLowerRelation').textContent = relations.changeLower;
 
       document.querySelectorAll('.wuxing-status').forEach(el => {
         const status = el.textContent;
@@ -1463,15 +1457,133 @@
         }`;
       });
 
-      const relationScore = [
-        getRelation(tiGua.wuxing, mainUpperGua.wuxing),
-        getRelation(tiGua.wuxing, mainLowerGua.wuxing),
-        getRelation(tiGua.wuxing, huUpperGua.wuxing),
-        getRelation(tiGua.wuxing, huLowerGua.wuxing),
-        getRelation(tiGua.wuxing, changeUpperGua.wuxing),
-        getRelation(tiGua.wuxing, changeLowerGua.wuxing)
-      ].reduce((sum, rel) => sum + getRelationScore(rel), 0);
+      const relationScore = Object.values(relations).reduce((sum, rel) => sum + getRelationScore(rel), 0);
+      const statusScores = [
+        getWuxingStatusScore(getWuxingStatus(mainUpperGua.wuxing, lunarMonthNumber)),
+        getWuxingStatusScore(getWuxingStatus(mainLowerGua.wuxing, lunarMonthNumber)),
+        getWuxingStatusScore(getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber)),
+        getWuxingStatusScore(getWuxingStatus(huLowerGua.wuxing, lunarMonthNumber)),
+        getWuxingStatusScore(getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber)),
+        getWuxingStatusScore(getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber)),
+        getWuxingStatusScore(getWuxingStatus(newTiGua.wuxing, lunarMonthNumber))
+      ];
+      const statusScore = statusScores.reduce((sum, score) => sum + score, 0);
+      const totalScore = relationScore + statusScore;
+      const normalizedScore = Math.max(0, Math.min(100, Math.round((totalScore + 60) / 1.2)));
+      const auspiciousnessIndex = document.getElementById('auspiciousnessIndex');
+      const auspiciousnessBar = document.getElementById('auspiciousnessBar');
+      if (auspiciousnessIndex && auspiciousnessBar) {
+        auspiciousnessIndex.textContent = `吉凶指數：${normalizedScore}%`;
+        auspiciousnessBar.style.background = `linear-gradient(to right, var(--negative-color) 0%, var(--positive-color) ${normalizedScore}%, var(--positive-color) 100%)`;
+      } else {
+        console.error('找不到吉凶指數或進度條元素');
+      }
 
+      try {
+        renderWuxingDiagram(newTiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber);
+      } catch (error) {
+        console.error('渲染五行圖表失敗:', error);
+        alert('無法渲染五行圖表，請檢查 D3.js 是否正確載入！');
+      }
+
+      const wuxingAnalysis = document.getElementById('wuxingAnalysis');
+      if (wuxingAnalysis) {
+        wuxingAnalysis.innerHTML = `
+          <div>
+            <h4>本卦五行分析</h4>
+            <p>本卦上卦（外在環境）：<span>${mainUpperGua.wuxing}（${getWuxingStatus(mainUpperGua.wuxing, lunarMonthNumber)}）</span> → 體卦（${newTiGua.wuxing}）：${explanations.mainUpper.description}</p>
+            <p>本卦下卦（內在基礎）：<span>${mainLowerGua.wuxing}（${getWuxingStatus(mainLowerGua.wuxing, lunarMonthNumber)}）</span> → 體卦（${newTiGua.wuxing}）：${explanations.mainLower.description}</p>
+          </div>
+          <div>
+            <h4>互卦五行分析</h4>
+            <p>互卦上卦（潛在發展）：<span>${huUpperGua.wuxing}（${getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber)}）</span> → 體卦（${newTiGua.wuxing}）：${explanations.huUpper.description}</p>
+            <p>互卦下卦（內在潛力）：<span>${huLowerGua.wuxing}（${getWuxingStatus(huLowerGua.wuxing, lunarMonthNumber)}）</span> → 體卦（${newTiGua.wuxing}）：${explanations.huLower.description}</p>
+          </div>
+          <div>
+            <h4>變卦五行分析</h4>
+            <p>變卦上卦（未來趨勢）：<span>${changeUpperGua.wuxing}（${getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber)}）</span> → 體卦（${newTiGua.wuxing}）：${explanations.changeUpper.description}</p>
+            <p>變卦下卦（變化基礎）：<span>${changeLowerGua.wuxing}（${getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber)}）</span> → 體卦（${newTiGua.wuxing}）：${explanations.changeLower.description}</p>
+          </div>
+        `;
+      } else {
+        console.error('找不到 wuxingAnalysis 元素');
+      }
+    }
+
+    function renderWuxingAnalysis(result) {
+      if (!result) {
+        alert('請先進行占卜以生成卦象！');
+        console.warn('renderWuxingAnalysis: currentResult 未定義');
+        return;
+      }
+
+      const judgeBox = document.getElementById('judgeBox');
+      if (!judgeBox) {
+        console.error('找不到 judgeBox 元素');
+        alert('頁面元素載入錯誤，請檢查 HTML 結構！');
+        return;
+      }
+      judgeBox.classList.remove('hidden');
+
+      const timestamp = new Date(result.timestamp || '2025-08-25T21:08:00+08:00');
+      const { lunarMonth, season, lunarMonthNumber } = lunarCalendar.gregorianToLunar(timestamp);
+
+      const mainUpperGua = getTrigramInfo(result.uIdx);
+      const mainLowerGua = getTrigramInfo(result.lIdx);
+      const changeUpperIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8;
+      const changeLowerIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8;
+      const huUpperIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8;
+      const huLowerIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8;
+      const changeUpperGua = getTrigramInfo(changeUpperIdx);
+      const changeLowerGua = getTrigramInfo(changeLowerIdx);
+      const huUpperGua = getTrigramInfo(huUpperIdx);
+      const huLowerGua = getTrigramInfo(huLowerIdx);
+
+      const { tiGua } = getTiYong(result);
+
+      const elements = {
+        mainUpperWuxing: `${mainUpperGua.wuxing}（${getWuxingStatus(mainUpperGua.wuxing, lunarMonthNumber)}）`,
+        mainLowerWuxing: `${mainLowerGua.wuxing}（${getWuxingStatus(mainLowerGua.wuxing, lunarMonthNumber)}）`,
+        huUpperWuxing: `${huUpperGua.wuxing}（${getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber)}）`,
+        huLowerWuxing: `${huLowerGua.wuxing}（${getWuxingStatus(huLowerGua.wuxing, lunarMonthNumber)}）`,
+        changeUpperWuxing: `${changeUpperGua.wuxing}（${getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber)}）`,
+        changeLowerWuxing: `${changeLowerGua.wuxing}（${getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber)}）`,
+        tiGuaWuxing: `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`
+      };
+
+      for (const [id, text] of Object.entries(elements)) {
+        const el = document.getElementById(id);
+        if (el) {
+          el.textContent = text;
+        } else {
+          console.warn(`找不到元素 ID: ${id}`);
+        }
+      }
+
+      const relations = {
+        mainUpperRelation: getRelation(tiGua.wuxing, mainUpperGua.wuxing),
+        mainLowerRelation: getRelation(tiGua.wuxing, mainLowerGua.wuxing),
+        huUpperRelation: getRelation(tiGua.wuxing, huUpperGua.wuxing),
+        huLowerRelation: getRelation(tiGua.wuxing, huLowerGua.wuxing),
+        changeUpperRelation: getRelation(tiGua.wuxing, changeUpperGua.wuxing),
+        changeLowerRelation: getRelation(tiGua.wuxing, changeLowerGua.wuxing)
+      };
+
+      for (const [id, text] of Object.entries(relations)) {
+        const el = document.getElementById(id);
+        if (el) {
+          el.textContent = text;
+          el.className = `wuxing-status ${
+            ['用生體', '體剋用'].includes(text) ? 'positive' :
+            text === '比和' ? 'neutral' :
+            ['體生用', '用�克體'].includes(text) ? 'negative' : ''
+          }`;
+        } else {
+          console.warn(`找不到關係元素 ID: ${id}`);
+        }
+      }
+
+      const relationScore = Object.values(relations).reduce((sum, rel) => sum + getRelationScore(rel), 0);
       const statusScores = [
         getWuxingStatusScore(getWuxingStatus(mainUpperGua.wuxing, lunarMonthNumber)),
         getWuxingStatusScore(getWuxingStatus(mainLowerGua.wuxing, lunarMonthNumber)),
@@ -1484,10 +1596,21 @@
       const statusScore = statusScores.reduce((sum, score) => sum + score, 0);
       const totalScore = relationScore + statusScore;
       const normalizedScore = Math.max(0, Math.min(100, Math.round((totalScore + 60) / 1.2)));
-      document.getElementById('auspiciousnessIndex').textContent = `吉凶指數：${normalizedScore}%`;
-      document.getElementById('auspiciousnessBar').style.background = `linear-gradient(to right, var(--negative-color) 0%, var(--positive-color) ${normalizedScore}%, var(--positive-color) 100%)`;
+      const auspiciousnessIndex = document.getElementById('auspiciousnessIndex');
+      const auspiciousnessBar = document.getElementById('auspiciousnessBar');
+      if (auspiciousnessIndex && auspiciousnessBar) {
+        auspiciousnessIndex.textContent = `吉凶指數：${normalizedScore}%`;
+        auspiciousnessBar.style.background = `linear-gradient(to right, var(--negative-color) 0%, var(--positive-color) ${normalizedScore}%, var(--positive-color) 100%)`;
+      } else {
+        console.error('找不到吉凶指數或進度條元素');
+      }
 
-      renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber);
+      try {
+        renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber);
+      } catch (error) {
+        console.error('渲染五行圖表失敗:', error);
+        alert('無法渲染五行圖表，請檢查 D3.js 是否正確載入！');
+      }
     }
 
     function renderDetailedAnalysis(result) {
@@ -1499,6 +1622,11 @@
       detailedAnalysis.classList.remove('hidden');
       const scoreWrap = document.getElementById('scoreWrap');
       const movingLineScores = document.getElementById('movingLineScores');
+
+      if (!scoreWrap || !movingLineScores) {
+        console.error('找不到 scoreWrap 或 movingLineScores 元素');
+        return;
+      }
 
       const mainHex = result.hexMain;
       const changeHex = result.hexChange;
@@ -1546,9 +1674,35 @@
           document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
           document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
           button.classList.add('active');
-          document.getElementById(button.dataset.target).classList.add('active');
+          const target = document.getElementById(button.dataset.target);
+          if (target) {
+            target.classList.add('active');
+          } else {
+            console.error(`找不到目標標籤內容: ${button.dataset.target}`);
+          }
         });
       });
+
+      const judgeBtn = document.getElementById('judgeBtn');
+      if (judgeBtn) {
+        judgeBtn.addEventListener('click', () => {
+          console.log('點擊「五行與象徵」按鈕，currentResult:', currentResult);
+          if (currentResult) {
+            try {
+              renderWuxingAnalysis(currentResult);
+              renderDetailedAnalysis(currentResult);
+            } catch (error) {
+              console.error('執行五行分析失敗:', error);
+              alert('五行分析失敗，請檢查控制台錯誤訊息！');
+            }
+          } else {
+            alert('請先進行占卜以生成卦象！');
+            console.warn('點擊「五行與象徵」時，currentResult 未定義');
+          }
+        });
+      } else {
+        console.error('找不到 judgeBtn 元素');
+      }
 
       document.getElementById('btnNumber').addEventListener('click', () => {
         const upper = parseInt(document.getElementById('numUpper').value);
@@ -1665,15 +1819,6 @@
         generateGua(upper, lower, [movingIdx], '以象取卦');
       });
 
-      document.getElementById('judgeBtn').addEventListener('click', () => {
-        if (currentResult) {
-          renderWuxingAnalysis(currentResult);
-          renderDetailedAnalysis(currentResult);
-        } else {
-          alert('請先進行占卜以生成卦象！');
-        }
-      });
-
       document.getElementById('clearHistoryBtn').addEventListener('click', () => {
         if (confirm('確定要清除所有歷史記錄嗎？')) {
           history = [];
@@ -1700,16 +1845,33 @@
 
       document.querySelectorAll('input[name="time-method"]').forEach(radio => {
         radio.addEventListener('change', () => {
-          document.getElementById('modern-time-inputs').classList.toggle('hidden', radio.value !== 'modern');
-          document.getElementById('traditional-time-inputs').classList.toggle('hidden', radio.value !== 'traditional');
+          const modernInputs = document.getElementById('modern-time-inputs');
+          const traditionalInputs = document.getElementById('traditional-time-inputs');
+          if (modernInputs && traditionalInputs) {
+            modernInputs.classList.toggle('hidden', radio.value !== 'modern');
+            traditionalInputs.classList.toggle('hidden', radio.value !== 'traditional');
+          } else {
+            console.error('找不到時間輸入元素');
+          }
         });
       });
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      await loadResources();
-      loadHistory();
-      initEventListeners();
+      // 確保 D3.js 已載入
+      if (!window.d3) {
+        console.error('D3.js 未載入');
+        alert('請確保已載入 D3.js 庫！');
+        return;
+      }
+      try {
+        await loadResources();
+        loadHistory();
+        initEventListeners();
+      } catch (error) {
+        console.error('初始化失敗:', error);
+        alert('初始化失敗，請檢查控制台錯誤訊息！');
+      }
     });
   </script>
 </body>
