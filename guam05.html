@@ -1264,7 +1264,7 @@ function renderDetailedAnalysis(result) {
     const radarChart = document.getElementById('radarChart');
     const movingLineScores = document.getElementById('movingLineScores');
     const lineExplanation = document.getElementById('lineExplanation');
-    const timestamp = new Date(result.timestamp || '2025-08-25T11:48:00+08:00');
+    const timestamp = new Date(result.timestamp || '2025-08-25T12:29:00+08:00');
     const { lunarMonthNumber } = lunarCalendar.gregorianToLunar(timestamp);
 
     if (!detailedDiv || !scoreWrap || !radarChart || !movingLineScores || !lineExplanation) {
@@ -1278,7 +1278,7 @@ function renderDetailedAnalysis(result) {
 
     // 繪製蛛網圖
     function renderRadarChart(scoresMain, scoresHu, scoresChange) {
-      console.log('蛛網圖數據:', { scoresMain, scoresHu, scoresChange }); // 調試數據
+      console.log('蛛網圖數據:', { scoresMain, scoresHu, scoresChange }); // 調試日誌，確認三卦數據
       radarChart.innerHTML = '';
       const center = 140;
       const maxRadius = 120;
@@ -1396,7 +1396,7 @@ function renderDetailedAnalysis(result) {
       svg.appendChild(legend);
     }
 
-    // 繪製蛛網圖，確保數據正確傳入
+    // 調用蛛網圖繪製函數
     renderRadarChart(
       result.hexMain?.symbolism || { people: 5, affairs: 5, time: 5, place: 5, object: 5 },
       result.hexHu?.symbolism || { people: 5, affairs: 5, time: 5, place: 5, object: 5 },
@@ -1460,7 +1460,7 @@ function renderDetailedAnalysis(result) {
     }
   }
 
-  // 修改「五行與象徵」按鈕的事件監聽器
+    // 修改「五行與象徵」按鈕的事件監聽器
   document.getElementById('judgeBtn')?.addEventListener('click', () => {
     if (currentResult) {
       renderWuxingAnalysis(currentResult);
