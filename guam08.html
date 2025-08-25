@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>張老師易經(梅花心易)</title>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --negative-color: #e74c3c;
+      --positive-color: #4caf50;
+      --background-color: #f4f7f9;
+      --card-bg: #ffffff;
+      --border-color: #e0e6ed;
+      --text-color: #333333;
+      --sub-text-color: #7f8c8d;
+      --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.05);
+      --border-radius: 12px;
+      --font-family: 'Noto Sans TC', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--background-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    h1, h2, h3, h4, h5 {
+      color: var(--primary-color);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tab-button {
+      padding: 10px 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .tab-button.active {
+      background: var(--primary-color);
+      color: #fff;
+    }
+
+    .tab-content {
+      display: none;
+      background: var(--card-bg);
+      padding: 20px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-light);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .input-group {
+      margin: 15px 0;
+    }
+
+    input, select {
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: var(--secondary-color);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .result-section {
+      margin-top: 20px;
+    }
+
+    .gua-display {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .gua-card {
+      background: var(--card-bg);
+      padding: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      text-align: center;
+    }
+
+    .radar-chart {
+      width: 280px;
+      height: 280px;
+      margin: 20px auto;
+      display: block;
+    }
+
+    .radar-chart-polygon {
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .moving-line-scores {
+      margin: 15px 0;
+    }
+
+    .score-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0;
+      padding: 10px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      font-size: 14px;
+    }
+
+    .score-bar-wrap {
+      flex: 1;
+      height: 20px;
+      background: #e0e6ed;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .score-bar {
+      height: 100%;
+      background: linear-gradient(to right, #e74c3c, #4caf50);
+      transition: width 0.3s ease;
+    }
+
+    .score-val {
+      font-weight: bold;
+      min-width: 40px;
+      text-align: right;
+      color: var(--text-color);
+    }
+
+    .auspiciousness-index {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 15px 0;
+      padding: 10px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      text-align: center;
+    }
+
+    .auspiciousness-bar {
+      height: 20px;
+      width: 100%;
+      max-width: 400px;
+      margin: 10px auto;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      background: #e0e6ed;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .auspiciousness-bar-fill {
+      height: 100%;
+      background: linear-gradient(to right, #e74c3c, #4caf50);
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>張老師易經(梅花心易)</h1>
+    <h3 id="subtitle">請選擇取卦方式以開始占卜</h3>
+
+    <div class="tabs">
+      <button class="tab-button active" data-target="number">數字取卦</button>
+      <button class="tab-button" data-target="manual">手動取卦</button>
+      <button class="tab-button" data-target="time">時間取卦</button>
+      <button class="tab-button" data-target="image">以象取卦</button>
+      <button class="tab-button" data-target="history">歷史記錄</button>
+    </div>
+
+    <div id="number" class="tab-content active">
+      <div class="input-group">
+        <label>上卦數字(100-999)：<input id="numUpper" type="number" min="100" max="999"></label>
+      </div>
+      <div class="input-group">
+        <label>下卦數字(100-999)：<input id="numLower" type="number" min="100" max="999"></label>
+      </div>
+      <div class="input-group">
+        <label>動爻數字(100-999)：<input id="numMoving" type="number" min="100" max="999"></label>
+      </div>
+      <div class="input-group">
+        <label>問題（可選）：<input id="numQuestion" type="text"></label>
+      </div>
+      <div class="input-group">
+        <button id="btnNumber">數字取卦</button>
+        <button id="btnRandomNumber">亂數取卦</button>
+      </div>
+      <p>說明：輸入三組100-999的數字，分別用於計算上卦、下卦與動爻，或點擊「亂數取卦」自動生成數字。數字經模數運算轉換為卦象。</p>
+    </div>
+
+    <div id="manual" class="tab-content">
+      <div class="input-group">
+        <label>上卦：
+          <select id="selUpper">
+            <option value="">請選擇</option>
+            <option value="1">乾</option>
+            <option value="2">兌</option>
+            <option value="3">離</option>
+            <option value="4">震</option>
+            <option value="5">巽</option>
+            <option value="6">坎</option>
+            <option value="7">艮</option>
+            <option value="8">坤</option>
+          </select>
+        </label>
+      </div>
+      <div class="input-group">
+        <label>下卦：
+          <select id="selLower">
+            <option value="">請選擇</option>
+            <option value="1">乾</option>
+            <option value="2">兌</option>
+            <option value="3">離</option>
+            <option value="4">震</option>
+            <option value="5">巽</option>
+            <option value="6">坎</option>
+            <option value="7">艮</option>
+            <option value="8">坤</option>
+          </select>
+        </label>
+      </div>
+      <div class="input-group">
+        <label>動爻（1-6，可多選以逗號分隔）：<input id="inputMoving" type="text"></label>
+      </div>
+      <div class="input-group">
+        <label>問題（可選）：<input id="manualQuestion" type="text"></label>
+      </div>
+      <div class="input-group">
+        <button id="btnManual">手動取卦</button>
+      </div>
+      <p>說明：直接選擇上卦與下卦，並指定動爻（若有）。動爻以逗號分隔輸入，例如“1,3,5”。</p>
+    </div>
+
+    <div id="time" class="tab-content">
+      <div class="input-group">
+        <label><input type="radio" name="time-method" value="modern" checked> 現代時間</label>
+        <label><input type="radio" name="time-method" value="traditional"> 傳統時辰</label>
+      </div>
+      <div id="modern-time-inputs">
+        <div class="input-group">
+          <label>日期時間：<input id="dtInput" type="datetime-local"><button id="nowQuick">現在</button></label>
+        </div>
+        <div class="input-group">
+          <label>問題（可選）：<input id="modernQuestion" type="text"></label>
+        </div>
+      </div>
+      <div id="traditional-time-inputs" class="hidden">
+        <div class="input-group">
+          <label>日期：<input id="dateInput" type="date"></label>
+        </div>
+        <div class="input-group">
+          <label>時辰：
+            <select id="shichenInput">
+              <option value="0">子時 (23:00-01:00)</option>
+              <option value="1">丑時 (01:00-03:00)</option>
+              <option value="2">寅時 (03:00-05:00)</option>
+              <option value="3">卯時 (05:00-07:00)</option>
+              <option value="4">辰時 (07:00-09:00)</option>
+              <option value="5">巳時 (09:00-11:00)</option>
+              <option value="6">午時 (11:00-13:00)</option>
+              <option value="7">未時 (13:00-15:00)</option>
+              <option value="8">申時 (15:00-17:00)</option>
+              <option value="9">酉時 (17:00-19:00)</option>
+              <option value="10">戌時 (19:00-21:00)</option>
+              <option value="11">亥時 (21:00-23:00)</option>
+            </select>
+          </label>
+        </div>
+        <div class="input-group">
+          <label>分鐘（可選）：<input id="minuteInput" type="number" min="0" max="59"></label>
+        </div>
+        <div class="input-group">
+          <label>問題（可選）：<input id="traditionalQuestion" type="text"></label>
+        </div>
+      </div>
+      <div class="input-group">
+        <button id="btnTime">時間取卦</button>
+      </div>
+      <p>說明：現代時間使用年月日時分計算卦象；傳統時辰使用日期與時辰（可選分鐘）。動爻由時間總和決定。</p>
+    </div>
+
+    <div id="image" class="tab-content">
+      <div class="input-group">
+        <label>上卦（物象）：
+          <select id="upperImageSelect">
+            <option value="">請選擇</option>
+            <option value="1">天、父、金屬</option>
+            <option value="2">澤、少女、金屬</option>
+            <option value="3">火、中女、電光</option>
+            <option value="4">雷、長男、動態</option>
+            <option value="5">風、長女、木</option>
+            <option value="6">水、中男、液體</option>
+            <option value="7">山、少男、石頭</option>
+            <option value="8">地、母、土壤</option>
+          </select>
+        </label>
+      </div>
+      <div class="input-group">
+        <label>下卦（方位）：
+          <select id="lowerDirectionSelect">
+            <option value="">請選擇</option>
+            <option value="1">西北</option>
+            <option value="2">西</option>
+            <option value="3">南</option>
+            <option value="4">東</option>
+            <option value="5">東南</option>
+            <option value="6">北</option>
+            <option value="7">東北</option>
+            <option value="8">中</option>
+          </select>
+        </label>
+      </div>
+      <div class="input-group">
+        <label><input id="imageUseMinute" type="checkbox"> 使用當前分鐘作為動爻</label>
+      </div>
+      <div class="input-group">
+        <label>動爻（1-6，若不勾選分鐘）：<input id="imageMovingInput" type="number" min="1" max="6"></label>
+      </div>
+      <div class="input-group">
+        <label>問題（可選）：<input id="imageQuestion" type="text"></label>
+      </div>
+      <div class="input-group">
+        <button id="btnImage">以象取卦</button>
+      </div>
+      <p>說明：根據物象選擇上卦，根據方位選擇下卦，動爻可由當前分鐘自動生成或手動輸入。</p>
+    </div>
+
+    <div id="history" class="tab-content">
+      <div class="input-group">
+        <button id="clearHistoryBtn">清除記錄</button>
+        <button id="exportHistoryBtn">匯出記錄</button>
+        <input id="importHistoryInput" type="file" accept=".json">
+        <button id="importHistoryBtn">匯入記錄</button>
+      </div>
+      <div id="historyList"></div>
+      <p>說明：顯示過去的占卜記錄，點擊可重新載入卦象進行分析。可匯出或匯入記錄（JSON格式）。</p>
+    </div>
+
+    <div class="result-section">
+      <h2>占卜結果</h2>
+      <div class="gua-display">
+        <div class="gua-card">
+          <h3>本卦</h3>
+          <div id="guaSymbol">未知</div>
+          <div id="guaName">未知</div>
+        </div>
+        <div class="gua-card">
+          <h3>互卦</h3>
+          <div id="huGuaSymbol">未知</div>
+          <div id="huGuaName">未知</div>
+        </div>
+        <div class="gua-card">
+          <h3>變卦</h3>
+          <div id="changeGuaSymbol">未知</div>
+          <div id="changeGuaName">未知</div>
+        </div>
+      </div>
+      <div class="input-group">
+        <button id="judgeBtn">五行與象徵</button>
+      </div>
+      <div id="wuxingAnalysis" class="tab-content hidden">
+        <h3>五行與象徵</h3>
+        <div id="auspiciousnessIndex" class="auspiciousness-index">吉凶指數：未計算</div>
+        <div id="auspiciousnessBar" class="auspiciousness-bar"></div>
+        <div id="wuxingDetails">
+          <h4>本卦五行分析</h4>
+          <p>本卦上卦（外在環境）：未知 → 體卦（未知）：未知</p>
+          <p>本卦下卦（內在基礎）：未知 → 體卦（未知）：未知</p>
+          <h4>互卦五行分析</h4>
+          <p>互卦上卦（潛在發展）：未知 → 體卦（未知）：未知</p>
+          <p>互卦下卦（內在潛力）：未知 → 體卦（未知）：未知</p>
+          <h4>變卦五行分析</h4>
+          <p>變卦上卦（未來趨勢）：未知 → 體卦（未知）：未知</p>
+          <p>變卦下卦（變化基礎）：未知 → 體卦（未知）：未知</p>
+        </div>
+        <div id="scoreWrap">
+          <h4>象徵分析</h4>
+          <svg id="radarChart" class="radar-chart"></svg>
+          <div id="lineExplanation"></div>
+          <div id="movingLineScores"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 引用外部 JSON 數據
+    const quotes = [
+      "《繫辭上傳》易有太極，是生兩儀；兩儀生四象；四象生八卦。",
+      "《乾·彖傳》乾道變化，各正性命；保合太和，乃利貞。",
+      "《乾·象傳》天行健，君子以自強不息。",
+      "《坤·象傳》地勢坤，君子以厚德載物。",
+      "《賁·彖傳》觀乎天文，以察時變；觀乎人文，以化成天下。",
+      "《蒙·彖傳》蒙以養正，聖功也。",
+      "《同人》卦辭 同人于野，亨；利涉大川。",
+      "《否·彖傳》否極泰來，君子以儉德辟難。",
+      "《坤·文言》積善之家，必有餘慶；積不善之家，必有餘殃。",
+      "《繫辭下傳》吉凶悔吝，生乎動。",
+      "《序卦傳》有天地，然後萬物生焉。盈天地之間者唯萬物，故受之以屯。",
+      "《繫辭上傳》一陰一陽之謂道。",
+      "《繫辭上傳》形而上者謂之道，形而下者謂之器。",
+      "《說卦傳》立天之道曰陰與陽，立地之道曰柔與剛，立人之道曰仁與義。",
+      "《繫辭下傳》君子藏器於身，待時而動。",
+      "《繫辭上傳》二人同心，其利斷金；同心之言，其臭如蘭。",
+      "《說卦傳》窮理盡性以至於命。",
+      "《革·彖傳》天地革而四時成，湯武革命，順乎天而應乎人。",
+      "《豐·彖傳》日中則昃，月盈則食。",
+      "《謙·象傳》謙謙君子，卑以自牧也。",
+      "乾三連（☰），坤六斷（☷）；震仰盂（☳），艮覆碗（☶）；離中虛（☲），坎中滿（☵）；兌上缺（☱），巽下斷（☴）。"
+    ];
+
+    let hexagrams = {};
+    let wuxingExplanations = {};
+    let currentResult = null;
+    let history = [];
+
+    // 載入外部資源
+    async function loadResources() {
+      try {
+        const [hexResponse, wuxingResponse] = await Promise.all([
+          fetch('hexagrams.json'),
+          fetch('wuxing_explanations.json')
+        ]);
+        hexagrams = await hexResponse.json();
+        wuxingExplanations = await wuxingResponse.json();
+        console.log('hexagrams.json 載入:', Object.keys(hexagrams).length, '個卦象');
+        console.log('wuxing_explanations.json 載入:', Object.keys(wuxingExplanations));
+      } catch (error) {
+        console.error('載入資源失敗:', error);
+        hexagrams = {};
+        wuxingExplanations = {};
+        alert('無法載入資源，請檢查檔案是否存在！');
+      }
+    }
+
+    // 輔助函數
+    function clamp(value) {
+      return Math.max(0, Math.min(10, value));
+    }
+
+    function getLineEntryFor(hex, lineIdx) {
+      return hex?.lines?.[lineIdx - 1] || { score: 5, text: '未知' };
+    }
+
+    const ASPECTS = [
+      { k: 'people', label: '人際' },
+      { k: 'affairs', label: '事業' },
+      { k: 'time', label: '時運' },
+      { k: 'place', label: '環境' },
+      { k: 'object', label: '物件' }
+    ];
+
+    const GUA_SYMBOLS = {
+      1: '☰ 乾', 2: '☱ 兌', 3: '☲ 離', 4: '☳ 震',
+      5: '☴ 巽', 6: '☵ 坎', 7: '☶ 艮', 8: '☷ 坤'
+    };
+
+    function calculateHuGua(upperIdx, lowerIdx) {
+      // 簡化互卦計算：取本卦的二三四爻為上卦，三四五爻為下卦
+      return `${(upperIdx % 8) || 8}-${(lowerIdx % 8) || 8}-hu`;
+    }
+
+    function calculateChangeGua(upperIdx, lowerIdx, moving) {
+      // 簡化變卦計算：根據動爻反轉
+      return `${(upperIdx % 8) || 8}-${(lowerIdx % 8) || 8}-change-${moving.join(',')}`;
+    }
+
+    function generateGua(upperIdx, lowerIdx, moving, method, timestamp, question = '') {
+      const hexKey = `${upperIdx}-${lowerIdx}`;
+      const mainHex = hexagrams[hexKey] || {
+        name: '未知',
+        wuxing: '未知',
+        judgment: { overall: 5, people: 5, affairs: 5, time: 5, place: 5, object: 5 },
+        symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 },
+        lines: []
+      };
+      const huHex = hexagrams[calculateHuGua(upperIdx, lowerIdx)] || {
+        name: '未知',
+        wuxing: '未知',
+        judgment: { overall: 5, people: 5, affairs: 5, time: 5, place: 5, object: 5 },
+        symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 }
+      };
+      const changeHex = hexagrams[calculateChangeGua(upperIdx, lowerIdx, moving)] || {
+        name: '未知',
+        wuxing: '未知',
+        judgment: { overall: 5, people: 5, affairs: 5, time: 5, place: 5, object: 5 },
+        symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 }
+      };
+      currentResult = {
+        hexMain: { idx: hexKey, ...mainHex },
+        hexHu: { idx: calculateHuGua(upperIdx, lowerIdx), ...huHex },
+        hexChange: { idx: calculateChangeGua(upperIdx, lowerIdx, moving), ...changeHex },
+        moving: moving || [],
+        timestamp: timestamp || new Date().toISOString(),
+        method,
+        question
+      };
+      // 更新卦象顯示
+      document.getElementById('guaSymbol').textContent = GUA_SYMBOLS[upperIdx] || '未知';
+      document.getElementById('guaName').textContent = `本卦：${mainHex.name} (${mainHex.wuxing})`;
+      document.getElementById('huGuaSymbol').textContent = GUA_SYMBOLS[upperIdx % 8 || 8] || '未知';
+      document.getElementById('huGuaName').textContent = `互卦：${huHex.name} (${huHex.wuxing})`;
+      document.getElementById('changeGuaSymbol').textContent = GUA_SYMBOLS[upperIdx % 8 || 8] || '未知';
+      document.getElementById('changeGuaName').textContent = `變卦：${changeHex.name} (${changeHex.wuxing})`;
+      // 保存到歷史記錄
+      history.push(currentResult);
+      saveHistory();
+      renderHistory();
+    }
+
+    async function renderWuxingAnalysis(result) {
+      const wuxingDiv = document.getElementById('wuxingAnalysis');
+      const guaName = document.getElementById('guaName');
+      const huGuaName = document.getElementById('huGuaName');
+      const changeGuaName = document.getElementById('changeGuaName');
+      if (!wuxingDiv || !guaName || !huGuaName || !changeGuaName) {
+        console.error('找不到五行分析或卦名元素');
+        alert('頁面元素載入錯誤，請檢查 HTML 結構！');
+        return;
+      }
+
+      // 重新載入 hexagrams.json 和 wuxing_explanations.json
+      await loadResources();
+
+      // 更新卦名
+      const mainHex = hexagrams[result.hexMain?.idx] || { name: '未知', wuxing: '未知' };
+      const huHex = hexagrams[result.hexHu?.idx] || { name: '未知', wuxing: '未知' };
+      const changeHex = hexagrams[result.hexChange?.idx] || { name: '未知', wuxing: '未知' };
+      guaName.textContent = `本卦：${mainHex.name} (${mainHex.wuxing})`;
+      huGuaName.textContent = `互卦：${huHex.name} (${huHex.wuxing})`;
+      changeGuaName.textContent = `變卦：${changeHex.name} (${changeHex.wuxing})`;
+
+      // 五行分析
+      const wuxingDetails = document.getElementById('wuxingDetails');
+      wuxingDetails.innerHTML = `
+        <h4>本卦五行分析</h4>
+        <p>本卦上卦（外在環境）：${mainHex.wuxing || '未知'} → 體卦（${mainHex.name}）：${wuxingExplanations[mainHex.wuxing]?.description || '無詳細分析'}</p>
+        <p>本卦下卦（內在基礎）：${mainHex.wuxing || '未知'} → 體卦（${mainHex.name}）：${wuxingExplanations[mainHex.wuxing]?.description || '無詳細分析'}</p>
+        <h4>互卦五行分析</h4>
+        <p>互卦上卦（潛在發展）：${huHex.wuxing || '未知'} → 體卦（${huHex.name}）：${wuxingExplanations[huHex.wuxing]?.description || '無詳細分析'}</p>
+        <p>互卦下卦（內在潛力）：${huHex.wuxing || '未知'} → 體卦（${huHex.name}）：${wuxingExplanations[huHex.wuxing]?.description || '無詳細分析'}</p>
+        <h4>變卦五行分析</h4>
+        <p>變卦上卦（未來趨勢）：${changeHex.wuxing || '未知'} → 體卦（${changeHex.name}）：${wuxingExplanations[changeHex.wuxing]?.description || '無詳細分析'}</p>
+        <p>變卦下卦（變化基礎）：${changeHex.wuxing || '未知'} → 體卦（${changeHex.name}）：${wuxingExplanations[changeHex.wuxing]?.description || '無詳細分析'}</p>
+      `;
+      wuxingDiv.classList.remove('hidden');
+    }
+
+    function renderDetailedAnalysis(result) {
+      const detailedDiv = document.getElementById('wuxingAnalysis');
+      const scoreWrap = document.getElementById('scoreWrap');
+      const radarChart = document.getElementById('radarChart');
+      const movingLineScores = document.getElementById('movingLineScores');
+      const lineExplanation = document.getElementById('lineExplanation');
+      const auspiciousnessIndex = document.getElementById('auspiciousnessIndex');
+      const auspiciousnessBar = document.getElementById('auspiciousnessBar');
+
+      if (!detailedDiv || !scoreWrap || !radarChart || !movingLineScores || !lineExplanation || !auspiciousnessIndex || !auspiciousnessBar) {
+        console.error('找不到圖表相關元素');
+        alert('頁面元素載入錯誤，請檢查 HTML 結構！');
+        return;
+      }
+
+      detailedDiv.classList.remove('hidden');
+      scoreWrap.innerHTML = ''; // 清空條狀圖
+
+      // 繪製蛛網圖
+      function renderRadarChart(scoresMain, scoresHu, scoresChange) {
+        console.log('蛛網圖數據:', { scoresMain, scoresHu, scoresChange }); // 調試數據
+        radarChart.innerHTML = '';
+        const center = 140;
+        const maxRadius = 120;
+        const numPoints = ASPECTS.length;
+
+        // SVG 容器
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute('viewBox', `0 0 ${center * 2} ${center * 2}`);
+        svg.setAttribute('class', 'radar-chart');
+        radarChart.appendChild(svg);
+
+        // 繪製多邊形背景
+        for (let i = 1; i <= 3; i++) {
+          const points = ASPECTS.map((_, index) => {
+            const angle = (Math.PI * 2 / numPoints) * index;
+            const radius = (maxRadius / 3) * i;
+            const x = center + radius * Math.sin(angle);
+            const y = center - radius * Math.cos(angle);
+            return `${x},${y}`;
+          }).join(' ');
+          const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+          polygon.setAttribute('points', points);
+          polygon.setAttribute('fill', `rgba(204, 204, 204, ${i * 0.1})`);
+          polygon.setAttribute('stroke', '#ccc');
+          polygon.setAttribute('stroke-width', '1');
+          svg.appendChild(polygon);
+        }
+
+        // 繪製中心點到邊緣的軸線
+        ASPECTS.forEach((_, index) => {
+          const angle = (Math.PI * 2 / numPoints) * index;
+          const x = center + maxRadius * Math.sin(angle);
+          const y = center - maxRadius * Math.cos(angle);
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute('x1', center);
+          line.setAttribute('y1', center);
+          line.setAttribute('x2', x);
+          line.setAttribute('y2', y);
+          line.setAttribute('stroke', '#ccc');
+          svg.appendChild(line);
+        });
+
+        // 繪製數據多邊形和數值
+        const datasets = [
+          { scores: scoresMain, label: '本卦', color: 'var(--primary-color)' },
+          { scores: scoresHu, label: '互卦', color: 'var(--secondary-color)' },
+          { scores: scoresChange, label: '變卦', color: 'var(--negative-color)' }
+        ];
+
+        datasets.forEach(dataset => {
+          const dataPoints = ASPECTS.map((aspect, index) => {
+            const score = clamp(dataset.scores[aspect.k] ?? 5);
+            const angle = (Math.PI * 2 / numPoints) * index;
+            const radius = (score / 10) * maxRadius;
+            const x = center + radius * Math.sin(angle);
+            const y = center - radius * Math.cos(angle);
+            // 繪製數值
+            const textValue = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            textValue.setAttribute('x', x);
+            textValue.setAttribute('y', y);
+            textValue.setAttribute('text-anchor', 'middle');
+            textValue.setAttribute('alignment-baseline', 'middle');
+            textValue.setAttribute('fill', dataset.color);
+            textValue.setAttribute('font-size', '12px');
+            textValue.textContent = score.toFixed(1);
+            svg.appendChild(textValue);
+            return `${x},${y}`;
+          }).join(' ');
+          const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+          polygon.setAttribute('points', dataPoints);
+          polygon.setAttribute('class', 'radar-chart-polygon');
+          polygon.setAttribute('fill', 'none');
+          polygon.setAttribute('stroke', dataset.color);
+          polygon.setAttribute('stroke-width', '2');
+          svg.appendChild(polygon);
+        });
+
+        // 繪製標籤
+        ASPECTS.forEach((aspect, index) => {
+          const angle = (Math.PI * 2 / numPoints) * index;
+          const labelX = center + (maxRadius + 20) * Math.sin(angle);
+          const labelY = center - (maxRadius + 20) * Math.cos(angle);
+          const textLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          textLabel.setAttribute('x', labelX);
+          textLabel.setAttribute('y', labelY);
+          textLabel.setAttribute('text-anchor', 'middle');
+          textLabel.setAttribute('alignment-baseline', 'middle');
+          textLabel.setAttribute('fill', 'var(--text-color)');
+          textLabel.setAttribute('font-weight', 'bold');
+          textLabel.setAttribute('font-size', '12px');
+          textLabel.textContent = aspect.label;
+          svg.appendChild(textLabel);
+        });
+
+        // 繪製圖例
+        const legend = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        legend.setAttribute('transform', 'translate(10, 10)');
+        datasets.forEach((dataset, index) => {
+          const legendY = 20 + index * 20;
+          const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          rect.setAttribute('x', '0');
+          rect.setAttribute('y', legendY - 10);
+          rect.setAttribute('width', '10');
+          rect.setAttribute('height', '10');
+          rect.setAttribute('fill', dataset.color);
+          legend.appendChild(rect);
+          const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          text.setAttribute('x', '15');
+          text.setAttribute('y', legendY);
+          text.setAttribute('fill', 'var(--text-color)');
+          text.setAttribute('font-size', '12px');
+          text.textContent = dataset.label;
+          legend.appendChild(text);
+        });
+        svg.appendChild(legend);
+      }
+
+      // 調用蛛網圖繪製函數
+      renderRadarChart(
+        result.hexMain?.symbolism || { people: 5, affairs: 5, time: 5, place: 5, object: 5 },
+        result.hexHu?.symbolism || { people: 5, affairs: 5, time: 5, place: 5, object: 5 },
+        result.hexChange?.symbolism || { people: 5, affairs: 5, time: 5, place: 5, object: 5 }
+      );
+
+      // 清空之前的動爻影響容器
+      movingLineScores.innerHTML = '';
+      const existingMovingContainer = lineExplanation.nextElementSibling;
+      if (existingMovingContainer?.classList.contains('moving-line-scores')) {
+        existingMovingContainer.remove();
+      }
+
+      // 繪製爻辭解釋
+      lineExplanation.innerHTML = '<h4>爻辭解釋</h4>';
+      if (result.moving.length > 0) {
+        result.moving.forEach(lineIdx => {
+          const line = getLineEntryFor(result.hexMain, lineIdx);
+          const p = document.createElement('p');
+          p.textContent = `第${lineIdx}爻：${line.text} - ${line.meaning || '無解釋'}`;
+          lineExplanation.appendChild(p);
+        });
+      } else {
+        lineExplanation.innerHTML += '<p>無動爻</p>';
+      }
+
+      // 繪製動爻影響（移至爻辭下方）
+      if (result.moving.length > 0) {
+        const movingContainer = document.createElement('div');
+        movingContainer.className = 'moving-line-scores';
+        movingContainer.innerHTML = `<h5 style="color: var(--text-color); margin: 10px 0;">動爻影響</h5>`;
+        result.moving.forEach(lineIdx => {
+          const score = getLineEntryFor(result.hexMain, lineIdx).score || 5;
+          const v = clamp(score);
+          const card = document.createElement('div');
+          card.className = 'score-card';
+          const lbl = document.createElement('div');
+          lbl.textContent = `【第${lineIdx}爻】`;
+          const barWrap = document.createElement('div');
+          barWrap.className = 'score-bar-wrap';
+          const bar = document.createElement('div');
+          bar.className = 'score-bar';
+          bar.style.width = `${v * 10}%`;
+          barWrap.appendChild(bar);
+          const val = document.createElement('div');
+          val.className = 'score-val';
+          val.textContent = v.toFixed(1);
+          card.appendChild(lbl);
+          card.appendChild(barWrap);
+          card.appendChild(val);
+          movingContainer.appendChild(card);
+        });
+        lineExplanation.insertAdjacentElement('afterend', movingContainer);
+      }
+
+      // 更新吉凶指數進度條
+      const overallScore = result.hexMain?.judgment?.overall || 5;
+      auspiciousnessIndex.textContent = `吉凶指數：${overallScore * 10}%`;
+      const barFill = document.createElement('div');
+      barFill.className = 'auspiciousness-bar-fill';
+      barFill.style.width = `${overallScore * 10}%`;
+      auspiciousnessBar.innerHTML = '';
+      auspiciousnessBar.appendChild(barFill);
+    }
+
+    // 歷史記錄管理
+    function saveHistory() {
+      localStorage.setItem('guaHistory', JSON.stringify(history));
+    }
+
+    function renderHistory() {
+      const historyList = document.getElementById('historyList');
+      historyList.innerHTML = '';
+      history.forEach((record, index) => {
+        const div = document.createElement('div');
+        div.textContent = `[${record.timestamp}] ${record.method}: ${record.hexMain.name} (問題: ${record.question || '無'})`;
+        div.style.cursor = 'pointer';
+        div.addEventListener('click', () => {
+          currentResult = record;
+          document.getElementById('guaSymbol').textContent = GUA_SYMBOLS[record.hexMain.idx.split('-')[0]] || '未知';
+          document.getElementById('guaName').textContent = `本卦：${record.hexMain.name} (${record.hexMain.wuxing})`;
+          document.getElementById('huGuaSymbol').textContent = GUA_SYMBOLS[record.hexHu.idx.split('-')[0]] || '未知';
+          document.getElementById('huGuaName').textContent = `互卦：${record.hexHu.name} (${record.hexHu.wuxing})`;
+          document.getElementById('changeGuaSymbol').textContent = GUA_SYMBOLS[record.hexChange.idx.split('-')[0]] || '未知';
+          document.getElementById('changeGuaName').textContent = `變卦：${record.hexChange.name} (${record.hexChange.wuxing})`;
+          renderWuxingAnalysis(record);
+          renderDetailedAnalysis(record);
+        });
+        historyList.appendChild(div);
+      });
+    }
+
+    function exportHistory() {
+      const dataStr = JSON.stringify(history);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'gua_history.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importHistory(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          history = JSON.parse(e.target.result);
+          saveHistory();
+          renderHistory();
+        } catch (err) {
+          alert('匯入檔案格式錯誤！');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // 初始化事件監聽器
+    document.addEventListener('DOMContentLoaded', () => {
+      loadResources();
+
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(btn.dataset.target).classList.add('active');
+          document.getElementById('subtitle').textContent = quotes[Math.floor(Math.random() * quotes.length)] || '請選擇取卦方式以開始占卜';
+        });
+      });
+
+      document.getElementById('btnNumber')?.addEventListener('click', () => {
+        const upperNum = parseInt(document.getElementById('numUpper').value);
+        const lowerNum = parseInt(document.getElementById('numLower').value);
+        const movingNum = parseInt(document.getElementById('numMoving').value);
+        const question = document.getElementById('numQuestion').value.trim();
+        if (isNaN(upperNum) || isNaN(lowerNum) || isNaN(movingNum) || upperNum < 100 || upperNum > 999 || lowerNum < 100 || lowerNum > 999 || movingNum < 100 || movingNum > 999) {
+          alert('請輸入有效的三位數（100-999）！');
+          return;
+        }
+        const upperIdx = ((upperNum % 8) || 8);
+        const lowerIdx = ((lowerNum % 8) || 8);
+        const moving = [((movingNum % 6) || 6)];
+        generateGua(upperIdx, lowerIdx, moving, '數字取卦', new Date().toISOString(), question);
+      });
+
+      document.getElementById('btnRandomNumber')?.addEventListener('click', () => {
+        const upperNum = Math.floor(Math.random() * 900) + 100;
+        const lowerNum = Math.floor(Math.random() * 900) + 100;
+        const movingNum = Math.floor(Math.random() * 900) + 100;
+        const question = document.getElementById('numQuestion').value.trim();
+        document.getElementById('numUpper').value = upperNum;
+        document.getElementById('numLower').value = lowerNum;
+        document.getElementById('numMoving').value = movingNum;
+        const upperIdx = ((upperNum % 8) || 8);
+        const lowerIdx = ((lowerNum % 8) || 8);
+        const moving = [((movingNum % 6) || 6)];
+        generateGua(upperIdx, lowerIdx, moving, '數字亂數取卦', new Date().toISOString(), question);
+      });
+
+      document.getElementById('btnManual')?.addEventListener('click', () => {
+        const upperIdx = parseInt(document.getElementById('selUpper').value);
+        const lowerIdx = parseInt(document.getElementById('selLower').value);
+        const movingInput = document.getElementById('inputMoving').value.trim();
+        const question = document.getElementById('manualQuestion').value.trim();
+        if (!upperIdx || !lowerIdx) {
+          alert('請選擇上卦與下卦！');
+          return;
+        }
+        const moving = movingInput ? movingInput.split(',').map(Number).filter(n => n >= 1 && n <= 6) : [];
+        if (movingInput && moving.length === 0) {
+          alert('動爻輸入格式錯誤，請輸入1-6的數字，以逗號分隔！');
+          return;
+        }
+        generateGua(upperIdx, lowerIdx, moving, '手動取卦', new Date().toISOString(), question);
+      });
+
+      document.getElementById('btnTime')?.addEventListener('click', () => {
+        const method = document.querySelector('input[name="time-method"]:checked').value;
+        const question = method === 'modern' ? document.getElementById('modernQuestion').value.trim() : document.getElementById('traditionalQuestion').value.trim();
+        let upperIdx, lowerIdx, moving, timestamp;
+        if (method === 'modern') {
+          const dtInput = document.getElementById('dtInput').value;
+          if (!dtInput) {
+            alert('請選擇日期時間！');
+            return;
+          }
+          const dt = new Date(dtInput);
+          if (isNaN(dt.getTime())) {
+            alert('無效的日期時間！');
+            return;
+          }
+          timestamp = dt.toLocaleString('zh-TW');
+          const year = dt.getFullYear();
+          const month = dt.getMonth() + 1;
+          const day = dt.getDate();
+          const hour = dt.getHours();
+          const minute = dt.getMinutes();
+          const total = year + month + day + hour + minute;
+          upperIdx = ((month + day) % 8) || 8;
+          lowerIdx = ((month + day + hour) % 8) || 8;
+          moving = [((total % 6) || 6)];
+        } else {
+          const dateInput = document.getElementById('dateInput').value;
+          const shichen = parseInt(document.getElementById('shichenInput').value);
+          const minute = parseInt(document.getElementById('minuteInput').value) || 0;
+          if (!dateInput || isNaN(shichen)) {
+            alert('請選擇日期與時辰！');
+            return;
+          }
+          const dt = new Date(dateInput);
+          if (isNaN(dt.getTime())) {
+            alert('無效的日期！');
+            return;
+          }
+          timestamp = `${dt.toLocaleDateString('zh-TW')} ${shichen}:00`;
+          const year = dt.getFullYear();
+          const month = dt.getMonth() + 1;
+          const day = dt.getDate();
+          const total = year + month + day + shichen + minute;
+          upperIdx = ((month + day) % 8) || 8;
+          lowerIdx = ((month + day + shichen) % 8) || 8;
+          moving = [((total % 6) || 6)];
+        }
+        generateGua(upperIdx, lowerIdx, moving, method === 'modern' ? '現代時間取卦' : '傳統時辰取卦', timestamp, question);
+      });
+
+      document.getElementById('nowQuick')?.addEventListener('click', () => {
+        document.getElementById('dtInput').value = new Date().toISOString().slice(0, 16);
+      });
+
+      document.getElementById('btnImage')?.addEventListener('click', () => {
+        const upperIdx = parseInt(document.getElementById('upperImageSelect').value);
+        const lowerIdx = parseInt(document.getElementById('lowerDirectionSelect').value);
+        const useMinute = document.getElementById('imageUseMinute').checked;
+        const movingInput = parseInt(document.getElementById('imageMovingInput').value);
+        const question = document.getElementById('imageQuestion').value.trim();
+        if (!upperIdx || !lowerIdx) {
+          alert('請選擇物象與方位！');
+          return;
+        }
+        let moving;
+        if (useMinute) {
+          const minute = new Date().getMinutes();
+          moving = [((minute % 6) || 6)];
+        } else {
+          if (isNaN(movingInput) || movingInput < 1 || movingInput > 6) {
+            alert('請輸入有效的動爻（1-6）！');
+            return;
+          }
+          moving = [movingInput];
+        }
+        generateGua(upperIdx, lowerIdx, moving, '以象取卦', new Date().toISOString(), question);
+      });
+
+      document.querySelectorAll('input[name="time-method"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          const modernInputs = document.getElementById('modern-time-inputs');
+          const traditionalInputs = document.getElementById('traditional-time-inputs');
+          if (!modernInputs || !traditionalInputs) {
+            console.error('找不到時間輸入元素');
+            return;
+          }
+          if (radio.value === 'modern') {
+            modernInputs.classList.remove('hidden');
+            traditionalInputs.classList.add('hidden');
+          } else {
+            modernInputs.classList.add('hidden');
+            traditionalInputs.classList.remove('hidden');
+          }
+        });
+      });
+
+      document.getElementById('judgeBtn')?.addEventListener('click', async () => {
+        if (currentResult) {
+          await loadResources();
+          renderWuxingAnalysis(currentResult);
+          renderDetailedAnalysis(currentResult);
+        } else {
+          alert('請先進行占卜！');
+        }
+      });
+
+      document.getElementById('clearHistoryBtn')?.addEventListener('click', () => {
+        if (confirm('確定要清除所有歷史記錄嗎？')) {
+          history = [];
+          saveHistory();
+          renderHistory();
+        }
+      });
+
+      document.getElementById('exportHistoryBtn')?.addEventListener('click', () => {
+        exportHistory();
+      });
+
+      document.getElementById('importHistoryBtn')?.addEventListener('click', () => {
+        const input = document.getElementById('importHistoryInput');
+        if (input.files.length === 0) {
+          alert('請選擇要匯入的 JSON 檔案！');
+          return;
+        }
+        importHistory(input.files[0]);
+        input.value = '';
+      });
+    });
+  </script>
+</body>
+</html>
