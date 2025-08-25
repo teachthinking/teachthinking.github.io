@@ -1226,8 +1226,6 @@
         `;
       });
     }
-
-
 async function renderWuxingAnalysis(result) {
     const wuxingDiv = document.getElementById('wuxingAnalysis');
     const guaName = document.getElementById('guaName');
@@ -1590,7 +1588,7 @@ async function renderWuxingAnalysis(result) {
         generateGua(upper, lower, [movingIdx], '以象取卦');
       });
 
-  //「五行與象徵」按鈕的事件監聽器
+  // 修改「五行與象徵」按鈕的事件監聽器
   document.getElementById('judgeBtn')?.addEventListener('click', async () => {
     if (currentResult) {
       await loadResources(); // 重新載入 hexagrams.json
