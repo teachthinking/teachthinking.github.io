@@ -4,18 +4,21 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>張老師易經(梅花心易)</title>
   <style>
-    :root {
-      --primary-color: #2c3e50;
-      --secondary-color: #3498db;
-      --background-color: #f4f7f9;
-      --card-bg: #ffffff;
-      --border-color: #e0e6ed;
-      --text-color: #333333;
-      --sub-text-color: #7f8c8d;
-      --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.05);
-      --border-radius: 12px;
-      --font-family: 'Noto Sans TC', sans-serif;
-    }
+   :root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --negative-color: #e74c3c;
+    --positive-color: #4caf50;
+    --yellow-color: #f1c40f;
+    --background-color: #f4f7f9;
+    --card-bg: #ffffff;
+    --border-color: #e0e6ed;
+    --text-color: #333333;
+    --sub-text-color: #7f8c8d;
+    --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.05);
+    --border-radius: 12px;
+    --font-family: 'Noto Sans TC', sans-serif;
+  }
 
     body {
       font-family: var(--font-family);
@@ -157,7 +160,7 @@
     .gua-line.moving::before {
       content: '×';
       position: absolute;
-      color: #e74c3c;
+      color: var(--negative-color);
       font-size: 16px;
       left: -20px;
       top: -3px;
@@ -179,9 +182,9 @@
       font-weight: bold;
     }
 
-    .wuxing-status.positive { color: #2ecc71; }
-    .wuxing-status.neutral { color: #3498db; }
-    .wuxing-status.negative { color: #e74c3c; }
+    .wuxing-status.positive { color: var(--positive-color); }
+    .wuxing-status.neutral { color: var(--secondary-color); }
+    .wuxing-status.negative { color: var(--negative-color); }
 
     .wuxing-node {
       fill: #ecf0f1;
@@ -196,15 +199,15 @@
     }
 
     .wuxing-edge-generate {
-      stroke: #2ecc71;
+      stroke: var(--positive-color);
     }
 
     .wuxing-edge-overcome {
-      stroke: #e74c3c;
+      stroke: var(--negative-color);
     }
 
     .wuxing-edge-harmony {
-      stroke: #3498db;
+      stroke: var(--secondary-color);
     }
 
     .wuxing-edge-label {
@@ -213,27 +216,19 @@
       text-anchor: middle;
     }
 
-    canvas {
-      max-width: 100%;
-      margin: 10px auto;
-      display: block;
-      width: 600px !important;
-      height: 400px !important;
-    }
-
-    .line-explanation {
-      margin: 15px 0;
-      padding: 10px;
-      background: var(--background-color);
-      border-radius: var(--border-radius);
-    }
 
 
-     .radar-chart {
+   .radar-chart {
     width: 280px;
     height: 280px;
     margin: 20px auto;
     display: block;
+    fill: none;
+    stroke-width: 2;
+  }
+
+  .moving-line-scores {
+    margin: 15px 0;
   }
 
   .radar-chart-polygon {
@@ -306,6 +301,7 @@
     background: linear-gradient(to right, #e74c3c, #4caf50);
     transition: width 0.3s ease;
   }
+
   </style>
 </head>
 <body>
@@ -541,9 +537,9 @@
         </div>
         <div id="detailedAnalysis" class="hidden">
           <h4>象徵分析</h4>
-          <canvas id="symbolismRadarChart" width="600" height="400"></canvas>
-          <canvas id="overallBarChart" width="600" height="400"></canvas>
-          <canvas id="movingLineBarChart" width="600" height="400"></canvas>
+          <div id="scoreWrap"></div>
+          <svg id="radarChart" class="radar-chart"></svg>
+          <div id="movingLineScores" class="moving-line-scores"></div>
         </div>
       </div>
     </div>
@@ -633,6 +629,14 @@
         return { lunarMonth: '七月', season: '秋', lunarMonthNumber: 7 }; // 預設 2025/8/25
       }
     };
+
+    const ASPECTS = [
+      { k: 'people', label: '人事' },
+      { k: 'affairs', label: '事務' },
+      { k: 'time', label: '時間' },
+      { k: 'place', label: '地點' },
+      { k: 'object', label: '物品' }
+    ];
 
     function normalizeKey(str) {
       return str ? str.replace(/[\s-]/g, '').toLowerCase() : '';
@@ -756,6 +760,10 @@
 
     function getLineEntryFor(hex, lineIdx) {
       return hex.lines?.find(line => line.index === lineIdx) || { text: '無爻辭', meaning: '無解釋', score: 5 };
+    }
+
+    function clamp(value) {
+      return Math.max(0, Math.min(10, value));
     }
 
     async function loadResources() {
@@ -1022,7 +1030,7 @@
       const wuxingDiv = document.getElementById('wuxingAnalysis');
       const judgeBox = document.getElementById('judgeBox');
       const judgeTitle = document.getElementById('judgeTitle');
-      const timestamp = new Date(result.timestamp || '2025-08-25T00:38:00+08:00');
+      const timestamp = new Date(result.timestamp || '2025-08-25T10:30:00+08:00');
       const { lunarMonth, season, lunarMonthNumber } = lunarCalendar.gregorianToLunar(timestamp);
 
       if (!wuxingDiv || !judgeBox || !judgeTitle) {
@@ -1097,7 +1105,7 @@
       const auspiciousnessIndex = document.getElementById('auspiciousnessIndex');
       const auspiciousnessBar = document.getElementById('auspiciousnessBar');
       auspiciousnessIndex.textContent = `吉凶指數：${normalizedScore}%`;
-      auspiciousnessBar.style.background = `linear-gradient(to right, #e74c3c 0%, #2ecc71 ${normalizedScore}%, #2ecc71 100%)`;
+      auspiciousnessBar.style.background = `linear-gradient(to right, var(--negative-color) 0%, var(--positive-color) ${normalizedScore}%, var(--positive-color) 100%)`;
 
       renderDetailedAnalysis(result);
     }
@@ -1111,16 +1119,16 @@
       svg.innerHTML = `
         <defs>
           <marker id="arrow-generate" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#2ecc71" />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--positive-color)" />
           </marker>
           <marker id="arrow-overcome" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#e74c3c" />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--negative-color)" />
           </marker>
           <marker id="arrow-harmony" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#3498db" />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--secondary-color)" />
           </marker>
           <marker id="arrow-harmony-reverse" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#3498db" />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--secondary-color)" />
           </marker>
         </defs>
       `;
@@ -1219,7 +1227,8 @@
       });
     }
 
- async function renderWuxingAnalysis(result) {
+
+async function renderWuxingAnalysis(result) {
     const wuxingDiv = document.getElementById('wuxingAnalysis');
     const guaName = document.getElementById('guaName');
     const huGuaName = document.getElementById('huGuaName');
@@ -1252,7 +1261,7 @@
     `;
     wuxingDiv.classList.remove('hidden');
   }
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   function renderDetailedAnalysis(result) {
     const detailedDiv = document.getElementById('detailedAnalysis');
     const scoreWrap = document.getElementById('scoreWrap');
@@ -1447,16 +1456,7 @@
       auspiciousnessBar.appendChild(barFill);
     }
   }
-// 修改「五行與象徵」按鈕的事件監聽器
-  document.getElementById('judgeBtn')?.addEventListener('click', async () => {
-    if (currentResult) {
-      await loadResources(); // 重新載入 hexagrams.json
-      renderWuxingAnalysis(currentResult);
-      renderDetailedAnalysis(currentResult);
-    } else {
-      alert('請先進行占卜！');
-    }
-  });
+    
     // 初始化事件監聽器
     function initEventListeners() {
       // 標籤切換
@@ -1590,14 +1590,17 @@
         generateGua(upper, lower, [movingIdx], '以象取卦');
       });
 
-      // 五行與象徵分析
-      document.getElementById('judgeBtn').addEventListener('click', () => {
-        if (currentResult) {
-          renderWuxingAnalysis(currentResult);
-        } else {
-          alert('請先進行占卜以生成卦象！');
-        }
-      });
+  //「五行與象徵」按鈕的事件監聽器
+  document.getElementById('judgeBtn')?.addEventListener('click', async () => {
+    if (currentResult) {
+      await loadResources(); // 重新載入 hexagrams.json
+      renderWuxingAnalysis(currentResult);
+      renderDetailedAnalysis(currentResult);
+    } else {
+      alert('請先進行占卜！');
+    }
+  });
+
 
       // 清除歷史記錄
       document.getElementById('clearHistoryBtn').addEventListener('click', () => {
@@ -1640,6 +1643,5 @@
       initEventListeners();
     });
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </body>
 </html>
