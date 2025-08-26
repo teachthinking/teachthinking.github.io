@@ -875,6 +875,12 @@
         );
         quotes = Array.isArray(quotesResponse) ? quotesResponse : [];
         wuxingExplanations = wuxingResponse.relations || {};
+        if (Object.keys(hexagrams).length === 0) {
+          throw new Error('hexagrams.json 數據為空');
+        }
+        if (Object.keys(wuxingExplanations).length === 0) {
+          console.warn('wuxing_explanations.json 數據為空，分析可能不完整');
+        }
         document.getElementById('subtitle').textContent = quotes[Math.floor(Math.random() * quotes.length)] || '請選擇取卦方式以開始占卜';
       } catch (error) {
         console.error('載入 JSON 檔案失敗:', error);
@@ -1038,99 +1044,104 @@
     }
 
     function generateGua(upperIdx, lowerIdx, moving, method = '未知', timestamp = new Date().toLocaleString('zh-TW')) {
-      if (!trigramName[upperIdx] || !trigramName[lowerIdx]) {
-        alert('無效的卦象輸入，請檢查上卦或下卦！');
-        console.error(`無效的卦象索引: 上卦 ${upperIdx}, 下卦 ${lowerIdx}`);
-        return;
-      }
-
-      const upperLines = guaTable[upperIdx].slice(0, 3);
-      const lowerLines = guaTable[lowerIdx].slice(0, 3);
-      const lines = [...lowerLines, ...upperLines];
-
-      const changeLines = [...lines];
-      moving.forEach(idx => {
-        if (idx >= 1 && idx <= 6) {
-          changeLines[idx - 1] = changeLines[idx - 1] === 1 ? 0 : 1;
+      try {
+        if (!trigramName[upperIdx] || !trigramName[lowerIdx]) {
+          alert('無效的卦象輸入，請檢查上卦或下卦！');
+          console.error(`無效的卦象索引: 上卦 ${upperIdx}, 下卦 ${lowerIdx}`);
+          return;
         }
-      });
 
-      const huLines = [lines[1], lines[2], lines[3], lines[2], lines[3], lines[4]];
+        const upperLines = guaTable[upperIdx].slice(0, 3);
+        const lowerLines = guaTable[lowerIdx].slice(0, 3);
+        const lines = [...lowerLines, ...upperLines];
 
-      const mainHexName = getHexagramName(upperIdx, lowerIdx);
-      const changeUpperIdx = triIndexByLines.get(JSON.stringify(changeLines.slice(3, 6))) || 8;
-      const changeLowerIdx = triIndexByLines.get(JSON.stringify(changeLines.slice(0, 3))) || 8;
-      const changeHexName = getHexagramName(changeUpperIdx, changeLowerIdx);
-      const huUpperIdx = triIndexByLines.get(JSON.stringify(huLines.slice(3, 6))) || 8;
-      const huLowerIdx = triIndexByLines.get(JSON.stringify(huLines.slice(0, 3))) || 8;
-      const huHexName = getHexagramName(huUpperIdx, huLowerIdx);
+        const changeLines = [...lines];
+        moving.forEach(idx => {
+          if (idx >= 1 && idx <= 6) {
+            changeLines[idx - 1] = changeLines[idx - 1] === 1 ? 0 : 1;
+          }
+        });
 
-      const mainHex = hexagrams[normalizeKey(mainHexName)] || { name: mainHexName, judgment: { text: '無卦辭', meaning: '無解釋', people: 5, affairs: 5, time: 5, place: 5, object: 5 }, symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 }, lines: [] };
-      const changeHex = hexagrams[normalizeKey(changeHexName)] || { name: changeHexName, judgment: { text: '無卦辭', meaning: '無解釋', people: 5, affairs: 5, time: 5, place: 5, object: 5 }, symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 }, lines: [] };
-      const huHex = hexagrams[normalizeKey(huHexName)] || { name: huHexName, judgment: { text: '無卦辭', meaning: '無解釋', people: 5, affairs: 5, time: 5, place: 5, object: 5 }, symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 }, lines: [] };
+        const huLines = [lines[1], lines[2], lines[3], lines[2], lines[3], lines[4]];
 
-      const mainPalace = getSamePalaceHexagrams(mainHexName);
-      console.log(`本卦 ${mainHexName} 屬於 ${mainPalace.palace} 宮，同宮卦：${mainPalace.hexagrams.join(', ')}`);
+        const mainHexName = getHexagramName(upperIdx, lowerIdx);
+        const changeUpperIdx = triIndexByLines.get(JSON.stringify(changeLines.slice(3, 6))) || 8;
+        const changeLowerIdx = triIndexByLines.get(JSON.stringify(changeLines.slice(0, 3))) || 8;
+        const changeHexName = getHexagramName(changeUpperIdx, changeLowerIdx);
+        const huUpperIdx = triIndexByLines.get(JSON.stringify(huLines.slice(3, 6))) || 8;
+        const huLowerIdx = triIndexByLines.get(JSON.stringify(huLines.slice(0, 3))) || 8;
+        const huHexName = getHexagramName(huUpperIdx, huLowerIdx);
 
-      let question = '';
-      const questionInputs = {
-        '數字取卦': 'questionNumber',
-        '數字亂數取卦': 'questionNumber',
-        '手動取卦': 'questionManual',
-        '現代時間取卦': 'questionTime',
-        '傳統時辰取卦': 'questionTime',
-        '以象取卦': 'questionImage'
-      };
-      const questionInputId = questionInputs[method];
-      if (questionInputId) {
-        const input = document.getElementById(questionInputId);
-        question = input?.value.trim() || '';
+        const mainHex = hexagrams[normalizeKey(mainHexName)] || { name: mainHexName, judgment: { text: '無卦辭', meaning: '無解釋', people: 5, affairs: 5, time: 5, place: 5, object: 5 }, symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 }, lines: [] };
+        const changeHex = hexagrams[normalizeKey(changeHexName)] || { name: changeHexName, judgment: { text: '無卦辭', meaning: '無解釋', people: 5, affairs: 5, time: 5, place: 5, object: 5 }, symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 }, lines: [] };
+        const huHex = hexagrams[normalizeKey(huHexName)] || { name: huHexName, judgment: { text: '無卦辭', meaning: '無解釋', people: 5, affairs: 5, time: 5, place: 5, object: 5 }, symbolism: { people: 5, affairs: 5, time: 5, place: 5, object: 5 }, lines: [] };
+
+        const mainPalace = getSamePalaceHexagrams(mainHexName);
+        console.log(`本卦 ${mainHexName} 屬於 ${mainPalace.palace} 宮，同宮卦：${mainPalace.hexagrams.join(', ')}`);
+
+        let question = '';
+        const questionInputs = {
+          '數字取卦': 'questionNumber',
+          '數字亂數取卦': 'questionNumber',
+          '手動取卦': 'questionManual',
+          '現代時間取卦': 'questionTime',
+          '傳統時辰取卦': 'questionTime',
+          '以象取卦': 'questionImage'
+        };
+        const questionInputId = questionInputs[method];
+        if (questionInputId) {
+          const input = document.getElementById(questionInputId);
+          question = input?.value.trim() || '';
+        }
+
+        currentResult = {
+          lines,
+          changeLines,
+          huLines,
+          moving,
+          hexMain: mainHex,
+          hexChange: changeHex,
+          hexHu: huHex,
+          uIdx: upperIdx,
+          lIdx: lowerIdx,
+          method,
+          timestamp,
+          question,
+          tiGua: getTiYong({ moving, uIdx: upperIdx, lIdx: lowerIdx }).tiGua
+        };
+
+        history.push(currentResult);
+        saveHistory();
+        renderHistory();
+
+        const resultDiv = document.getElementById('result');
+        const guaName = document.getElementById('guaName');
+        const changeGuaName = document.getElementById('changeGuaName');
+        const huGuaName = document.getElementById('huGuaName');
+        const guaNote = document.getElementById('guaNote');
+        const resultTitle = document.getElementById('resultTitle');
+
+        if (!resultDiv || !guaName || !changeGuaName || !huGuaName || !guaNote || !resultTitle) {
+          console.error('找不到結果顯示相關元素');
+          alert('頁面元素載入錯誤，請檢查 HTML 結構！');
+          return;
+        }
+
+        resultDiv.classList.remove('hidden');
+        guaName.textContent = mainHex.name || mainHexName;
+        changeGuaName.textContent = changeHex.name || changeHexName;
+        huGuaName.textContent = huHex.name || huHexName;
+        guaNote.textContent = `本卦：${trigramName[lowerIdx]}為下，${trigramName[upperIdx]}為上，動爻：${moving.join('、') || '無'}，取卦方式：${method}${question ? `，問：${question}` : ''}`;
+        resultTitle.textContent = question || '占卜結果';
+
+        renderGuaImage(lines, 'guaImage', moving);
+        renderGuaImage(changeLines, 'changeGuaImage', moving);
+        renderGuaImage(huLines, 'huGuaImage');
+        renderLineExplanation(moving, mainHex, changeHex);
+      } catch (error) {
+        console.error('取卦過程中發生錯誤:', error);
+        alert('取卦失敗，請檢查輸入或稍後再試！');
       }
-
-      currentResult = {
-        lines,
-        changeLines,
-        huLines,
-        moving,
-        hexMain: mainHex,
-        hexChange: changeHex,
-        hexHu: huHex,
-        uIdx: upperIdx,
-        lIdx: lowerIdx,
-        method,
-        timestamp,
-        question,
-        tiGua: getTiYong({ moving, uIdx: upperIdx, lIdx: lowerIdx }).tiGua
-      };
-
-      history.push(currentResult);
-      saveHistory();
-      renderHistory();
-
-      const resultDiv = document.getElementById('result');
-      const guaName = document.getElementById('guaName');
-      const changeGuaName = document.getElementById('changeGuaName');
-      const huGuaName = document.getElementById('huGuaName');
-      const guaNote = document.getElementById('guaNote');
-      const resultTitle = document.getElementById('resultTitle');
-
-      if (!resultDiv || !guaName || !changeGuaName || !huGuaName || !guaNote || !resultTitle) {
-        console.error('找不到結果顯示相關元素');
-        alert('頁面元素載入錯誤，請檢查 HTML 結構！');
-        return;
-      }
-
-      resultDiv.classList.remove('hidden');
-      guaName.textContent = mainHex.name || mainHexName;
-      changeGuaName.textContent = changeHex.name || changeHexName;
-      huGuaName.textContent = huHex.name || huHexName;
-      guaNote.textContent = `本卦：${trigramName[lowerIdx]}為下，${trigramName[upperIdx]}為上，動爻：${moving.join('、') || '無'}，取卦方式：${method}${question ? `，問：${question}` : ''}`;
-      resultTitle.textContent = question || '占卜結果';
-
-      renderGuaImage(lines, 'guaImage', moving);
-      renderGuaImage(changeLines, 'changeGuaImage', moving);
-      renderGuaImage(huLines, 'huGuaImage');
-      renderLineExplanation(moving, mainHex, changeHex);
     }
 
     function downloadSvg() {
@@ -1298,6 +1309,10 @@
         }
       });
 
+      const huRelation = getRelation(huUpperGua.wuxing, huLowerGua.wuxing);
+      const changeRelation = getRelation(changeUpperGua.wuxing, changeLowerGua.wuxing);
+
+      let huClassName, huSource, huTarget, huMarkers, huStrokeWidth;
       huStrokeWidth = getWuxingStrength(getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber));
       if (huRelation === '用生體') {
         huClassName = 'wuxing-edge-generate';
@@ -1329,7 +1344,6 @@
         edges.push({ source: huSource, target: huTarget, className: huClassName, label: huRelation, markers: huMarkers, strokeWidth: huStrokeWidth });
       }
 
-      
       let changeClassName, changeSource, changeTarget, changeMarkers, changeStrokeWidth;
       changeStrokeWidth = getWuxingStrength(getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber));
       if (changeRelation === '用生體') {
@@ -1352,30 +1366,7 @@
         changeSource = 'changeUpper';
         changeTarget = 'changeLower';
         changeMarkers = { end: 'url(#arrow-generate)' };
-      } else if (changeRelation === '體剋用') {
-let changeClassName, changeSource, changeTarget, changeMarkers, changeStrokeWidth;
-      changeStrokeWidth = getWuxingStrength(getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber));
-      if (changeRelation === '用生體') {
-        changeClassName = 'wuxing-edge-generate';
-        changeSource = 'changeLower';
-        changeTarget = 'changeUpper';
-        changeMarkers = { end: 'url(#arrow-generate)' };
-      } else if (changeRelation === '用剋體') {
-        changeClassName = 'wuxing-edge-overcome';
-        changeSource = 'changeLower';
-        changeTarget = 'changeUpper';
-        changeMarkers = { end: 'url(#arrow-overcome)' };
-      } else if (changeRelation === '比和') {
-        changeClassName = 'wuxing-edge-harmony';
-        changeSource = 'changeLower';
-        changeTarget = 'changeUpper';
-        changeMarkers = { start: 'url(#arrow-harmony-reverse)', end: 'url(#arrow-harmony)' };
-      } else if (changeRelation === '體生用') {
-        changeClassName = 'wuxing-edge-generate';
-        changeSource = 'changeUpper';
-        changeTarget = 'changeLower';
-        changeMarkers = { end: 'url(#arrow-generate)' };
-      } else if (changeRelation === '體剋用') {
+      } else if (changeRelation === '體�克用') {
         changeClassName = 'wuxing-edge-overcome';
         changeSource = 'changeUpper';
         changeTarget = 'changeLower';
