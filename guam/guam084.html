@@ -1330,7 +1330,32 @@
       if (huRelation !== '未知') {
         edges.push({ source: huSource, target: huTarget, className: huClassName, label: huRelation, markers: huMarkers, strokeWidth: huStrokeWidth });
       }
+const changeRelation = getRelation(changeUpperGua.wuxing, changeLowerGua.wuxing);
 
+      
+      let changeClassName, changeSource, changeTarget, changeMarkers, changeStrokeWidth;
+      changeStrokeWidth = getWuxingStrength(getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber));
+      if (changeRelation === '用生體') {
+        changeClassName = 'wuxing-edge-generate';
+        changeSource = 'changeLower';
+        changeTarget = 'changeUpper';
+        changeMarkers = { end: 'url(#arrow-generate)' };
+      } else if (changeRelation === '用剋體') {
+        changeClassName = 'wuxing-edge-overcome';
+        changeSource = 'changeLower';
+        changeTarget = 'changeUpper';
+        changeMarkers = { end: 'url(#arrow-overcome)' };
+      } else if (changeRelation === '比和') {
+        changeClassName = 'wuxing-edge-harmony';
+        changeSource = 'changeLower';
+        changeTarget = 'changeUpper';
+        changeMarkers = { start: 'url(#arrow-harmony-reverse)', end: 'url(#arrow-harmony)' };
+      } else if (changeRelation === '體生用') {
+        changeClassName = 'wuxing-edge-generate';
+        changeSource = 'changeUpper';
+        changeTarget = 'changeLower';
+        changeMarkers = { end: 'url(#arrow-generate)' };
+      } else if (changeRelation === '體剋用') {
 let changeClassName, changeSource, changeTarget, changeMarkers, changeStrokeWidth;
       changeStrokeWidth = getWuxingStrength(getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber));
       if (changeRelation === '用生體') {
