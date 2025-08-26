@@ -1377,9 +1377,12 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
 
 function updateTiGua(nodeId) {
   if (!currentResult) {
+    console.error('無當前占卜結果');
     alert('請先進行占卜以生成卦象！');
     return;
   }
+
+  console.log('更新體卦，節點 ID:', nodeId);
 
   const timestamp = new Date(currentResult.timestamp || '2025-08-25T19:02:00+08:00');
   const { lunarMonth, season, lunarMonthNumber } = lunarCalendar.gregorianToLunar(timestamp);
@@ -1408,56 +1411,11 @@ function updateTiGua(nodeId) {
   const newTiGua = nodeMap[nodeId];
   if (!newTiGua) {
     console.error(`無效的節點 ID: ${nodeId}`);
+    alert(`無效的節點選擇: ${nodeId}`);
     return;
   }
 
-  // 更新五行分析區塊
-  const wuxingAnalysis = document.getElementById('wuxingAnalysis');
-  wuxingAnalysis.innerHTML = `
-    <div class="wuxing-box">
-      <h4>本卦現況</h4>
-      <p><strong>整體：</strong> <span id="mainOverall"></span></p>
-      <p><strong>描述：</strong> <span id="mainDescription"></span></p>
-      <p><strong>愛情：</strong> <span id="mainLove"></span></p>
-      <p><strong>事業：</strong> <span id="mainCareer"></span></p>
-      <p><strong>財運：</strong> <span id="mainWealth"></span></p>
-      <p><strong>健康：</strong> <span id="mainHealth"></span></p>
-      <p><strong>人際：</strong> <span id="mainRelationship"></span></p>
-      <p><strong>生活：</strong> <span id="mainLife"></span></p>
-      <p><strong>建議：</strong> <span id="mainGuidance"></span></p>
-    </div>
-    <div class="wuxing-box">
-      <h4>互卦外在過程（上卦）</h4>
-      <p><strong>整體：</strong> <span id="huUpperOverall"></span></p>
-      <p><strong>描述：</strong> <span id="huUpperDescription"></span></p>
-    </div>
-    <div class="wuxing-box">
-      <h4>互卦內在過程（下卦）</h4>
-      <p><strong>整體：</strong> <span id="huLowerOverall"></span></p>
-      <p><strong>描述：</strong> <span id="huLowerDescription"></span></p>
-    </div>
-    <div class="wuxing-box">
-      <h4>變卦未來趨勢（上卦）</h4>
-      <p><strong>整體：</strong> <span id="changeUpperOverall"></span></p>
-      <p><strong>描述：</strong> <span id="changeUpperDescription"></span></p>
-    </div>
-    <div class="wuxing-box">
-      <h4>變卦變化基礎（下卦）</h4>
-      <p><strong>整體：</strong> <span id="changeLowerOverall"></span></p>
-      <p><strong>描述：</strong> <span id="changeLowerDescription"></span></p>
-    </div>
-    <div class="wuxing-box">
-      <h4>綜合吉凶</h4>
-      <p><strong>結果：</strong> <span id="combinedResult"></span></p>
-    </div>
-  `;
-
-  // 將 SVG 附加到 wuxingAnalysis
-  const svgContainer = document.createElement('div');
-  svgContainer.innerHTML = `<svg id="wuxingSvg" width="600" height="400"></svg>`;
-  wuxingAnalysis.insertBefore(svgContainer.firstChild, wuxingAnalysis.firstChild);
-
-  // 更新五行關係
+  // 重新計算五行關係
   const relationMap = {
     '用生體': 'generate_ti',
     '體生用': 'ti_generate_yong',
@@ -1479,37 +1437,98 @@ function updateTiGua(nodeId) {
   };
 
   const explanations = {
-    mainUpper: wuxingExplanations.main?.[relationMap[relations.mainUpper]]?.details?.[trigramKeys[currentResult.uIdx]] || { description: '無解釋' },
+    mainUpper: wuxingExplanations.main?.[relationMap[relations.mainUpper]]?.details?.[trigramKeys[currentResult.uIdx]] || { description: '無解釋', love: '無解釋', career: '無解釋', wealth: '無解釋', health: '無解釋', relationship: '無解釋', life: '無解釋', guidance: '無建議' },
     mainLower: wuxingExplanations.main?.[relationMap[relations.mainLower]]?.details?.[trigramKeys[currentResult.lIdx]] || { description: '無解釋' },
     huUpper: wuxingExplanations.hu_upper?.[relationMap[relations.huUpper]]?.details?.[trigramKeys[huUpperIdx]] || { description: '無解釋' },
     huLower: wuxingExplanations.hu_lower?.[relationMap[relations.huLower]]?.details?.[trigramKeys[huLowerIdx]] || { description: '無解釋' },
     changeUpper: wuxingExplanations.change_upper?.[relationMap[relations.changeUpper]]?.details?.[trigramKeys[changeUpperIdx]] || { description: '無解釋' },
-    changeLower: wuxingExplanations.change_lower?.[relationMap[relations.changeLower]]?.details || { description: '無解釋' }
+    changeLower: wuxingExplanations.change_lower?.[relationMap[relations.changeLower]]?.details?.[trigramKeys[changeLowerIdx]] || { description: '無解釋' }
   };
 
-  // 更新五行分析顯示
-  document.getElementById('mainOverall').textContent = wuxingExplanations.main?.[relationMap[relations.mainUpper]]?.overall || '無說明';
-  document.getElementById('mainDescription').textContent = explanations.mainUpper.description;
-  document.getElementById('mainLove').textContent = explanations.mainUpper.love || '無解釋';
-  document.getElementById('mainCareer').textContent = explanations.mainUpper.career || '無解釋';
-  document.getElementById('mainWealth').textContent = explanations.mainUpper.wealth || '無解釋';
-  document.getElementById('mainHealth').textContent = explanations.mainUpper.health || '無解釋';
-  document.getElementById('mainRelationship').textContent = explanations.mainUpper.relationship || '無解釋';
-  document.getElementById('mainLife').textContent = explanations.mainUpper.life || '無解釋';
-  document.getElementById('mainGuidance').textContent = `${explanations.mainUpper.guidance || '無建議'}${wuxingExplanations.main?.[relationMap[relations.mainUpper]]?.remedy?.description ? `<br><strong>化解：</strong> ${wuxingExplanations.main?.[relationMap[relations.mainUpper]]?.remedy?.description}` : ''}`;
-  document.getElementById('huUpperOverall').textContent = wuxingExplanations.hu_upper?.[relationMap[relations.huUpper]]?.overall || '無說明';
-  document.getElementById('huUpperDescription').textContent = explanations.huUpper.description;
-  document.getElementById('huLowerOverall').textContent = wuxingExplanations.hu_lower?.[relationMap[relations.huLower]]?.overall || '無說明';
-  document.getElementById('huLowerDescription').textContent = explanations.huLower.description;
-  document.getElementById('changeUpperOverall').textContent = wuxingExplanations.change_upper?.[relationMap[relations.changeUpper]]?.overall || '無說明';
-  document.getElementById('changeUpperDescription').textContent = explanations.changeUpper.description;
-  document.getElementById('changeLowerOverall').textContent = wuxingExplanations.change_lower?.[relationMap[relations.changeLower]]?.overall || '無說明';
-  document.getElementById('changeLowerDescription').textContent = explanations.changeLower.description;
+  // 計算吉凶指數
+  const totalRelationScore = [
+    relations.mainUpper, relations.mainLower, relations.huUpper,
+    relations.huLower, relations.changeUpper, relations.changeLower
+  ].reduce((sum, relation) => sum + getRelationScore(relation), 0);
+  const wuxingScores = [
+    getWuxingStatusScore(mainUpperGua.wuxing, lunarMonthNumber),
+    getWuxingStatusScore(mainLowerGua.wuxing, lunarMonthNumber),
+    getWuxingStatusScore(huUpperGua.wuxing, lunarMonthNumber),
+    getWuxingStatusScore(huLowerGua.wuxing, lunarMonthNumber),
+    getWuxingStatusScore(changeUpperGua.wuxing, lunarMonthNumber),
+    getWuxingStatusScore(changeLowerGua.wuxing, lunarMonthNumber)
+  ];
+  const totalWuxingScore = wuxingScores.reduce((sum, score) => sum + score, 0);
+  const auspiciousnessScore = clamp((totalRelationScore + totalWuxingScore + 60) / 12);
+  let combinedResultKey;
+  if (auspiciousnessScore >= 8) combinedResultKey = 'auspicious';
+  else if (auspiciousnessScore >= 6) combinedResultKey = 'moderately_auspicious';
+  else if (auspiciousnessScore >= 4) combinedResultKey = 'neutral';
+  else if (auspiciousnessScore >= 2) combinedResultKey = 'moderately_inauspicious';
+  else combinedResultKey = 'inauspicious';
+  const combinedExplanation = wuxingExplanations.combined?.[combinedResultKey]?.details || '無綜合說明';
+
+  // 更新吉凶指數
+  const auspiciousnessIndex = document.getElementById('auspiciousnessIndex');
+  const auspiciousnessBar = document.getElementById('auspiciousnessBar');
+  if (auspiciousnessIndex && auspiciousnessBar) {
+    auspiciousnessIndex.textContent = `吉凶指數：${auspiciousnessScore.toFixed(1)}`;
+    auspiciousnessBar.innerHTML = `<div style="width: ${auspiciousnessScore * 10}%; height: 100%; background: ${auspiciousnessScore >= 7 ? 'var(--positive-color)' : auspiciousnessScore <= 3 ? 'var(--negative-color)' : 'var(--secondary-color)'};"></div>`;
+  } else {
+    console.warn('找不到 auspiciousnessIndex 或 auspiciousnessBar 元素');
+  }
+
+  // 更新五行分析區塊
+  const wuxingAnalysis = document.getElementById('wuxingAnalysis');
+  wuxingAnalysis.innerHTML = `
+    <div class="wuxing-box">
+      <h4>本卦現況</h4>
+      <p><strong>整體：</strong> <span id="mainOverall">${wuxingExplanations.main?.[relationMap[relations.mainUpper]]?.overall || '無說明'}</span></p>
+      <p><strong>描述：</strong> <span id="mainDescription">${explanations.mainUpper.description}</span></p>
+      <p><strong>愛情：</strong> <span id="mainLove">${explanations.mainUpper.love}</span></p>
+      <p><strong>事業：</strong> <span id="mainCareer">${explanations.mainUpper.career}</span></p>
+      <p><strong>財運：</strong> <span id="mainWealth">${explanations.mainUpper.wealth}</span></p>
+      <p><strong>健康：</strong> <span id="mainHealth">${explanations.mainUpper.health}</span></p>
+      <p><strong>人際：</strong> <span id="mainRelationship">${explanations.mainUpper.relationship}</span></p>
+      <p><strong>生活：</strong> <span id="mainLife">${explanations.mainUpper.life}</span></p>
+      <p><strong>建議：</strong> <span id="mainGuidance">${explanations.mainUpper.guidance}${wuxingExplanations.main?.[relationMap[relations.mainUpper]]?.remedy?.description ? `<br><strong>化解：</strong> ${wuxingExplanations.main?.[relationMap[relations.mainUpper]]?.remedy?.description}` : ''}</span></p>
+    </div>
+    <div class="wuxing-box">
+      <h4>互卦外在過程（上卦）</h4>
+      <p><strong>整體：</strong> <span id="huUpperOverall">${wuxingExplanations.hu_upper?.[relationMap[relations.huUpper]]?.overall || '無說明'}</span></p>
+      <p><strong>描述：</strong> <span id="huUpperDescription">${explanations.huUpper.description}</span></p>
+    </div>
+    <div class="wuxing-box">
+      <h4>互卦內在過程（下卦）</h4>
+      <p><strong>整體：</strong> <span id="huLowerOverall">${wuxingExplanations.hu_lower?.[relationMap[relations.huLower]]?.overall || '無說明'}</span></p>
+      <p><strong>描述：</strong> <span id="huLowerDescription">${explanations.huLower.description}</span></p>
+    </div>
+    <div class="wuxing-box">
+      <h4>變卦未來趨勢（上卦）</h4>
+      <p><strong>整體：</strong> <span id="changeUpperOverall">${wuxingExplanations.change_upper?.[relationMap[relations.changeUpper]]?.overall || '無說明'}</span></p>
+      <p><strong>描述：</strong> <span id="changeUpperDescription">${explanations.changeUpper.description}</span></p>
+    </div>
+    <div class="wuxing-box">
+      <h4>變卦變化基礎（下卦）</h4>
+      <p><strong>整體：</strong> <span id="changeLowerOverall">${wuxingExplanations.change_lower?.[relationMap[relations.changeLower]]?.overall || '無說明'}</span></p>
+      <p><strong>描述：</strong> <span id="changeLowerDescription">${explanations.changeLower.description}</span></p>
+    </div>
+    <div class="wuxing-box">
+      <h4>綜合吉凶</h4>
+      <p><strong>結果：</strong> <span id="combinedResult">${combinedExplanation}</span></p>
+    </div>
+  `;
+
+  // 將 SVG 附加到 wuxingAnalysis
+  const svgContainer = document.createElement('div');
+  svgContainer.innerHTML = `<svg id="wuxingSvg" width="600" height="400"></svg>`;
+  wuxingAnalysis.insertBefore(svgContainer.firstChild, wuxingAnalysis.firstChild);
 
   // 重新渲染五行圖表
   renderWuxingDiagram(newTiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber);
-}
 
+  console.log('吉凶指數更新:', { auspiciousnessScore, combinedResultKey });
+}
 function renderWuxingAnalysis(result) {
   if (!result) {
     console.error('無有效結果數據');
