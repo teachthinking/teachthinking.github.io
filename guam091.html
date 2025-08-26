@@ -1356,7 +1356,7 @@ async function loadResources() {
       });
     }
 
-  function updateTiGua(nodeId) {
+function updateTiGua(nodeId) {
   if (!currentResult) {
     alert('請先進行占卜以生成卦象！');
     return;
@@ -1393,12 +1393,50 @@ async function loadResources() {
   }
 
   // 更新五行分析區塊
-  document.getElementById('tiGuaWuxing').textContent = `${newTiGua.wuxing}（${getWuxingStatus(newTiGua.wuxing, lunarMonthNumber)}）`;
-  document.getElementById('tiGuaWuxing2').textContent = `${newTiGua.wuxing}（${getWuxingStatus(newTiGua.wuxing, lunarMonthNumber)}）`;
-  document.getElementById('tiGuaWuxing3').textContent = `${newTiGua.wuxing}（${getWuxingStatus(newTiGua.wuxing, lunarMonthNumber)}）`;
-  document.getElementById('tiGuaWuxing4').textContent = `${newTiGua.wuxing}（${getWuxingStatus(newTiGua.wuxing, lunarMonthNumber)}）`;
-  document.getElementById('tiGuaWuxing5').textContent = `${newTiGua.wuxing}（${getWuxingStatus(newTiGua.wuxing, lunarMonthNumber)}）`;
-  document.getElementById('tiGuaWuxing6').textContent = `${newTiGua.wuxing}（${getWuxingStatus(newTiGua.wuxing, lunarMonthNumber)}）`;
+  const wuxingAnalysis = document.getElementById('wuxingAnalysis');
+  wuxingAnalysis.innerHTML = `
+    <div class="wuxing-box">
+      <h4>本卦現況</h4>
+      <p><strong>整體：</strong> <span id="mainOverall"></span></p>
+      <p><strong>描述：</strong> <span id="mainDescription"></span></p>
+      <p><strong>愛情：</strong> <span id="mainLove"></span></p>
+      <p><strong>事業：</strong> <span id="mainCareer"></span></p>
+      <p><strong>財運：</strong> <span id="mainWealth"></span></p>
+      <p><strong>健康：</strong> <span id="mainHealth"></span></p>
+      <p><strong>人際：</strong> <span id="mainRelationship"></span></p>
+      <p><strong>生活：</strong> <span id="mainLife"></span></p>
+      <p><strong>建議：</strong> <span id="mainGuidance"></span></p>
+    </div>
+    <div class="wuxing-box">
+      <h4>互卦外在過程（上卦）</h4>
+      <p><strong>整體：</strong> <span id="huUpperOverall"></span></p>
+      <p><strong>描述：</strong> <span id="huUpperDescription"></span></p>
+    </div>
+    <div class="wuxing-box">
+      <h4>互卦內在過程（下卦）</h4>
+      <p><strong>整體：</strong> <span id="huLowerOverall"></span></p>
+      <p><strong>描述：</strong> <span id="huLowerDescription"></span></p>
+    </div>
+    <div class="wuxing-box">
+      <h4>變卦未來趨勢（上卦）</h4>
+      <p><strong>整體：</strong> <span id="changeUpperOverall"></span></p>
+      <p><strong>描述：</strong> <span id="changeUpperDescription"></span></p>
+    </div>
+    <div class="wuxing-box">
+      <h4>變卦變化基礎（下卦）</h4>
+      <p><strong>整體：</strong> <span id="changeLowerOverall"></span></p>
+      <p><strong>描述：</strong> <span id="changeLowerDescription"></span></p>
+    </div>
+    <div class="wuxing-box">
+      <h4>綜合吉凶</h4>
+      <p><strong>結果：</strong> <span id="combinedResult"></span></p>
+    </div>
+  `;
+
+  // 將 SVG 附加到 wuxingAnalysis
+  const svgContainer = document.createElement('div');
+  svgContainer.innerHTML = `<svg id="wuxingSvg" width="600" height="400"></svg>`;
+  wuxingAnalysis.insertBefore(svgContainer.firstChild, wuxingAnalysis.firstChild);
 
   // 更新五行關係
   const relationMap = {
@@ -1430,63 +1468,24 @@ async function loadResources() {
     changeLower: wuxingExplanations.change_lower?.[relationMap[relations.changeLower]]?.details || { description: '無解釋' }
   };
 
-  document.getElementById('mainUpperWuxing').textContent = `${mainUpperGua.wuxing}（${getWuxingStatus(mainUpperGua.wuxing, lunarMonthNumber)}）`;
-  document.getElementById('mainLowerWuxing').textContent = `${mainLowerGua.wuxing}（${getWuxingStatus(mainLowerGua.wuxing, lunarMonthNumber)}）`;
-  document.getElementById('huUpperWuxing').textContent = `${huUpperGua.wuxing}（${getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber)}）`;
-  document.getElementById('huLowerWuxing').textContent = `${huLowerGua.wuxing}（${getWuxingStatus(huLowerGua.wuxing, lunarMonthNumber)}）`;
-  document.getElementById('changeUpperWuxing').textContent = `${changeUpperGua.wuxing}（${getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber)}）`;
-  document.getElementById('changeLowerWuxing').textContent = `${changeLowerGua.wuxing}（${getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber)}）`;
-
-  document.getElementById('mainUpperRelation').textContent = relations.mainUpper;
-  document.getElementById('mainUpperRelation').className = `wuxing-status ${relations.mainUpper.includes('生') ? 'positive' : relations.mainUpper.includes('剋') ? 'negative' : 'neutral'}`;
-  document.getElementById('mainLowerRelation').textContent = relations.mainLower;
-  document.getElementById('mainLowerRelation').className = `wuxing-status ${relations.mainLower.includes('生') ? 'positive' : relations.mainLower.includes('剋') ? 'negative' : 'neutral'}`;
-  document.getElementById('huUpperRelation').textContent = relations.huUpper;
-  document.getElementById('huUpperRelation').className = `wuxing-status ${relations.huUpper.includes('生') ? 'positive' : relations.huUpper.includes('剋') ? 'negative' : 'neutral'}`;
-  document.getElementById('huLowerRelation').textContent = relations.huLower;
-  document.getElementById('huLowerRelation').className = `wuxing-status ${relations.huLower.includes('生') ? 'positive' : relations.huLower.includes('剋') ? 'negative' : 'neutral'}`;
-  document.getElementById('changeUpperRelation').textContent = relations.changeUpper;
-  document.getElementById('changeUpperRelation').className = `wuxing-status ${relations.changeUpper.includes('生') ? 'positive' : relations.changeUpper.includes('�克') ? 'negative' : 'neutral'}`;
-  document.getElementById('changeLowerRelation').textContent = relations.changeLower;
-  document.getElementById('changeLowerRelation').className = `wuxing-status ${relations.changeLower.includes('生') ? 'positive' : relations.changeLower.includes('剋') ? 'negative' : 'neutral'}`;
-
   // 更新五行分析顯示
-  const wuxingAnalysis = document.getElementById('wuxingAnalysis');
-  wuxingAnalysis.innerHTML = `
-    <svg id="wuxingSvg" width="600" height="400"></svg>
-    <div class="wuxing-box">
-      <h4>本卦現況</h4>
-      <p><strong>整體：</strong> ${wuxingExplanations.main?.[relationMap[relations.mainUpper]]?.overall || '無說明'}</p>
-      <p><strong>描述：</strong> ${explanations.mainUpper.description}</p>
-      <p><strong>愛情：</strong> ${explanations.mainUpper.love || '無解釋'}</p>
-      <p><strong>事業：</strong> ${explanations.mainUpper.career || '無解釋'}</p>
-      <p><strong>財運：</strong> ${explanations.mainUpper.wealth || '無解釋'}</p>
-      <p><strong>健康：</strong> ${explanations.mainUpper.health || '無解釋'}</p>
-      <p><strong>人際：</strong> ${explanations.mainUpper.relationship || '無解釋'}</p>
-      <p><strong>生活：</strong> ${explanations.mainUpper.life || '無解釋'}</p>
-      <p><strong>建議：</strong> ${explanations.mainUpper.guidance || '無建議'}${wuxingExplanations.main?.[relationMap[relations.mainUpper]]?.remedy?.description ? `<br><strong>化解：</strong> ${wuxingExplanations.main?.[relationMap[relations.mainUpper]]?.remedy?.description}` : ''}</p>
-    </div>
-    <div class="wuxing-box">
-      <h4>互卦外在過程（上卦）</h4>
-      <p><strong>整體：</strong> ${wuxingExplanations.hu_upper?.[relationMap[relations.huUpper]]?.overall || '無說明'}</p>
-      <p><strong>描述：</strong> ${explanations.huUpper.description}</p>
-    </div>
-    <div class="wuxing-box">
-      <h4>互卦內在過程（下卦）</h4>
-      <p><strong>整體：</strong> ${wuxingExplanations.hu_lower?.[relationMap[relations.huLower]]?.overall || '無說明'}</p>
-      <p><strong>描述：</strong> ${explanations.huLower.description}</p>
-    </div>
-    <div class="wuxing-box">
-      <h4>變卦未來趨勢（上卦）</h4>
-      <p><strong>整體：</strong> ${wuxingExplanations.change_upper?.[relationMap[relations.changeUpper]]?.overall || '無說明'}</p>
-      <p><strong>描述：</strong> ${explanations.changeUpper.description}</p>
-    </div>
-    <div class="wuxing-box">
-      <h4>變卦變化基礎（下卦）</h4>
-      <p><strong>整體：</strong> ${wuxingExplanations.change_lower?.[relationMap[relations.changeLower]]?.overall || '無說明'}</p>
-      <p><strong>描述：</strong> ${explanations.changeLower.description}</p>
-    </div>
-  `;
+  document.getElementById('mainOverall').textContent = wuxingExplanations.main?.[relationMap[relations.mainUpper]]?.overall || '無說明';
+  document.getElementById('mainDescription').textContent = explanations.mainUpper.description;
+  document.getElementById('mainLove').textContent = explanations.mainUpper.love || '無解釋';
+  document.getElementById('mainCareer').textContent = explanations.mainUpper.career || '無解釋';
+  document.getElementById('mainWealth').textContent = explanations.mainUpper.wealth || '無解釋';
+  document.getElementById('mainHealth').textContent = explanations.mainUpper.health || '無解釋';
+  document.getElementById('mainRelationship').textContent = explanations.mainUpper.relationship || '無解釋';
+  document.getElementById('mainLife').textContent = explanations.mainUpper.life || '無解釋';
+  document.getElementById('mainGuidance').textContent = `${explanations.mainUpper.guidance || '無建議'}${wuxingExplanations.main?.[relationMap[relations.mainUpper]]?.remedy?.description ? `<br><strong>化解：</strong> ${wuxingExplanations.main?.[relationMap[relations.mainUpper]]?.remedy?.description}` : ''}`;
+  document.getElementById('huUpperOverall').textContent = wuxingExplanations.hu_upper?.[relationMap[relations.huUpper]]?.overall || '無說明';
+  document.getElementById('huUpperDescription').textContent = explanations.huUpper.description;
+  document.getElementById('huLowerOverall').textContent = wuxingExplanations.hu_lower?.[relationMap[relations.huLower]]?.overall || '無說明';
+  document.getElementById('huLowerDescription').textContent = explanations.huLower.description;
+  document.getElementById('changeUpperOverall').textContent = wuxingExplanations.change_upper?.[relationMap[relations.changeUpper]]?.overall || '無說明';
+  document.getElementById('changeUpperDescription').textContent = explanations.changeUpper.description;
+  document.getElementById('changeLowerOverall').textContent = wuxingExplanations.change_lower?.[relationMap[relations.changeLower]]?.overall || '無說明';
+  document.getElementById('changeLowerDescription').textContent = explanations.changeLower.description;
 
   // 重新渲染五行圖表
   renderWuxingDiagram(newTiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber);
