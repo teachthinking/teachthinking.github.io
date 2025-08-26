@@ -3,6 +3,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>張老師易經(梅花心易)</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
    :root {
     --primary-color: #2c3e50;
@@ -1574,6 +1575,20 @@ async function loadResources() {
 
   // 渲染解釋
   const wuxingAnalysis = document.getElementById('wuxingAnalysis');
+
+// 更新吉凶指數顯示
+const auspiciousnessIndex = document.getElementById('auspiciousnessIndex');
+const auspiciousnessBar = document.getElementById('auspiciousnessBar');
+if (auspiciousnessIndex && auspiciousnessBar) {
+  const percentage = Math.round(auspiciousnessScore * 10);
+  const barColor = auspiciousnessScore >= 7 ? 'var(--positive-color)' : 
+                   auspiciousnessScore <= 3 ? 'var(--negative-color)' : 'var(--secondary-color)';
+  auspiciousnessIndex.textContent = `吉凶指數：${auspiciousnessScore.toFixed(1)} (${combinedExplanation})`;
+  auspiciousnessBar.innerHTML = `<div class="score-bar" style="width: ${percentage}%; background: ${barColor};"></div>`;
+} else {
+  console.error('找不到 auspiciousnessIndex 或 auspiciousnessBar 元素');
+}
+     
   wuxingAnalysis.innerHTML = `
     <svg id="wuxingSvg" width="600" height="400"></svg>
     <div class="wuxing-box">
@@ -1618,9 +1633,20 @@ async function loadResources() {
   updateTiGua('ti');
 
   // 渲染五行圖表
-  renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber);
-}
-
+function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
+  console.log('渲染五行圖表，輸入數據：', { tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua });
+  const svg = document.getElementById('wuxingSvg');
+  if (!svg) {
+    console.error('找不到 wuxingSvg 元素');
+    alert('無法找到SVG元素，請檢查HTML結構！');
+    return;
+  }
+  const guas = [tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua];
+  if (guas.some(gua => !gua || !gua.wuxing || !gua.name)) {
+    console.error('無效的卦象數據：', guas);
+    svg.innerHTML = '<text x="300" y="200" text-anchor="middle" font-size="14">無法渲染五行圖表：數據無效</text>';
+    return;
+  }
     function renderDetailedAnalysis(result) {
       if (!result || !result.hexMain || !result.hexChange || !result.hexHu) {
         console.error('無有效結果數據或缺少卦象數據');
