@@ -1174,11 +1174,9 @@
       `);
       newWindow.document.close();
     }
-
-    function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
+function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
   console.log('開始渲染五行圖表，參數：', { tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber });
 
-  // 獲取 SVG 元素
   const svg = document.getElementById('wuxingSvg');
   if (!svg) {
     console.error('找不到 wuxingSvg 元素');
@@ -1186,13 +1184,11 @@
     return;
   }
 
-  // 清空並設置 SVG 屬性
   svg.innerHTML = '';
   svg.setAttribute('width', '600');
   svg.setAttribute('height', '400');
   svg.style.display = 'block';
 
-  // 驗證卦象數據
   const guas = [tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua];
   if (guas.some(gua => !gua || !gua.wuxing || !gua.name || !gua.trigram_id)) {
     console.error('無效的卦象數據：', guas);
@@ -1200,7 +1196,6 @@
     return;
   }
 
-  // SVG 定義（箭頭標記）
   svg.innerHTML += `
     <defs>
       <marker id="arrow-generate" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
@@ -1218,7 +1213,6 @@
     </defs>
   `;
 
-  // 標題和五行狀態
   const question = currentResult?.question ? `問題：${currentResult.question.slice(0, 30)}${currentResult.question.length > 30 ? '...' : ''}` : '五行生克圖';
   svg.innerHTML += `<text x="300" y="20" text-anchor="middle" font-size="16" font-weight="bold">${question}</text>`;
 
@@ -1236,7 +1230,6 @@
                     `死：${Object.keys(wuxingStatus).find(k => wuxingStatus[k] === '死') || '無'}`;
   svg.innerHTML += `<text x="300" y="40" text-anchor="middle" font-size="14">${statusText}</text>`;
 
-  // 定義節點
   const nodes = [
     { id: 'ti', gua: tiGua, label: '體卦', x: 300, y: 200 },
     { id: 'mainUpper', gua: mainUpperGua, label: '本卦上卦', x: 300, y: 100 },
@@ -1248,7 +1241,6 @@
   ];
   window.nodeMap = Object.fromEntries(nodes.map(node => [node.id, node.gua]));
 
-  // 定義邊緣，動態調整箭頭方向
   const edges = [
     { source: 'mainUpper', target: 'ti', relation: getRelation(tiGua.wuxing, mainUpperGua.wuxing) },
     { source: 'mainLower', target: 'ti', relation: getRelation(tiGua.wuxing, mainLowerGua.wuxing) },
@@ -1260,12 +1252,12 @@
 
   // 更新五行分析區塊
   const wuxingElements = {
-    mainUpperWuxing: mainUpperGua.wuxing,
-    mainLowerWuxing: mainLowerGua.wuxing,
-    huUpperWuxing: huUpperGua.wuxing,
-    huLowerWuxing: huLowerGua.wuxing,
-    changeUpperWuxing: changeUpperGua.wuxing,
-    changeLowerWuxing: changeLowerGua.wuxing,
+    mainUpperWuxing: `${mainUpperGua.wuxing}（${getWuxingStatus(mainUpperGua.wuxing, lunarMonthNumber)}）`,
+    mainLowerWuxing: `${mainLowerGua.wuxing}（${getWuxingStatus(mainLowerGua.wuxing, lunarMonthNumber)}）`,
+    huUpperWuxing: `${huUpperGua.wuxing}（${getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber)}）`,
+    huLowerWuxing: `${huLowerGua.wuxing}（${getWuxingStatus(huLowerGua.wuxing, lunarMonthNumber)}）`,
+    changeUpperWuxing: `${changeUpperGua.wuxing}（${getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber)}）`,
+    changeLowerWuxing: `${changeLowerGua.wuxing}（${getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber)}）`,
     tiGuaWuxing: `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`,
     tiGuaWuxing2: `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`,
     tiGuaWuxing3: `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`,
@@ -1292,7 +1284,6 @@
     }
   });
 
-  // 渲染節點
   nodes.forEach(node => {
     const fill = node.gua.wuxing === '金' ? '#FFD700' :
                  node.gua.wuxing === '木' ? '#228B22' :
@@ -1307,7 +1298,6 @@
     `;
   });
 
-  // 渲染邊緣，根據五行狀態調整線條粗細並修正箭頭方向
   edges.forEach(edge => {
     const source = nodes.find(n => n.id === edge.source);
     const target = nodes.find(n => n.id === edge.target);
@@ -1327,11 +1317,10 @@
       markerEnd = 'url(#arrow-harmony)';
     }
 
-    // 計算箭頭偏移以避免重疊節點
     const dx = target.x - source.x;
     const dy = target.y - source.y;
     const len = Math.sqrt(dx * dx + dy * dy);
-    const offset = 30; // 節點半徑
+    const offset = 30;
     const x1 = source.x + (dx * offset) / len;
     const y1 = source.y + (dy * offset) / len;
     const x2 = target.x - (dx * offset) / len;
@@ -1343,7 +1332,6 @@
     `;
   });
 
-  // 綁定點擊事件
   svg.querySelectorAll('.node').forEach(node => {
     node.addEventListener('click', () => {
       console.log('點擊節點：', node.dataset.nodeId);
@@ -1557,9 +1545,13 @@
     }
 
     // 初始化與事件監聽
-    document.addEventListener('DOMContentLoaded', () => {
-      loadResources();
-      loadHistory();
+
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM 載入完成，綁定事件監聽器');
+  loadResources();
+  loadHistory();
+  // 其他事件綁定...
+});
 
       // Tab 切換
       document.querySelectorAll('.tab-button').forEach(button => {
