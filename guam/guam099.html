@@ -1,6 +1,7 @@
 <html lang="zh-TW">
 <head>
   <script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>張老師易經(梅花心易)</title>
@@ -1821,14 +1822,33 @@ async function loadResources() {
       });
 
       // 五行與象徵分析
-      document.getElementById('judgeBtn').addEventListener('click', () => {
-        if (!currentResult) {
+
+document.getElementById('judgeBtn').addEventListener('click', async () => {
+    // 顯示分析區塊
+    document.getElementById('judgeBox').classList.remove('hidden');
+
+    // 如果已經有結果，則執行分析
+    if (currentResult) {
+        // 計算並顯示吉凶指數
+        const scores = await getHexagramScores(currentResult.hexagrams.main, hexagrams);
+        if (scores && scores.overall !== null) {
+            document.getElementById('auspiciousnessIndex').textContent = `吉凶指數：${scores.overall}`;
+            createAuspiciousnessBar(scores.overall);
+            createScoreChart(scores.lineScores);
+        } else {
+            document.getElementById('auspiciousnessIndex').textContent = '吉凶指數：未計算';
+        }
+    }
+         if (!currentResult) {
           alert('請先進行占卜以生成卦象！');
           return;
         }
         renderWuxingAnalysis(currentResult);
         renderDetailedAnalysis(currentResult);
       });
+});
+
+
 
       // 歷史記錄管理
       document.getElementById('clearHistoryBtn').addEventListener('click', () => {
