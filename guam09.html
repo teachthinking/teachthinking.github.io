@@ -1,6 +1,7 @@
 <html lang="zh-TW">
 <head>
   <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>張老師易經(梅花心易)</title>
@@ -322,6 +323,14 @@
 .wuxing-box strong {
   color: var(--text-color);
   font-weight: 600;
+}
+    #wuxingSvg {
+  display: block;
+  margin: 0 auto;
+  visibility: visible !important;
+}
+.wuxing-node, .wuxing-edge-generate, .wuxing-edge-overcome, .wuxing-edge-harmony, .wuxing-edge-label, .wuxing-node-text {
+  visibility: visible !important;
 }
   </style>
 </head>
