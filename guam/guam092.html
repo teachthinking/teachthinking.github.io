@@ -1,4 +1,3 @@
-```html
 <html lang="zh-TW">
 <head>
   <meta charset="utf-8" />
@@ -1176,9 +1175,9 @@
       newWindow.document.close();
     }
 
-    function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
+    function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
   console.log('開始渲染五行圖表，參數：', { tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber });
-  
+
   // 獲取 SVG 元素
   const svg = document.getElementById('wuxingSvg');
   if (!svg) {
@@ -1186,7 +1185,7 @@
     alert('無法找到 SVG 元素，請檢查 HTML 結構！');
     return;
   }
-  
+
   // 清空並設置 SVG 屬性
   svg.innerHTML = '';
   svg.setAttribute('width', '600');
@@ -1220,8 +1219,8 @@
   `;
 
   // 標題和五行狀態
-  const questionText = currentResult?.question ? `問題：${currentResult.question.slice(0, 30)}${currentResult.question.length > 30 ? '...' : ''}` : '五行生克圖';
-  svg.innerHTML += `<text x="300" y="20" text-anchor="middle" font-size="16" font-weight="bold">${questionText}</text>`;
+  const question = currentResult?.question ? `問題：${currentResult.question.slice(0, 30)}${currentResult.question.length > 30 ? '...' : ''}` : '五行生克圖';
+  svg.innerHTML += `<text x="300" y="20" text-anchor="middle" font-size="16" font-weight="bold">${question}</text>`;
 
   const wuxingStatus = {
     '木': getWuxingStatus('木', lunarMonthNumber),
@@ -1249,7 +1248,7 @@
   ];
   window.nodeMap = Object.fromEntries(nodes.map(node => [node.id, node.gua]));
 
-  // 定義邊緣
+  // 定義邊緣，動態調整箭頭方向
   const edges = [
     { source: 'mainUpper', target: 'ti', relation: getRelation(tiGua.wuxing, mainUpperGua.wuxing) },
     { source: 'mainLower', target: 'ti', relation: getRelation(tiGua.wuxing, mainLowerGua.wuxing) },
@@ -1259,27 +1258,88 @@
     { source: 'changeLower', target: 'ti', relation: getRelation(tiGua.wuxing, changeLowerGua.wuxing) }
   ];
 
+  // 更新五行分析區塊
+  const wuxingElements = {
+    mainUpperWuxing: mainUpperGua.wuxing,
+    mainLowerWuxing: mainLowerGua.wuxing,
+    huUpperWuxing: huUpperGua.wuxing,
+    huLowerWuxing: huLowerGua.wuxing,
+    changeUpperWuxing: changeUpperGua.wuxing,
+    changeLowerWuxing: changeLowerGua.wuxing,
+    tiGuaWuxing: `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`,
+    tiGuaWuxing2: `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`,
+    tiGuaWuxing3: `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`,
+    tiGuaWuxing4: `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`,
+    tiGuaWuxing5: `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`,
+    tiGuaWuxing6: `${tiGua.wuxing}（${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}）`,
+    mainUpperRelation: edges.find(e => e.source === 'mainUpper').relation,
+    mainLowerRelation: edges.find(e => e.source === 'mainLower').relation,
+    huUpperRelation: edges.find(e => e.source === 'huUpper').relation,
+    huLowerRelation: edges.find(e => e.source === 'huLower').relation,
+    changeUpperRelation: edges.find(e => e.source === 'changeUpper').relation,
+    changeLowerRelation: edges.find(e => e.source === 'changeLower').relation
+  };
+
+  Object.entries(wuxingElements).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.textContent = value;
+      if (id.includes('Relation')) {
+        element.className = `wuxing-status ${value.includes('生') ? 'positive' : value.includes('剋') ? 'negative' : 'neutral'}`;
+      }
+    } else {
+      console.warn(`找不到元素 ID: ${id}`);
+    }
+  });
+
   // 渲染節點
   nodes.forEach(node => {
-    const fill = node.gua.wuxing === '金' ? '#FFD700' : node.gua.wuxing === '木' ? '#228B22' :
-                 node.gua.wuxing === '水' ? '#1E90FF' : node.gua.wuxing === '火' ? '#FF4500' : '#8B4513';
+    const fill = node.gua.wuxing === '金' ? '#FFD700' :
+                 node.gua.wuxing === '木' ? '#228B22' :
+                 node.gua.wuxing === '水' ? '#1E90FF' :
+                 node.gua.wuxing === '火' ? '#FF4500' : '#8B4513';
+    const status = getWuxingStatus(node.gua.wuxing, lunarMonthNumber);
     svg.innerHTML += `
-      <circle cx="${node.x}" cy="${node.y}" r="30" fill="${fill}" stroke="#333" stroke-width="2" class="node" data-node-id="${node.id}" />
+      <circle cx="${node.x}" cy="${node.y}" r="30" fill="${fill}" stroke="#333" stroke-width="2" class="node" data-node-id="${node.id}" style="fill: ${fill}; stroke: #333; stroke-width: 2;" />
       <text x="${node.x}" y="${node.y - 10}" text-anchor="middle" font-size="12">${node.label}</text>
       <text x="${node.x}" y="${node.y + 5}" text-anchor="middle" font-size="12">${node.gua.name} (${node.gua.wuxing})</text>
-      <text x="${node.x}" y="${node.y + 20}" text-anchor="middle" font-size="10">${getWuxingStatus(node.gua.wuxing, lunarMonthNumber)}</text>
+      <text x="${node.x}" y="${node.y + 20}" text-anchor="middle" font-size="10">${status}</text>
     `;
   });
 
-  // 渲染邊緣
+  // 渲染邊緣，根據五行狀態調整線條粗細並修正箭頭方向
   edges.forEach(edge => {
     const source = nodes.find(n => n.id === edge.source);
     const target = nodes.find(n => n.id === edge.target);
-    const marker = edge.relation.includes('生') ? 'url(#arrow-generate)' :
-                  edge.relation.includes('剋') ? 'url(#arrow-overcome)' : 'url(#arrow-harmony)';
+    const sourceStatus = getWuxingStatus(source.gua.wuxing, lunarMonthNumber);
+    const strokeWidth = sourceStatus === '旺' ? 4 :
+                        sourceStatus === '相' ? 3.5 :
+                        sourceStatus === '休' ? 3 :
+                        sourceStatus === '囚' ? 2.5 : 2;
+    let markerStart = '';
+    let markerEnd = '';
+    if (edge.relation === '用生體' || edge.relation === '體剋用') {
+      markerEnd = edge.relation === '用生體' ? 'url(#arrow-generate)' : 'url(#arrow-overcome)';
+    } else if (edge.relation === '體生用' || edge.relation === '用剋體') {
+      markerStart = edge.relation === '體生用' ? 'url(#arrow-generate)' : 'url(#arrow-overcome)';
+    } else if (edge.relation === '比和') {
+      markerStart = 'url(#arrow-harmony)';
+      markerEnd = 'url(#arrow-harmony)';
+    }
+
+    // 計算箭頭偏移以避免重疊節點
+    const dx = target.x - source.x;
+    const dy = target.y - source.y;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const offset = 30; // 節點半徑
+    const x1 = source.x + (dx * offset) / len;
+    const y1 = source.y + (dy * offset) / len;
+    const x2 = target.x - (dx * offset) / len;
+    const y2 = target.y - (dy * offset) / len;
+
     svg.innerHTML += `
-      <line x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" stroke="#333" stroke-width="2" marker-end="${marker}" />
-      <text x="${(source.x + target.x) / 2}" y="${(source.y + target.y) / 2 - 10}" text-anchor="middle" font-size="10">${edge.relation}</text>
+      <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#333" stroke-width="${strokeWidth}" marker-start="${markerStart}" marker-end="${markerEnd}" />
+      <text x="${(x1 + x2) / 2}" y="${(y1 + y2) / 2 - 10}" text-anchor="middle" font-size="10">${edge.relation}</text>
     `;
   });
 
@@ -1293,7 +1353,6 @@
 
   console.log('五行圖表渲染完成');
 }
-
     function updateTiGua(nodeId) {
       if (!currentResult) {
         alert('請先進行占卜以生成卦象！');
@@ -1678,4 +1737,3 @@
   </script>
 </body>
 </html>
-```
