@@ -1839,13 +1839,7 @@ document.getElementById('judgeBtn').addEventListener('click', async () => {
             document.getElementById('auspiciousnessIndex').textContent = '吉凶指數：未計算';
         }
     }
-         if (!currentResult) {
-          alert('請先進行占卜以生成卦象！');
-          return;
-        }
-        renderWuxingAnalysis(currentResult);
-        renderDetailedAnalysis(currentResult);
-      });
+});
 });
 
 
