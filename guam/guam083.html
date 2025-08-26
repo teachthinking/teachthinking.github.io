@@ -1298,8 +1298,6 @@
         }
       });
 
-      const huRelation = getRelation(huUpperGua.wuxing, huLowerGua.wuxing);
-      let huClassName, huSource, huTarget, huMarkers, huStrokeWidth;
       huStrokeWidth = getWuxingStrength(getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber));
       if (huRelation === '用生體') {
         huClassName = 'wuxing-edge-generate';
@@ -1330,7 +1328,6 @@
       if (huRelation !== '未知') {
         edges.push({ source: huSource, target: huTarget, className: huClassName, label: huRelation, markers: huMarkers, strokeWidth: huStrokeWidth });
       }
-const changeRelation = getRelation(changeUpperGua.wuxing, changeLowerGua.wuxing);
 
       
       let changeClassName, changeSource, changeTarget, changeMarkers, changeStrokeWidth;
