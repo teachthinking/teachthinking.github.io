@@ -627,7 +627,7 @@
     </div>
   </div>
   <script>
-    let hexagrams = {}, quotes = [], history = [], currentResult = null, trigramExplanations = {};
+    let hexagrams = {}, quotes = [], history = [], currentResult = null, wuxingExplanations = {};
 
     const trigramName = {
       1: '乾', 2: '兌', 3: '離', 4: '震', 5: '巽', 6: '坎', 7: '艮', 8: '坤'
@@ -836,95 +836,39 @@
       if (generate[yongWuxing] === tiWuxing) return '用生體';
       if (generate[tiWuxing] === yongWuxing) return '體生用';
       if (overcome[yongWuxing] === tiWuxing) return '用剋體';
-      if (overcome[tiWuxing] === yongWuxing) return '體剋用';
+      if (overcome[tiWuxing] === yongWuxing) return '體�克用';
       return '未知';
     }
 
     function getRelationScore(relation) {
       switch (relation) {
-        case '用生體': return 10;
-        case '體剋用': return 3;
+        case '用生體': return 2;
+        case '體剋用': return 1;
         case '比和': return 0;
-        case '體生用': return -5;
-        case '用剋體': return -10;
+        case '體用同宮': return 0;
+        case '體生用': return -1;
+        case '用剋體': return -2;
         default: return 0;
       }
     }
 
     function getWuxingStatus(wuxing, lunarMonthNumber) {
-      const statuses = {
-        '木': {
-          1: '旺', 2: '旺', 3: '旺',
-          4: '休', 5: '休', 6: '休',
-          7: '囚', 8: '囚', 9: '囚',
-          10: '死', 11: '死', 12: '死'
-        },
-        '火': {
-          1: '死', 2: '相', 3: '相',
-          4: '旺', 5: '旺', 6: '旺',
-          7: '休', 8: '休', 9: '休',
-          10: '囚', 11: '囚', 12: '囚'
-        },
-        '土': {
-          1: '囚', 2: '囚', 3: '旺',
-          4: '相', 5: '相', 6: '旺',
-          7: '死', 8: '死', 9: '旺',
-          10: '休', 11: '休', 12: '旺'
-        },
-        '金': {
-          1: '囚', 2: '囚', 3: '相',
-          4: '死', 5: '死', 6: '相',
-          7: '旺', 8: '旺', 9: '旺',
-          10: '休', 11: '休', 12: '相'
-        },
-        '水': {
-          1: '休', 2: '休', 3: '死',
-          4: '囚', 5: '囚', 6: '死',
-          7: '相', 8: '相', 9: '死',
-          10: '旺', 11: '旺', 12: '旺'
-        }
+      const statusMap = {
+        1: { 木: '旺', 火: '相', 水: '休', 金: '囚', 土: '死' }, // 春季
+        2: { 木: '旺', 火: '相', 水: '休', 金: '囚', 土: '死' },
+        3: { 木: '旺', 火: '相', 水: '休', 金: '囚', 土: '死' },
+        4: { 火: '旺', 土: '相', 木: '休', 水: '囚', 金: '死' }, // 夏季
+        5: { 火: '旺', 土: '相', 木: '休', 水: '囚', 金: '死' },
+        6: { 火: '旺', 土: '相', 木: '休', 水: '囚', 金: '死' },
+        7: { 金: '旺', 水: '相', 土: '休', 火: '囚', 木: '死' }, // 秋季
+        8: { 金: '旺', 水: '相', 土: '休', 火: '囚', 木: '死' },
+        9: { 金: '旺', 水: '相', 土: '休', 火: '囚', 木: '死' },
+        10: { 水: '旺', 木: '相', 金: '休', 土: '囚', 火: '死' }, // 冬季
+        11: { 水: '旺', 木: '相', 金: '休', 土: '囚', 火: '死' },
+        12: { 水: '旺', 木: '相', 金: '休', 土: '囚', 火: '死' }
       };
-      return statuses[wuxing]?.[lunarMonthNumber] || '未知';
+      return statusMap[lunarMonthNumber]?.[wuxing] || '休';
     }
-
-function getWuxingStatus(wuxing, lunarMonthNumber) {
-  const statusMap = {
-    1: { 木: '旺', 火: '相', 水: '休', 金: '囚', 土: '死' }, // 春季
-    2: { 木: '旺', 火: '相', 水: '休', 金: '囚', 土: '死' },
-    3: { 木: '旺', 火: '相', 水: '休', 金: '囚', 土: '死' },
-    4: { 火: '旺', 土: '相', 木: '休', 水: '囚', 金: '死' }, // 夏季
-    5: { 火: '旺', 土: '相', 木: '休', 水: '囚', 金: '死' },
-    6: { 火: '旺', 土: '相', 木: '休', 水: '囚', 金: '死' },
-    7: { 金: '旺', 水: '相', 土: '休', 火: '囚', 木: '死' }, // 秋季
-    8: { 金: '旺', 水: '相', 土: '休', 火: '囚', 木: '死' },
-    9: { 金: '旺', 水: '相', 土: '休', 火: '囚', 木: '死' },
-    10: { 水: '旺', 木: '相', 金: '休', 土: '囚', 火: '死' }, // 冬季
-    11: { 水: '旺', 木: '相', 金: '休', 土: '囚', 火: '死' },
-    12: { 水: '旺', 木: '相', 金: '休', 土: '囚', 火: '死' }
-  };
-  return statusMap[lunarMonthNumber]?.[wuxing] || '休';
-}
-
-function getRelationScore(relation) {
-  const scoreMap = {
-    '用生體': 2,
-    '體剋用': 1,
-    '比和': 0,
-    '體用同宮': 0,
-    '體生用': -1,
-    '用剋體': -2
-  };
-  return scoreMap[relation] || 0;
-}
-
-function getCombinedRelation(scores) {
-  const totalScore = scores.reduce((sum, score) => sum + score, 0);
-  if (totalScore >= 3) return '吉';
-  if (totalScore >= 1) return '中吉';
-  if (totalScore === 0) return '中';
-  if (totalScore >= -2) return '中凶';
-  return '凶';
-}
 
     function getWuxingStrength(status) {
       switch (status) {
@@ -937,35 +881,31 @@ function getCombinedRelation(scores) {
       }
     }
 
+    function getTiYong(result) {
+      const moving = result.moving || [];
+      const upperIdx = result.uIdx;
+      const lowerIdx = result.lIdx;
 
+      let tiGua, yongGua;
 
+      if (moving.length === 0) {
+        tiGua = getTrigramInfo(lowerIdx);
+        yongGua = getTrigramInfo(upperIdx);
+      } else {
+        const maxMoving = Math.max(...moving);
+        console.log('最高動爻:', maxMoving);
+        if (maxMoving < 4) {
+          yongGua = getTrigramInfo(upperIdx);
+          tiGua = getTrigramInfo(lowerIdx);
+        } else {
+          yongGua = getTrigramInfo(lowerIdx);
+          tiGua = getTrigramInfo(upperIdx);
+        }
+      }
 
-    
-function getTiYong(result) {
-  const moving = result.moving || [];
-  const upperIdx = result.uIdx;
-  const lowerIdx = result.lIdx;
-
-  let tiGua, yongGua;
-
-  if (moving.length === 0) {
-    tiGua = getTrigramInfo(lowerIdx);
-    yongGua = getTrigramInfo(upperIdx);
-  } else {
-    const maxMoving = Math.max(...moving);
-    console.log('最高動爻:', maxMoving);
-    if (maxMoving < 4) {
-      yongGua = getTrigramInfo(upperIdx);
-      tiGua = getTrigramInfo(lowerIdx);
-    } else {
-      yongGua = getTrigramInfo(lowerIdx);
-      tiGua = getTrigramInfo(upperIdx);
+      console.log('體卦:', tiGua.name, '用卦:', yongGua.name);
+      return { tiGua, yongGua };
     }
-  }
-
-  console.log('體卦:', tiGua.name, '用卦:', yongGua.name);
-  return { tiGua, yongGua };
-}
 
     function getLineEntryFor(hex, lineIdx) {
       return hex.lines?.find(line => line.index === lineIdx) || { text: '無爻辭', meaning: '無解釋', score: 5 };
@@ -1438,7 +1378,6 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
     }
     edges.push({ source, target, className, label: relation, markers, title: `體用關係: ${relationData.overall}` });
   }
-
   // Add edges for mutual and changing hexagrams
   const huRelation = getRelation(huUpperGua.wuxing, huLowerGua.wuxing);
   if (huRelation !== '未知') {
