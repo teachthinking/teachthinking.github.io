@@ -1376,46 +1376,52 @@
         const symbol = trigramSymbol[node.name] || '';
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.classList.add('wuxing-node', node.wuxing);
+        circle.classList.add('wuxing-node', node.wuxing || '未知');
         circle.setAttribute('cx', node.x);
         circle.setAttribute('cy', node.y);
         circle.setAttribute('r', '40');
-        circle.setAttribute('stroke-width', strokeWidth.toString());
+        circle.setAttribute('stroke-width', (node.status ? getWuxingStrength(node.status) : 1).toString());
         g.appendChild(circle);
 
         const text1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text1.classList.add('wuxing-node-text');
         text1.setAttribute('x', node.x);
         text1.setAttribute('y', node.y - 15);
-    //    text1.textContent = `${node.name} (${node.wuxing}, ${node.status})`;
-        text1.textContent = node.name + ' (' + node.wuxing + ', ' + node.status + ')';
+        // 使用字串拼接避免模板字面量問題，並添加防錯保護
+        text1.textContent = (node.name || '未知') + ' (' + (node.wuxing || '未知') + ', ' + (node.status || '未知') + ')';
         g.appendChild(text1);
 
         const text2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text2.classList.add('wuxing-node-text');
         text2.setAttribute('x', node.x);
         text2.setAttribute('y', node.y + 5);
-        text2.textContent = node.label;
+        text2.textContent = node.label || '未知';
         g.appendChild(text2);
 
         const text3 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text3.classList.add('wuxing-node-text');
         text3.setAttribute('x', node.x);
         text3.setAttribute('y', node.y + 25);
-        text3.textContent = symbol;
+        text3.textContent = trigramSymbol[node.name] || '';
         g.appendChild(text3);
 
-        // Add click event for node interaction
+        // 為節點添加點擊事件以支援體卦切換
         circle.addEventListener('click', () => {
+          if (!node.name || !node.wuxing || !node.status) {
+            console.error('節點數據不完整:', node);
+            alert('無法處理節點：數據不完整');
+            return;
+          }
           if (node.id === 'ti') {
-            // Clicked on current tiGua, show info only
+            // 點擊當前體卦，僅顯示資訊
             const relation = getRelation(tiGua.wuxing, node.wuxing);
             const relationText = wuxingExplanations[relationMap[relation]]?.[currentResult.questionType || 'general']?.meaning || '無具體解釋';
             const suggestion = wuxingExplanations[relationMap[relation]]?.[currentResult.questionType || 'general']?.suggestion || '無具體建議';
             alert(`卦象：${node.label} (${node.name})\n五行：${node.wuxing}\n狀態：${node.status}\n與體卦關係：${relation}\n解釋：${relationText}\n建議：${suggestion}`);
           } else {
-            // Clicked on non-tiGua node, switch tiGua and re-render
+            // 點擊非體卦，提示切換體卦
             if (confirm(`是否將 ${node.label} (${node.name}) 設為新體卦並重新分析？`)) {
+              console.log(`切換體卦至 ${node.name} (${node.wuxing})`);
               switchTiGua(
                 { name: node.name, wuxing: node.wuxing },
                 mainUpperGua,
@@ -1436,7 +1442,7 @@
       });
       console.log('節點渲染完成，總節點數:', nodes.length);
 
-      // Define edges
+      // 定義邊
       const edges = [
         { from: 'ti', to: 'mainUpper', relation: getRelation(tiGua.wuxing, mainUpperGua.wuxing) },
         { from: 'ti', to: 'mainLower', relation: getRelation(tiGua.wuxing, mainLowerGua.wuxing) },
@@ -1449,7 +1455,7 @@
         { from: 'changeUpper', to: 'changeLower', relation: getRelation(changeUpperGua.wuxing, changeLowerGua.wuxing) }
       ];
 
-      // Render edges with dynamic stroke-width based on from-node status
+      // 渲染邊，根據起點節點的五行狀態動態調整粗細
       edges.forEach(edge => {
         if (edge.from === edge.to) return;
         const fromNode = nodes.find(n => n.id === edge.from);
@@ -1468,7 +1474,7 @@
           marker = edge.from < edge.to ? 'url(#arrow-harmony)' : 'url(#arrow-harmony-reverse)';
         }
 
-        const strokeWidth = getWuxingStrength(fromNode.status);
+        const strokeWidth = fromNode.status ? getWuxingStrength(fromNode.status) : 1;
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.classList.add(`wuxing-edge-${edge.relation === '比和' ? 'harmony' : edge.relation.includes('生') ? 'generate' : 'overcome'}`);
         line.setAttribute('x1', fromNode.x);
@@ -1492,12 +1498,11 @@
       });
       console.log('邊渲染完成，總邊數:', edges.length);
 
-      // Force SVG repaint
+      // 強制重新繪製 SVG
       svg.style.display = 'none';
-      svg.offsetHeight; // Trigger reflow
+      svg.offsetHeight; // 觸發重排
       svg.style.display = 'block';
       console.log('五行圖渲染完成');
-    }
 
     function renderWuxingAnalysis(result) {
       const judgeBox = document.getElementById('judgeBox');
