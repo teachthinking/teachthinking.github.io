@@ -1378,6 +1378,7 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
     }
     edges.push({ source, target, className, label: relation, markers, title: `體用關係: ${relationData.overall}` });
   }
+
   // Add edges for mutual and changing hexagrams
   const huRelation = getRelation(huUpperGua.wuxing, huLowerGua.wuxing);
   if (huRelation !== '未知') {
@@ -1404,6 +1405,7 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
       huSource = 'huUpper';
       huTarget = 'huLower';
       huMarkers = { end: 'url(#arrow-generate)' };
+      
          } else if (huRelation === '體剋用') {
         huClassName = 'wuxing-edge-overcome';
         huSource = 'huUpper';
