@@ -1370,22 +1370,21 @@
         { id: 'changeLower', name: changeLowerGua.name, wuxing: changeLowerGua.wuxing, x: 500, y: 300, label: '變卦下卦', status: getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber) }
       ];
       console.log('節點定義完成:', nodes.length);
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Render nodes
       nodes.forEach(node => {
         const strokeWidth = getWuxingStrength(node.status);
         const symbol = trigramSymbol[node.name] || '';
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+```html
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.classList.add('wuxing-node', node.wuxing);
         circle.setAttribute('cx', node.x);
         circle.setAttribute('cy', node.y);
         circle.setAttribute('r', '40');
-        circle.setAttribute('stroke-width', strokeWidth);
-        circle.setAttribute('data-id', node.id);
+        circle.setAttribute('stroke-width', strokeWidth.toString());
         g.appendChild(circle);
 
-               const text1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        const text1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text1.classList.add('wuxing-node-text');
         text1.setAttribute('x', node.x);
         text1.setAttribute('y', node.y - 15);
@@ -1406,16 +1405,36 @@
         text3.textContent = symbol;
         g.appendChild(text3);
 
+        // Add click event for node interaction
         circle.addEventListener('click', () => {
-          const relation = getRelation(tiGua.wuxing, node.wuxing);
-          const relationText = wuxingExplanations[relationMap[relation]]?.[currentResult.questionType || 'general']?.meaning || '無具體解釋';
-          const suggestion = wuxingExplanations[relationMap[relation]]?.[currentResult.questionType || 'general']?.suggestion || '無具體建議';
-          alert(`卦象：${node.label} (${node.name})\n五行：${node.wuxing}\n狀態：${node.status}\n與體卦關係：${relation}\n解釋：${relationText}\n建議：${suggestion}`);
+          if (node.id === 'ti') {
+            // Clicked on current tiGua, show info only
+            const relation = getRelation(tiGua.wuxing, node.wuxing);
+            const relationText = wuxingExplanations[relationMap[relation]]?.[currentResult.questionType || 'general']?.meaning || '無具體解釋';
+            const suggestion = wuxingExplanations[relationMap[relation]]?.[currentResult.questionType || 'general']?.suggestion || '無具體建議';
+            alert(`卦象：${node.label} (${node.name})\n五行：${node.wuxing}\n狀態：${node.status}\n與體卦關係：${relation}\n解釋：${relationText}\n建議：${suggestion}`);
+          } else {
+            // Clicked on non-tiGua node, switch tiGua and re-render
+            if (confirm(`是否將 ${node.label} (${node.name}) 設為新體卦並重新分析？`)) {
+              switchTiGua(
+                { name: node.name, wuxing: node.wuxing },
+                mainUpperGua,
+                mainLowerGua,
+                huUpperGua,
+                huLowerGua,
+                changeUpperGua,
+                changeLowerGua,
+                lunarMonth,
+                season,
+                lunarMonthNumber
+              );
+            }
+          }
         });
 
         svg.appendChild(g);
       });
-      console.log('節點渲染完成');
+      console.log('節點渲染完成，總節點數:', nodes.length);
 
       // Define edges
       const edges = [
@@ -1430,7 +1449,7 @@
         { from: 'changeUpper', to: 'changeLower', relation: getRelation(changeUpperGua.wuxing, changeLowerGua.wuxing) }
       ];
 
-      // Render edges
+      // Render edges with dynamic stroke-width based on from-node status
       edges.forEach(edge => {
         if (edge.from === edge.to) return;
         const fromNode = nodes.find(n => n.id === edge.from);
@@ -1449,13 +1468,14 @@
           marker = edge.from < edge.to ? 'url(#arrow-harmony)' : 'url(#arrow-harmony-reverse)';
         }
 
+        const strokeWidth = getWuxingStrength(fromNode.status);
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.classList.add(`wuxing-edge-${edge.relation === '比和' ? 'harmony' : edge.relation.includes('生') ? 'generate' : 'overcome'}`);
         line.setAttribute('x1', fromNode.x);
         line.setAttribute('y1', fromNode.y);
         line.setAttribute('x2', toNode.x);
         line.setAttribute('y2', toNode.y);
-        line.setAttribute('stroke-width', '2');
+        line.setAttribute('stroke-width', strokeWidth.toString());
         if (marker) {
           line.setAttribute('marker-end', marker);
         }
@@ -1745,3 +1765,4 @@
   </script>
 </body>
 </html>
+```
