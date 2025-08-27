@@ -1176,6 +1176,7 @@
     }
 
     // 渲染五行圖表
+   // 渲染五行圖表（從指定行繼續）
     function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
       const svg = document.getElementById('wuxingSvg');
       svg.innerHTML = `
@@ -1211,7 +1212,7 @@
 
       nodes.forEach(node => {
         const strokeWidth = getWuxingStrength(node.status);
-        const wuxingClass = WUXING_COLORS[node.wuxing];
+        const wuxingClass = WUXING_COLORS[node.wuxing] || 'water';
         const tooltipContent = `五行：${node.wuxing} (${node.status})<br>建議：${getSuggestions(tiGua.wuxing, node.wuxing, getRelation(tiGua.wuxing, node.wuxing), lunarMonthNumber) || '無'}`;
         svg.innerHTML += `
           <circle class="wuxing-node ${wuxingClass} ${node.id === 'ti' ? 'ti' : ''}" cx="${node.x}" cy="${node.y}" r="40" stroke-width="${strokeWidth}" data-id="${node.id}" data-tooltip="${tooltipContent.replace(/"/g, '&quot;')}"></circle>
@@ -1225,45 +1226,39 @@
       nodes.forEach(node => {
         if (node.id !== 'ti') {
           const relation = getRelation(tiGua.wuxing, node.wuxing);
-          let marker = '';
-          let className = '';
+          let marker = 'arrow-harmony';
+          let edgeClass = 'wuxing-edge-harmony';
           if (relation.includes('生')) {
-            marker = relation === '用生體' ? 'arrow-generate' : 'arrow-generate';
-            className = 'wuxing-edge-generate';
+            marker = 'arrow-generate';
+            edgeClass = 'wuxing-edge-generate';
           } else if (relation.includes('剋')) {
-            marker = relation === '用剋體' ? 'arrow-overcome' : 'arrow-overcome';
-            className = 'wuxing-edge-overcome';
-          } else if (relation === '比和') {
-            marker = 'arrow-harmony';
-            className = 'wuxing-edge-harmony';
+            marker = 'arrow-overcome';
+            edgeClass = 'wuxing-edge-overcome';
           }
-          if (marker) {
-            edges.push({
-              from: node.id === 'ti' ? node.id : 'ti',
-              to: node.id === 'ti' ? 'mainUpper' : node.id,
-              relation,
-              marker,
-              className
-            });
-          }
+          const tiNode = nodes.find(n => n.id === 'ti');
+          edges.push({
+            from: node.id === 'ti' ? tiNode : node,
+            to: node.id === 'ti' ? node : tiNode,
+            relation,
+            marker,
+            edgeClass
+          });
         }
       });
 
       edges.forEach(edge => {
-        const fromNode = nodes.find(n => n.id === edge.from);
-        const toNode = nodes.find(n => n.id === edge.to);
-        const dx = toNode.x - fromNode.x;
-        const dy = toNode.y - fromNode.y;
-        const len = Math.sqrt(dx * dx + dy * dy);
+        const dx = edge.to.x - edge.from.x;
+        const dy = edge.to.y - edge.from.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
         const offset = 40;
-        const x1 = fromNode.x + (dx * offset) / len;
-        const y1 = fromNode.y + (dy * offset) / len;
-        const x2 = toNode.x - (dx * offset) / len;
-        const y2 = toNode.y - (dy * offset) / len;
+        const x1 = edge.from.x + (dx * offset) / length;
+        const y1 = edge.from.y + (dy * offset) / length;
+        const x2 = edge.to.x - (dx * offset) / length;
+        const y2 = edge.to.y - (dy * offset) / length;
         const midX = (x1 + x2) / 2;
         const midY = (y1 + y2) / 2;
         svg.innerHTML += `
-          <line class="${edge.className}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" marker-end="url(#${edge.marker})"></line>
+          <line class="${edge.edgeClass}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" marker-end="url(#${edge.marker})"></line>
           <text x="${midX}" y="${midY - 10}" class="wuxing-edge-label">${edge.relation}</text>
         `;
       });
@@ -1274,63 +1269,67 @@
 
       svg.querySelectorAll('.wuxing-node').forEach(node => {
         node.addEventListener('mousemove', e => {
-          tooltip.className = 'tooltip active';
-          tooltip.innerHTML = node.dataset.tooltip;
+          tooltip.innerHTML = node.getAttribute('data-tooltip');
+          tooltip.classList.add('active');
           tooltip.style.left = `${e.pageX + 10}px`;
           tooltip.style.top = `${e.pageY + 10}px`;
         });
         node.addEventListener('mouseout', () => {
-          tooltip.className = 'tooltip';
+          tooltip.classList.remove('active');
         });
       });
     }
 
     // 渲染總結
     function renderSummary(tiGua, relations) {
-      const summaryBox = document.getElementById('summaryBox');
-      summaryBox.classList.remove('hidden');
-      const summaryContent = document.getElementById('summaryContent');
-      let summary = `<p><strong>體卦（${tiGua.name}，${tiGua.wuxing}）總結：</strong></p>`;
-      summary += `<p>當前季節：${season}（農曆${lunarMonth}），${tiGua.wuxing}狀態：${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}，建議：${wuxingExplanations[tiGua.wuxing]?.suggestions[getWuxingStatus(tiGua.wuxing, lunarMonthNumber)] || '無具體建議'}</p>`;
-      if (Object.values(relations).some(r => r === '用剋體')) {
-        summary += `<p><strong>注意：</strong>存在「用剋體」的情況，宜謹慎行事，參考五行建議以化解不利影響。</p>`;
-      } else if (Object.values(relations).some(r => r === '用生體')) {
-        summary += `<p><strong>有利：</strong>存在「用生體」的情況，環境有利於體卦，宜積極行動。</p>`;
-      } else {
-        summary += `<p><strong>中性：</strong>整體局勢穩定，宜穩中求進，注意時機。</p>`;
-      }
-      summaryContent.innerHTML = summary;
+      const summaryDiv = document.getElementById('summaryContent');
+      let summary = `<p><strong>總結分析</strong></p>`;
+      summary += `<p>體卦（${tiGua.name}, ${tiGua.wuxing}）代表您的核心處境，當前五行狀態：${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)}，${wuxingExplanations[tiGua.wuxing]?.suggestions[getWuxingStatus(tiGua.wuxing, lunarMonthNumber)] || '無建議'}。</p>`;
+
+      const relationSummary = Object.entries(relations).map(([key, relation]) => {
+        const gua = {
+          mainUpper: mainUpperGua,
+          mainLower: mainLowerGua,
+          huUpper: huUpperGua,
+          huLower: huLowerGua,
+          changeUpper: changeUpperGua,
+          changeLower: changeLowerGua
+        }[key];
+        return `<p>${gua.label}（${gua.name}, ${gua.wuxing}）：與體卦關係為${relation}，${relation.includes('剋') ? '需謹慎應對' : relation.includes('生') ? '有利發展' : '保持平衡'}。</p>`;
+      }).join('');
+
+      summary += relationSummary;
+      summary += `<p>根據${lunarMonth}（${season}），建議您${wuxingExplanations[tiGua.wuxing]?.description || '無描述'}，並留意五行生剋的影響。</p>`;
+      summaryDiv.innerHTML = summary;
+      document.getElementById('summaryBox').classList.remove('hidden');
     }
 
     // 數字取卦
     document.getElementById('btnNumber').addEventListener('click', () => {
-      const numUpper = parseInt(document.getElementById('numUpper').value);
-      const numLower = parseInt(document.getElementById('numLower').value);
-      const numMoving = parseInt(document.getElementById('numMoving').value);
-      if (isNaN(numUpper) || isNaN(numLower) || isNaN(numMoving) ||
-          numUpper < 100 || numUpper > 999 ||
-          numLower < 100 || numLower > 999 ||
-          numMoving < 100 || numMoving > 999) {
+      const upperNum = parseInt(document.getElementById('numUpper').value);
+      const lowerNum = parseInt(document.getElementById('numLower').value);
+      const movingNum = parseInt(document.getElementById('numMoving').value);
+      if (isNaN(upperNum) || isNaN(lowerNum) || isNaN(movingNum) || upperNum < 100 || upperNum > 999 || lowerNum < 100 || lowerNum > 999 || movingNum < 100 || movingNum > 999) {
         alert('請輸入100-999之間的數字！');
         return;
       }
-      const upperIdx = ((numUpper % 8) || 8).toString();
-      const lowerIdx = ((numLower % 8) || 8).toString();
-      const moving = [((numMoving % 6) || 6)];
+      const upperIdx = ((upperNum % 8) || 8).toString();
+      const lowerIdx = ((lowerNum % 8) || 8).toString();
+      const moving = [((movingNum % 6) || 6)];
       generateGua(upperIdx, lowerIdx, moving, '數字取卦');
     });
 
     // 亂數取卦
     document.getElementById('btnRandomNumber').addEventListener('click', () => {
-      const numUpper = Math.floor(Math.random() * 900) + 100;
-      const numLower = Math.floor(Math.random() * 900) + 100;
-      const numMoving = Math.floor(Math.random() * 900) + 100;
-      document.getElementById('numUpper').value = numUpper;
-      document.getElementById('numLower').value = numLower;
-      document.getElementById('numMoving').value = numMoving;
-      const upperIdx = ((numUpper % 8) || 8).toString();
-      const lowerIdx = ((numLower % 8) || 8).toString();
-      const moving = [((numMoving % 6) || 6)];
+      const upperNum = Math.floor(Math.random() * 900) + 100;
+      const lowerNum = Math.floor(Math.random() * 900) + 100;
+      const movingNum = Math.floor(Math.random() * 900) + 100;
+      document.getElementById('numUpper').value = upperNum;
+      document.getElementById('numLower').value = lowerNum;
+      document.getElementById('numMoving').value = movingNum;
+      const upperIdx = ((upperNum % 8) || 8).toString();
+      const lowerIdx = ((lowerNum % 8) || 8).toString();
+      const moving = [((movingNum % 6) || 6)];
       generateGua(upperIdx, lowerIdx, moving, '數字亂數取卦');
     });
 
@@ -1340,7 +1339,7 @@
       const lowerIdx = document.getElementById('selLower').value;
       const movingInput = document.getElementById('inputMoving').value.trim();
       if (!upperIdx || !lowerIdx) {
-        alert('請選擇上卦和下卦！');
+        alert('請選擇上卦與下卦！');
         return;
       }
       const moving = movingInput ? movingInput.split(',').map(Number).filter(n => n >= 1 && n <= 6) : [];
@@ -1350,23 +1349,30 @@
     // 時間取卦
     document.getElementById('btnTime').addEventListener('click', () => {
       const method = document.querySelector('input[name="time-method"]:checked').value;
+      let date, moving;
       if (method === 'modern') {
         const dtInput = document.getElementById('dtInput').value;
         if (!dtInput) {
           alert('請選擇日期時間！');
           return;
         }
-        const date = new Date(dtInput);
+        date = new Date(dtInput);
+        if (isNaN(date)) {
+          alert('無效的日期時間！');
+          return;
+        }
         const year = date.getFullYear();
         const month = date.getMonth() + 1;
         const day = date.getDate();
         const hour = date.getHours();
         const minute = date.getMinutes();
-        const sum = year + month + day + hour + minute;
-        const upperIdx = ((sum % 8) || 8).toString();
-        const lowerIdx = (((sum + minute) % 8) || 8).toString();
-        const moving = [((sum % 6) || 6)];
-        generateGua(upperIdx, lowerIdx, moving, '現代時間取卦');
+        const upperNum = year + month + day;
+        const lowerNum = month + day + hour;
+        const movingNum = hour + minute;
+        const upperIdx = ((upperNum % 8) || 8).toString();
+        const lowerIdx = ((lowerNum % 8) || 8).toString();
+        moving = [((movingNum % 6) || 6)];
+        generateGua(upperIdx, lowerIdx, moving, '現代時間取卦', date.toLocaleString('zh-TW'));
       } else {
         const dateInput = document.getElementById('dateInput').value;
         const shichen = parseInt(document.getElementById('shichenInput').value);
@@ -1375,15 +1381,21 @@
           alert('請選擇日期！');
           return;
         }
-        const date = new Date(dateInput);
+        date = new Date(dateInput);
+        if (isNaN(date)) {
+          alert('無效的日期！');
+          return;
+        }
         const year = date.getFullYear();
         const month = date.getMonth() + 1;
         const day = date.getDate();
-        const sum = year + month + day + shichen + minute;
-        const upperIdx = ((sum % 8) || 8).toString();
-        const lowerIdx = (((sum + minute) % 8) || 8).toString();
-        const moving = [((sum % 6) || 6)];
-        generateGua(upperIdx, lowerIdx, moving, '傳統時辰取卦');
+        const upperNum = year + month + day;
+        const lowerNum = month + day + shichen;
+        const movingNum = shichen + minute;
+        const upperIdx = ((upperNum % 8) || 8).toString();
+        const lowerIdx = ((lowerNum % 8) || 8).toString();
+        moving = [((movingNum % 6) || 6)];
+        generateGua(upperIdx, lowerIdx, moving, '傳統時辰取卦', `${date.toLocaleDateString('zh-TW')} ${shichen}:00`);
       }
     });
 
@@ -1391,21 +1403,22 @@
     document.getElementById('btnImage').addEventListener('click', () => {
       const upperIdx = document.getElementById('upperImageSelect').value;
       const lowerIdx = document.getElementById('lowerDirectionSelect').value;
+      const useMinute = document.getElementById('imageUseMinute').checked;
       if (!upperIdx || !lowerIdx) {
-        alert('請選擇物象和方位！');
+        alert('請選擇上卦與下卦！');
         return;
       }
-      let moving = [];
-      if (document.getElementById('imageUseMinute').checked) {
+      let moving;
+      if (useMinute) {
         const minute = new Date().getMinutes();
         moving = [((minute % 6) || 6)];
       } else {
-        const movingInput = parseInt(document.getElementById('imageMovingInput').value);
-        if (isNaN(movingInput) || movingInput < 1 || movingInput > 6) {
+        const movingNum = parseInt(document.getElementById('imageMovingInput').value);
+        if (isNaN(movingNum) || movingNum < 1 || movingNum > 6) {
           alert('請輸入有效的動爻（1-6）！');
           return;
         }
-        moving = [movingInput];
+        moving = [movingNum];
       }
       generateGua(upperIdx, lowerIdx, moving, '以象取卦');
     });
@@ -1413,9 +1426,7 @@
     // 現在按鈕
     document.getElementById('nowQuick').addEventListener('click', () => {
       const now = new Date();
-      const offset = now.getTimezoneOffset();
-      const local = new Date(now.getTime() - offset * 60 * 1000);
-      document.getElementById('dtInput').value = local.toISOString().slice(0, 16);
+      document.getElementById('dtInput').value = now.toISOString().slice(0, 16);
     });
 
     // 切換時間輸入方式
@@ -1433,26 +1444,68 @@
       });
     });
 
-    // 歷史記錄管理
+    // 切換標籤
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        button.classList.add('active');
+        document.getElementById(button.dataset.target).classList.add('active');
+      });
+    });
+
+    // 五行分析按鈕
+    document.getElementById('judgeBtn').addEventListener('click', () => {
+      if (currentResult) {
+        renderWuxingAnalysis(currentResult);
+      }
+    });
+
+    // 下載 SVG
+    document.getElementById('downloadSvgBtn').addEventListener('click', () => {
+      const svg = document.getElementById('wuxingSvg');
+      const serializer = new XMLSerializer();
+      const source = '<?xml version="1.0" standalone="no"?>\r\n' + serializer.serializeToString(svg);
+      const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'wuxing_diagram.svg';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
+
+    // 在新視窗查看 SVG
+    document.getElementById('openSvgWindowBtn').addEventListener('click', () => {
+      const svg = document.getElementById('wuxingSvg');
+      const serializer = new XMLSerializer();
+      const source = '<?xml version="1.0" standalone="no"?>\r\n' + serializer.serializeToString(svg);
+      const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const newWindow = window.open(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+
+    // 渲染歷史記錄
     function renderHistory() {
       const historyList = document.getElementById('historyList');
       historyList.innerHTML = '';
-      history.forEach((item, index) => {
+      history.forEach((entry, index) => {
         const div = document.createElement('div');
         div.className = 'gua-box';
         div.innerHTML = `
-          <p><strong>時間：</strong>${item.timestamp}</p>
-          <p><strong>方式：</strong>${item.method}</p>
-          <p><strong>問題：</strong>${item.question || '無'}</p>
-          <p><strong>本卦：</strong>${item.hexMain.name}，動爻：${item.moving.join('、') || '無'}</p>
-          <p><strong>互卦：</strong>${item.hexHu.name}</p>
-          <p><strong>變卦：</strong>${item.hexChange.name}</p>
-          <button class="primary" onclick="loadHistory(${index})">載入</button>
+          <p><strong>記錄 ${index + 1} (${entry.timestamp})</strong></p>
+          <p>本卦：${entry.hexMain.name}，動爻：${entry.moving.join('、') || '無'}，體卦：${entry.tiGua.name}，用卦：${entry.yongGua.name}</p>
+          ${entry.question ? `<p>問題：${entry.question}</p>` : ''}
+          <button class="primary" onclick="loadHistory(${index})">重新載入</button>
         `;
         historyList.appendChild(div);
       });
     }
 
+    // 載入歷史記錄
     window.loadHistory = function(index) {
       currentResult = history[index];
       document.getElementById('result').classList.remove('hidden');
@@ -1465,8 +1518,11 @@
       renderGuaImage(currentResult.changeLines, 'changeGuaImage', currentResult.moving);
       renderGuaImage(currentResult.huLines, 'huGuaImage');
       renderLineExplanation(currentResult.moving, currentResult.hexMain, currentResult.hexChange);
+      document.getElementById('judgeBox').classList.add('hidden');
+      document.getElementById('summaryBox').classList.add('hidden');
     };
 
+    // 清除歷史記錄
     document.getElementById('clearHistoryBtn').addEventListener('click', () => {
       if (confirm('確定要清除所有歷史記錄？')) {
         history = [];
@@ -1475,26 +1531,29 @@
       }
     });
 
+    // 匯出歷史記錄
     document.getElementById('exportHistoryBtn').addEventListener('click', () => {
-      const dataStr = JSON.stringify(history, null, 2);
-      const blob = new Blob([dataStr], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(history, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `gua_history_${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'gua_history.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       URL.revokeObjectURL(url);
     });
 
+    // 匯入歷史記錄
     document.getElementById('importHistoryBtn').addEventListener('click', () => {
       const fileInput = document.getElementById('importHistoryInput');
       const file = fileInput.files[0];
       if (!file) {
-        alert('請選擇一個JSON檔案！');
+        alert('請選擇一個 JSON 檔案！');
         return;
       }
       const reader = new FileReader();
-      reader.onload = e => {
+      reader.onload = (e) => {
         try {
           const importedHistory = JSON.parse(e.target.result);
           if (Array.isArray(importedHistory)) {
@@ -1506,68 +1565,15 @@
             alert('無效的歷史記錄格式！');
           }
         } catch (error) {
-          alert('匯入失敗：無效的JSON檔案！');
+          alert('匯入失敗：無效的 JSON 檔案！');
         }
       };
       reader.readAsText(file);
     });
 
-    // 五行與象徵按鈕
-    document.getElementById('judgeBtn').addEventListener('click', () => {
-      if (currentResult) {
-        renderWuxingAnalysis(currentResult);
-      } else {
-        alert('請先進行取卦！');
-      }
-    });
-
-    // 下載 SVG
-    document.getElementById('downloadSvgBtn').addEventListener('click', () => {
-      const svg = document.getElementById('wuxingSvg');
-      const serializer = new XMLSerializer();
-      const source = '<?xml version="1.0" standalone="no"?>\r\n' + serializer.serializeToString(svg);
-      const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `wuxing_diagram_${new Date().toISOString().slice(0, 10)}.svg`;
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    // 新視窗查看 SVG
-    document.getElementById('openSvgWindowBtn').addEventListener('click', () => {
-      const svg = document.getElementById('wuxingSvg');
-      const serializer = new XMLSerializer();
-      const source = '<?xml version="1.0" standalone="no"?>\r\n' + serializer.serializeToString(svg);
-      const newWindow = window.open('');
-      newWindow.document.write(`
-        <html>
-          <head>
-            <title>五行生克圖</title>
-            <style>
-              body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4f7f9; }
-              svg { max-width: 100%; max-height: 100%; }
-            </style>
-          </head>
-          <body>${source}</body>
-        </html>
-      `);
-    });
-
-    // 標籤切換
-    document.querySelectorAll('.tab-button').forEach(button => {
-      button.addEventListener('click', () => {
-        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        button.classList.add('active');
-        document.getElementById(button.dataset.target).classList.add('active');
-      });
-    });
-
     // 初始化
-    document.addEventListener('DOMContentLoaded', async () => {
-      await loadResources();
+    document.addEventListener('DOMContentLoaded', () => {
+      loadResources();
       const savedHistory = localStorage.getItem('guaHistory');
       if (savedHistory) {
         history = JSON.parse(savedHistory);
