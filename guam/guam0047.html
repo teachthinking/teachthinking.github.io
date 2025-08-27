@@ -1671,7 +1671,7 @@ function getSuggestionForYongKeTi(yongWuxing, tiWuxing) {
       }
     }
 
-  function renderDetailedAnalysis(result) {
+function renderDetailedAnalysis(result) {
   const detailedAnalysis = document.getElementById('detailedAnalysis');
   if (!detailedAnalysis) {
     console.error('找不到 detailedAnalysis 元素');
@@ -1680,7 +1680,7 @@ function getSuggestionForYongKeTi(yongWuxing, tiWuxing) {
   detailedAnalysis.classList.remove('hidden');
   detailedAnalysis.innerHTML = '';
 
-  const timestamp = new Date(result.timestamp || '2025-08-25T23:46:00+08:00');
+  const timestamp = new Date(result.timestamp || '2025-08-27T17:21:00+08:00');
   const { lunarMonth, season, lunarMonthNumber } = lunarCalendar.gregorianToLunar(timestamp);
   const { tiGua, yongGua } = getTiYong(result);
 
@@ -1694,21 +1694,25 @@ function getSuggestionForYongKeTi(yongWuxing, tiWuxing) {
   `;
 
   const relations = [
-    { name: '本卦上卦', gua: getTrigramInfo(result.uIdx) },
-    { name: '本卦下卦', gua: getTrigramInfo(result.lIdx) },
-    { name: '互卦上卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8) },
-    { name: '互卦下卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8) },
-    { name: '變卦上卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8) },
-    { name: '變卦下卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8) }
+    { name: '本卦上卦', gua: getTrigramInfo(result.uIdx), position: '上卦' },
+    { name: '本卦下卦', gua: getTrigramInfo(result.lIdx), position: '下卦' },
+    { name: '互卦上卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8), position: '上卦' },
+    { name: '互卦下卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8), position: '下卦' },
+    { name: '變卦上卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8), position: '上卦' },
+    { name: '變卦下卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8), position: '下卦' }
   ];
 
-  relations.forEach(({ name, gua }) => {
+  relations.forEach(({ name, gua, position }) => {
     const relation = getRelation(tiGua.wuxing, gua.wuxing);
     const status = getWuxingStatus(gua.wuxing, lunarMonthNumber);
     const relationKey = relationMap[relation];
-    const trigramKey = trigramEnglish[gua.name];
+    // 使用中文卦名 + 關係作為鍵
+    const trigramKey = `${gua.name}卦${relation.includes('生') ? relation.replace('體', '生體').replace('用', '生用') : relation}`;
+    console.log('關係:', relation, 'relationKey:', relationKey, 'trigramKey:', trigramKey);
     const relationData = wuxingExplanations[relationKey] || { display_name: '未知', overall: '無總結', details: {} };
+    console.log('relationData:', relationData);
     const explanationObj = relationData.details[trigramKey] || { title: '無標題', description: '無詳細解釋', love: '', career: '', wealth: '', health: '', relationship: '', life: '', guidance: '' };
+    console.log('explanationObj:', explanationObj);
 
     let detailsHtml = '';
     const categories = ['love', 'career', 'wealth', 'health', 'relationship', 'life', 'guidance'];
@@ -1725,7 +1729,7 @@ function getSuggestionForYongKeTi(yongWuxing, tiWuxing) {
 
     detailedAnalysis.innerHTML += `
       <div class="wuxing-box">
-        <h5>${name}（${gua.name}, ${gua.wuxing}, ${status}）</h5>
+        <h5>${name}（${gua.name}, ${gua.wuxing}, ${status}, ${position}）</h5>
         <p><strong>關係：</strong> ${relationData.display_name} - ${relationData.overall}</p>
         <p><strong>標題：</strong> ${explanationObj.title}</p>
         <p><strong>描述：</strong> ${explanationObj.description}</p>
@@ -1735,7 +1739,7 @@ function getSuggestionForYongKeTi(yongWuxing, tiWuxing) {
     `;
   });
 
-  const scores = relations.map(r => getRelationScore(r.relation));
+  const scores = relations.map(r => getRelationScore(getRelation(tiGua.wuxing, r.gua.wuxing)));
   const combinedRelation = getCombinedRelation(scores);
   const combinedData = wuxingExplanations.combined[combinedRelation] || { display_name: '未知', details: '無總結' };
   detailedAnalysis.innerHTML += `
