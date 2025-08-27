@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -706,7 +705,8 @@
         const [hexResponse, quotesResponse, trigramResponse] = await Promise.all([
           fetch('hexagrams.json').then(res => res.ok ? res.json() : Promise.reject(`hexagrams.json 載入失敗: ${res.status}`)),
           fetch('quotes.json').then(res => res.ok ? res.json() : Promise.reject(`quotes.json 載入失敗: ${res.status}`)),
-          fetch('trigram_explanations.json').then(res => res.ok ? res.json() : Promise.reject(`trigram_explanations.json 載入失敗: ${res.status}`))
+          fetch('trigram_explanations.json').then(res => res.ok ? res.json() : Promise.reject(`trigram_explanations.json 載入失敗: ${res.status}`)),
+          fetch('wuxing_explanations.json').then(res => res.ok ? res.json() : Promise.reject(`wuxing_explanations.json 載入失敗: ${res.status}`))
         ]);
         hexagrams = Object.fromEntries(
           Object.entries(hexResponse).map(([key, value]) => [normalizeKey(key), {
