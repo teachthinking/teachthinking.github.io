@@ -861,18 +861,35 @@
       }
     }
 
-    function getTiYong(result) {
-      const moving = result.moving || [];
-      const upperIdx = result.uIdx;
-      const lowerIdx = result.lIdx;
-      const tiGua = moving.length === 0 || moving.every(m => m > 3)
-        ? getTrigramInfo(lowerIdx)
-        : getTrigramInfo(upperIdx);
-      const yongGua = moving.length === 0 || moving.every(m => m > 3)
-        ? getTrigramInfo(upperIdx)
-        : getTrigramInfo(lowerIdx);
-      return { tiGua, yongGua };
+function getTiYong(result) {
+  const moving = result.moving || [];
+  const upperIdx = result.uIdx;
+  const lowerIdx = result.lIdx;
+
+  let tiGua, yongGua;
+
+  if (moving.length === 0) {
+    // 無動爻：下卦為體卦，上卦為用卦
+    tiGua = getTrigramInfo(lowerIdx);
+    yongGua = getTrigramInfo(upperIdx);
+  } else {
+    // 計算上下卦的動爻數量
+    const upperMovingCount = moving.filter(m => m > 3).length;
+    const lowerMovingCount = moving.filter(m => m <= 3).length;
+
+    if (upperMovingCount >= lowerMovingCount) {
+      // 上卦動爻數量較多（或相等時優先上卦）
+      yongGua = getTrigramInfo(upperIdx); // 上卦為用卦
+      tiGua = getTrigramInfo(lowerIdx);   // 下卦為體卦
+    } else {
+      // 下卦動爻數量較多
+      yongGua = getTrigramInfo(lowerIdx); // 下卦為用卦
+      tiGua = getTrigramInfo(upperIdx);   // 上卦為體卦
     }
+  }
+
+  return { tiGua, yongGua };
+}
 
     function getLineEntryFor(hex, lineIdx) {
       return hex.lines?.find(line => line.index === lineIdx) || { text: '無爻辭', meaning: '無解釋', score: 5 };
@@ -882,32 +899,31 @@
       return Math.max(0, Math.min(10, value));
     }
 
-    async function loadResources() {
-      try {
-        const [hexResponse, quotesResponse, wuxingResponse, trigramResponse] = await Promise.all([
-          fetch('hexagrams.json').then(res => res.ok ? res.json() : Promise.reject(`hexagrams.json 載入失敗: ${res.status}`)),
-          fetch('quotes.json').then(res => res.ok ? res.json() : Promise.reject(`quotes.json 載入失敗: ${res.status}`)),
-          fetch('wuxing_explanations.json').then(res => res.ok ? res.json() : Promise.reject(`wuxing_explanations.json 載入失敗: ${res.status}`)),
-          fetch('trigram_explanations.json').then(res => res.ok ? res.json() : Promise.reject(`trigram_explanations.json 載入失敗: ${res.status}`))
-        ]);
-        hexagrams = Object.fromEntries(
-          Object.entries(hexResponse).map(([key, value]) => [normalizeKey(key), {
-            name: value.name || key,
-            judgment: value.judgment || { text: '無卦辭', meaning: '無解釋', people: 5, affairs: 5, time: 5, place: 5, object: 5 },
-            symbolism: value.symbolism || { people: 5, affairs: 5, time: 5, place: 5, object: 5 },
-            lines: value.lines || []
-          }])
-        );
-        quotes = Array.isArray(quotesResponse) ? quotesResponse : [];
-        wuxingExplanations = wuxingResponse.relations || {};
-        trigramExplanations = trigramResponse;
-        document.getElementById('subtitle').textContent = quotes[Math.floor(Math.random() * quotes.length)] || '請選擇取卦方式以開始占卜';
-      } catch (error) {
-        console.error('載入 JSON 檔案失敗:', error);
-        alert('無法載入資料，請檢查檔案路徑或格式！');
-        document.getElementById('subtitle').textContent = '資料載入失敗，請檢查網路或檔案';
-      }
-    }
+async function loadResources() {
+  try {
+    const [hexResponse, quotesResponse, wuxingResponse] = await Promise.all([
+      fetch('hexagrams.json').then(res => res.ok ? res.json() : Promise.reject(`hexagrams.json 載入失敗: ${res.status}`)),
+      fetch('quotes.json').then(res => res.ok ? res.json() : Promise.reject(`quotes.json 載入失敗: ${res.status}`)),
+      fetch('wuxing_explanations.json').then(res => res.ok ? res.json() : Promise.reject(`wuxing_explanations.json 載入失敗: ${res.status}`))
+    ]);
+    hexagrams = Object.fromEntries(
+      Object.entries(hexResponse).map(([key, value]) => [normalizeKey(key), {
+        name: value.name || key,
+        judgment: value.judgment || { text: '無卦辭', meaning: '無解釋', people: 5, affairs: 5, time: 5, place: 5, object: 5 },
+        symbolism: value.symbolism || { people: 5, affairs: 5, time: 5, place: 5, object: 5 },
+        lines: value.lines || []
+      }])
+    );
+    quotes = Array.isArray(quotesResponse) ? quotesResponse : [];
+    wuxingExplanations = wuxingResponse.relations || {};
+    console.log('載入的 wuxingExplanations:', wuxingExplanations);
+    document.getElementById('subtitle').textContent = quotes[Math.floor(Math.random() * quotes.length)] || '請選擇取卦方式以開始占卜';
+  } catch (error) {
+    console.error('載入 JSON 檔案失敗:', error);
+    alert('無法載入資料，請檢查檔案路徑或格式！');
+    document.getElementById('subtitle').textContent = '資料載入失敗，請檢查網路或檔案';
+  }
+}
 
     function saveHistory() {
       try {
@@ -1428,40 +1444,24 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
   });
 }
 
-    function getSuggestionForYongKeTi(yongWuxing, tiWuxing) {
-      const keYongWuxing = overcome[yongWuxing];
-      const xiaoHaoYongWuxing = generate[yongWuxing];
-      const shengTiWuxing = Object.keys(generate).find(key => generate[key] === tiWuxing) || '';
+function getSuggestionForYongKeTi(yongWuxing, tiWuxing) {
+  const keYongWuxing = overcome[yongWuxing];
+  const xiaoHaoYongWuxing = generate[yongWuxing];
+  const shengTiWuxing = Object.keys(generate).find(key => generate[key] === tiWuxing) || '';
 
-      const keTrigrams = wuxingToTrigrams[keYongWuxing] || [];
-      const xiaoTrigrams = wuxingToTrigrams[xiaoHaoYongWuxing] || [];
+  let suggestion = '建議尋求以下五行屬性相關的協助來化解：\n';
+  suggestion += `- ${keYongWuxing}：可剋制用卦。\n`;
+  suggestion += `- ${xiaoHaoYongWuxing}：可消耗用卦`;
+  if (xiaoHaoYongWuxing === shengTiWuxing) {
+    suggestion += `，且能生體卦`;
+  }
+  suggestion += `。\n`;
+  if (shengTiWuxing && shengTiWuxing !== xiaoHaoYongWuxing) {
+    suggestion += `- ${shengTiWuxing}：可生體卦。\n`;
+  }
 
-      let suggestion = '建議尋求以下卦象相關人士的協助來化解：\n';
-
-      keTrigrams.forEach(trig => {
-        const desc = trigramExplanations[trig]?.people || '無描述';
-        suggestion += `- ${trig} (${keYongWuxing}) 克制用卦：${desc}\n`;
-      });
-
-      xiaoTrigrams.forEach(trig => {
-        const desc = trigramExplanations[trig]?.people || '無描述';
-        suggestion += `- ${trig} (${xiaoHaoYongWuxing}) 消耗用卦`;
-        if (xiaoHaoYongWuxing === shengTiWuxing) {
-          suggestion += `，且生體卦`;
-        }
-        suggestion += `：${desc}\n`;
-      });
-
-      if (shengTiWuxing && shengTiWuxing !== xiaoHaoYongWuxing) {
-        const shengTrigrams = wuxingToTrigrams[shengTiWuxing] || [];
-        shengTrigrams.forEach(trig => {
-          const desc = trigramExplanations[trig]?.people || '無描述';
-          suggestion += `- ${trig} (${shengTiWuxing}) 生體卦：${desc}\n`;
-        });
-      }
-
-      return suggestion;
-    }
+  return suggestion;
+}
 
     function updateTiGua(nodeId) {
       if (!currentResult) {
@@ -1671,79 +1671,80 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
       }
     }
 
-    function renderDetailedAnalysis(result) {
-      const detailedAnalysis = document.getElementById('detailedAnalysis');
-      if (!detailedAnalysis) {
-        console.error('找不到 detailedAnalysis 元素');
-        return;
+  function renderDetailedAnalysis(result) {
+  const detailedAnalysis = document.getElementById('detailedAnalysis');
+  if (!detailedAnalysis) {
+    console.error('找不到 detailedAnalysis 元素');
+    return;
+  }
+  detailedAnalysis.classList.remove('hidden');
+  detailedAnalysis.innerHTML = '';
+
+  const timestamp = new Date(result.timestamp || '2025-08-25T23:46:00+08:00');
+  const { lunarMonth, season, lunarMonthNumber } = lunarCalendar.gregorianToLunar(timestamp);
+  const { tiGua, yongGua } = getTiYong(result);
+
+  detailedAnalysis.innerHTML += `
+    <h4>詳細分析</h4>
+    <p><strong>占卜時間：</strong> ${result.timestamp}</p>
+    <p><strong>農曆：</strong> ${lunarMonth}（${season}）</p>
+    <p><strong>問題：</strong> ${result.question || '無'}</p>
+    <p><strong>體卦：</strong> ${tiGua.name} (${tiGua.wuxing}, ${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)})</p>
+    <p><strong>用卦：</strong> ${yongGua.name} (${yongGua.wuxing}, ${getWuxingStatus(yongGua.wuxing, lunarMonthNumber)})</p>
+  `;
+
+  const relations = [
+    { name: '本卦上卦', gua: getTrigramInfo(result.uIdx) },
+    { name: '本卦下卦', gua: getTrigramInfo(result.lIdx) },
+    { name: '互卦上卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8) },
+    { name: '互卦下卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8) },
+    { name: '變卦上卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8) },
+    { name: '變卦下卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8) }
+  ];
+
+  relations.forEach(({ name, gua }) => {
+    const relation = getRelation(tiGua.wuxing, gua.wuxing);
+    const status = getWuxingStatus(gua.wuxing, lunarMonthNumber);
+    const relationKey = relationMap[relation];
+    const trigramKey = trigramEnglish[gua.name];
+    const relationData = wuxingExplanations[relationKey] || { display_name: '未知', overall: '無總結', details: {} };
+    const explanationObj = relationData.details[trigramKey] || { title: '無標題', description: '無詳細解釋', love: '', career: '', wealth: '', health: '', relationship: '', life: '', guidance: '' };
+
+    let detailsHtml = '';
+    const categories = ['love', 'career', 'wealth', 'health', 'relationship', 'life', 'guidance'];
+    categories.forEach(category => {
+      if (explanationObj[category]) {
+        detailsHtml += `<p><strong>${category.toUpperCase()}：</strong> ${explanationObj[category]}</p>`;
       }
-      detailedAnalysis.classList.remove('hidden');
-      detailedAnalysis.innerHTML = '';
+    });
 
-      const timestamp = new Date(result.timestamp || '2025-08-25T23:46:00+08:00');
-      const { lunarMonth, season, lunarMonthNumber } = lunarCalendar.gregorianToLunar(timestamp);
-      const { tiGua, yongGua } = getTiYong(result);
-
-      detailedAnalysis.innerHTML += `
-        <h4>詳細分析</h4>
-        <p><strong>占卜時間：</strong> ${result.timestamp}</p>
-        <p><strong>農曆：</strong> ${lunarMonth}（${season}）</p>
-        <p><strong>問題：</strong> ${result.question || '無'}</p>
-        <p><strong>體卦：</strong> ${tiGua.name} (${tiGua.wuxing}, ${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)})</p>
-        <p><strong>用卦：</strong> ${yongGua.name} (${yongGua.wuxing}, ${getWuxingStatus(yongGua.wuxing, lunarMonthNumber)})</p>
-      `;
-
-      const relations = [
-        { name: '本卦上卦', gua: getTrigramInfo(result.uIdx) },
-        { name: '本卦下卦', gua: getTrigramInfo(result.lIdx) },
-        { name: '互卦上卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8) },
-        { name: '互卦下卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8) },
-        { name: '變卦上卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8) },
-        { name: '變卦下卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8) }
-      ];
-
-      relations.forEach(({ name, gua }) => {
-        const relation = getRelation(tiGua.wuxing, gua.wuxing);
-        const status = getWuxingStatus(gua.wuxing, lunarMonthNumber);
-        const relationKey = relationMap[relation];
-        const trigramKey = trigramEnglish[gua.name];
-        const relationData = wuxingExplanations.main[relationKey] || { display_name: '未知', overall: '無總結', details: {} };
-        const explanationObj = relationData.details[trigramKey] || { title: '無標題', description: '無詳細解釋', love: '', career: '', wealth: '', health: '', relationship: '', life: '', guidance: '' };
-
-        let detailsHtml = '';
-        const categories = ['love', 'career', 'wealth', 'health', 'relationship', 'life', 'guidance'];
-        categories.forEach(category => {
-          if (explanationObj[category]) {
-            detailsHtml += `<p><strong>${category.toUpperCase()}：</strong> ${explanationObj[category]}</p>`;
-          }
-        });
-
-        let extra = '';
-        if (relation === '用剋體') {
-          extra = `<p><strong>建議：</strong> ${getSuggestionForYongKeTi(gua.wuxing, tiGua.wuxing)}</p>`;
-        }
-
-        detailedAnalysis.innerHTML += `
-          <div class="wuxing-box">
-            <h5>${name}（${gua.name}, ${gua.wuxing}, ${status}）</h5>
-            <p><strong>關係：</strong> ${relationData.display_name} - ${relationData.overall}</p>
-            <p><strong>標題：</strong> ${explanationObj.title}</p>
-            <p><strong>描述：</strong> ${explanationObj.description}</p>
-            ${detailsHtml}
-            ${extra}
-          </div>
-        `;
-      });
-
-      const combinedRelation = getCombinedRelation(scores);
-      const combinedData = wuxingExplanations.combined[combinedRelation] || { display_name: '未知', details: '無總結' };
-      detailedAnalysis.innerHTML += `
-        <div class="wuxing-box">
-          <h4>綜合吉凶</h4>
-          <p><strong>結果：</strong> ${combinedData.display_name} - ${combinedData.details}</p>
-        </div>
-      `;
+    let extra = '';
+    if (relation === '用剋體') {
+      extra = `<p><strong>建議：</strong> ${getSuggestionForYongKeTi(gua.wuxing, tiGua.wuxing)}</p>`;
     }
+
+    detailedAnalysis.innerHTML += `
+      <div class="wuxing-box">
+        <h5>${name}（${gua.name}, ${gua.wuxing}, ${status}）</h5>
+        <p><strong>關係：</strong> ${relationData.display_name} - ${relationData.overall}</p>
+        <p><strong>標題：</strong> ${explanationObj.title}</p>
+        <p><strong>描述：</strong> ${explanationObj.description}</p>
+        ${detailsHtml}
+        ${extra}
+      </div>
+    `;
+  });
+
+  const scores = relations.map(r => getRelationScore(r.relation));
+  const combinedRelation = getCombinedRelation(scores);
+  const combinedData = wuxingExplanations.combined[combinedRelation] || { display_name: '未知', details: '無總結' };
+  detailedAnalysis.innerHTML += `
+    <div class="wuxing-box">
+      <h4>綜合吉凶</h4>
+      <p><strong>結果：</strong> ${combinedData.display_name} - ${combinedData.details}</p>
+    </div>
+  `;
+}
 
     function getCombinedRelation(scores) {
       const totalScore = scores.reduce((sum, score) => sum + score, 0);
