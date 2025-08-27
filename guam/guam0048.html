@@ -1339,9 +1339,10 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
     const strokeWidth = getWuxingStrength(node.status);
     const symbol = trigramSymbol[node.name] || '';
     const wuxingStatusData = wuxingExplanations.wuxing_status[node.wuxing] || { description: '無', suggestions: {} };
+    // 確保圓形有明確的填充顏色
     svg.innerHTML += `
-      <circle class="wuxing-node ${node.wuxing.toLowerCase()}" cx="${node.x}" cy="${node.y}" r="40" stroke-width="${strokeWidth}" fill="${statusColors[node.status] || '#FFFFFF'}" opacity="0.3" data-id="${node.id}" title="${node.name} (${node.wuxing}, ${node.status}): ${wuxingStatusData.suggestions[node.status] || '無建議'}" />
-      <text class="wuxing-node-text" x="${node.x}" y="${node.y - 15}" fill="${node.id === 'ti' || node.id === 'yong' ? '#0000FF' : '#333'}">${node.name} (${node.wuxing}, ${node.status})</text>
+      <circle class="wuxing-node ${node.wuxing.toLowerCase()}" cx="${node.x}" cy="${node.y}" r="40" stroke="black" stroke-width="${strokeWidth}" fill="${statusColors[node.status] || '#FFFFFF'}" opacity="0.5" data-id="${node.id}" title="${node.name} (${node.wuxing}, ${node.status}): ${wuxingStatusData.suggestions[node.status] || '無建議'}" />
+      <text class="wuxing-node-text" x="${node.x}" y="${node.y - 15}" fill="${node.id === 'ti' || node.id === 'mainLower' ? '#0000FF' : '#333'}">${node.name} (${node.wuxing}, ${node.status})</text>
       <text class="wuxing-node-text" x="${node.x}" y="${node.y}" font-size="20">${symbol}</text>
       <text class="wuxing-node-text" x="${node.x}" y="${node.y + 20}">${node.label}</text>
     `;
@@ -1519,6 +1520,7 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
   svg.querySelectorAll('.wuxing-node').forEach(node => {
     node.addEventListener('click', () => {
       const nodeId = node.getAttribute('data-id');
+      console.log('點擊節點:', nodeId); // 調試用
       updateTiGua(nodeId);
     });
   });
