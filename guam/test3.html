@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <title>張老師易經(梅花心易)</title>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --negative-color: #e74c3c;
+      --positive-color: #4caf50;
+      --yellow-color: #f1c40f;
+      --background-color: #f4f7f9;
+      --card-bg: #ffffff;
+      --border-color: #e0e6ed;
+      --text-color: #333333;
+      --sub-text-color: #7f8c8d;
+      --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.05);
+      --border-radius: 12px;
+      --font-family: 'Noto Sans TC', sans-serif;
+      --wood-color: #27ae60;
+      --fire-color: #e74c3c;
+      --earth-color: #f1c40f;
+      --metal-color: #bdc3c7;
+      --water-color: #3498db;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--background-color);
+      color: var(--text-color);
+      padding: 20px;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-light);
+      padding: 30px;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .main-content {
+      flex: 3;
+      min-width: 600px;
+    }
+
+    .sidebar {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    h1, h2, h3, h4 {
+      color: var(--primary-color);
+    }
+
+    .card {
+      background: var(--background-color);
+      padding: 20px;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border-color);
+    }
+
+    .input-group, .history-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .input-group input[type="number"], .input-group input[type="date"], .input-group input[type="time"] {
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .input-group label {
+      min-width: 60px;
+    }
+
+    button {
+      padding: 10px 15px;
+      background: var(--secondary-color);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #2980b9;
+    }
+
+    .small-btn {
+      padding: 5px 10px;
+      font-size: 14px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .result-section {
+      margin-top: 30px;
+      border-top: 2px solid var(--border-color);
+      padding-top: 20px;
+    }
+
+    .gua-display {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      text-align: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .gua-box {
+      margin: 10px;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+    }
+
+    .analysis-section {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fcfcfc;
+      border-left: 5px solid var(--secondary-color);
+      border-radius: 5px;
+    }
+
+    .analysis-section h4 {
+      margin-top: 0;
+    }
+
+    .history-list {
+      list-style-type: none;
+      padding: 0;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .history-item:hover {
+      background: #e9ecef;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="main-content">
+      <h1>梅花心易卜卦程式</h1>
+      <p>請輸入或選擇以下任一方式進行占卜：</p>
+      <div class="card">
+        <h2>數字起卦</h2>
+        <div class="input-group">
+          <label>上卦數：</label><input type="number" id="upper-num" min="1" max="999" value="1" />
+          <label>下卦數：</label><input type="number" id="lower-num" min="1" max="999" value="2" />
+          <label>動爻數：</label><input type="number" id="moving-num" min="1" max="999" value="3" />
+          <button id="btnNumber">取卦</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>隨機起卦</h2>
+        <div class="input-group">
+          <button id="btnRandomNumber">隨機取卦</button>
+          <span id="random-result"></span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>手動起卦 (輸入三組數字)</h2>
+        <div class="input-group">
+          <label>上卦：</label>
+          <input type="number" id="manual-upper-1" value="1" />
+          <input type="number" id="manual-upper-2" value="2" />
+          <input type="number" id="manual-upper-3" value="3" />
+          <label>下卦：</label>
+          <input type="number" id="manual-lower-1" value="4" />
+          <input type="number" id="manual-lower-2" value="5" />
+          <input type="number" id="manual-lower-3" value="6" />
+          <label>動爻：</label><input type="number" id="manual-moving-num" value="7" />
+          <button id="btnManual">取卦</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>時間起卦</h2>
+        <div class="input-group">
+          <label><input type="radio" name="time-method" value="modern" checked>公曆</label>
+          <label><input type="radio" name="time-method" value="traditional">農曆</label>
+        </div>
+        <div id="modern-time-inputs">
+          <div class="input-group">
+            <label>日期：</label><input type="date" id="modern-date" />
+            <label>時間：</label><input type="time" id="modern-time" />
+          </div>
+        </div>
+        <div id="traditional-time-inputs" class="hidden">
+          <div class="input-group">
+            <label>年份：</label><input type="number" id="traditional-upper-num" />
+            <label>月日時：</label><input type="number" id="traditional-lower-num" />
+            <label>總數：</label><input type="number" id="traditional-moving-num" />
+          </div>
+        </div>
+        <div class="input-group">
+          <button id="btnTime">取卦</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>物象起卦 (長寬高或重量)</h2>
+        <div class="input-group">
+          <label>物象上卦：</label><input type="number" id="img-width" value="1" />
+          <label>物象下卦：</label><input type="number" id="img-height" value="2" />
+          <button id="btnImage">取卦</button>
+        </div>
+      </div>
+      <div id="result" class="hidden result-section">
+        <h2>卜卦結果</h2>
+        <p id="quote"></p>
+        <div class="gua-display">
+          <div class="gua-box">
+            <h4>本卦</h4>
+            <div id="main-gua-container" class="gua-svg-container">
+              <svg id="main-gua-svg" width="120" height="140"></svg>
+            </div>
+            <h4 id="main-gua-name"></h4>
+          </div>
+          <div class="gua-box hidden" id="hu-gua-container">
+            <h4>互卦</h4>
+            <div id="hu-gua-container-svg" class="gua-svg-container">
+              <svg id="hu-gua-svg" width="120" height="140"></svg>
+            </div>
+            <h4 id="hu-gua-name"></h4>
+          </div>
+          <div class="gua-box hidden" id="bian-gua-container">
+            <h4>變卦</h4>
+            <div id="bian-gua-container-svg" class="gua-svg-container">
+              <svg id="bian-gua-svg" width="120" height="140"></svg>
+            </div>
+            <h4 id="bian-gua-name"></h4>
+          </div>
+        </div>
+        <div id="result-details" class="card"></div>
+        <div id="wuxing-analysis" class="analysis-section"></div>
+        <div id="detailed-analysis" class="analysis-section"></div>
+        <div class="history-controls">
+          <button id="downloadSvgBtn">下載卦象圖 (SVG)</button>
+          <button id="openSvgWindowBtn">在新視窗開啟卦象圖</button>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="card">
+        <h2>歷史紀錄</h2>
+        <div class="history-controls">
+          <button id="clearHistoryBtn">清除全部</button>
+          <button id="exportHistoryBtn">匯出</button>
+          <input type="file" id="importHistoryInput" accept=".json" class="hidden" />
+          <button id="importHistoryBtn" onclick="document.getElementById('importHistoryInput').click();">匯入</button>
+        </div>
+        <ul id="history-list" class="history-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let wuxingExplanations = {};
+    let trigramExplanations = {};
+    let hexagrams = {};
+    let quotes = [];
+    let guaTable = {};
+    let hexagramNameMap = {};
+    let currentResult = null;
+    let history = [];
+
+    const TI_GUA_INDEX = 0;
+    const YONG_GUA_INDEX = 1;
+    const HUGUA_INDEX = 2;
+    const BIANGUA_INDEX = 3;
+
+    function loadHistory() {
+      const savedHistory = localStorage.getItem('guaHistory');
+      if (savedHistory) {
+        history = JSON.parse(savedHistory);
+        renderHistory();
+      }
+    }
+
+    function saveHistory() {
+      localStorage.setItem('guaHistory', JSON.stringify(history));
+    }
+
+    function fetchJSON(url) {
+      return fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .catch(e => {
+          console.error(`無法載入 ${url}:`, e);
+          return {};
+        });
+    }
+
+    async function loadData() {
+      [wuxingExplanations, trigramExplanations, hexagrams, quotes] = await Promise.all([
+        fetchJSON('wuxing_explanations.json'),
+        fetchJSON('trigram_explanations.json'),
+        fetchJSON('hexagrams.json'),
+        fetchJSON('quotes.json')
+      ]);
+
+      if (Object.keys(hexagrams).length > 0) {
+        hexagramNameMap = Object.entries(hexagrams).reduce((acc, [name, data]) => {
+          acc[data.id] = name;
+          return acc;
+        }, {});
+      }
+
+      if (Object.keys(trigramExplanations).length > 0) {
+        guaTable = Object.entries(trigramExplanations).reduce((acc, [name, data]) => {
+          acc[data.id] = { name: name, wuxing: data.wuxing };
+          return acc;
+        }, {});
+      }
+
+      console.log("所有資料載入完成。");
+    }
+
+    function getGuaName(lines) {
+      if (!hexagrams) return '未知';
+      const hexagramId = lines.join('');
+      return hexagramNameMap[hexagramId] || '未知';
+    }
+
+    function getTrigramName(lines) {
+      const trigramId = lines.slice(0, 3).join('');
+      return guaTable[trigramId] ? guaTable[trigramId].name : '未知';
+    }
+
+    function getWuxingRelation(tiWuxing, yongWuxing) {
+      const wuxingRelations = {
+        '金': { '木': '用剋體', '火': '體剋用', '土': '用生體', '金': '比和', '水': '體生用' },
+        '木': { '金': '體剋用', '木': '比和', '水': '用生體', '火': '體生用', '土': '用剋體' },
+        '水': { '金': '體生用', '木': '用生體', '水': '比和', '火': '用剋體', '土': '用剋體' },
+        '火': { '金': '用剋體', '木': '用生體', '水': '體剋用', '火': '比和', '土': '用生體' },
+        '土': { '金': '體生用', '木': '用剋體', '水': '用剋體', '火': '用生體', '土': '比和' }
+      };
+      return wuxingRelations[tiWuxing]?.[yongWuxing] || '未知';
+    }
+
+    function getRelationType(relation) {
+      if (relation.includes('生')) return 'generate';
+      if (relation.includes('剋')) return 'restrain';
+      return 'compare';
+    }
+
+    function generateGua(upperLines, lowerLines, totalSum, source) {
+      const tiLines = upperLines;
+      const yongLines = lowerLines;
+      const movingLineIndex = (totalSum % 6) === 0 ? 5 : (totalSum % 6) - 1;
+
+      const mainGuaId = tiLines.concat(yongLines).join('');
+      const tiGuaId = tiLines.join('');
+      const yongGuaId = yongLines.join('');
+
+      const mainGuaName = hexagramNameMap[mainGuaId];
+      const tiGuaName = guaTable[tiGuaId]?.name;
+      const yongGuaName = guaTable[yongGuaId]?.name;
+
+      const tiWuxing = guaTable[tiGuaId]?.wuxing;
+      const yongWuxing = guaTable[yongGuaId]?.wuxing;
+      const wuxingRelation = getWuxingRelation(tiWuxing, yongWuxing);
+      const relationType = getRelationType(wuxingRelation);
+
+      let mainHuLines = [];
+      if (guaTable[tiGuaId] && guaTable[yongGuaId]) {
+        mainHuLines = [
+          tiLines[1], tiLines[2], yongLines[0],
+          tiLines[2], yongLines[0], yongLines[1]
+        ].join('').split('').map(Number);
+      }
+      const huGuaId = mainHuLines.join('');
+      const huGuaName = hexagramNameMap[huGuaId] || '未知';
+
+      const bianGuaLines = [...tiLines, ...yongLines];
+      let bianGuaName = null;
+      let wuxingBianRelation = null;
+      let relationBianType = null;
+      
+      if (movingLineIndex !== -1 && bianGuaLines[movingLineIndex]) {
+          bianGuaLines[movingLineIndex] = bianGuaLines[movingLineIndex] === 6 ? 7 : (bianGuaLines[movingLineIndex] === 9 ? 8 : bianGuaLines[movingLineIndex]);
+          const upperBian = bianGuaLines.slice(0, 3).join('');
+          const lowerBian = bianGuaLines.slice(3, 6).join('');
+          const bianGuaId = bianGuaLines.join('');
+          bianGuaName = hexagramNameMap[bianGuaId] || '未知';
+
+          const tiBianWuxing = guaTable[upperBian]?.wuxing;
+          const yongBianWuxing = guaTable[lowerBian]?.wuxing;
+          wuxingBianRelation = getWuxingRelation(tiBianWuxing, yongBianWuxing);
+          relationBianType = getRelationType(wuxingBianRelation);
+      }
+
+      return {
+        source, ti_lines: tiLines, yong_lines: yongLines,
+        ti_name: tiGuaName, yong_name: yongGuaName,
+        main_lines: tiLines.concat(yongLines), main_name: mainGuaName,
+        ti_wuxing: tiWuxing, yong_wuxing: yongWuxing,
+        wuxing_relation: wuxingRelation, relation_type: relationType,
+        moving_line_index: movingLineIndex,
+        hu_lines: mainHuLines, hu_name: huGuaName,
+        bian_lines: bianGuaLines, bian_name: bianGuaName,
+        bian_wuxing_relation: wuxingBianRelation, bian_relation_type: relationBianType
+      };
+    }
+
+    function renderResult(result) {
+      if (!result) return;
+      document.getElementById('result').classList.remove('hidden');
+
+      const renderLines = (elementId, lines) => {
+        const svg = d3.select(`#${elementId}`);
+        svg.selectAll('*').remove();
+        const lineData = lines.map((line, i) => ({
+          value: line,
+          index: i,
+          isYang: line === 9 || line === 7,
+          isMoving: line === 6 || line === 9
+        }));
+
+        const lineGroups = svg.selectAll('.gua-line').data(lineData).enter().append('g').attr('transform', (d, i) => `translate(0, ${i * 20})`);
+        const lineLength = 100;
+        const lineGap = 10;
+        lineGroups.each(function(d) {
+          const group = d3.select(this);
+          if (d.isYang) {
+            group.append('line').attr('x1', 0).attr('y1', 0).attr('x2', lineLength).attr('y2', 0).attr('stroke', '#333').attr('stroke-width', 3);
+          } else {
+            group.append('line').attr('x1', 0).attr('y1', 0).attr('x2', (lineLength - lineGap) / 2).attr('y2', 0).attr('stroke', '#333').attr('stroke-width', 3);
+            group.append('line').attr('x1', (lineLength + lineGap) / 2).attr('y1', 0).attr('x2', lineLength).attr('y2', 0).attr('stroke', '#333').attr('stroke-width', 3);
+          }
+          if (d.isMoving) {
+            group.append('text').attr('x', lineLength + 10).attr('y', 0).attr('dy', '0.35em').attr('fill', 'var(--negative-color)').text(d.value === 6 ? '×' : '○').style('font-size', '16px');
+          }
+        });
+      };
+
+      renderLines('main-gua-svg', result.main_lines);
+      document.getElementById('main-gua-name').textContent = result.main_name;
+      document.getElementById('ti-gua-name').textContent = result.ti_name;
+      document.getElementById('yong-gua-name').textContent = result.yong_name;
+      document.getElementById('hu-gua-name').textContent = result.hu_name;
+      document.getElementById('bian-gua-name').textContent = result.bian_name || '無變卦';
+
+      if (result.hu_lines && result.hu_lines.length === 6) {
+        document.getElementById('hu-gua-container').classList.remove('hidden');
+        renderLines('hu-gua-svg', result.hu_lines);
+      } else {
+        document.getElementById('hu-gua-container').classList.add('hidden');
+      }
+
+      if (result.bian_lines) {
+        document.getElementById('bian-gua-container').classList.remove('hidden');
+        renderLines('bian-gua-svg', result.bian_lines);
+      } else {
+        document.getElementById('bian-gua-container').classList.add('hidden');
+      }
+
+      renderWuxingAnalysis(result);
+      renderDetailedAnalysis(result);
+      updateResultDetails(result);
+    }
+
+    function renderWuxingAnalysis(result) {
+      const wuxingAnalysisDiv = document.getElementById('wuxing-analysis');
+      wuxingAnalysisDiv.innerHTML = '';
+      const mainAnalysis = wuxingExplanations.relations.main;
+      const explanation = mainAnalysis[result.wuxing_relation];
+      if (explanation) {
+        const titleEl = document.createElement('h3');
+        titleEl.textContent = `${explanation.display_name} - ${result.ti_name}(${result.ti_wuxing}) 與 ${result.yong_name} (${result.yong_wuxing})`;
+        const overallEl = document.createElement('p');
+        overallEl.textContent = explanation.overall;
+        wuxingAnalysisDiv.appendChild(titleEl);
+        wuxingAnalysisDiv.appendChild(overallEl);
+        if (explanation.details) {
+          const detailsList = document.createElement('ul');
+          for (const key in explanation.details) {
+            const detail = explanation.details[key];
+            const item = document.createElement('li');
+            item.innerHTML = `<strong>${detail.title}</strong>: ${detail.description}`;
+            detailsList.appendChild(item);
+          }
+          wuxingAnalysisDiv.appendChild(detailsList);
+        }
+      } else {
+          const titleEl = document.createElement('h3');
+          titleEl.textContent = `無法顯示五行分析：資料路徑不符`;
+          const overallEl = document.createElement('p');
+          overallEl.textContent = `請檢查 wuxing_explanations.json 檔案中的五行關係鍵名，例如 "用生體" 或 "體剋用"。`;
+          wuxingAnalysisDiv.appendChild(titleEl);
+          wuxingAnalysisDiv.appendChild(overallEl);
+      }
+    }
+
+    function renderDetailedAnalysis(result) {
+      const detailedAnalysisDiv = document.getElementById('detailed-analysis');
+      detailedAnalysisDiv.innerHTML = '';
+
+      const createSection = (title, content, color = '') => {
+        const section = document.createElement('div');
+        section.className = 'analysis-section';
+        const heading = document.createElement('h4');
+        heading.textContent = title;
+        if (color) heading.style.color = color;
+        section.appendChild(heading);
+        const contentP = document.createElement('p');
+        contentP.innerHTML = content;
+        section.appendChild(contentP);
+        detailedAnalysisDiv.appendChild(section);
+      };
+
+      const mainHexagram = hexagrams[result.main_name];
+      if (mainHexagram) {
+        createSection('卦象總論', mainHexagram.judgment.overall);
+        createSection('卦辭', mainHexagram.judgment.overall);
+      }
+      const movingLine = result.moving_line_index !== -1 ? mainHexagram.lines[result.moving_line_index] : null;
+      if (movingLine) {
+        createSection('動爻解析', `${movingLine.text} - ${movingLine.meaning}`);
+      }
+      if (result.bian_name) {
+        const bianHexagram = hexagrams[result.bian_name];
+        if (bianHexagram) {
+          createSection('變卦總論', bianHexagram.judgment.overall);
+          createSection('變卦卦辭', bianHexagram.judgment.overall);
+        }
+      }
+      if (result.ti_name && trigramExplanations[result.ti_name]) {
+        const explanation = trigramExplanations[result.ti_name];
+        createSection('體卦 (主體、內在) 解析', `
+          <p><strong>感情:</strong> ${explanation.love}</p>
+          <p><strong>事業:</strong> ${explanation.career}</p>
+          <p><strong>財富:</strong> ${explanation.wealth}</p>
+        `);
+      }
+      if (result.yong_name && trigramExplanations[result.yong_name]) {
+        const explanation = trigramExplanations[result.yong_name];
+        createSection('用卦 (外在、變動) 解析', `
+          <p><strong>感情:</strong> ${explanation.love}</p>
+          <p><strong>事業:</strong> ${explanation.career}</p>
+          <p><strong>財富:</strong> ${explanation.wealth}</p>
+        `);
+      }
+    }
+
+    function updateResultDetails(result) {
+      const detailsContainer = document.getElementById('result-details');
+      detailsContainer.innerHTML = '';
+      const details = {
+        '起卦時間': new Date().toLocaleString(),
+        '起卦來源': result.source,
+        '上卦': `${result.ti_name} (${result.ti_wuxing})`,
+        '下卦': `${result.yong_name} (${result.yong_wuxing})`,
+        '本卦': `${result.main_name}`,
+        '互卦': `${result.hu_name}`,
+        '動爻': result.moving_line_index !== -1 ? `第${result.moving_line_index + 1}爻` : '無動爻',
+        '變卦': result.bian_name ? `${result.bian_name}` : '無變卦'
+      };
+      for (const key in details) {
+        const p = document.createElement('p');
+        p.innerHTML = `<strong>${key}:</strong> ${details[key]}`;
+        detailsContainer.appendChild(p);
+      }
+    }
+
+    function generate(method, data) {
+      let result;
+      if (method === 'number') {
+        const num1 = parseInt(document.getElementById('upper-num').value);
+        const num2 = parseInt(document.getElementById('lower-num').value);
+        const num3 = parseInt(document.getElementById('moving-num').value);
+        if (isNaN(num1) || isNaN(num2) || isNaN(num3)) {
+          alert('請輸入三個有效數字！');
+          return;
+        }
+        const upperLines = Array(3).fill(0).map(() => (num1 % 8 === 0 ? 8 : num1 % 8));
+        const lowerLines = Array(3).fill(0).map(() => (num2 % 8 === 0 ? 8 : num2 % 8));
+        result = generateGua(upperLines, lowerLines, num3, '數字起卦');
+      } else if (method === 'random') {
+        const random1 = Math.floor(Math.random() * 8) + 1;
+        const random2 = Math.floor(Math.random() * 8) + 1;
+        const random3 = Math.floor(Math.random() * 6) + 1;
+        document.getElementById('random-result').textContent = `生成數字：${random1}, ${random2}, ${random3}`;
+        const upperLines = Array(3).fill(0).map(() => (random1 % 8 === 0 ? 8 : random1 % 8));
+        const lowerLines = Array(3).fill(0).map(() => (random2 % 8 === 0 ? 8 : random2 % 8));
+        result = generateGua(upperLines, lowerLines, random3, '隨機數字起卦');
+      } else if (method === 'manual') {
+        const upperLines = [
+          parseInt(document.getElementById('manual-upper-1').value),
+          parseInt(document.getElementById('manual-upper-2').value),
+          parseInt(document.getElementById('manual-upper-3').value)
+        ];
+        const lowerLines = [
+          parseInt(document.getElementById('manual-lower-1').value),
+          parseInt(document.getElementById('manual-lower-2').value),
+          parseInt(document.getElementById('manual-lower-3').value)
+        ];
+        const movingNum = parseInt(document.getElementById('manual-moving-num').value);
+        result = generateGua(upperLines, lowerLines, movingNum, '手動起卦');
+      } else if (method === 'time') {
+        const selectedTimeMethod = document.querySelector('input[name="time-method"]:checked').value;
+        let upperNum, lowerNum, movingNum;
+        if (selectedTimeMethod === 'modern') {
+          const date = new Date(document.getElementById('modern-date').value + 'T' + document.getElementById('modern-time').value);
+          if (isNaN(date.getTime())) {
+            alert('請輸入有效的時間！');
+            return;
+          }
+          upperNum = date.getFullYear() + date.getMonth() + date.getDate();
+          lowerNum = date.getHours() + date.getMinutes() + date.getSeconds();
+          movingNum = date.getFullYear() + date.getMonth() + date.getDate() + date.getHours() + date.getMinutes() + date.getSeconds();
+        } else {
+          upperNum = parseInt(document.getElementById('traditional-upper-num').value);
+          lowerNum = parseInt(document.getElementById('traditional-lower-num').value);
+          movingNum = parseInt(document.getElementById('traditional-moving-num').value);
+        }
+        result = generateGua(
+          Array(3).fill(0).map(() => (upperNum % 8 === 0 ? 8 : upperNum % 8)),
+          Array(3).fill(0).map(() => (lowerNum % 8 === 0 ? 8 : lowerNum % 8)),
+          movingNum,
+          '時間起卦'
+        );
+      } else if (method === 'image') {
+        const imgWidth = parseInt(document.getElementById('img-width').value) || 0;
+        const imgHeight = parseInt(document.getElementById('img-height').value) || 0;
+        const sum = imgWidth + imgHeight;
+        const upperNum = sum;
+        const lowerNum = sum;
+        const movingNum = sum;
+        const upperLines = Array(3).fill(0).map(() => (upperNum % 8 === 0 ? 8 : upperNum % 8));
+        const lowerLines = Array(3).fill(0).map(() => (lowerNum % 8 === 0 ? 8 : lowerNum % 8));
+        result = generateGua(upperLines, lowerLines, movingNum, '物象起卦');
+      }
+
+      if (result) {
+        currentResult = result;
+        history.unshift(result);
+        if (history.length > 10) history.pop();
+        saveHistory();
+        renderResult(result);
+        renderHistory();
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        document.getElementById('quote').textContent = randomQuote;
+      }
+    }
+
+    function renderHistory() {
+      const historyList = document.getElementById('history-list');
+      historyList.innerHTML = '';
+      history.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        li.innerHTML = `
+          <span><strong>${index + 1}.</strong> 本卦: ${item.main_name} | 變卦: ${item.bian_name || '無'} (${item.source})</span>
+          <button class="small-btn" onclick="showHistoryItem(${index})">查看</button>
+        `;
+        historyList.appendChild(li);
+      });
+    }
+
+    function showHistoryItem(index) {
+      currentResult = history[index];
+      renderResult(currentResult);
+      document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function exportHistory() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(history, null, 2));
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", "gua_history.json");
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+    }
+
+    function importHistory(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedHistory = JSON.parse(e.target.result);
+          if (Array.isArray(importedHistory)) {
+            history = importedHistory;
+            saveHistory();
+            renderHistory();
+            alert('歷史記錄匯入成功！');
+          } else {
+            alert('檔案格式錯誤，請選擇有效的 JSON 歷史記錄檔。');
+          }
+        } catch (error) {
+          alert('匯入失敗：' + error.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function downloadSvg() {
+      const svgElement = document.getElementById('main-gua-svg');
+      const svgData = new XMLSerializer().serializeToString(svgElement);
+      const blob = new Blob([svgData], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'gua_diagram.svg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function openSvgInNewWindow() {
+      const svgElement = document.getElementById('main-gua-svg');
+      const svgData = new XMLSerializer().serializeToString(svgElement);
+      const svgWindow = window.open('', '_blank');
+      svgWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head><title>卦象圖</title></head>
+        <body>${svgData}</body>
+        </html>
+      `);
+      svgWindow.document.close();
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadData();
+      loadHistory();
+
+      document.getElementById('btnNumber').addEventListener('click', () => {
+        generate('number', {});
+      });
+      document.getElementById('btnRandomNumber').addEventListener('click', () => {
+        generate('random', {});
+      });
+      document.getElementById('btnManual').addEventListener('click', () => {
+        generate('manual', {});
+      });
+      document.getElementById('btnTime').addEventListener('click', () => {
+        generate('time', {});
+      });
+      document.getElementById('btnImage').addEventListener('click', () => {
+        generate('image', {});
+      });
+
+      document.getElementById('judgeBtn').addEventListener('click', () => {
+        if (!currentResult) {
+          alert('請先進行占卜以生成卦象！');
+          return;
+        }
+        renderWuxingAnalysis(currentResult);
+        renderDetailedAnalysis(currentResult);
+      });
+
+      document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+        if (confirm('確定要清除所有歷史記錄嗎？')) {
+          history = [];
+          saveHistory();
+          renderHistory();
+        }
+      });
+
+      document.getElementById('exportHistoryBtn').addEventListener('click', () => {
+        exportHistory();
+      });
+
+      document.getElementById('importHistoryBtn').addEventListener('click', () => {
+        const input = document.getElementById('importHistoryInput');
+        if (input.files.length > 0) {
+          importHistory(input.files[0]);
+        } else {
+          alert('請選擇要匯入的檔案！');
+        }
+      });
+
+      document.getElementById('downloadSvgBtn').addEventListener('click', () => {
+        downloadSvg();
+      });
+
+      document.getElementById('openSvgWindowBtn').addEventListener('click', () => {
+        openSvgInNewWindow();
+      });
+
+      document.querySelectorAll('input[name="time-method"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          const modernInputs = document.getElementById('modern-time-inputs');
+          const traditionalInputs = document.getElementById('traditional-time-inputs');
+          if (radio.value === 'modern') {
+            modernInputs.classList.remove('hidden');
+            traditionalInputs.classList.add('hidden');
+          } else {
+            modernInputs.classList.add('hidden');
+            traditionalInputs.classList.remove('hidden');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
