@@ -218,7 +218,6 @@
       stroke: var(--primary-color);
       stroke-width: 2;
       transition: all 0.3s ease;
-      animation: pulse 2s infinite;
     }
 
     .wuxing-node.wood { fill: var(--wood-color); }
@@ -362,12 +361,6 @@
     .summary-box p {
       margin-bottom: 5px;
     }
-
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
   </style>
 </head>
 <body>
@@ -383,16 +376,16 @@
     </div>
     <div id="number" class="tab-content active">
       <div class="row">
-        <label>上卦數字(100-999)：</label>
-        <input id="numUpper" type="number" min="100" max="999" />
+        <label>上卦數字(正整數)：</label>
+        <input id="numUpper" type="number" min="0" />
       </div>
       <div class="row">
-        <label>下卦數字(100-999)：</label>
-        <input id="numLower" type="number" min="100" max="999" />
+        <label>下卦數字(正整數)：</label>
+        <input id="numLower" type="number" min="0" />
       </div>
       <div class="row">
-        <label>動爻數字(100-999)：</label>
-        <input id="numMoving" type="number" min="100" max="999" />
+        <label>動爻數字(正整數)：</label>
+        <input id="numMoving" type="number" min="0" />
       </div>
       <div class="row">
         <label>問題（可選）：</label>
@@ -402,7 +395,7 @@
         <button id="btnNumber" class="primary">數字取卦</button>
         <button id="btnRandomNumber" class="primary">亂數取卦</button>
       </div>
-      <div class="hint">說明：輸入三組100-999的數字，分別用於計算上卦、下卦與動爻，或點擊「亂數取卦」自動生成數字。數字經模數運算轉換為卦象。</div>
+      <div class="hint">說明：輸入三組正整數，分別用於計算上卦、下卦與動爻，或點擊「亂數取卦」自動生成數字。數字經模數運算轉換為卦象。</div>
     </div>
     <div id="manual" class="tab-content">
       <div class="row">
@@ -1176,7 +1169,8 @@
         <div class="hint">${description}</div>
       `;
     }
-   // 渲染五行圖表（修正後，移除動畫並修改標題）
+
+    // 渲染五行圖表
     function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
       const svg = document.getElementById('wuxingSvg');
       svg.innerHTML = `
@@ -1213,6 +1207,7 @@
         { id: 'changeLower', name: changeLowerGua.name, wuxing: changeLowerGua.wuxing, symbol: changeLowerGua.symbol, x: 600, y: 300, label: '變卦下卦', status: getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber) }
       ];
 
+//?????????????????????????????????????????????????????????????????????????????????????????????????????????????????
       nodes.forEach(node => {
         const strokeWidth = getWuxingStrength(node.status);
         const wuxingClass = WUXING_COLORS[node.wuxing] || 'water';
