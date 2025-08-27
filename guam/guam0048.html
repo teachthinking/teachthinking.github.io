@@ -334,6 +334,54 @@
       color: var(--text-color);
       font-weight: 600;
     }
+
+#wuxingSvg {
+  display: block;
+  margin: 20px auto;
+  background-color: #f9f9f9;
+}
+
+.wuxing-node {
+  transition: opacity 0.3s;
+}
+
+.wuxing-node:hover {
+  opacity: 0.7;
+}
+
+.wuxing-node-text {
+  font-size: 12px;
+  font-family: Arial, sans-serif;
+  text-anchor: middle;
+}
+
+.wuxing-edge-generate {
+  stroke: var(--positive-color);
+  stroke-width: 2;
+}
+
+.wuxing-edge-overcome {
+  stroke: var(--negative-color);
+  stroke-width: 2;
+}
+
+.wuxing-edge-harmony {
+  stroke: var(--secondary-color);
+  stroke-width: 2;
+}
+
+.wuxing-edge-label {
+  font-size: 10px;
+  fill: #333;
+  text-anchor: middle;
+}
+
+.wuxing-edge-generate:hover,
+.wuxing-edge-overcome:hover,
+.wuxing-edge-harmony:hover {
+  stroke-width: 3;
+}
+    
   </style>
 </head>
 <body>
