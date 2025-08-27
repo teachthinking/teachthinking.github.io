@@ -861,6 +861,10 @@
       }
     }
 
+
+
+
+    
 function getTiYong(result) {
   const moving = result.moving || [];
   const upperIdx = result.uIdx;
@@ -869,25 +873,21 @@ function getTiYong(result) {
   let tiGua, yongGua;
 
   if (moving.length === 0) {
-    // 無動爻：下卦為體卦，上卦為用卦
     tiGua = getTrigramInfo(lowerIdx);
     yongGua = getTrigramInfo(upperIdx);
   } else {
-    // 計算上下卦的動爻數量
-    const upperMovingCount = moving.filter(m => m > 3).length;
-    const lowerMovingCount = moving.filter(m => m <= 3).length;
-
-    if (upperMovingCount >= lowerMovingCount) {
-      // 上卦動爻數量較多（或相等時優先上卦）
-      yongGua = getTrigramInfo(upperIdx); // 上卦為用卦
-      tiGua = getTrigramInfo(lowerIdx);   // 下卦為體卦
+    const maxMoving = Math.max(...moving);
+    console.log('最高動爻:', maxMoving);
+    if (maxMoving < 3) {
+      yongGua = getTrigramInfo(upperIdx);
+      tiGua = getTrigramInfo(lowerIdx);
     } else {
-      // 下卦動爻數量較多
-      yongGua = getTrigramInfo(lowerIdx); // 下卦為用卦
-      tiGua = getTrigramInfo(upperIdx);   // 上卦為體卦
+      yongGua = getTrigramInfo(lowerIdx);
+      tiGua = getTrigramInfo(upperIdx);
     }
   }
 
+  console.log('體卦:', tiGua.name, '用卦:', yongGua.name);
   return { tiGua, yongGua };
 }
 
