@@ -1386,10 +1386,11 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
   nodes.forEach(node => {
     const strokeWidth = getWuxingStrength(node.status);
     const symbol = trigramSymbol[node.name] || '';
-    const wuxingStatusData = wuxingExplanations.wuxing_status[node.wuxing] || { description: '無', suggestions: {} };
-    // 確保圓形有明確的填充顏色
+    const wuxingStatusData = wuxingExplanations?.wuxing_status?.[node.wuxing] || { description: '無', suggestions: {} };
+    const suggestion = wuxingStatusData.suggestions?.[node.status] || '無建議';
+    console.log('渲染節點:', node.name, '五行:', node.wuxing, '狀態:', node.status, '顏色:', statusColors[node.status], '建議:', suggestion); // 調試用
     svg.innerHTML += `
-      <circle class="wuxing-node ${node.wuxing.toLowerCase()}" cx="${node.x}" cy="${node.y}" r="40" stroke="black" stroke-width="${strokeWidth}" fill="${statusColors[node.status] || '#FFFFFF'}" opacity="0.5" data-id="${node.id}" title="${node.name} (${node.wuxing}, ${node.status}): ${wuxingStatusData.suggestions[node.status] || '無建議'}" />
+      <circle class="wuxing-node ${node.wuxing.toLowerCase()}" cx="${node.x}" cy="${node.y}" r="40" stroke="black" stroke-width="${strokeWidth}" fill="${statusColors[node.status] || '#FFFFFF'}" opacity="0.5" data-id="${node.id}" title="${node.name} (${node.wuxing}, ${node.status}): ${suggestion}" />
       <text class="wuxing-node-text" x="${node.x}" y="${node.y - 15}" fill="${node.id === 'ti' || node.id === 'mainLower' ? '#0000FF' : '#333'}">${node.name} (${node.wuxing}, ${node.status})</text>
       <text class="wuxing-node-text" x="${node.x}" y="${node.y}" font-size="20">${symbol}</text>
       <text class="wuxing-node-text" x="${node.x}" y="${node.y + 20}">${node.label}</text>
@@ -1399,10 +1400,11 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
   // Define edges for body-use relationship
   const edges = [];
   const yongGua = nodes.find(n => n.id !== 'ti' && (n.id === 'mainUpper' || n.id === 'mainLower')); // Assume yongGua is mainUpper or mainLower
+  console.log('用卦:', yongGua ? yongGua.name : '未找到'); // 調試用
   if (yongGua) {
     const relation = getRelation(tiGua.wuxing, yongGua.wuxing);
+    const relationData = wuxingExplanations?.[relationMap[relation]] || { overall: '未知' };
     let className, source, target, markers;
-    const relationData = wuxingExplanations[relationMap[relation]] || { overall: '未知' };
     if (relation === '用生體') {
       className = 'wuxing-edge-generate';
       source = yongGua.id;
@@ -1442,7 +1444,7 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
   if (huRelation !== '未知') {
     let huClassName, huSource, huTarget, huMarkers;
     const huStrokeWidth = getWuxingStrength(getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber));
-    const huRelationData = wuxingExplanations[relationMap[huRelation]] || { overall: '未知' };
+    const huRelationData = wuxingExplanations?.[relationMap[huRelation]] || { overall: '未知' };
     if (huRelation === '用生體') {
       huClassName = 'wuxing-edge-generate';
       huSource = 'huLower';
@@ -1475,8 +1477,8 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
   // Add edges for changing hexagrams (upper and lower) with dashed lines
   const changeUpperRelation = getRelation(tiGua.wuxing, changeUpperGua.wuxing);
   const changeLowerRelation = getRelation(tiGua.wuxing, changeLowerGua.wuxing);
-  const changeUpperRelationData = wuxingExplanations.change_influences.upper_change[changeUpperRelation] || { overall: '未知' };
-  const changeLowerRelationData = wuxingExplanations.change_influences.lower_change[changeLowerRelation] || { overall: '未知' };
+  const changeUpperRelationData = wuxingExplanations?.change_influences?.upper_change?.[changeUpperRelation] || { overall: '未知' };
+  const changeLowerRelationData = wuxingExplanations?.change_influences?.lower_change?.[changeLowerRelation] || { overall: '未知' };
 
   if (changeUpperRelation !== '比和' && changeUpperRelation !== '體用同宮') {
     let changeClassName, changeSource, changeTarget, changeMarkers;
@@ -1526,7 +1528,7 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
     } else if (changeLowerRelation === '體剋用') {
       changeClassName = 'wuxing-edge-overcome';
       changeSource = 'ti';
-      changeTarget = 'changeLower';
+      target = 'changeLower';
       changeMarkers = { end: 'url(#arrow-overcome)' };
     }
     edges.push({ source: changeSource, target: changeTarget, className: changeClassName, label: changeLowerRelation, markers: changeMarkers, strokeWidth: changeStrokeWidth, strokeDasharray: '5,5', title: `下卦變卦影響: ${changeLowerRelationData.overall}` });
@@ -1565,11 +1567,19 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
   `;
 
   // Attach event listeners to nodes
-  svg.querySelectorAll('.wuxing-node').forEach(node => {
+  const wuxingNodes = svg.querySelectorAll('.wuxing-node');
+  console.log('找到的節點數:', wuxingNodes.length); // 調試用
+  wuxingNodes.forEach(node => {
+    const nodeId = node.getAttribute('data-id');
+    console.log('綁定事件到節點:', nodeId); // 調試用
     node.addEventListener('click', () => {
-      const nodeId = node.getAttribute('data-id');
       console.log('點擊節點:', nodeId); // 調試用
-      updateTiGua(nodeId);
+      if (typeof updateTiGua === 'function') {
+        updateTiGua(nodeId);
+      } else {
+        console.error('updateTiGua 未定義');
+        alert('無法更新體卦：updateTiGua 函數未定義');
+      }
     });
   });
 }
