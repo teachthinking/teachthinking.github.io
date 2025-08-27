@@ -869,18 +869,20 @@ function getTiYong(result) {
   let tiGua, yongGua;
 
   if (moving.length === 0) {
-    // 無動爻：下卦為體卦，上卦為用卦（梅花易數慣例）
+    // 無動爻：下卦為體卦，上卦為用卦
     tiGua = getTrigramInfo(lowerIdx);
     yongGua = getTrigramInfo(upperIdx);
   } else {
-    // 有動爻：以最高動爻所在的卦為用卦，另一卦為體卦
-    const maxMoving = Math.max(...moving); // 選擇最高的動爻
-    if (maxMoving > 3) {
-      // 最高動爻在上卦（4-6 爻）
+    // 計算上下卦的動爻數量
+    const upperMovingCount = moving.filter(m => m > 3).length;
+    const lowerMovingCount = moving.filter(m => m <= 3).length;
+
+    if (upperMovingCount >= lowerMovingCount) {
+      // 上卦動爻數量較多（或相等時優先上卦）
       yongGua = getTrigramInfo(upperIdx); // 上卦為用卦
       tiGua = getTrigramInfo(lowerIdx);   // 下卦為體卦
     } else {
-      // 最高動爻在下卦（1-3 爻）
+      // 下卦動爻數量較多
       yongGua = getTrigramInfo(lowerIdx); // 下卦為用卦
       tiGua = getTrigramInfo(upperIdx);   // 上卦為體卦
     }
