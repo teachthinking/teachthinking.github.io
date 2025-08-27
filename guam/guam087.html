@@ -1176,7 +1176,8 @@
         <div class="hint">${description}</div>
       `;
     }
-function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
+   // 渲染五行圖表（修正後，移除動畫並修改標題）
+    function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
       const svg = document.getElementById('wuxingSvg');
       svg.innerHTML = `
         <defs>
@@ -1194,10 +1195,13 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
           </marker>
         </defs>
       `;
-      const question = currentResult?.question ? `問題：${currentResult.question.slice(0, 30)}${currentResult.question.length > 30 ? '...' : ''}` : '五行生克圖';
-      svg.innerHTML += `<text x="300" y="20" text-anchor="middle" font-size="16" font-weight="bold">${question}</text>`;
+      const question = currentResult?.question ? `問題：${currentResult.question.slice(0, 30)}${currentResult.question.length > 30 ? '...' : ''}` : '';
+      svg.innerHTML += `<text x="300" y="20" text-anchor="middle" font-size="16" font-weight="bold">梅花心易五行生剋圖</text>`;
+      if (question) {
+        svg.innerHTML += `<text x="300" y="40" text-anchor="middle" font-size="14">${question}</text>`;
+      }
       const statusText = `農曆：${lunarMonth}（${season}），五行狀態：旺：${Object.keys(TRIGRAM_INFO).find(k => getWuxingStatus(TRIGRAM_INFO[k].wuxing, lunarMonthNumber) === '旺') ? TRIGRAM_INFO[Object.keys(TRIGRAM_INFO).find(k => getWuxingStatus(TRIGRAM_INFO[k].wuxing, lunarMonthNumber) === '旺')].wuxing : '無'}，相：${Object.keys(TRIGRAM_INFO).find(k => getWuxingStatus(TRIGRAM_INFO[k].wuxing, lunarMonthNumber) === '相') ? TRIGRAM_INFO[Object.keys(TRIGRAM_INFO).find(k => getWuxingStatus(TRIGRAM_INFO[k].wuxing, lunarMonthNumber) === '相')].wuxing : '無'}`;
-      svg.innerHTML += `<text x="300" y="40" text-anchor="middle" font-size="14">${statusText}</text>`;
+      svg.innerHTML += `<text x="300" y="${question ? 60 : 40}" text-anchor="middle" font-size="14">${statusText}</text>`;
 
       const nodes = [
         { id: 'ti', name: tiGua.name, wuxing: tiGua.wuxing, symbol: tiGua.symbol, x: 300, y: 200, label: '體卦', status: getWuxingStatus(tiGua.wuxing, lunarMonthNumber) },
@@ -1303,13 +1307,13 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
       document.getElementById('summaryBox').classList.remove('hidden');
     }
 
-    // 數字取卦
+    // 修正數字取卦
     document.getElementById('btnNumber').addEventListener('click', () => {
       const upperNum = parseInt(document.getElementById('numUpper').value);
       const lowerNum = parseInt(document.getElementById('numLower').value);
       const movingNum = parseInt(document.getElementById('numMoving').value);
-      if (isNaN(upperNum) || isNaN(lowerNum) || isNaN(movingNum) || upperNum < 100 || upperNum > 999 || lowerNum < 100 || lowerNum > 999 || movingNum < 100 || movingNum > 999) {
-        alert('請輸入100-999之間的數字！');
+      if (isNaN(upperNum) || isNaN(lowerNum) || isNaN(movingNum) || upperNum < 0 || lowerNum < 0 || movingNum < 0) {
+        alert('請輸入有效的正整數！');
         return;
       }
       const upperIdx = ((upperNum % 8) || 8).toString();
@@ -1318,7 +1322,7 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
       generateGua(upperIdx, lowerIdx, moving, '數字取卦');
     });
 
-    // 亂數取卦
+    // 修正亂數取卦
     document.getElementById('btnRandomNumber').addEventListener('click', () => {
       const upperNum = Math.floor(Math.random() * 900) + 100;
       const lowerNum = Math.floor(Math.random() * 900) + 100;
