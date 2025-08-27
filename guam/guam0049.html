@@ -1375,7 +1375,6 @@
         const strokeWidth = getWuxingStrength(node.status);
         const symbol = trigramSymbol[node.name] || '';
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-```html
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.classList.add('wuxing-node', node.wuxing);
         circle.setAttribute('cx', node.x);
@@ -1388,7 +1387,8 @@
         text1.classList.add('wuxing-node-text');
         text1.setAttribute('x', node.x);
         text1.setAttribute('y', node.y - 15);
-        text1.textContent = `${node.name} (${node.wuxing}, ${node.status})`;
+    //    text1.textContent = `${node.name} (${node.wuxing}, ${node.status})`;
+        text1.textContent = node.name + ' (' + node.wuxing + ', ' + node.status + ')';
         g.appendChild(text1);
 
         const text2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -1765,4 +1765,3 @@
   </script>
 </body>
 </html>
-```
