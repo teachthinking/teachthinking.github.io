@@ -958,19 +958,21 @@
         return;
       }
 
-      const upperLines = GUA_LINES[upperIdx];
-      const lowerLines = GUA_LINES[lowerIdx];
+      const upperLines = [...(GUA_LINES[upperIdx] || [0, 0, 0])];
+      const lowerLines = [...(GUA_LINES[lowerIdx] || [0, 0, 0])];
       const lines = [...lowerLines, ...upperLines];
       const changeLines = [...lines];
       moving.forEach(idx => {
-        if (idx >= 1 && idx <= 6) changeLines[idx - 1] = changeLines[idx - 1] === 1 ? 0 : 1;
+        if (idx >= 1 && idx <= 6) {
+          changeLines[idx - 1] = changeLines[idx - 1] === 1 ? 0 : 1;
+        }
       });
       const huLines = [lines[1], lines[2], lines[3], lines[2], lines[3], lines[4]];
       const mainHexName = HEXAGRAM_NAMES[`${upperIdx}${lowerIdx}`] || `${TRIGRAM_INFO[upperIdx].name}${TRIGRAM_INFO[lowerIdx].name}`;
-      const changeUpperIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === changeLines.slice(3, 6)[i])) || 8;
-      const changeLowerIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === changeLines.slice(0, 3)[i])) || 8;
-      const huUpperIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === huLines.slice(3, 6)[i])) || 8;
-      const huLowerIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === huLines.slice(0, 3)[i])) || 8;
+      const changeUpperIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === changeLines.slice(3, 6)[i])) || '8';
+      const changeLowerIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === changeLines.slice(0, 3)[i])) || '8';
+      const huUpperIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === huLines.slice(3, 6)[i])) || '8';
+      const huLowerIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === huLines.slice(0, 3)[i])) || '8';
       const changeHexName = HEXAGRAM_NAMES[`${changeUpperIdx}${changeLowerIdx}`] || `${TRIGRAM_INFO[changeUpperIdx].name}${TRIGRAM_INFO[changeLowerIdx].name}`;
       const huHexName = HEXAGRAM_NAMES[`${huUpperIdx}${huLowerIdx}`] || `${TRIGRAM_INFO[huUpperIdx].name}${TRIGRAM_INFO[huLowerIdx].name}`;
 
@@ -1076,10 +1078,10 @@
       mainLowerGua = { ...TRIGRAM_INFO[lowerIdx], label: '本卦下卦' };
       const { tiGua: determinedTiGua, yongGua } = determineTiYong(moving, upperIdx, lowerIdx);
       tiGua = determinedTiGua;
-      const changeUpperIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === result.changeLines.slice(3, 6)[i])) || 8;
-      const changeLowerIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === result.changeLines.slice(0, 3)[i])) || 8;
-      const huUpperIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === result.huLines.slice(3, 6)[i])) || 8;
-      const huLowerIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === result.huLines.slice(0, 3)[i])) || 8;
+      const changeUpperIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === result.changeLines.slice(3, 6)[i])) || '8';
+      const changeLowerIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === result.changeLines.slice(0, 3)[i])) || '8';
+      const huUpperIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === result.huLines.slice(3, 6)[i])) || '8';
+      const huLowerIdx = Object.keys(GUA_LINES).find(k => GUA_LINES[k].every((v, i) => v === result.huLines.slice(0, 3)[i])) || '8';
       changeUpperGua = { ...TRIGRAM_INFO[changeUpperIdx], label: '變卦上卦' };
       changeLowerGua = { ...TRIGRAM_INFO[changeLowerIdx], label: '變卦下卦' };
       huUpperGua = { ...TRIGRAM_INFO[huUpperIdx], label: '互卦上卦' };
@@ -1136,7 +1138,7 @@
       auspiciousnessScore += getWuxingStatusScore(tiGua.wuxing, lunarMonthNumber);
       const normalizedScore = Math.max(0, Math.min(100, Math.round((auspiciousnessScore + 50) * 100 / 70)));
       document.getElementById('auspiciousnessIndex').textContent = `吉凶指數：${normalizedScore}%`;
-      document.getElementById('auspiciousnessBar').innerHTML = `<div class="score-bar" style="width: ${normalizedScore}%; background: ${normalizedScore >= 50 ? 'var(--positive-color)' : 'var(--negative-color)'};"></div>";
+      document.getElementById('auspiciousnessBar').innerHTML = `<div class="score-bar" style="width: ${normalizedScore}%; background: ${normalizedScore >= 50 ? 'var(--positive-color)' : 'var(--negative-color)'};"></div`;
 
       const scoreWrap = document.getElementById('scoreWrap');
       scoreWrap.innerHTML = `
@@ -1208,7 +1210,7 @@
         { id: 'changeUpper', name: changeUpperGua.name, wuxing: changeUpperGua.wuxing, symbol: changeUpperGua.symbol, x: 600, y: 100, label: '變卦上卦', status: getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber) },
         { id: 'changeLower', name: changeLowerGua.name, wuxing: changeLowerGua.wuxing, symbol: changeLowerGua.symbol, x: 600, y: 300, label: '變卦下卦', status: getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber) }
       ];
-
+//llllllllllllllllllllllllllllllllllllllllhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfffffffffffffffffffffffggggggggggggggggggggggggggggggggggggggggggggggggggg
       nodes.forEach(node => {
         const strokeWidth = getWuxingStrength(node.status);
         const wuxingClass = WUXING_COLORS[node.wuxing];
