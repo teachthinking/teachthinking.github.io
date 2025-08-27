@@ -381,7 +381,22 @@
 .wuxing-edge-harmony:hover {
   stroke-width: 3;
 }
-    
+    :root {
+  --positive-color: #00FF00; /* 綠色，生 */
+  --negative-color: #FF0000; /* 紅色，剋 */
+  --secondary-color: #0000FF; /* 藍色，比和 */
+}
+.wuxing-node {
+  cursor: pointer;
+}
+.wuxing-edge-generate { stroke: var(--positive-color); }
+.wuxing-edge-overcome { stroke: var(--negative-color); }
+.wuxing-edge-harmony { stroke: var(--secondary-color); }
+.wuxing-edge-label {
+  font-size: 12px;
+  text-anchor: middle;
+  fill: #333;
+}
   </style>
 </head>
 <body>
@@ -1250,7 +1265,7 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
     return;
   }
 
-  // Validate input data
+  // 驗證輸入數據
   const guas = [tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua];
   for (const gua of guas) {
     if (!gua || !gua.name || !gua.wuxing) {
@@ -1260,8 +1275,14 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
     }
   }
 
-  // Clear SVG and define markers
-  svg.innerHTML = `
+  // 清空 SVG 並設置屬性
+  svg.innerHTML = '';
+  svg.setAttribute('width', '600');
+  svg.setAttribute('height', '400');
+  svg.style.border = '1px solid #ccc';
+
+  // 定義箭頭標記
+  svg.innerHTML += `
     <defs>
       <marker id="arrow-generate" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
         <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--positive-color)" />
@@ -1278,7 +1299,7 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
     </defs>
   `;
 
-  // Add title and status text
+  // 添加標題和五行狀態文字
   const question = currentResult?.question ? `問題：${currentResult.question.slice(0, 30)}${currentResult.question.length > 30 ? '...' : ''}` : '五行生克圖';
   svg.innerHTML += `<text x="300" y="30" text-anchor="middle" font-size="16" font-weight="bold">${question}</text>`;
 
@@ -1296,35 +1317,74 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
                     `死：${Object.keys(wuxingStatus).find(k => wuxingStatus[k] === '死') || '無'}`;
   svg.innerHTML += `<text x="300" y="50" text-anchor="middle" font-size="14">${statusText}</text>`;
 
-  // Define nodes with adjusted positions to fit within SVG
+  // 五行狀態顏色
+  const statusColors = {
+    '旺': '#FF0000', // 紅色
+    '相': '#FFA500', // 橙色
+    '休': '#FFFF00', // 黃色
+    '囚': '#00FF00', // 綠色
+    '死': '#808080'  // 灰色
+  };
+
+  // 定義節點，調整位置以適應 SVG
   const nodes = [
-    { id: 'ti', name: tiGua.name, wuxing: tiGua.wuxing, x: 200, y: 200, label: '體卦', status: getWuxingStatus(tiGua.wuxing, lunarMonthNumber) },
-    { id: 'mainUpper', name: mainUpperGua.name, wuxing: mainUpperGua.wuxing, x: 100, y: 100, label: '本卦上卦', status: getWuxingStatus(mainUpperGua.wuxing, lunarMonthNumber) },
-    { id: 'mainLower', name: mainLowerGua.name, wuxing: mainLowerGua.wuxing, x: 100, y: 300, label: '本卦下卦', status: getWuxingStatus(mainLowerGua.wuxing, lunarMonthNumber) },
-    { id: 'huUpper', name: huUpperGua.name, wuxing: huUpperGua.wuxing, x: 300, y: 100, label: '互卦上卦', status: getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber) },
-    { id: 'huLower', name: huLowerGua.name, wuxing: huLowerGua.wuxing, x: 300, y: 300, label: '互卦下卦', status: getWuxingStatus(huLowerGua.wuxing, lunarMonthNumber) },
-    { id: 'changeUpper', name: changeUpperGua.name, wuxing: changeUpperGua.wuxing, x: 500, y: 100, label: '變卦上卦', status: getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber) },
-    { id: 'changeLower', name: changeLowerGua.name, wuxing: changeLowerGua.wuxing, x: 500, y: 300, label: '變卦下卦', status: getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber) }
+    { id: 'ti', name: tiGua.name, wuxing: tiGua.wuxing, x: 300, y: 200, label: '體卦', status: getWuxingStatus(tiGua.wuxing, lunarMonthNumber) },
+    { id: 'mainUpper', name: mainUpperGua.name, wuxing: mainUpperGua.wuxing, x: 150, y: 100, label: '本卦上卦', status: getWuxingStatus(mainUpperGua.wuxing, lunarMonthNumber) },
+    { id: 'mainLower', name: mainLowerGua.name, wuxing: mainLowerGua.wuxing, x: 150, y: 300, label: '本卦下卦', status: getWuxingStatus(mainLowerGua.wuxing, lunarMonthNumber) },
+    { id: 'huUpper', name: huUpperGua.name, wuxing: huUpperGua.wuxing, x: 250, y: 100, label: '互卦上卦', status: getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber) },
+    { id: 'huLower', name: huLowerGua.name, wuxing: huLowerGua.wuxing, x: 250, y: 300, label: '互卦下卦', status: getWuxingStatus(huLowerGua.wuxing, lunarMonthNumber) },
+    { id: 'changeUpper', name: changeUpperGua.name, wuxing: changeUpperGua.wuxing, x: 450, y: 100, label: '變卦上卦', status: getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber) },
+    { id: 'changeLower', name: changeLowerGua.name, wuxing: changeLowerGua.wuxing, x: 450, y: 300, label: '變卦下卦', status: getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber) }
   ];
 
-  // Render nodes
+  // 預設說明，防止「未知」或「無建議」
+  const defaultExplanations = {
+    wuxing_status: {
+      '木': { description: '木代表生長與創意', suggestions: { '旺': '宜積極進取', '相': '穩健發展', '休': '休養生息', '囚': '謹慎行事', '死': '等待時機' } },
+      '火': { description: '火代表熱情與變革', suggestions: { '旺': '宜大膽行動', '相': '適度進取', '休': '保持穩定', '囚': '避免衝突', '死': '低調行事' } },
+      '土': { description: '土代表穩定與包容', suggestions: { '旺': '宜穩固基礎', '相': '適宜合作', '休': '注重內在', '囚': '避免變動', '死': '耐心等待' } },
+      '金': { description: '金代表堅定與收斂', suggestions: { '旺': '宜果斷行動', '相': '穩中求進', '休': '儲備力量', '囚': '謹慎決策', '死': '避免爭鬥' } },
+      '水': { description: '水代表智慧與流動', suggestions: { '旺': '宜靈活應變', '相': '順勢而為', '休': '靜觀其變', '囚': '小心行事', '死': '韜光養晦' } }
+    },
+    generate_ti: { overall: '用卦生體卦，吉利，助力強大。', suggestions: { general: '宜借助外力達成目標。', specific: '尋求合作與資源。' } },
+    generate_yong: { overall: '體卦生用卦，耗力，需謹慎。', suggestions: { general: '宜節制行動，避免過度付出。', specific: '注意資源分配。' } },
+    overcome_ti: { overall: '用卦剋體卦，凶，阻力較大。', suggestions: { general: '宜低調行事，避免正面衝突。', specific: '尋求緩解壓力的方法。' } },
+    overcome_yong: { overall: '體卦剋用卦，吉，主導力強。', suggestions: { general: '宜積極行動，掌控局面。', specific: '抓住主導機會。' } },
+    harmony: { overall: '體用比和，平，穩定無大變。', suggestions: { general: '宜保持現狀，穩中求進。', specific: '注重平衡與合作。' } },
+    suggestions: {
+      career: '事業宜穩中求進，注重團隊合作。',
+      relationship: '感情宜坦誠溝通，增進互信。',
+      general: '保持平衡，靈活應對變化。'
+    }
+  };
+
+  const explanations = wuxingExplanations || defaultExplanations;
+
+  // 渲染節點，包含詳細彈出資訊
   nodes.forEach(node => {
     const strokeWidth = getWuxingStrength(node.status);
     const symbol = trigramSymbol[node.name] || '';
+    const wuxingStatusData = explanations.wuxing_status[node.wuxing] || { description: '無詳細說明', suggestions: { [node.status]: '無建議' } };
+    const suggestion = wuxingStatusData.suggestions[node.status] || '無建議';
+    const relation = node.id === 'ti' ? '' : getRelation(tiGua.wuxing, node.wuxing);
+    const relationData = relation ? explanations[relationMap[relation]] || { overall: '無解釋' } : { overall: '體卦自身，無生剋關係' };
+    const popupText = `${node.label} (${node.name}, ${node.wuxing}, ${node.status})\n描述: ${wuxingStatusData.description}\n與體卦關係: ${relation || '無'}\n關係解釋: ${relationData.overall}\n建議: ${suggestion}`;
     svg.innerHTML += `
-      <circle class="wuxing-node ${node.wuxing.toLowerCase()}" cx="${node.x}" cy="${node.y}" r="40" stroke-width="${strokeWidth}" data-id="${node.id}" />
-      <text class="wuxing-node-text" x="${node.x}" y="${node.y - 15}">${node.name} (${node.wuxing}, ${node.status})</text>
+      <circle class="wuxing-node ${node.wuxing.toLowerCase()}" cx="${node.x}" cy="${node.y}" r="40" stroke="black" stroke-width="${strokeWidth}" fill="${statusColors[node.status] || '#FFFFFF'}" opacity="0.5" data-id="${node.id}" data-popup="${encodeURIComponent(popupText)}" />
+      <text class="wuxing-node-text" x="${node.x}" y="${node.y - 15}" fill="${node.id === 'ti' ? '#0000FF' : '#333'}">${node.name} (${node.wuxing}, ${node.status})</text>
       <text class="wuxing-node-text" x="${node.x}" y="${node.y}" font-size="20">${symbol}</text>
       <text class="wuxing-node-text" x="${node.x}" y="${node.y + 20}">${node.label}</text>
     `;
   });
 
-  // Define edges
+  // 定義邊（以體卦為核心）
   const edges = [];
   nodes.forEach(node => {
     if (node.id !== 'ti') {
       const relation = getRelation(tiGua.wuxing, node.wuxing);
-      let className, source, target, markers;
+      const relationData = explanations[relationMap[relation]] || { overall: '無解釋' };
+      let className, source, target, markers, strokeWidth;
+      strokeWidth = (getWuxingStrength(tiGua.status) + getWuxingStrength(node.status)) / 2;
       if (relation === '用生體') {
         className = 'wuxing-edge-generate';
         source = node.id;
@@ -1351,17 +1411,26 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
         target = node.id;
         markers = { end: 'url(#arrow-overcome)' };
       } else {
-        return; // Skip unknown relations
+        return; // 跳過未知關係
       }
-      edges.push({ source, target, className, label: relation, markers });
+      edges.push({ 
+        source, 
+        target, 
+        className, 
+        label: relation, 
+        markers, 
+        strokeWidth,
+        title: `${node.label} → 體卦: ${relationData.overall}`
+      });
     }
   });
 
-  // Add edges for mutual and changing hexagrams
+  // 添加互卦和變卦的上下卦關係
   const huRelation = getRelation(huUpperGua.wuxing, huLowerGua.wuxing);
   if (huRelation !== '未知') {
     let huClassName, huSource, huTarget, huMarkers;
     const huStrokeWidth = getWuxingStrength(getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber));
+    const huRelationData = explanations[relationMap[huRelation]] || { overall: '無解釋' };
     if (huRelation === '用生體') {
       huClassName = 'wuxing-edge-generate';
       huSource = 'huLower';
@@ -1388,13 +1457,22 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
       huTarget = 'huLower';
       huMarkers = { end: 'url(#arrow-overcome)' };
     }
-    edges.push({ source: huSource, target: huTarget, className: huClassName, label: huRelation, markers: huMarkers, strokeWidth: huStrokeWidth });
+    edges.push({ 
+      source: huSource, 
+      target: huTarget, 
+      className: huClassName, 
+      label: huRelation, 
+      markers: huMarkers, 
+      strokeWidth: huStrokeWidth,
+      title: `互卦關係: ${huRelationData.overall}`
+    });
   }
 
   const changeRelation = getRelation(changeUpperGua.wuxing, changeLowerGua.wuxing);
   if (changeRelation !== '未知') {
     let changeClassName, changeSource, changeTarget, changeMarkers;
     const changeStrokeWidth = getWuxingStrength(getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber));
+    const changeRelationData = explanations[relationMap[changeRelation]] || { overall: '無解釋' };
     if (changeRelation === '用生體') {
       changeClassName = 'wuxing-edge-generate';
       changeSource = 'changeLower';
@@ -1415,16 +1493,24 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
       changeSource = 'changeUpper';
       changeTarget = 'changeLower';
       changeMarkers = { end: 'url(#arrow-generate)' };
-    } else if (changeRelation === '體剋用') {
+    } else if (changeRelation === '體�克用') {
       changeClassName = 'wuxing-edge-overcome';
       changeSource = 'changeUpper';
       changeTarget = 'changeLower';
       changeMarkers = { end: 'url(#arrow-overcome)' };
     }
-    edges.push({ source: changeSource, target: changeTarget, className: changeClassName, label: changeRelation, markers: changeMarkers, strokeWidth: changeStrokeWidth });
+    edges.push({ 
+      source: changeSource, 
+      target: changeTarget, 
+      className: changeClassName, 
+      label: changeRelation, 
+      markers: changeMarkers, 
+      strokeWidth: changeStrokeWidth,
+      title: `變卦關係: ${changeRelationData.overall}`
+    });
   }
 
-  // Render edges
+  // 渲染邊
   edges.forEach(edge => {
     const sourceNode = nodes.find(n => n.id === edge.source);
     const targetNode = nodes.find(n => n.id === edge.target);
@@ -1436,7 +1522,7 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
     const dx = targetNode.x - sourceNode.x;
     const dy = targetNode.y - sourceNode.y;
     const length = Math.sqrt(dx * dx + dy * dy);
-    const offset = 40; // Radius of nodes
+    const offset = 40; // 節點半徑
     const sx = sourceNode.x + (dx / length) * offset;
     const sy = sourceNode.y + (dy / length) * offset;
     const tx = targetNode.x - (dx / length) * offset;
@@ -1446,18 +1532,175 @@ function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLo
 
     const strokeWidth = edge.strokeWidth || getWuxingStrength(sourceNode.status);
     svg.innerHTML += `
-      <line class="${edge.className}" x1="${sx}" y1="${sy}" x2="${tx}" y2="${ty}" stroke-width="${strokeWidth}" marker-start="${edge.markers.start || ''}" marker-end="${edge.markers.end || ''}" />
+      <line class="${edge.className}" x1="${sx}" y1="${sy}" x2="${tx}" y2="${ty}" stroke-width="${strokeWidth}" marker-start="${edge.markers.start || ''}" marker-end="${edge.markers.end || ''}" title="${edge.title}" />
       <text class="wuxing-edge-label" x="${midX}" y="${midY - 10}">${edge.label}</text>
     `;
   });
 
-  // Attach event listeners to nodes
+  // 添加節點交互
   svg.querySelectorAll('.wuxing-node').forEach(node => {
     node.addEventListener('click', () => {
       const nodeId = node.getAttribute('data-id');
-      updateTiGua(nodeId);
+      const guaNode = nodes.find(n => n.id === nodeId);
+      if (!guaNode) return;
+      const popupText = decodeURIComponent(node.getAttribute('data-popup'));
+      if (nodeId !== 'ti' && confirm(`${popupText}\n是否將此卦設為體卦重新分析？`)) {
+        setNewTiGua(guaNode);
+      } else {
+        alert(popupText);
+      }
     });
   });
+}
+
+function setNewTiGua(newTiGua) {
+  if (!currentResult) {
+    alert('無當前卦象數據，無法重新設置體卦！');
+    return;
+  }
+  const mainUpperGua = getTrigramInfo(currentResult.uIdx);
+  const mainLowerGua = getTrigramInfo(currentResult.lIdx);
+  const huUpperIdx = triIndexByLines.get(JSON.stringify(currentResult.huLines.slice(3, 6))) || 8;
+  const huLowerIdx = triIndexByLines.get(JSON.stringify(currentResult.huLines.slice(0, 3))) || 8;
+  const changeUpperIdx = triIndexByLines.get(JSON.stringify(currentResult.changeLines.slice(3, 6))) || 8;
+  const changeLowerIdx = triIndexByLines.get(JSON.stringify(currentResult.changeLines.slice(0, 3))) || 8;
+  const huUpperGua = getTrigramInfo(huUpperIdx);
+  const huLowerGua = getTrigramInfo(huLowerIdx);
+  const changeUpperGua = getTrigramInfo(changeUpperIdx);
+  const changeLowerGua = getTrigramInfo(changeLowerIdx);
+  const date = new Date(currentResult.timestamp);
+  const lunar = lunarCalendar.gregorianToLunar(date);
+  const { lunarMonth, season, lunarMonthNumber } = lunar;
+
+  // 更新體卦並重新渲染
+  renderWuxingDiagram(
+    newTiGua,
+    mainUpperGua,
+    mainLowerGua,
+    huUpperGua,
+    huLowerGua,
+    changeUpperGua,
+    changeLowerGua,
+    lunarMonth,
+    season,
+    lunarMonthNumber
+  );
+  renderWuxingAnalysis(currentResult);
+  renderDetailedAnalysis(currentResult);
+}
+
+function renderDetailedAnalysis(result) {
+  const detailedAnalysis = document.getElementById('detailedAnalysis');
+  if (!detailedAnalysis) {
+    console.error('找不到 detailedAnalysis 元素');
+    return;
+  }
+  detailedAnalysis.classList.remove('hidden');
+  detailedAnalysis.innerHTML = '<h3>詳細解釋</h3>';
+
+  const { tiGua, yongGua } = getTiYong(result);
+  const mainUpperGua = getTrigramInfo(result.uIdx);
+  const mainLowerGua = getTrigramInfo(result.lIdx);
+  const huUpperIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8;
+  const huLowerIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8;
+  const changeUpperIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8;
+  const changeLowerIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8;
+  const huUpperGua = getTrigramInfo(huUpperIdx);
+  const huLowerGua = getTrigramInfo(huLowerIdx);
+  const changeUpperGua = getTrigramInfo(changeUpperIdx);
+  const changeLowerGua = getTrigramInfo(changeLowerIdx);
+
+  const date = new Date(result.timestamp);
+  const lunar = lunarCalendar.gregorianToLunar(date);
+  const { lunarMonth, season, lunarMonthNumber } = lunar;
+
+  const relations = {
+    mainUpper: getRelation(tiGua.wuxing, mainUpperGua.wuxing),
+    mainLower: getRelation(tiGua.wuxing, mainLowerGua.wuxing),
+    huUpper: getRelation(tiGua.wuxing, huUpperGua.wuxing),
+    huLower: getRelation(tiGua.wuxing, huLowerGua.wuxing),
+    changeUpper: getRelation(tiGua.wuxing, changeUpperGua.wuxing),
+    changeLower: getRelation(tiGua.wuxing, changeLowerGua.wuxing)
+  };
+
+  const wuxingStatus = {
+    ti: getWuxingStatus(tiGua.wuxing, lunarMonthNumber),
+    mainUpper: getWuxingStatus(mainUpperGua.wuxing, lunarMonthNumber),
+    mainLower: getWuxingStatus(mainLowerGua.wuxing, lunarMonthNumber),
+    huUpper: getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber),
+    huLower: getWuxingStatus(huLowerGua.wuxing, lunarMonthNumber),
+    changeUpper: getWuxingStatus(changeUpperGua.wuxing, lunarMonthNumber),
+    changeLower: getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber)
+  };
+
+  // 預設說明
+  const defaultExplanations = {
+    wuxing_status: {
+      '木': { description: '木代表生長與創意', suggestions: { '旺': '宜積極進取', '相': '穩健發展', '休': '休養生息', '囚': '謹慎行事', '死': '等待時機' } },
+      '火': { description: '火代表熱情與變革', suggestions: { '旺': '宜大膽行動', '相': '適度進取', '休': '保持穩定', '囚': '避免衝突', '死': '低調行事' } },
+      '土': { description: '土代表穩定與包容', suggestions: { '旺': '宜穩固基礎', '相': '適宜合作', '休': '注重內在', '囚': '避免變動', '死': '耐心等待' } },
+      '金': { description: '金代表堅定與收斂', suggestions: { '旺': '宜果斷行動', '相': '穩中求進', '休': '儲備力量', '囚': '謹慎決策', '死': '避免爭鬥' } },
+      '水': { description: '水代表智慧與流動', suggestions: { '旺': '宜靈活應變', '相': '順勢而為', '休': '靜觀其變', '囚': '小心行事', '死': '韜光養晦' } }
+    },
+    generate_ti: { overall: '用卦生體卦，吉利，助力強大。', suggestions: { general: '宜借助外力達成目標。', specific: '尋求合作與資源。' } },
+    generate_yong: { overall: '體卦生用卦，耗力，需謹慎。', suggestions: { general: '宜節制行動，避免過度付出。', specific: '注意資源分配。' } },
+    overcome_ti: { overall: '用卦剋體卦，凶，阻力較大。', suggestions: { general: '宜低調行事，避免正面衝突。', specific: '尋求緩解壓力的方法。' } },
+    overcome_yong: { overall: '體卦剋用卦，吉，主導力強。', suggestions: { general: '宜積極行動，掌控局面。', specific: '抓住主導機會。' } },
+    harmony: { overall: '體用比和，平，穩定無大變。', suggestions: { general: '宜保持現狀，穩中求進。', specific: '注重平衡與合作。' } },
+    suggestions: {
+      career: '事業宜穩中求進，注重團隊合作。',
+      relationship: '感情宜坦誠溝通，增進互信。',
+      general: '保持平衡，靈活應對變化。'
+    }
+  };
+
+  const explanations = wuxingExplanations || defaultExplanations;
+
+  detailedAnalysis.innerHTML += `
+    <div class="wuxing-box">
+      <h4>五行狀態與建議</h4>
+      <p><strong>農曆：</strong> ${lunarMonth}（${season}）</p>
+      <p><strong>體卦五行（${tiGua.name}）：</strong> ${tiGua.wuxing} (${wuxingStatus.ti})</p>
+      <p><strong>描述：</strong> ${explanations.wuxing_status[tiGua.wuxing]?.description || '無詳細說明'}</p>
+      <p><strong>建議：</strong> ${explanations.wuxing_status[tiGua.wuxing]?.suggestions?.[wuxingStatus.ti] || '無建議'}</p>
+    </div>
+  `;
+
+  Object.entries(relations).forEach(([key, relation]) => {
+    const guaMap = {
+      mainUpper: mainUpperGua,
+      mainLower: mainLowerGua,
+      huUpper: huUpperGua,
+      huLower: huLowerGua,
+      changeUpper: changeUpperGua,
+      changeLower: changeLowerGua
+    };
+    const gua = guaMap[key];
+    const status = wuxingStatus[key];
+    const relationData = explanations[relationMap[relation]] || { overall: '無解釋', suggestions: { general: '無建議', specific: '無建議' } };
+    detailedAnalysis.innerHTML += `
+      <div class="wuxing-box">
+        <h4>${key === 'mainUpper' ? '本卦上卦' : key === 'mainLower' ? '本卦下卦' : key === 'huUpper' ? '互卦上卦' : key === 'huLower' ? '互卦下卦' : key === 'changeUpper' ? '變卦上卦' : '變卦下卦'}</h4>
+        <p><strong>五行：</strong> ${gua.wuxing} (${gua.name})</p>
+        <p><strong>狀態：</strong> ${status}</p>
+        <p><strong>與體卦關係：</strong> ${relation}</p>
+        <p><strong>解釋：</strong> ${relationData.overall}</p>
+        <p><strong>建議：</strong> ${relationData.suggestions[result.question ? 'specific' : 'general']}</p>
+      </div>
+    `;
+  });
+
+  if (result.question) {
+    const suggestionKey = result.question.toLowerCase().includes('事業') ? 'career' : 
+                         result.question.toLowerCase().includes('感情') ? 'relationship' : 'general';
+    detailedAnalysis.innerHTML += `
+      <div class="wuxing-box">
+        <h4>問題分析</h4>
+        <p><strong>問題：</strong> ${result.question}</p>
+        <p><strong>建議：</strong> ${explanations.suggestions[suggestionKey]}</p>
+      </div>
+    `;
+  }
 }
 
 function setNewTiGua(newTiGua) {
