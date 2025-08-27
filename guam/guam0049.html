@@ -596,7 +596,7 @@
     </div>
   </div>
   <script>
-    let hexagrams = {}, quotes = [], history = [], currentResult = null, trigramExplanations = {};
+    let hexagrams = {}, quotes = [], history = [], currentResult = null, wuxingExplanations = {};
 
     const trigramName = {
       1: '乾', 2: '兌', 3: '離', 4: '震', 5: '巽', 6: '坎', 7: '艮', 8: '坤'
@@ -812,7 +812,7 @@
     function getRelationScore(relation) {
       switch (relation) {
         case '用生體': return 10;
-        case '體�克用': return 3;
+        case '體剋用': return 3;
         case '比和': return 0;
         case '體生用': return -5;
         case '用剋體': return -10;
@@ -1153,7 +1153,8 @@
         lIdx: lowerIdx,
         method,
         timestamp,
-        question
+        question,
+        questionType: question ? (question.includes('事業') ? 'career' : question.includes('感情') ? 'relationship' : 'general') : 'general'
       };
 
       history.push(currentResult);
@@ -1258,7 +1259,18 @@
         const bbox = node.getBBox();
         console.log(`節點 ${i}: x=${bbox.x}, y=${bbox.y}, width=${bbox.width}, height=${bbox.height}`);
       });
+      edges.forEach((edge, i) => {
+        const strokeWidth = edge.getAttribute('stroke-width');
+        console.log(`邊 ${i}: stroke-width=${strokeWidth}`);
+      });
       alert(`檢查控制台以查看 SVG 診斷資訊！節點數: ${nodes.length}, 邊數: ${edges.length}`);
+    }
+
+    function switchTiGua(newTiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
+      console.log('切換體卦至:', newTiGua.name);
+      currentResult.tiGua = newTiGua;
+      renderWuxingAnalysis(currentResult);
+      renderDetailedAnalysis(currentResult);
     }
 
     function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
@@ -1358,7 +1370,7 @@
         { id: 'changeLower', name: changeLowerGua.name, wuxing: changeLowerGua.wuxing, x: 500, y: 300, label: '變卦下卦', status: getWuxingStatus(changeLowerGua.wuxing, lunarMonthNumber) }
       ];
       console.log('節點定義完成:', nodes.length);
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Render nodes
       nodes.forEach(node => {
         const strokeWidth = getWuxingStrength(node.status);
