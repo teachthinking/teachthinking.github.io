@@ -1,245 +1,264 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <title>學生分組系統</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-  <style>
-    body { font-family: "Microsoft JhengHei", Arial; margin: 20px; background: linear-gradient(135deg, #eef2f3, #dfe9f3); }
-    h2 { text-align: center; color: #333; margin-bottom: 20px; }
-    .toolbar { text-align: center; margin-bottom: 20px; }
-    button { margin: 5px; padding: 10px 15px; border: none; border-radius: 6px; background: #4a90e2; color: white; cursor: pointer; font-size: 14px; transition: 0.2s; }
-    button:hover { background: #357ABD; }
-    .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
-    .group { border-radius: 12px; padding: 15px; width: 240px; min-height: 150px; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.3s; }
-    .group:hover { transform: scale(1.03); }
-    .group h4 { text-align: center; margin: 0 0 10px 0; color: #444; }
-    .student { border: 1px solid #ccc; border-radius: 6px; padding: 6px; margin: 5px 0; background: #f9f9f9; cursor: move; transition: 0.2s; font-size: 14px; display:flex; align-items:center; justify-content:space-between; }
-    .student:hover { background: #e6f0ff; }
-    .leader-star { font-size: 18px; cursor: pointer; color: #ccc; margin-right: 5px; }
-    .leader-star.active { color: #ffd700; }
-    #unassigned { border: 2px dashed #aaa; background: #f4f4f4; padding: 10px; border-radius: 12px; width: 95%; margin: 0 auto 20px auto; }
-    #unassigned h4 { text-align: center; color: #666; }
-    #leadersList span { display: inline-block; margin: 5px 15px; font-weight: bold; color: #333; }
-  </style>
+<meta charset="UTF-8">
+<title>秀蜜老師學生分組系統</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<style>
+body { font-family: "Microsoft JhengHei", Arial; margin: 20px; background: linear-gradient(135deg,#eef2f3,#dfe9f3); }
+h2 { text-align: center; color: #333; margin-bottom: 20px; }
+.toolbar { text-align: center; margin-bottom: 20px; }
+button { margin: 5px; padding: 10px 15px; border: none; border-radius: 6px; background: #4a90e2; color: white; cursor: pointer; font-size: 14px; transition: 0.2s; }
+button:hover { background: #357ABD; }
+.container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+.group { border-radius: 12px; padding: 15px; width: 240px; min-height: 150px; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); position: relative; transition: 0.3s; }
+.group:hover { transform: scale(1.03); }
+.group h4 { text-align: center; margin: 0 0 10px 0; color: #444; }
+.students-container { min-height: 50px; }
+.student { border: 1px solid #ccc; border-radius: 6px; padding: 6px; margin: 5px 0; background: #f9f9f9; cursor: pointer; transition: 0.2s; font-size: 14px; position: relative; }
+.student:hover { background: #e6f0ff; }
+.student.leader { background: #fff18d; font-weight: bold; }
+.student.leader::after { content: " ⭐"; }
+#unassigned { border: 2px dashed #aaa; background: #f4f4f4; padding: 10px; border-radius: 12px; width: 95%; margin: 0 auto 20px auto; }
+#unassigned h4 { text-align: center; color: #666; }
+#leadersList span { display: inline-block; margin: 5px 15px; font-weight: bold; color: #333; }
+</style>
 </head>
 <body>
-  <h2 id="title">學生分組系統</h2>
+<h2 id="title">學生分組系統</h2>
 
-  <div class="toolbar">
-    <input type="file" id="fileInput" />
-    <button onclick="addGroup()">新增組別</button>
-    <button onclick="randomAssign()">隨機分組</button>
-    <button onclick="autoAssignLeader()">隨機指定組長</button>
-    <button onclick="exportExcel()">匯出 Excel</button>
-  </div>
+<div class="toolbar">
+<input type="file" id="fileInput" />
+<button onclick="addGroup()">新增組別</button>
+<button onclick="randomAssign()">隨機分組</button>
+<button onclick="autoAssignLeader()">隨機指定組長</button>
+<button onclick="exportExcel()">匯出 Excel</button>
+</div>
 
-  <div id="unassigned" class="group">
-    <h4>未分組學生</h4>
-  </div>
+<div id="unassigned" class="group" data-group-name="未分組"><h4>未分組學生</h4>
+  <div id="unassigned-students" class="students-container"></div>
+</div>
 
-  <h3 style="text-align:center;">分組區</h3>
-  <div id="groups" class="container"></div>
+<h3 style="text-align:center;">分組區</h3>
+<div id="groups" class="container"></div>
 
-  <h3 style="text-align:center;">組長清單</h3>
-  <div id="leadersList" style="text-align:center; margin-bottom:20px;"></div>
+<h3 style="text-align:center;">組長清單</h3>
+<div id="leadersList" style="text-align:center; margin-bottom:20px;"></div>
 
-  <script>
-    let students = []; 
-    let groups = {};   
-    const colors = ["#d6eaff", "#d6ffd6", "#ffe6e6", "#f0d6ff", "#fff5cc", "#ffd6f5"];
+<script>
+let students = [];
+let groups = {};
+const colors=["#d6eaff","#d6ffd6","#ffe6e6","#f0d6ff","#fff5cc","#ffd6f5"];
 
-    document.getElementById('fileInput').addEventListener('change', handleFile, false);
+document.getElementById('fileInput').addEventListener('change', handleFile,false);
 
-    function handleFile(e) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const data = new Uint8Array(event.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet);
+function handleFile(e){
+  const file=e.target.files[0];
+  const reader=new FileReader();
+  reader.onload=(event)=>{
+    const data=new Uint8Array(event.target.result);
+    const workbook=XLSX.read(data,{type:'array'});
+    const sheet=workbook.Sheets[workbook.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(sheet);
 
-        students = rows.map(s => ({ ...s, isLeader: false }));
-        groups = {};
+    students=rows.map(s=>({...s,isLeader:false}));
+    groups={};
 
-        if (rows.length > 0) {
-          document.getElementById('title').innerText = rows[0].班級 + " - " + rows[0].科目 + " 學生分組";
-        }
+    if(rows.length>0) document.getElementById('title').innerText=rows[0].班級+" - "+rows[0].科目+" 學生分組";
 
-        rows.forEach(s => {
-          if (!s.組別 || s.組別 === "") {
-            if (!groups["未分組"]) groups["未分組"] = [];
-            groups["未分組"].push(s);
-          } else {
-            if (!groups[s.組別]) groups[s.組別] = [];
-            groups[s.組別].push(s);
-          }
-        });
+    rows.forEach(s=>{
+      const gName = s.組別 && s.組別!="" ? s.組別 : "未分組";
+      if(!groups[gName]) groups[gName]=[];
+      groups[gName].push(s);
+    });
 
-        renderGroups();
-      };
-      reader.readAsArrayBuffer(file);
-    }
+    renderGroups(true);
+  };
+  reader.readAsArrayBuffer(file);
+}
 
-    function renderGroups() {
-      const groupsDiv = document.getElementById("groups");
-      groupsDiv.innerHTML = "";
-      document.getElementById("unassigned").innerHTML = "<h4>未分組學生</h4>";
+function createStudentDiv(stu){
+  const div=document.createElement("div");
+  div.className="student";
+  div.dataset.id=stu.座號;
+  div.innerText = stu.座號+" "+stu.姓名;
+  if(stu.isLeader) div.classList.add("leader");
 
-      Object.keys(groups).forEach((groupName, idx) => {
-        const groupDiv = document.createElement("div");
-        groupDiv.className = "group";
-        groupDiv.id = "group-" + groupName;
-        if (groupName !== "未分組") groupDiv.style.background = colors[idx % colors.length];
-
-        const title = document.createElement("h4");
-        title.innerText = groupName;
-        groupDiv.appendChild(title);
-
-        groups[groupName].forEach(stu => {
-          const div = document.createElement("div");
-          div.className = "student";
-
-          // 星形
-          const star = document.createElement("span");
-          star.className = "leader-star" + (stu.isLeader ? " active" : "");
-          star.innerText = "⭐";
-          star.addEventListener("click", (e) => {
-            e.stopPropagation();
-            setLeader(stu.座號);
-          });
-
-          div.appendChild(star);
-          const textNode = document.createElement("span");
-          textNode.innerText = stu.座號 + " " + stu.姓名;
-          div.appendChild(textNode);
-
-          div.dataset.id = stu.座號;
-
-          groupDiv.appendChild(div);
-        });
-
-        if (groupName === "未分組") {
-          document.getElementById("unassigned").append(...groupDiv.childNodes);
-        } else {
-          groupsDiv.appendChild(groupDiv);
-        }
-
-        new Sortable(groupDiv, {
-          group: 'shared',
-          animation: 150,
-          fallbackOnBody: true,
-          revertOnSpill: true,
-          onAdd: updateGroups
-        });
-      });
-
-      new Sortable(document.getElementById("unassigned"), {
-        group: 'shared',
-        animation: 150,
-        fallbackOnBody: true,
-        revertOnSpill: true,
-        onAdd: updateGroups
-      });
-
-      renderLeaders();
-    }
-
-    function setLeader(stuId) {
-      let stu = students.find(s => s.座號 == stuId);
-      if (!stu) return;
-      let groupName = Object.keys(groups).find(g => groups[g].some(s => s.座號 == stuId));
-      if (!groupName) return;
-
-      // 清除同組其他組長
-      groups[groupName].forEach(s => s.isLeader = false);
-      stu.isLeader = true;
-      renderGroups();
-    }
-
-    function renderLeaders() {
-      const div = document.getElementById("leadersList");
-      div.innerHTML = "";
-      Object.keys(groups).forEach(g => {
-        if (g === "未分組") return;
-        const leader = groups[g].find(s => s.isLeader);
-        const span = document.createElement("span");
-        span.innerText = leader ? `${g}: ${leader.姓名}` : `${g}: 無組長`;
-        div.appendChild(span);
+  div.addEventListener("click", ()=>{
+    if(stu.isLeader){
+      stu.isLeader=false;
+      div.classList.remove("leader");
+    } else {
+      // 先取消同組其他組長
+      let groupName = Object.keys(groups).find(g=>groups[g].some(s=>s.座號==stu.座號));
+      groups[groupName].forEach(s=>s.isLeader=false);
+      stu.isLeader=true;
+      // 更新顏色
+      document.querySelectorAll("#group-"+groupName+" .student").forEach(d=>{
+        d.classList.remove("leader");
+        if(d.dataset.id==stu.座號) d.classList.add("leader");
       });
     }
+    renderLeaders();
+  });
 
-    function updateGroups(evt) {
-      const groupName = evt.to.querySelector("h4") ? evt.to.querySelector("h4").innerText : "未分組";
-      const stuId = evt.item.dataset.id;
-      const stu = students.find(s => s.座號 == stuId);
+  return div;
+}
 
-      Object.keys(groups).forEach(g => {
-        groups[g] = groups[g].filter(s => s.座號 != stuId);
+function renderGroups(first=false){
+  const groupsDiv=document.getElementById("groups");
+  if(first){
+    Object.keys(groups).forEach((groupName,idx)=>{
+      if(groupName==="未分組") return;
+      const groupDiv=document.createElement("div");
+      groupDiv.className="group";
+      groupDiv.id="group-"+groupName;
+      groupDiv.dataset.groupName=groupName;
+      groupDiv.style.background=colors[idx%colors.length];
+
+      const title=document.createElement("h4");
+      title.innerText=groupName;
+      groupDiv.appendChild(title);
+
+      const studentsContainer=document.createElement("div");
+      studentsContainer.className="students-container";
+      groupDiv.appendChild(studentsContainer);
+
+      new Sortable(studentsContainer,{
+        group:'shared',
+        animation:150,
+        fallbackOnBody:true,
+        revertOnSpill:true,
+        onAdd: handleDrop
       });
 
-      if (!groups[groupName]) groups[groupName] = [];
-      groups[groupName].push(stu);
+      groupsDiv.appendChild(groupDiv);
+    });
 
-      renderLeaders();
+    new Sortable(document.getElementById("unassigned-students"),{
+      group:'shared',
+      animation:150,
+      fallbackOnBody:true,
+      revertOnSpill:true,
+      onAdd: handleDrop
+    });
+  }
+
+  // 更新學生 DOM
+  Object.keys(groups).forEach((groupName,idx)=>{
+    const container = groupName==="未分組"?document.getElementById("unassigned-students"):document.querySelector("#group-"+groupName+" .students-container");
+    container.innerHTML="";
+    groups[groupName].forEach(stu=>{
+      container.appendChild(createStudentDiv(stu));
+    });
+  });
+
+  renderLeaders();
+}
+
+// 拖曳處理
+function handleDrop(evt){
+  const stuId=evt.item.dataset.id;
+  const stu=students.find(s=>s.座號==stuId);
+  Object.keys(groups).forEach(g=>groups[g]=groups[g].filter(s=>s.座號!=stuId));
+  let newGroupName=evt.to.closest(".group")?.dataset.groupName || "未分組";
+  if(!groups[newGroupName]) groups[newGroupName]=[];
+  groups[newGroupName].push(stu);
+  renderGroups();
+}
+
+// 顯示組長清單
+function renderLeaders(){
+  const div=document.getElementById("leadersList");
+  div.innerHTML="";
+  Object.keys(groups).forEach(g=>{
+    if(g==="未分組") return;
+    const leader=groups[g].find(s=>s.isLeader);
+    const span=document.createElement("span");
+    span.innerText=leader?`${g}: ${leader.姓名}`:`${g}: 無組長`;
+    div.appendChild(span);
+  });
+}
+
+// 新增組別
+function addGroup(){
+  const newGroup="第"+(Object.keys(groups).length)+"組";
+  groups[newGroup]=[];
+  const idx = Object.keys(groups).length-1;
+  const groupDiv=document.createElement("div");
+  groupDiv.className="group";
+  groupDiv.id="group-"+newGroup;
+  groupDiv.dataset.groupName=newGroup;
+  groupDiv.style.background=colors[idx%colors.length];
+
+  const title=document.createElement("h4");
+  title.innerText=newGroup;
+  groupDiv.appendChild(title);
+
+  const studentsContainer=document.createElement("div");
+  studentsContainer.className="students-container";
+  groupDiv.appendChild(studentsContainer);
+
+  new Sortable(studentsContainer,{
+    group:'shared',
+    animation:150,
+    fallbackOnBody:true,
+    revertOnSpill:true,
+    onAdd: handleDrop
+  });
+
+  document.getElementById("groups").appendChild(groupDiv);
+  renderGroups();
+}
+
+// 隨機分組
+function randomAssign(){
+  const numGroups=parseInt(prompt("要分成幾組？","4"));
+  if(!numGroups||numGroups<=0) return;
+  groups={};
+  for(let i=1;i<=numGroups;i++) groups["第"+i+"組"]=[];
+  let shuffled=[...students].sort(()=>Math.random()-0.5);
+  shuffled.forEach((stu,index)=>{
+    let groupName="第"+((index%numGroups)+1)+"組";
+    groups[groupName].push(stu);
+  });
+  renderGroups();
+}
+
+// 隨機組長
+function autoAssignLeader(){
+  Object.keys(groups).forEach(groupName=>{
+    if(groupName==="未分組") return;
+    if(groups[groupName].length>0){
+      groups[groupName].forEach(s=>s.isLeader=false);
+      let randomIndex=Math.floor(Math.random()*groups[groupName].length);
+      groups[groupName][randomIndex].isLeader=true;
     }
+  });
+  renderGroups();
+}
 
-    function addGroup() {
-      const newGroup = "第" + (Object.keys(groups).length) + "組";
-      groups[newGroup] = [];
-      renderGroups();
-    }
-
-    function randomAssign() {
-      const numGroups = parseInt(prompt("要分成幾組？", "4"));
-      if (!numGroups || numGroups <= 0) return;
-
-      groups = {};
-      for (let i = 1; i <= numGroups; i++) groups["第" + i + "組"] = [];
-
-      let shuffled = [...students].sort(() => Math.random() - 0.5);
-      shuffled.forEach((stu, index) => {
-        let groupName = "第" + ((index % numGroups) + 1) + "組";
-        groups[groupName].push(stu);
+// 匯出 Excel
+function exportExcel(){
+  let exportData=[];
+  Object.keys(groups).forEach(g=>{
+    groups[g].forEach(stu=>{
+      exportData.push({
+        班級:stu.班級,
+        科目:stu.科目,
+        座號:stu.座號,
+        姓名:stu.姓名,
+        組別:g==="未分組"?"":g,
+        是否組長:stu.isLeader?"Y":""
       });
-
-      renderGroups();
-    }
-
-    function autoAssignLeader() {
-      Object.keys(groups).forEach(groupName => {
-        if (groupName === "未分組") return;
-        if (groups[groupName].length > 0) {
-          groups[groupName].forEach(s => s.isLeader = false);
-          let randomIndex = Math.floor(Math.random() * groups[groupName].length);
-          groups[groupName][randomIndex].isLeader = true;
-        }
-      });
-      renderGroups();
-    }
-
-    function exportExcel() {
-      let exportData = [];
-      Object.keys(groups).forEach(g => {
-        groups[g].forEach(stu => {
-          exportData.push({
-            班級: stu.班級,
-            科目: stu.科目,
-            座號: stu.座號,
-            姓名: stu.姓名,
-            組別: g === "未分組" ? "" : g,
-            是否組長: stu.isLeader ? "Y" : ""
-          });
-        });
-      });
-
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "分組結果");
-      XLSX.writeFile(wb, "分組結果.xlsx");
-    }
-  </script>
+    });
+  });
+  const ws=XLSX.utils.json_to_sheet(exportData);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"分組結果");
+  XLSX.writeFile(wb,"分組結果.xlsx");
+}
+</script>
 </body>
 </html>
