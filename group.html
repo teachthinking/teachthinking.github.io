@@ -17,13 +17,13 @@ button:hover { background: #357ABD; }
 .group { border-radius: 12px; padding: 15px; width: 240px; min-height: 180px; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); position: relative; transition: 0.3s; }
 .group:hover { transform: scale(1.03); }
 .group h4 { text-align: center; margin: 0 0 10px 0; color: #444; }
-.students-container { min-height: 60px; display: flex; flex-wrap: wrap; gap:6px; justify-content:center; }
-.student { border: 1px solid #ccc; border-radius: 6px; padding: 10px; background: #f9f9f9; cursor: pointer; transition: 0.2s; font-size: 18px; position: relative; user-select: none; text-align:center; width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-.student.leader { background: #fff18d; font-weight: bold; }
-.student.leader::after { content: "⭐"; position:absolute; top:2px; right:2px; font-size:16px; }
-#unassigned { border: 2px dashed #aaa; background: #f4f4f4; padding: 10px; border-radius: 12px; width: 95%; margin: 20px auto 0 auto; }
-#unassigned h4 { text-align: center; color: #666; font-size: 18px; }
+.students-container { min-height: 60px; display: flex; flex-direction: column; gap:6px; }
+.student { border: 1px solid #ccc; border-radius: 6px; padding: 10px; background: #f9f9f9; cursor: pointer; transition: 0.2s; font-size: 18px; position: relative; user-select: none; text-align:center; width: 90px; }
 #unassigned-students { display: flex; flex-wrap: wrap; gap: 8px; min-height: 60px; justify-content: center; }
+.student.leader { background: #fff18d; font-weight: bold; }
+.student.leader::after { content: "⭐"; position:absolute; top:2px; right:4px; }
+#unassigned { border: 2px dashed #aaa; background: #f4f4f4; padding: 10px; border-radius: 12px; width: 95%; margin: 20px auto 0 auto; overflow-x:auto; }
+#unassigned h4 { text-align: center; color: #666; font-size: 18px; }
 </style>
 </head>
 <body>
@@ -51,6 +51,7 @@ button:hover { background: #357ABD; }
 let students = [];
 let groups = {};
 const colors=["#d6eaff","#d6ffd6","#ffe6e6","#f0d6ff","#fff5cc","#ffd6f5"];
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
 document.getElementById('fileInput').addEventListener('change', handleFile,false);
 
@@ -62,8 +63,10 @@ function handleFile(e){
     const workbook=XLSX.read(data,{type:'array'});
     const sheet=workbook.Sheets[workbook.SheetNames[0]];
     const rows=XLSX.utils.sheet_to_json(sheet);
+
     students=rows.map(s=>({...s,isLeader:false}));
     groups={};
+
     if(rows.length>0) document.getElementById('title').innerText=rows[0].班級+" - "+rows[0].科目+" 學生分組";
 
     rows.forEach(s=>{
@@ -71,6 +74,7 @@ function handleFile(e){
       if(!groups[gName]) groups[gName]=[];
       groups[gName].push(s);
     });
+
     renderGroups(true);
   };
   reader.readAsArrayBuffer(file);
@@ -84,10 +88,28 @@ function createStudentDiv(stu){
   if(stu.isLeader) div.classList.add("leader");
 
   div.addEventListener("click", ()=>{
-    let groupName = Object.keys(groups).find(g=>groups[g].some(s=>s.座號==stu.座號));
-    groups[groupName].forEach(s=>s.isLeader=false);
-    stu.isLeader=true;
-    renderGroups();
+    if(isTouchDevice){
+      const groupNames = Object.keys(groups).filter(g=>g!=="未分組");
+      let groupName = prompt(`將 ${stu.姓名} 移到哪一組？\n可選：${groupNames.join(',')}`, groupNames[0]);
+      if(!groupName || !groups[groupName]) return;
+      Object.keys(groups).forEach(g=>groups[g]=groups[g].filter(s=>s.座號!=stu.座號));
+      groups[groupName].push(stu);
+      if(confirm(`是否設為 ${groupName} 組組長？`)){
+        groups[groupName].forEach(s=>s.isLeader=false);
+        stu.isLeader=true;
+      }
+      renderGroups();
+    } else {
+      // 桌面點擊切換組長
+      if(stu.isLeader){
+        stu.isLeader=false;
+      } else {
+        let groupName = Object.keys(groups).find(g=>groups[g].some(s=>s.座號==stu.座號));
+        groups[groupName].forEach(s=>s.isLeader=false);
+        stu.isLeader=true;
+      }
+      renderGroups();
+    }
   });
 
   return div;
@@ -112,31 +134,42 @@ function renderGroups(first=false){
       studentsContainer.className="students-container";
       groupDiv.appendChild(studentsContainer);
 
-      new Sortable(studentsContainer,{
-        group:'shared',
-        animation:150,
-        fallbackOnBody:true,
-        revertOnSpill:true,
-        onAdd: handleDrop
-      });
+      if(!isTouchDevice){
+        new Sortable(studentsContainer,{
+          group:'shared',
+          animation:150,
+          fallbackOnBody:true,
+          revertOnSpill:true,
+          delay:100,
+          touchStartThreshold:5,
+          onAdd: handleDrop
+        });
+      }
 
       groupsDiv.appendChild(groupDiv);
     });
 
-    new Sortable(document.getElementById("unassigned-students"),{
-      group:'shared',
-      animation:150,
-      fallbackOnBody:true,
-      revertOnSpill:true,
-      onAdd: handleDrop
-    });
+    if(!isTouchDevice){
+      new Sortable(document.getElementById("unassigned-students"),{
+        group:'shared',
+        animation:150,
+        fallbackOnBody:true,
+        revertOnSpill:true,
+        delay:100,
+        touchStartThreshold:5,
+        onAdd: handleDrop
+      });
+    }
   }
 
   Object.keys(groups).forEach((groupName,idx)=>{
     const container = groupName==="未分組"?document.getElementById("unassigned-students"):document.querySelector("#group-"+groupName+" .students-container");
     container.innerHTML="";
-    groups[groupName].forEach(stu=>container.appendChild(createStudentDiv(stu)));
+    groups[groupName].forEach(stu=>{
+      container.appendChild(createStudentDiv(stu));
+    });
   });
+
   renderLeaders();
 }
 
