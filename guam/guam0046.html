@@ -863,7 +863,9 @@ function getTiYong(result) {
       tiGua = getTrigramInfo(upperIdx);
     }
   }
-
+  console.log('體卦:', tiGua.name, '用卦:', yongGua.name);
+  return { tiGua, yongGua };
+}
     function getLineEntryFor(hex, lineIdx) {
       return hex.lines?.find(line => line.index === lineIdx) || { text: '無爻辭', meaning: '無解釋', score: 5 };
     }
