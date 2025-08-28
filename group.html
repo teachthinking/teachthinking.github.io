@@ -2,78 +2,23 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>陳秀蜜老師學生分組系統</title>
+  <title>秀蜜老師學生分組系統</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   <style>
-    body { 
-      font-family: "Microsoft JhengHei", Arial; 
-      margin: 20px; 
-      background: linear-gradient(135deg, #eef2f3, #dfe9f3);
-    }
-    h2 { 
-      text-align: center; 
-      color: #333; 
-      margin-bottom: 20px;
-    }
-    .toolbar { 
-      text-align: center; 
-      margin-bottom: 20px;
-    }
-    button { 
-      margin: 5px; 
-      padding: 10px 15px; 
-      border: none; 
-      border-radius: 6px; 
-      background: #4a90e2; 
-      color: white; 
-      cursor: pointer; 
-      font-size: 14px; 
-      transition: 0.2s;
-    }
+    body { font-family: "Microsoft JhengHei", Arial; margin: 20px; background: linear-gradient(135deg, #eef2f3, #dfe9f3); }
+    h2 { text-align: center; color: #333; margin-bottom: 20px; }
+    .toolbar { text-align: center; margin-bottom: 20px; }
+    button { margin: 5px; padding: 10px 15px; border: none; border-radius: 6px; background: #4a90e2; color: white; cursor: pointer; font-size: 14px; transition: 0.2s; }
     button:hover { background: #357ABD; }
-
-    .container { 
-      display: flex; 
-      flex-wrap: wrap; 
-      gap: 20px; 
-      justify-content: center;
-    }
-    .group { 
-      border-radius: 12px; 
-      padding: 15px; 
-      width: 240px; 
-      min-height: 150px; 
-      background: white; 
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
-      transition: 0.3s;
-    }
+    .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+    .group { border-radius: 12px; padding: 15px; width: 240px; min-height: 150px; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.3s; }
     .group:hover { transform: scale(1.03); }
-    .group h4 { 
-      text-align: center; 
-      margin-top: 0; 
-      margin-bottom: 10px; 
-      color: #444;
-    }
-    .student { 
-      border: 1px solid #ccc; 
-      border-radius: 6px; 
-      padding: 6px; 
-      margin: 5px 0; 
-      background: #f9f9f9; 
-      cursor: grab; 
-      transition: 0.2s;
-      font-size: 14px;
-    }
+    .group h4 { text-align: center; margin: 0 0 10px 0; color: #444; }
+    .student { border: 1px solid #ccc; border-radius: 6px; padding: 6px; margin: 5px 0; background: #f9f9f9; cursor: pointer; transition: 0.2s; font-size: 14px; }
     .student:hover { background: #e6f0ff; }
-    #unassigned { 
-      border: 2px dashed #aaa; 
-      background: #f4f4f4; 
-      padding: 10px; 
-      border-radius: 12px; 
-      width: 95%; 
-      margin: 0 auto 20px auto;
-    }
+    .leader { background: #ffe066 !important; font-weight: bold; }
+    #unassigned { border: 2px dashed #aaa; background: #f4f4f4; padding: 10px; border-radius: 12px; width: 95%; margin: 0 auto 20px auto; }
     #unassigned h4 { text-align: center; color: #666; }
   </style>
 </head>
@@ -84,6 +29,7 @@
     <input type="file" id="fileInput" />
     <button onclick="addGroup()">新增組別</button>
     <button onclick="randomAssign()">隨機分組</button>
+    <button onclick="autoAssignLeader()">隨機指定組長</button>
     <button onclick="exportExcel()">匯出 Excel</button>
   </div>
 
@@ -98,7 +44,6 @@
     let students = []; 
     let groups = {};   
 
-    // 組別配色
     const colors = ["#d6eaff", "#d6ffd6", "#ffe6e6", "#f0d6ff", "#fff5cc", "#ffd6f5"];
 
     document.getElementById('fileInput').addEventListener('change', handleFile, false);
@@ -112,7 +57,7 @@
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet);
 
-        students = rows;
+        students = rows.map(s => ({ ...s, isLeader: false }));
         groups = {};
 
         if (rows.length > 0) {
@@ -144,7 +89,6 @@
         groupDiv.className = "group";
         groupDiv.id = "group-" + groupName;
 
-        // 套用不同背景色（未分組不變）
         if (groupName !== "未分組") {
           groupDiv.style.background = colors[idx % colors.length];
         }
@@ -156,8 +100,13 @@
         groups[groupName].forEach(stu => {
           const div = document.createElement("div");
           div.className = "student";
-          div.innerText = stu.座號 + " " + stu.姓名 + " (" + stu.科目 + ")";
+          div.innerText = stu.座號 + " " + stu.姓名 + (stu.isLeader ? " ⭐" : "");
           div.dataset.id = stu.座號;
+          if (stu.isLeader) div.classList.add("leader");
+
+          // 點擊設定組長
+          div.addEventListener("click", () => toggleLeader(stu.座號));
+
           groupDiv.appendChild(div);
         });
 
@@ -223,6 +172,32 @@
       renderGroups();
     }
 
+    function toggleLeader(stuId) {
+      let stu = students.find(s => s.座號 == stuId);
+      if (!stu) return;
+
+      let groupName = Object.keys(groups).find(g => groups[g].some(s => s.座號 == stuId));
+      if (!groupName) return;
+
+      groups[groupName].forEach(s => s.isLeader = false);
+      stu.isLeader = true;
+
+      renderGroups();
+    }
+
+    function autoAssignLeader() {
+      Object.keys(groups).forEach(groupName => {
+        if (groupName === "未分組") return;
+        if (groups[groupName].length > 0) {
+          groups[groupName].forEach(s => s.isLeader = false);
+          // 隨機挑選組長
+          let randomIndex = Math.floor(Math.random() * groups[groupName].length);
+          groups[groupName][randomIndex].isLeader = true;
+        }
+      });
+      renderGroups();
+    }
+
     function exportExcel() {
       let exportData = [];
       Object.keys(groups).forEach(g => {
@@ -232,7 +207,8 @@
             科目: stu.科目,
             座號: stu.座號,
             姓名: stu.姓名,
-            組別: g === "未分組" ? "" : g
+            組別: g === "未分組" ? "" : g,
+            是否組長: stu.isLeader ? "Y" : ""
           });
         });
       });
