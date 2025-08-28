@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>陳秀蜜老師班級分組系統</title>
+  <title>陳秀蜜老師學生分組系統</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   <style>
@@ -95,10 +95,12 @@
   <div id="groups" class="container"></div>
 
   <script>
-    let students = []; // 全部學生
-    let groups = {};   // 分組資料 {組別: [學生...]}
+    let students = []; 
+    let groups = {};   
 
-    // 讀取 Excel
+    // 組別配色
+    const colors = ["#d6eaff", "#d6ffd6", "#ffe6e6", "#f0d6ff", "#fff5cc", "#ffd6f5"];
+
     document.getElementById('fileInput').addEventListener('change', handleFile, false);
 
     function handleFile(e) {
@@ -113,12 +115,10 @@
         students = rows;
         groups = {};
 
-        // 設定標題
         if (rows.length > 0) {
           document.getElementById('title').innerText = rows[0].班級 + " - " + rows[0].科目 + " 學生分組";
         }
 
-        // 按組別分類
         rows.forEach(s => {
           if (!s.組別 || s.組別 === "") {
             if (!groups["未分組"]) groups["未分組"] = [];
@@ -134,16 +134,20 @@
       reader.readAsArrayBuffer(file);
     }
 
-    // 渲染分組畫面
     function renderGroups() {
       const groupsDiv = document.getElementById("groups");
       groupsDiv.innerHTML = "";
       document.getElementById("unassigned").innerHTML = "<h4>未分組學生</h4>";
 
-      Object.keys(groups).forEach(groupName => {
+      Object.keys(groups).forEach((groupName, idx) => {
         const groupDiv = document.createElement("div");
         groupDiv.className = "group";
         groupDiv.id = "group-" + groupName;
+
+        // 套用不同背景色（未分組不變）
+        if (groupName !== "未分組") {
+          groupDiv.style.background = colors[idx % colors.length];
+        }
 
         const title = document.createElement("h4");
         title.innerText = groupName;
@@ -152,73 +156,65 @@
         groups[groupName].forEach(stu => {
           const div = document.createElement("div");
           div.className = "student";
-          // 顯示 座號 姓名 (科目)
           div.innerText = stu.座號 + " " + stu.姓名 + " (" + stu.科目 + ")";
           div.dataset.id = stu.座號;
           groupDiv.appendChild(div);
         });
 
-        // 加入到畫面
         if (groupName === "未分組") {
           document.getElementById("unassigned").append(...groupDiv.childNodes);
         } else {
           groupsDiv.appendChild(groupDiv);
         }
 
-        // 設置可拖曳
         new Sortable(groupDiv, {
           group: 'shared',
           animation: 150,
+          fallbackOnBody: true,
+          revertOnSpill: true,
           onAdd: updateGroups
         });
       });
 
-      // 讓「未分組」區塊也支援拖曳
       new Sortable(document.getElementById("unassigned"), {
         group: 'shared',
         animation: 150,
+        fallbackOnBody: true,
+        revertOnSpill: true,
         onAdd: updateGroups
       });
     }
 
-    // 拖曳後更新分組
     function updateGroups(evt) {
       const groupName = evt.to.querySelector("h4") ? evt.to.querySelector("h4").innerText : "未分組";
       const stuId = evt.item.dataset.id;
       const stu = students.find(s => s.座號 == stuId);
 
-      // 從原本移除
       Object.keys(groups).forEach(g => {
         groups[g] = groups[g].filter(s => s.座號 != stuId);
       });
 
-      // 加到新組
       if (!groups[groupName]) groups[groupName] = [];
       groups[groupName].push(stu);
     }
 
-    // 新增組別
     function addGroup() {
       const newGroup = "第" + (Object.keys(groups).length) + "組";
       groups[newGroup] = [];
       renderGroups();
     }
 
-    // 隨機分組
     function randomAssign() {
       const numGroups = parseInt(prompt("要分成幾組？", "4"));
       if (!numGroups || numGroups <= 0) return;
 
-      // 清空分組
       groups = {};
       for (let i = 1; i <= numGroups; i++) {
         groups["第" + i + "組"] = [];
       }
 
-      // 打亂學生順序
       let shuffled = [...students].sort(() => Math.random() - 0.5);
 
-      // 平均分配
       shuffled.forEach((stu, index) => {
         let groupName = "第" + ((index % numGroups) + 1) + "組";
         groups[groupName].push(stu);
@@ -227,7 +223,6 @@
       renderGroups();
     }
 
-    // 匯出 Excel
     function exportExcel() {
       let exportData = [];
       Object.keys(groups).forEach(g => {
