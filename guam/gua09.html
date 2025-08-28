@@ -1353,8 +1353,7 @@ if (!svg) {
 };
 
 // 以下為其餘函數的實現，確保語法完整
-const renderWuxingAnalysisText = () => {
-  const lunar = lunarCalendar.gregorianToLunar(new Date());
+const renderWuxingAnalysisText = (tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonthNumber) => {
   const elements = [
     { id: 'mainUpperWuxing', gua: mainUpperGua },
     { id: 'mainLowerWuxing', gua: mainLowerGua },
@@ -1366,16 +1365,20 @@ const renderWuxingAnalysisText = () => {
 
   elements.forEach(({ id, gua }) => {
     const element = document.getElementById(id);
-    if (element) {
-      element.textContent = `${gua.wuxing} (${getWuxingStatus(gua.wuxing, lunar.lunarMonthNumber)})`;
+    if (element && gua && gua.wuxing) {
+      element.textContent = `${gua.wuxing} (${getWuxingStatus(gua.wuxing, lunarMonthNumber)})`;
+    } else {
+      console.warn(`無法設置元素 ${id} 的五行資訊：gua 或 wuxing 為空`);
     }
   });
 
   const tiElements = ['tiGuaWuxing', 'tiGuaWuxing2', 'tiGuaWuxing3', 'tiGuaWuxing4', 'tiGuaWuxing5', 'tiGuaWuxing6'];
   tiElements.forEach(id => {
     const element = document.getElementById(id);
-    if (element) {
+    if (element && tiGua && tiGua.wuxing) {
       element.textContent = tiGua.wuxing;
+    } else {
+      console.warn(`無法設置體卦元素 ${id} 的五行資訊：tiGua 或 wuxing 為空`);
     }
   });
 
@@ -1390,11 +1393,62 @@ const renderWuxingAnalysisText = () => {
 
   relations.forEach(({ id, relation }) => {
     const element = document.getElementById(id);
-    if (element) {
+    if (element && relation) {
       element.textContent = wuxingExplanations[relationMap[relation]]?.meaning || relation;
       element.className = `wuxing-status ${relation === '用生體' || relation === '體剋用' ? 'positive' : relation === '比和' ? 'neutral' : 'negative'}`;
+    } else {
+      console.warn(`無法設置關係元素 ${id}：relation 為空或元素不存在`);
     }
   });
+};
+
+const renderWuxingAnalysis = result => {
+  const { tiGua, yongGua } = getTiYong(result);
+  if (!tiGua || !yongGua) {
+    console.error('體卦或用卦未正確獲取', { tiGua, yongGua });
+    alert('無法進行五行分析：體卦或用卦數據缺失！');
+    return;
+  }
+
+  const mainUpperGua = getTrigramInfo(result.uIdx);
+  const mainLowerGua = getTrigramInfo(result.lIdx);
+  const huUpperIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8;
+  const huLowerIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8;
+  const changeUpperIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8;
+  const changeLowerIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8;
+  const huUpperGua = getTrigramInfo(huUpperIdx);
+  const huLowerGua = getTrigramInfo(huLowerIdx);
+  const changeUpperGua = getTrigramInfo(changeUpperIdx);
+  const changeLowerGua = getTrigramInfo(changeLowerIdx);
+
+  const lunar = lunarCalendar.gregorianToLunar(new Date());
+  const { lunarMonth, season, lunarMonthNumber } = lunar;
+
+  if (!mainUpperGua || !mainLowerGua || !huUpperGua || !huLowerGua || !changeUpperGua || !changeLowerGua) {
+    console.error('卦象資訊不完整', {
+      mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua
+    });
+    alert('無法進行五行分析：卦象數據不完整！');
+    return;
+  }
+
+  renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber);
+  renderWuxingAnalysisText(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonthNumber);
+
+  const score = calculateAuspiciousness(
+    result.hexMain, result.hexChange, result.hexHu, result.moving,
+    tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua,
+    lunarMonthNumber
+  );
+  renderAuspiciousnessBar(score);
+
+  const judgeBox = document.getElementById('judgeBox');
+  if (judgeBox) {
+    judgeBox.classList.remove('hidden');
+  } else {
+    console.error('找不到 judgeBox 元素');
+    alert('無法顯示五行分析：頁面元素缺失！');
+  }
 };
 
 const calculateAuspiciousness = (mainHex, changeHex, huHex, moving, tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonthNumber) => {
