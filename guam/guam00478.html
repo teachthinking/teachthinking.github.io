@@ -1688,7 +1688,7 @@ function renderDetailedAnalysis(result) {
   detailedAnalysis.classList.remove('hidden');
   detailedAnalysis.innerHTML = '';
 
-  const timestamp = new Date(result.timestamp || '2025-08-28T23:40:54+08:00');
+  const timestamp = new Date(result.timestamp || '2025-08-28T23:21:00+08:00');
   const { lunarMonth, season, lunarMonthNumber } = lunarCalendar.gregorianToLunar(timestamp);
   const { tiGua, yongGua } = getTiYong(result);
 
@@ -1699,7 +1699,6 @@ function renderDetailedAnalysis(result) {
     <p><strong>問題：</strong> ${result.question || '無'}</p>
     <p><strong>體卦：</strong> ${tiGua.name} (${tiGua.wuxing}, ${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)})</p>
     <p><strong>用卦：</strong> ${yongGua.name} (${yongGua.wuxing}, ${getWuxingStatus(yongGua.wuxing, lunarMonthNumber)})</p>
-    <p><strong>體卦五行建議：</strong> ${wuxingExplanations.wuxing_status[tiGua.wuxing]?.suggestions[getWuxingStatus(tiGua.wuxing, lunarMonthNumber)] || '無建議'}</p>
   `;
 
   const relations = [
@@ -1714,10 +1713,10 @@ function renderDetailedAnalysis(result) {
   relations.forEach(({ name, gua, position }) => {
     const relation = getRelation(tiGua.wuxing, gua.wuxing);
     const status = getWuxingStatus(gua.wuxing, lunarMonthNumber);
-    const relationKey = relationMap[relation] || '未知';
-    const trigramKey = `${gua.name}卦${relation === 'generate_ti' ? '生體' : relation === 'generate_yong' ? '生用' : relation === 'overcome_ti' ? '剋體' : relation === 'overcome_yong' ? '�克用' : relation}`;
+    const relationKey = relationMap[relation];
+    const trigramKey = `${gua.name}卦${relation.includes('生') ? relation.replace('體', '生體').replace('用', '生用') : relation}`;
     console.log('關係:', relation, 'relationKey:', relationKey, 'trigramKey:', trigramKey);
-    const relationData = wuxingExplanations[relationKey] || { overall: '無總結', details: {} };
+    const relationData = wuxingExplanations[relationKey] || { display_name: '未知', overall: '無總結', details: {} };
     console.log('relationData:', relationData);
     const explanationObj = relationData.details[trigramKey] || { title: '無標題', description: '無詳細解釋', love: '', career: '', wealth: '', health: '', relationship: '', life: '', guidance: '' };
     console.log('explanationObj:', explanationObj);
@@ -1731,14 +1730,14 @@ function renderDetailedAnalysis(result) {
     });
 
     let extra = '';
-    if (relation === 'overcome_ti') {
+    if (relation === '用剋體') {
       extra = `<p><strong>建議：</strong> ${getSuggestionForYongKeTi(gua.wuxing, tiGua.wuxing)}</p>`;
     }
 
     detailedAnalysis.innerHTML += `
       <div class="wuxing-box">
         <h5>${name}（${gua.name}, ${gua.wuxing}, ${status}, ${position}）</h5>
-        <p><strong>關係：</strong> ${relationData.overall || '無總結'}</p>
+        <p><strong>關係：</strong> ${relationData.display_name} - ${relationData.overall}</p>
         <p><strong>${explanationObj.title}：</strong> ${explanationObj.description}</p>
         ${detailsHtml}
         ${extra}
