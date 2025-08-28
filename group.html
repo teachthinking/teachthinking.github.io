@@ -12,11 +12,13 @@ h2 { text-align: center; color: #333; margin-bottom: 20px; }
 button { margin: 5px; padding: 10px 15px; border: none; border-radius: 6px; background: #4a90e2; color: white; cursor: pointer; font-size: 14px; transition: 0.2s; }
 button:hover { background: #357ABD; }
 .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
-.group { border-radius: 12px; padding: 15px; width: 240px; min-height: 150px; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); position: relative; transition: 0.3s; }
+.group { border-radius: 12px; padding: 15px; width: 240px; min-height: 180px; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); position: relative; transition: 0.3s; }
 .group:hover { transform: scale(1.03); }
 .group h4 { text-align: center; margin: 0 0 10px 0; color: #444; }
-.students-container { min-height: 50px; }
-.student { border: 1px solid #ccc; border-radius: 6px; padding: 6px; margin: 5px 0; background: #f9f9f9; cursor: pointer; transition: 0.2s; font-size: 14px; position: relative; }
+.students-container { min-height: 60px; display: flex; flex-direction: column; gap:6px; }
+#unassigned-students { display: flex; flex-wrap: wrap; gap: 8px; min-height: 60px; }
+.student { border: 1px solid #ccc; border-radius: 6px; padding: 10px; background: #f9f9f9; cursor: pointer; transition: 0.2s; font-size: 16px; position: relative; user-select: none; text-align:center; }
+#unassigned-students .student { width: 80px; font-size:14px; padding:6px; }
 .student:hover { background: #e6f0ff; }
 .student.leader { background: #fff18d; font-weight: bold; }
 .student.leader::after { content: " ⭐"; }
@@ -30,14 +32,14 @@ button:hover { background: #357ABD; }
 
 <div class="toolbar">
 <input type="file" id="fileInput" />
-<button onclick="addGroup()">新增組別</button>
+<button onclick="assistGrouping()">協助分組</button>
 <button onclick="randomAssign()">隨機分組</button>
 <button onclick="autoAssignLeader()">隨機指定組長</button>
 <button onclick="exportExcel()">匯出 Excel</button>
 </div>
 
 <div id="unassigned" class="group" data-group-name="未分組"><h4>未分組學生</h4>
-  <div id="unassigned-students" class="students-container"></div>
+  <div id="unassigned-students"></div>
 </div>
 
 <h3 style="text-align:center;">分組區</h3>
@@ -90,11 +92,9 @@ function createStudentDiv(stu){
       stu.isLeader=false;
       div.classList.remove("leader");
     } else {
-      // 先取消同組其他組長
       let groupName = Object.keys(groups).find(g=>groups[g].some(s=>s.座號==stu.座號));
       groups[groupName].forEach(s=>s.isLeader=false);
       stu.isLeader=true;
-      // 更新顏色
       document.querySelectorAll("#group-"+groupName+" .student").forEach(d=>{
         d.classList.remove("leader");
         if(d.dataset.id==stu.座號) d.classList.add("leader");
@@ -130,6 +130,8 @@ function renderGroups(first=false){
         animation:150,
         fallbackOnBody:true,
         revertOnSpill:true,
+        delay:100,
+        touchStartThreshold:5,
         onAdd: handleDrop
       });
 
@@ -141,11 +143,12 @@ function renderGroups(first=false){
       animation:150,
       fallbackOnBody:true,
       revertOnSpill:true,
+      delay:100,
+      touchStartThreshold:5,
       onAdd: handleDrop
     });
   }
 
-  // 更新學生 DOM
   Object.keys(groups).forEach((groupName,idx)=>{
     const container = groupName==="未分組"?document.getElementById("unassigned-students"):document.querySelector("#group-"+groupName+" .students-container");
     container.innerHTML="";
@@ -157,7 +160,6 @@ function renderGroups(first=false){
   renderLeaders();
 }
 
-// 拖曳處理
 function handleDrop(evt){
   const stuId=evt.item.dataset.id;
   const stu=students.find(s=>s.座號==stuId);
@@ -168,7 +170,6 @@ function handleDrop(evt){
   renderGroups();
 }
 
-// 顯示組長清單
 function renderLeaders(){
   const div=document.getElementById("leadersList");
   div.innerHTML="";
@@ -181,52 +182,62 @@ function renderLeaders(){
   });
 }
 
-// 新增組別
-function addGroup(){
-  const newGroup="第"+(Object.keys(groups).length)+"組";
-  groups[newGroup]=[];
-  const idx = Object.keys(groups).length-1;
-  const groupDiv=document.createElement("div");
-  groupDiv.className="group";
-  groupDiv.id="group-"+newGroup;
-  groupDiv.dataset.groupName=newGroup;
-  groupDiv.style.background=colors[idx%colors.length];
+// 協助分組：建立新組數並隨機分配學生
+function assistGrouping(){
+  const numGroups = parseInt(prompt("要分幾組？","4"));
+  if(!numGroups || numGroups<=0) return;
 
-  const title=document.createElement("h4");
-  title.innerText=newGroup;
-  groupDiv.appendChild(title);
-
-  const studentsContainer=document.createElement("div");
-  studentsContainer.className="students-container";
-  groupDiv.appendChild(studentsContainer);
-
-  new Sortable(studentsContainer,{
-    group:'shared',
-    animation:150,
-    fallbackOnBody:true,
-    revertOnSpill:true,
-    onAdd: handleDrop
+  // 收集所有學生
+  let allStudents = [];
+  Object.keys(groups).forEach(g=>{
+    allStudents = allStudents.concat(groups[g].map(s=>({...s,isLeader:false})));
   });
 
-  document.getElementById("groups").appendChild(groupDiv);
-  renderGroups();
-}
+  // 清空桌子區
+  const groupsDiv = document.getElementById("groups");
+  groupsDiv.innerHTML="";
+  groups = {};
 
-// 隨機分組
-function randomAssign(){
-  const numGroups=parseInt(prompt("要分成幾組？","4"));
-  if(!numGroups||numGroups<=0) return;
-  groups={};
-  for(let i=1;i<=numGroups;i++) groups["第"+i+"組"]=[];
-  let shuffled=[...students].sort(()=>Math.random()-0.5);
-  shuffled.forEach((stu,index)=>{
-    let groupName="第"+((index%numGroups)+1)+"組";
+  // 建立新組別
+  for(let i=1;i<=numGroups;i++){
+    groups["第"+i+"組"]=[];
+  }
+
+  // 隨機打亂學生
+  allStudents.sort(()=>Math.random()-0.5);
+
+  // 平均分配學生到新組
+  allStudents.forEach((stu,index)=>{
+    let groupName = "第"+((index % numGroups)+1)+"組";
     groups[groupName].push(stu);
   });
+
+  renderGroups(true);
+}
+
+// 隨機分組（現有組別）
+function randomAssign(){
+  const groupNames = Object.keys(groups).filter(g=>g!=="未分組");
+  if(groupNames.length === 0) { alert("先建立組別"); return; }
+
+  let allStudents = [];
+  Object.keys(groups).forEach(g=>{
+    allStudents = allStudents.concat(groups[g]);
+    if(g!=="未分組") groups[g] = [];
+  });
+
+  allStudents.sort(()=>Math.random()-0.5);
+
+  allStudents.forEach((stu,index)=>{
+    let groupName = index<groupNames.length ? groupNames[index] : groupNames[index % groupNames.length];
+    groups[groupName].push(stu);
+    stu.isLeader=false;
+  });
+
   renderGroups();
 }
 
-// 隨機組長
+// 隨機指定組長
 function autoAssignLeader(){
   Object.keys(groups).forEach(groupName=>{
     if(groupName==="未分組") return;
