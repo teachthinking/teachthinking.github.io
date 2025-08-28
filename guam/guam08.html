@@ -218,21 +218,6 @@
       stroke-width: 2;
     }
 
-    .wuxing-node.木 {
-      fill: var(--wood-color);
-    }
-    .wuxing-node.火 {
-      fill: var(--fire-color);
-    }
-    .wuxing-node.土 {
-      fill: var(--earth-color);
-    }
-    .wuxing-node.金 {
-      fill: var(--metal-color);
-    }
-    .wuxing-node.水 {
-      fill: var(--water-color);
-    }
 
     .wuxing-node:hover {
       opacity: 0.8;
@@ -334,11 +319,9 @@
       color: var(--text-color);
       font-weight: 600;
     }
-    #wuxingSvg {
-  display: block;
-  margin: 0 auto;
-  background: #f8f9fa; /* Light background to confirm SVG visibility */
-  border: 1px solid #ccc; /* Add border for debugging */
+#wuxingSvg {
+  background: var(--background-color, #f8f9fa);
+  border: 1px solid var(--border-color, #ccc);
 }
 
 .wuxing-node {
@@ -388,6 +371,12 @@
 }
 #judgeBox {
   display: block;
+}
+    .wuxing-node-text {
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
   </style>
 </head>
