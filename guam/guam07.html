@@ -861,16 +861,15 @@
       }
     }
 
-    function getGuaObject(guaName) {
-      const hex = hexagrams[normalizeKey(guaName)] || { symbolism: { overall: '未知' } };
-      const wuxingMap = { '乾': '金', '坤': '土', '震': '木', '巽': '木', '坎': '水', '離': '火', '艮': '土', '兌': '金' };
-      return {
-        name: guaName,
-        wuxing: wuxingMap[guaName] || '未知',
-        symbolism: hex.symbolism?.overall || '未知'
-      };
-    }
-
+function getGuaObject(guaName) {
+  const wuxingMap = { '乾': '金', '兌': '金', '離': '火', '震': '木', '巽': '木', '坎': '水', '艮': '土', '坤': '土' };
+  const hex = hexagrams[normalizeKey(guaName)] || { symbolism: { overall: '未知' } };
+  return {
+    name: guaName,
+    wuxing: wuxingMap[guaName] || '未知',
+    symbolism: hex.symbolism?.overall || '未知'
+  };
+}
     function generateGuaFromMeihua(method = 'time', input = new Date()) {
       console.log('梅花起卦: 方法', method);
       let yearZhi, month, day, hourZhi;
@@ -1666,30 +1665,28 @@
         }
       });
 
-      document.getElementById('judgeBtn').addEventListener('click', () => {
-        if (!currentResult) {
-          alert('請先進行取卦！');
-          return;
-        }
-        const lunarInfo = lunarCalendar.gregorianToLunar(new Date(currentResult.timestamp));
-        const { tiGua, yongGua } = getTiYong(currentResult);
-        const guas = generateGuaFromMeihua('time', new Date(currentResult.timestamp));
-        renderWuxingDiagram(
-          tiGua,
-          getGuaObject(trigramName[currentResult.uIdx]),
-          getGuaObject(trigramName[currentResult.lIdx]),
-          guas.huUpperGua,
-          guas.huLowerGua,
-          guas.changeUpperGua,
-          guas.changeLowerGua,
-          lunarInfo.lunarMonth,
-          lunarInfo.season,
-          lunarInfo.lunarMonthNumber
-        );
-        renderDetailedAnalysis(currentResult);
-        document.getElementById('judgeBox').classList.remove('hidden');
-      });
-
+document.getElementById('judgeBtn').addEventListener('click', async () => {
+  if (!currentResult) {
+    alert('請先進行取卦！');
+    return;
+  }
+  const lunarInfo = lunarCalendar.gregorianToLunar(new Date(currentResult.timestamp));
+  const guas = generateGuaFromMeihua('time', new Date(currentResult.timestamp));
+  await renderWuxingDiagram(
+    guas.tiGua,
+    getGuaObject(trigramName[currentResult.uIdx]),
+    getGuaObject(trigramName[currentResult.lIdx]),
+    guas.huUpperGua,
+    guas.huLowerGua,
+    guas.changeUpperGua,
+    guas.changeLowerGua,
+    lunarInfo.lunarMonth,
+    lunarInfo.season,
+    lunarInfo.lunarMonthNumber
+  );
+  renderDetailedAnalysis(currentResult);
+  document.getElementById('judgeBox').classList.remove('hidden');
+});
       document.getElementById('downloadSvgBtn').addEventListener('click', downloadSvg);
       document.getElementById('openSvgWindowBtn').addEventListener('click', openSvgInNewWindow);
 
