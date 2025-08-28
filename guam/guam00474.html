@@ -1755,7 +1755,7 @@ function renderDetailedAnalysis(result) {
       <p><strong>總結：</strong> ${combinedData.details}</p>
     </div>
   `;
-}tion getCombinedRelation(scores) {
+function getCombinedRelation(scores) {
   const totalScore = scores.reduce((sum, score) => sum + score, 0);
   if (totalScore > 20) return '吉';
   if (totalScore > 0) return '中吉';
