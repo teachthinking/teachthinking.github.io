@@ -182,31 +182,31 @@ function renderLeaders(){
   });
 }
 
-// 協助分組：建立新組數並隨機分配學生
+// 協助分組：包含未分組，分組前清空所有組別
 function assistGrouping(){
   const numGroups = parseInt(prompt("要分幾組？","4"));
   if(!numGroups || numGroups<=0) return;
 
-  // 收集所有學生
+  // 取出所有學生（包含未分組）
   let allStudents = [];
   Object.keys(groups).forEach(g=>{
     allStudents = allStudents.concat(groups[g].map(s=>({...s,isLeader:false})));
   });
 
-  // 清空桌子區
-  const groupsDiv = document.getElementById("groups");
-  groupsDiv.innerHTML="";
+  const method = prompt("分組方式：輸入 1 隨機分組 / 2 照座號分組","1");
+  if(method==="1"){ allStudents.sort(()=>Math.random()-0.5);}
+  else if(method==="2"){ allStudents.sort((a,b)=>a.座號 - b.座號);}
+  else { alert("輸入錯誤，使用隨機分組"); allStudents.sort(()=>Math.random()-0.5); }
+
+  // 清空原本所有組別（包含未分組）
   groups = {};
+  document.getElementById("groups").innerHTML="";
+  document.getElementById("unassigned-students").innerHTML="";
 
   // 建立新組別
-  for(let i=1;i<=numGroups;i++){
-    groups["第"+i+"組"]=[];
-  }
+  for(let i=1;i<=numGroups;i++){ groups["第"+i+"組"]=[]; }
 
-  // 隨機打亂學生
-  allStudents.sort(()=>Math.random()-0.5);
-
-  // 平均分配學生到新組
+  // 分配學生到新組
   allStudents.forEach((stu,index)=>{
     let groupName = "第"+((index % numGroups)+1)+"組";
     groups[groupName].push(stu);
@@ -270,11 +270,10 @@ function exportExcel(){
   XLSX.utils.book_append_sheet(wb,ws,"分組結果");
   XLSX.writeFile(wb,"分組結果.xlsx");
 }
-  // 在頁面關閉或重新整理前提醒
+
+// 離開提醒
 window.addEventListener("beforeunload", function (e) {
-    // 判斷是否有學生資料
     if (students.length > 0) {
-        // 標準方式設定訊息
         e.preventDefault();
         e.returnValue = "您尚未匯出分組結果，確定要離開嗎？";
         return "您尚未匯出分組結果，確定要離開嗎？";
