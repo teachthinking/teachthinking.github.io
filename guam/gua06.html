@@ -4,287 +4,337 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>張老師易經(梅花心易)</title>
-  <style>
- :root {
-  --primary-color: #2c3e50;
-  --secondary-color: #3498db;
-  --negative-color: #e74c3c;
-  --positive-color: #4caf50;
-  --background-color: #f4f7f9;
-  --card-bg: #ffffff;
-  --border-color: #e0e6ed;
-  --text-color: #333333;
-  --sub-text-color: #7f8c8d;
-  --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.05);
-  --border-radius: 12px;
-  --font-family: 'Noto Sans TC', sans-serif;
-  --wood-color: #27ae60;
-  --fire-color: #e74c3c;
-  --earth-color: #f1c40f;
-  --metal-color: #bdc3c7;
-  --water-color: #3498db;
-}
+ <style>
+   :root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --negative-color: #e74c3c;
+    --positive-color: #4caf50;
+    --yellow-color: #f1c40f;
+    --background-color: #f4f7f9;
+    --card-bg: #ffffff;
+    --border-color: #e0e6ed;
+    --text-color: #333333;
+    --sub-text-color: #7f8c8d;
+    --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.05);
+    --border-radius: 12px;
+    --font-family: 'Noto Sans TC', sans-serif;
+    --wood-color: #27ae60;
+    --fire-color: #e74c3c;
+    --earth-color: #f1c40f;
+    --metal-color: #bdc3c7;
+    --water-color: #3498db;
+  }
 
-/* 基礎排版 */
-body {
-  font-family: var(--font-family);
-  background: var(--background-color);
-  color: var(--text-color);
-  padding: 20px;
-  line-height: 1.6;
-  margin: 0;
-  font-size: 16px;
-}
+    body {
+      font-family: var(--font-family);
+      background: var(--background-color);
+      color: var(--text-color);
+      padding: 20px;
+      line-height: 1.6;
+      margin: 0;
+    }
 
-h1 {
-  margin: 0 0 8px;
-  font-size: 28px;
-  color: var(--primary-color);
-}
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 25px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-light);
+    }
 
-h2.subtitle {
-  margin: 0 0 20px;
-  color: var(--sub-text-color);
-  font-weight: 400;
-  font-size: 16px;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 15px;
-}
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      color: var(--primary-color);
+    }
 
-/* 共用卡片樣式 */
-.card {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-}
+    h2.subtitle {
+      margin: 0 0 20px 0;
+      color: var(--sub-text-color);
+      font-weight: 400;
+      font-size: 16px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 15px;
+    }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 25px;
-  box-shadow: var(--shadow-light);
-  background: var(--card-bg);
-}
+    .tab-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
 
-/* Tabs */
-.tab-buttons {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-}
+    .tab-button {
+      padding: 10px 18px;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border-color);
+      background: transparent;
+      cursor: pointer;
+      color: var(--sub-text-color);
+      transition: all 0.3s ease;
+      font-size: 15px;
+    }
 
-.tab-button {
-  padding: 10px 18px;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
-  background: transparent;
-  cursor: pointer;
-  color: var(--sub-text-color);
-  transition: all 0.3s ease;
-  font-size: 15px;
-}
-.tab-button.active,
-.tab-button:hover {
-  background: var(--primary-color);
-  color: #fff;
-  border-color: var(--primary-color);
-}
+    .tab-button.active {
+      background: var(--primary-color);
+      color: #fff;
+      border-color: var(--primary-color);
+    }
 
-/* Content */
-.tab-content { display: none; padding-top: 10px; }
-.tab-content.active { display: block; }
+    .tab-content {
+      display: none;
+      padding-top: 10px;
+    }
 
-.row {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin: 12px 0;
-}
+    .tab-content.active {
+      display: block;
+    }
 
-.hint {
-  font-size: 13px;
-  color: var(--sub-text-color);
-  line-height: 1.5;
-}
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
 
-/* 卦象顯示 */
-.gua-box {
-  @extend .card;
-  padding: 20px;
-  margin-bottom: 20px;
-  background: var(--background-color);
-}
+    .hint {
+      font-size: 13px;
+      color: var(--sub-text-color);
+      line-height: 1.5;
+    }
 
-.gua-display-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 10px 0;
-}
+    .gua-box {
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      background: var(--background-color);
+      margin-bottom: 20px;
+    }
 
-.gua-line {
-  width: 60px;
-  height: 10px;
-  margin: 5px 0;
-  background: var(--text-color);
-  position: relative;
-}
-.gua-line.yin::after {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 10px;
-  background: var(--card-bg);
-  left: 20px;
-}
-.gua-line.moving::before {
-  content: '×';
-  position: absolute;
-  color: var(--negative-color);
-  font-size: 16px;
-  left: -20px;
-  top: -3px;
-}
+    .hidden {
+      display: none;
+    }
 
-.gua-name {
-  margin-top: 10px;
-  font-weight: bold;
-  font-size: 16px;
-  color: var(--primary-color);
-  text-align: center;
-}
+    button.primary {
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
 
-/* 按鈕與輸入 */
-button.primary {
-  background: var(--primary-color);
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-button.primary:hover,
-button.primary:focus {
-  background: var(--secondary-color);
-}
+    button.primary:hover {
+      background: var(--secondary-color);
+    }
 
-input, select {
-  padding: 8px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  font-size: 14px;
-  width: 200px;
-}
+    input, select {
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      font-size: 14px;
+    }
 
-/* 共用 focus 樣式 */
-:focus {
-  outline: 2px solid var(--secondary-color);
-  outline-offset: 2px;
-}
+    .gua-display-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 10px 0;
+    }
 
-/* 五行區塊 */
-.wuxing-box {
-  margin: 15px 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  max-width: 600px;
-}
-.wuxing-box ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.wuxing-box li {
-  @extend .card;
-  flex: 1 1 calc(50% - 10px);
-  min-width: 280px;
-  padding: 10px;
-}
+    .gua-line {
+      width: 60px;
+      height: 10px;
+      margin: 5px 0;
+      background: var(--text-color);
+      position: relative;
+    }
 
-.wuxing-status.positive { color: var(--positive-color); }
-.wuxing-status.neutral  { color: var(--secondary-color); }
-.wuxing-status.negative { color: var(--negative-color); }
+    .gua-line.yin::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 10px;
+      background: var(--card-bg);
+      left: 20px;
+    }
 
-.wuxing-node { stroke: var(--primary-color); stroke-width: 2; }
-.wuxing-node.木 { fill: var(--wood-color); }
-.wuxing-node.火 { fill: var(--fire-color); }
-.wuxing-node.土 { fill: var(--earth-color); }
-.wuxing-node.金 { fill: var(--metal-color); }
-.wuxing-node.水 { fill: var(--water-color); }
-.wuxing-node:hover { opacity: 0.8; cursor: pointer; }
+    .gua-line.moving::before {
+      content: '×';
+      position: absolute;
+      color: var(--negative-color);
+      font-size: 16px;
+      left: -20px;
+      top: -3px;
+    }
 
-.wuxing-node-text { text-anchor: middle; font-size: 12px; fill: var(--text-color); }
-.wuxing-edge-generate { stroke: var(--positive-color); }
-.wuxing-edge-overcome { stroke: var(--negative-color); }
-.wuxing-edge-harmony { stroke: var(--secondary-color); }
-.wuxing-edge-label { font-size: 10px; fill: var(--text-color); text-anchor: middle; }
+    .gua-name {
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 16px;
+      color: var(--primary-color);
+      text-align: center;
+    }
 
-/* 分數卡片 */
-.score-card {
-  @extend .card;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 10px 0;
-  padding: 10px;
-  font-size: 14px;
-}
+    .wuxing-box {
+      margin: 15px 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      max-width: 600px;
+    }
 
-.score-bar-wrap {
-  flex: 1;
-  height: 20px;
-  background: #e0e6ed;
-  border-radius: 10px;
-  overflow: hidden;
-}
-.score-bar { height: 100%; transition: width 0.3s ease; }
+    .wuxing-box ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
 
-.auspiciousness-index {
-  @extend .card;
-  font-size: 18px;
-  font-weight: bold;
-  margin: 15px 0;
-  padding: 10px;
-  text-align: center;
-}
-.auspiciousness-bar {
-  height: 20px;
-  width: 100%;
-  max-width: 400px;
-  margin: 10px auto;
-  border-radius: var(--border-radius);
-  overflow: hidden;
-}
+    .wuxing-box li {
+      flex: 1 1 calc(50% - 10px);
+      min-width: 280px;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      background: var(--card-bg);
+    }
 
-/* 爻辭解釋 */
-.line-explanation {
-  margin: 15px 0;
-  padding: 10px;
-  background: var(--background-color);
-  border-radius: var(--border-radius);
-}
+    .wuxing-status {
+      font-weight: bold;
+    }
 
-.wuxing-controls {
-  display: flex;
-  gap: 10px;
-  margin: 10px 0;
-}
+    .wuxing-status.positive { color: var(--positive-color); }
+    .wuxing-status.neutral { color: var(--secondary-color); }
+    .wuxing-status.negative { color: var(--negative-color); }
 
-/* 響應式 */
-@media (max-width: 768px) {
-  .container { padding: 15px; }
-  .row { flex-direction: column; align-items: flex-start; }
-  input, select { width: 100%; }
-  .gua-display-container { transform: scale(0.8); }
-}
+    .wuxing-node {
+      stroke: var(--primary-color);
+      stroke-width: 2;
+    }
 
+    .wuxing-node.木 {
+      fill: var(--wood-color);
+    }
+    .wuxing-node.火 {
+      fill: var(--fire-color);
+    }
+    .wuxing-node.土 {
+      fill: var(--earth-color);
+    }
+    .wuxing-node.金 {
+      fill: var(--metal-color);
+    }
+    .wuxing-node.水 {
+      fill: var(--water-color);
+    }
+
+    .wuxing-node:hover {
+      opacity: 0.8;
+      cursor: pointer;
+    }
+
+    .wuxing-node-text {
+      text-anchor: middle;
+      font-size: 12px;
+      fill: var(--text-color);
+    }
+
+    .wuxing-edge-generate {
+      stroke: var(--positive-color);
+    }
+
+    .wuxing-edge-overcome {
+      stroke: var(--negative-color);
+    }
+
+    .wuxing-edge-harmony {
+      stroke: var(--secondary-color);
+    }
+
+    .wuxing-edge-label {
+      font-size: 10px;
+      fill: var(--text-color);
+      text-anchor: middle;
+    }
+
+    .score-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0;
+      padding: 10px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      font-size: 14px;
+    }
+
+    .score-bar-wrap {
+      flex: 1;
+      height: 20px;
+      background: #e0e6ed;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .score-bar {
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+
+    .auspiciousness-index {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 15px 0;
+      padding: 10px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      text-align: center;
+    }
+
+    .auspiciousness-bar {
+      height: 20px;
+      width: 100%;
+      max-width: 400px;
+      margin: 10px auto;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+    }
+
+    .line-explanation {
+      margin: 15px 0;
+      padding: 10px;
+      background: var(--background-color);
+      border-radius: var(--border-radius);
+    }
+
+    .wuxing-controls {
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .wuxing-box p {
+      margin: 8px 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .wuxing-box h4 {
+      margin: 15px 0 10px;
+      font-size: 16px;
+      color: var(--primary-color);
+    }
+    .wuxing-box strong {
+      color: var(--text-color);
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
