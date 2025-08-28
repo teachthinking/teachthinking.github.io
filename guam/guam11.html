@@ -334,6 +334,61 @@
       color: var(--text-color);
       font-weight: 600;
     }
+    #wuxingSvg {
+  display: block;
+  margin: 0 auto;
+  background: #f8f9fa; /* Light background to confirm SVG visibility */
+  border: 1px solid #ccc; /* Add border for debugging */
+}
+
+.wuxing-node {
+  stroke: var(--primary-color, #000000);
+  stroke-width: 2;
+  fill-opacity: 1; /* Ensure nodes are not transparent */
+}
+.wuxing-node.金 { fill: var(--metal-color, #FFD700); }
+.wuxing-node.木 { fill: var(--wood-color, #28a745); }
+.wuxing-node.水 { fill: var(--water-color, #007bff); }
+.wuxing-node.火 { fill: var(--fire-color, #dc3545); }
+.wuxing-node.土 { fill: var(--earth-color, #8B4513); }
+
+.wuxing-edge-generate {
+  stroke: var(--positive-color, #28a745);
+  stroke-width: 2;
+  stroke-opacity: 1; /* Ensure edges are visible */
+}
+.wuxing-edge-overcome {
+  stroke: var(--negative-color, #dc3545);
+  stroke-width: 2;
+  stroke-opacity: 1;
+}
+.wuxing-edge-harmony {
+  stroke: var(--secondary-color, #007bff);
+  stroke-width: 2;
+  stroke-opacity: 1;
+}
+
+.wuxing-node-text, .wuxing-edge-label {
+  font-size: 12px;
+  text-anchor: middle;
+  fill: var(--text-color, #000000);
+  pointer-events: none; /* Prevent text from interfering with clicks */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.wuxing-node, .wuxing-edge-generate, .wuxing-edge-overcome, .wuxing-edge-harmony {
+  animation: fadeIn 0.5s ease-in;
+}
+
+#judgeBox.hidden {
+  display: none;
+}
+#judgeBox {
+  display: block;
+}
   </style>
 </head>
 <body>
@@ -782,73 +837,80 @@
     const generate = { '木': '火', '火': '土', '土': '金', '金': '水', '水': '木' };
     const overcome = { '木': '土', '土': '水', '水': '火', '火': '金', '金': '木' };
 
-    function getRelation(tiWuxing, yongWuxing, isChange = false) {
-      if (!tiWuxing || !yongWuxing) return '未知';
-      if (tiWuxing === yongWuxing) return '比和';
-      if (generate[yongWuxing] === tiWuxing) return '用生體';
-      if (generate[tiWuxing] === yongWuxing) return '體生用';
-      if (overcome[yongWuxing] === tiWuxing) return '用剋體';
-      if (overcome[tiWuxing] === yongWuxing) return '體剋用';
-      return '未知';
-    }
+   function getRelation(yongWuxing, tiWuxing, isChange = false) {
+  const generateCycle = { '木': '火', '火': '土', '土': '金', '金': '水', '水': '木' };
+  const overcomeCycle = { '木': '土', '火': '金', '土': '水', '金': '木', '水': '火' };
 
-    function getRelationScore(relation) {
-      switch (relation) {
-        case '用生體': return 10;
-        case '體剋用': return 3;
-        case '比和': return 0;
-        case '體生用': return -5;
-        case '用剄體': return -10;
-        default: return 0;
-      }
-    }
+  if (yongWuxing === tiWuxing) {
+    return '比和';
+  }
+  if (generateCycle[yongWuxing] === tiWuxing) {
+    return isChange ? '體生用' : '用生體';
+  }
+  if (generateCycle[tiWuxing] === yongWuxing) {
+    return isChange ? '用生體' : '體生用';
+  }
+  if (overcomeCycle[yongWuxing] === tiWuxing) {
+    return isChange ? '體剄用' : '用剄體';
+  }
+  if (overcomeCycle[tiWuxing] === yongWuxing) {
+    return isChange ? '用剄體' : '體剄用';
+  }
+  console.warn(`Unknown relation between ${yongWuxing} and ${tiWuxing}`);
+  return '比和';
+}
 
-    function getWuxingStatus(wuxing, lunarMonthNumber) {
-      const statuses = {
-        '木': {
-          1: '旺', 2: '旺', 3: '旺',
-          4: '休', 5: '休', 6: '休',
-          7: '囚', 8: '囚', 9: '囚',
-          10: '死', 11: '死', 12: '死'
-        },
-        '火': {
-          1: '死', 2: '相', 3: '相',
-          4: '旺', 5: '旺', 6: '旺',
-          7: '休', 8: '休', 9: '休',
-          10: '囚', 11: '囚', 12: '囚'
-        },
-        '土': {
-          1: '囚', 2: '囚', 3: '旺',
-          4: '相', 5: '相', 6: '旺',
-          7: '死', 8: '死', 9: '旺',
-          10: '休', 11: '休', 12: '旺'
-        },
-        '金': {
-          1: '囚', 2: '囚', 3: '相',
-          4: '死', 5: '死', 6: '相',
-          7: '旺', 8: '旺', 9: '旺',
-          10: '休', 11: '休', 12: '相'
-        },
-        '水': {
-          1: '休', 2: '休', 3: '死',
-          4: '囚', 5: '囚', 6: '死',
-          7: '相', 8: '相', 9: '死',
-          10: '旺', 11: '旺', 12: '旺'
-        }
-      };
-      return statuses[wuxing]?.[lunarMonthNumber] || '未知';
-    }
+function getWuxingStatus(wuxing, lunarMonthNumber) {
+  const statusCycle = {
+    '金': [7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6],
+    '木': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    '水': [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    '火': [4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3],
+    '土': [3, 6, 9, 12, 1, 2, 4, 5, 7, 8, 10, 11]
+  };
+  const status = ['旺', '相', '休', '休', '囚', '囚', '囚', '囚', '死', '死', '死', '死'];
+  return status[statusCycle[wuxing]?.indexOf(lunarMonthNumber) || 0] || '休';
+}
 
-    function getWuxingStatusScore(wuxing, lunarMonthNumber) {
-      switch (getWuxingStatus(wuxing, lunarMonthNumber)) {
-        case '旺': return 5;
-        case '相': return 3;
-        case '休': return 0;
-        case '囚': return -3;
-        case '死': return -5;
-        default: return 0;
-      }
-    }
+function getWuxingStatusScore(wuxing, lunarMonthNumber) {
+  const status = getWuxingStatus(wuxing, lunarMonthNumber);
+  return { '旺': 2, '相': 1, '休': 0, '囚': -1, '死': -2 }[status] || 0;
+}
+
+function getRelationScore(relation) {
+  return {
+    '用生體': 2,
+    '體剄用': 2,
+    '比和': 1,
+    '體生用': -1,
+    '用剄體': -2
+  }[relation] || 0;
+}
+
+function clamp(value, min = 0, max = 10) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function renderWuxingAnalysis(question, lunarMonthNumber, guas) {
+  const analysisDiv = document.getElementById('wuxingAnalysis');
+  if (!analysisDiv) {
+    console.warn('wuxingAnalysis element not found');
+    return;
+  }
+  const tiStatus = getWuxingStatus(guas.tiGua.wuxing, lunarMonthNumber);
+  const analysis = `
+    <p>問題：${question}</p>
+    <p>體卦：${guas.tiGua.name} (${guas.tiGua.wuxing}, ${tiStatus})</p>
+    <p>五行建議：${wuxingExplanations.wuxing_status[guas.tiGua.wuxing]?.suggestions?.[tiStatus] || '無建議'}</p>
+    <p>本卦上卦：${guas.mainUpperGua.name} (${guas.mainUpperGua.wuxing}, ${getRelation(guas.mainUpperGua.wuxing, guas.tiGua.wuxing)})</p>
+    <p>本卦下卦：${guas.mainLowerGua.name} (${guas.mainLowerGua.wuxing}, ${getRelation(guas.mainLowerGua.wuxing, guas.tiGua.wuxing)})</p>
+    <p>互卦上卦：${guas.huUpperGua.name} (${guas.huUpperGua.wuxing}, ${getRelation(guas.huUpperGua.wuxing, guas.tiGua.wuxing)})</p>
+    <p>互卦下卦：${guas.huLowerGua.name} (${guas.huLowerGua.wuxing}, ${getRelation(guas.huLowerGua.wuxing, guas.tiGua.wuxing)})</p>
+    <p>變卦上卦：${guas.changeUpperGua.name} (${guas.changeUpperGua.wuxing}, ${getRelation(guas.changeUpperGua.wuxing, guas.tiGua.wuxing, true)})</p>
+    <p>變卦下卦：${guas.changeLowerGua.name} (${guas.changeLowerGua.wuxing}, ${getRelation(guas.changeLowerGua.wuxing, guas.tiGua.wuxing, true)})</p>
+  `;
+  analysisDiv.innerHTML = analysis;
+}
 
     function getWuxingStrength(status) {
       switch (status) {
