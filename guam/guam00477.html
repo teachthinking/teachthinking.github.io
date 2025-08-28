@@ -1688,13 +1688,13 @@ function renderDetailedAnalysis(result) {
   detailedAnalysis.classList.remove('hidden');
   detailedAnalysis.innerHTML = '';
 
-  const timestamp = new Date(result.timestamp || '2025-08-28T23:52:00+08:00');
+  const timestamp = new Date(result.timestamp || '2025-08-28T23:40:54+08:00');
   const { lunarMonth, season, lunarMonthNumber } = lunarCalendar.gregorianToLunar(timestamp);
   const { tiGua, yongGua } = getTiYong(result);
 
   detailedAnalysis.innerHTML += `
     <h4>詳細分析</h4>
-    <p><strong>占卜時間：</strong> ${timestamp.toLocaleString('zh-TW')}</p>
+    <p><strong>占卜時間：</strong> ${result.timestamp}</p>
     <p><strong>農曆：</strong> ${lunarMonth}（${season}）</p>
     <p><strong>問題：</strong> ${result.question || '無'}</p>
     <p><strong>體卦：</strong> ${tiGua.name} (${tiGua.wuxing}, ${getWuxingStatus(tiGua.wuxing, lunarMonthNumber)})</p>
@@ -1715,10 +1715,12 @@ function renderDetailedAnalysis(result) {
     const relation = getRelation(tiGua.wuxing, gua.wuxing);
     const status = getWuxingStatus(gua.wuxing, lunarMonthNumber);
     const relationKey = relationMap[relation] || '未知';
-    const trigramKey = `${gua.name}卦${relation === 'generate_ti' ? '生體' : relation === 'generate_yong' ? '生用' : relation === 'overcome_ti' ? '剋體' : relation === 'overcome_yong' ? '剋用' : relation}`;
+    const trigramKey = `${gua.name}卦${relation === 'generate_ti' ? '生體' : relation === 'generate_yong' ? '生用' : relation === 'overcome_ti' ? '剋體' : relation === 'overcome_yong' ? '�克用' : relation}`;
     console.log('關係:', relation, 'relationKey:', relationKey, 'trigramKey:', trigramKey);
     const relationData = wuxingExplanations[relationKey] || { overall: '無總結', details: {} };
+    console.log('relationData:', relationData);
     const explanationObj = relationData.details[trigramKey] || { title: '無標題', description: '無詳細解釋', love: '', career: '', wealth: '', health: '', relationship: '', life: '', guidance: '' };
+    console.log('explanationObj:', explanationObj);
 
     let detailsHtml = '';
     const categories = ['love', 'career', 'wealth', 'health', 'relationship', 'life', 'guidance'];
@@ -1745,9 +1747,11 @@ function renderDetailedAnalysis(result) {
   });
 
   const scores = relations.map(r => getRelationScore(getRelation(tiGua.wuxing, r.gua.wuxing)));
+  console.log('關係得分:', scores);
   const combinedRelation = getCombinedRelation(scores);
+  console.log('綜合關係:', combinedRelation);
   const combinedData = wuxingExplanations.combined[combinedRelation] || { details: '無總結' };
-  console.log('關係得分:', scores, '綜合關係:', combinedRelation, '綜合資料:', combinedData);
+  console.log('綜合資料:', combinedData);
 
   detailedAnalysis.innerHTML += `
     <div class="wuxing-box">
