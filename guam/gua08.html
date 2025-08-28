@@ -1283,413 +1283,488 @@
       });
 
   
-    const huRelation = getRelation(huUpperGua.wuxing, huLowerGua.wuxing);
-    if (huRelation !== '未知') {
-      let huClassName, huSource, huTarget, huMarkers;
-      const huStrokeWidth = getWuxingStrength(getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber));
-      if (huRelation === '用生體') {
-        huClassName = 'wuxing-edge-generate';
-        huSource = 'huLower';
-        huTarget = 'huUpper';
-        huMarkers = { end: 'url(#arrow-generate)' };
-      } else if (huRelation === '用剋體') {
-        huClassName = 'wuxing-edge-overcome';
-        huSource = 'huLower';
-        huTarget = 'huUpper';
-        huMarkers = { end: 'url(#arrow-overcome)' };
-      } else if (huRelation === '比和') {
-        huClassName = 'wuxing-edge-harmony';
-        huSource = 'huLower';
-        huTarget = 'huUpper';
-        huMarkers = { start: 'url(#arrow-harmony-reverse)', end: 'url(#arrow-harmony)' };
-      } else if (huRelation === '體生用') {
-        huClassName = 'wuxing-edge-generate';
-        huSource = 'huUpper';
-        huTarget = 'huLower';
-        huMarkers = { end: 'url(#arrow-generate)' };
-      } else if (huRelation === '體剋用') {
-        huClassName = 'wuxing-edge-overcome';
-        huSource = 'huUpper';
-        huTarget = 'huLower';
-        huMarkers = { end: 'url(#arrow-overcome)' };
-      }
-      edges.push({ source: huSource, target: huTarget, className: huClassName, label: huRelation, markers: huMarkers, strokeWidth: huStrokeWidth });
+const huRelation = getRelation(huUpperGua.wuxing, huLowerGua.wuxing);
+if (huRelation !== '未知') {
+  let huClassName, huSource, huTarget, huMarkers;
+  const huStrokeWidth = getWuxingStrength(getWuxingStatus(huUpperGua.wuxing, lunarMonthNumber));
+  if (huRelation === '用生體') {
+    huClassName = 'wuxing-edge-generate';
+    huSource = 'huLower';
+    huTarget = 'huUpper';
+    huMarkers = { end: 'url(#arrow-generate)' };
+  } else if (huRelation === '用剋體') {
+    huClassName = 'wuxing-edge-overcome';
+    huSource = 'huLower';
+    huTarget = 'huUpper';
+    huMarkers = { end: 'url(#arrow-overcome)' };
+  } else if (huRelation === '比和') {
+    huClassName = 'wuxing-edge-harmony';
+    huSource = 'huLower';
+    huTarget = 'huUpper';
+    huMarkers = { start: 'url(#arrow-harmony-reverse)', end: 'url(#arrow-harmony)' };
+  } else if (huRelation === '體生用') {
+    huClassName = 'wuxing-edge-generate';
+    huSource = 'huUpper';
+    huTarget = 'huLower';
+    huMarkers = { end: 'url(#arrow-generate)' };
+  } else if (huRelation === '體剋用') {
+    huClassName = 'wuxing-edge-overcome';
+    huSource = 'huUpper';
+    huTarget = 'huLower';
+    huMarkers = { end: 'url(#arrow-overcome)' };
+  }
+  edges.push({ source: huSource, target: huTarget, className: huClassName, label: huRelation, markers: huMarkers, strokeWidth: huStrokeWidth });
+}
+
+edges.forEach(edge => {
+  const sourceNode = nodes.find(n => n.id === edge.source);
+  const targetNode = nodes.find(n => n.id === edge.target);
+  if (!sourceNode || !targetNode) {
+    console.warn(`無效的邊緣節點: ${edge.source} -> ${edge.target}`);
+    return;
+  }
+  const dx = targetNode.x - sourceNode.x;
+  const dy = targetNode.y - sourceNode.y;
+  const length = Math.sqrt(dx * dx + dy * dy);
+  const offset = 40;
+  const startX = sourceNode.x + (dx * offset) / length;
+  const startY = sourceNode.y + (dy * offset) / length;
+  const endX = targetNode.x - (dx * offset) / length;
+  const endY = targetNode.y - (dy * offset) / length;
+  const midX = (startX + endX) / 2;
+  const midY = (startY + endY) / 2;
+
+  let markerStart = edge.markers.start || '';
+  let markerEnd = edge.markers.end || '';
+  svg.innerHTML += `
+    <line class="${edge.className}" x1="${startX}" y1="${startY}" x2="${endX}" y2="${endY}" stroke-width="${edge.strokeWidth || 2}" marker-start="${markerStart}" marker-end="${markerEnd}" />
+    <text class="wuxing-edge-label" x="${midX}" y="${midY + 5}">${edge.label}</text>
+  `;
+});
+
+// 確保 SVG 元素存在
+if (!svg) {
+  console.error('找不到 wuxingSvg 元素');
+  alert('無法渲染五行圖：SVG元素缺失');
+  return;
+}
+
+// 完成 renderWuxingDiagram 函數
+};
+
+// 以下為其餘函數的實現，確保語法完整
+const renderWuxingAnalysisText = () => {
+  const lunar = lunarCalendar.gregorianToLunar(new Date());
+  const elements = [
+    { id: 'mainUpperWuxing', gua: mainUpperGua },
+    { id: 'mainLowerWuxing', gua: mainLowerGua },
+    { id: 'huUpperWuxing', gua: huUpperGua },
+    { id: 'huLowerWuxing', gua: huLowerGua },
+    { id: 'changeUpperWuxing', gua: changeUpperGua },
+    { id: 'changeLowerWuxing', gua: changeLowerGua }
+  ];
+
+  elements.forEach(({ id, gua }) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.textContent = `${gua.wuxing} (${getWuxingStatus(gua.wuxing, lunar.lunarMonthNumber)})`;
     }
+  });
 
-    edges.forEach(edge => {
-      const sourceNode = nodes.find(n => n.id === edge.source);
-      const targetNode = nodes.find(n => n.id === edge.target);
-      if (!sourceNode || !targetNode) {
-        console.warn(`無效的邊緣節點: ${edge.source} -> ${edge.target}`);
-        return;
+  const tiElements = ['tiGuaWuxing', 'tiGuaWuxing2', 'tiGuaWuxing3', 'tiGuaWuxing4', 'tiGuaWuxing5', 'tiGuaWuxing6'];
+  tiElements.forEach(id => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.textContent = tiGua.wuxing;
+    }
+  });
+
+  const relations = [
+    { id: 'mainUpperRelation', relation: getRelation(tiGua.wuxing, mainUpperGua.wuxing) },
+    { id: 'mainLowerRelation', relation: getRelation(tiGua.wuxing, mainLowerGua.wuxing) },
+    { id: 'huUpperRelation', relation: getRelation(tiGua.wuxing, huUpperGua.wuxing) },
+    { id: 'huLowerRelation', relation: getRelation(tiGua.wuxing, huLowerGua.wuxing) },
+    { id: 'changeUpperRelation', relation: getRelation(tiGua.wuxing, changeUpperGua.wuxing) },
+    { id: 'changeLowerRelation', relation: getRelation(tiGua.wuxing, changeLowerGua.wuxing) }
+  ];
+
+  relations.forEach(({ id, relation }) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.textContent = wuxingExplanations[relationMap[relation]]?.meaning || relation;
+      element.className = `wuxing-status ${relation === '用生體' || relation === '體剋用' ? 'positive' : relation === '比和' ? 'neutral' : 'negative'}`;
+    }
+  });
+};
+
+const calculateAuspiciousness = (mainHex, changeHex, huHex, moving, tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonthNumber) => {
+  let score = 0;
+
+  const mainJudgmentScore = (mainHex.judgment?.people || 5) + (mainHex.judgment?.affairs || 5) + (mainHex.judgment?.time || 5) + (mainHex.judgment?.place || 5) + (mainHex.judgment?.object || 5);
+  const changeJudgmentScore = (changeHex.judgment?.people || 5) + (changeHex.judgment?.affairs || 5) + (changeHex.judgment?.time || 5) + (changeHex.judgment?.place || 5) + (changeHex.judgment?.object || 5);
+  score += (mainJudgmentScore + changeJudgmentScore) / 10;
+
+  moving.forEach(lineIdx => {
+    const lineEntry = getLineEntryFor(mainHex, lineIdx);
+    score += lineEntry.score || 5;
+  });
+
+  const relations = [
+    getRelation(tiGua.wuxing, mainUpperGua.wuxing),
+    getRelation(tiGua.wuxing, mainLowerGua.wuxing),
+    getRelation(tiGua.wuxing, huUpperGua.wuxing),
+    getRelation(tiGua.wuxing, huLowerGua.wuxing),
+    getRelation(tiGua.wuxing, changeUpperGua.wuxing),
+    getRelation(tiGua.wuxing, changeLowerGua.wuxing)
+  ];
+
+  relations.forEach(relation => {
+    score += getRelationScore(relation);
+  });
+
+  const wuxingScores = [
+    getWuxingStatusScore(mainUpperGua.wuxing, lunarMonthNumber),
+    getWuxingStatusScore(mainLowerGua.wuxing, lunarMonthNumber),
+    getWuxingStatusScore(huUpperGua.wuxing, lunarMonthNumber),
+    getWuxingStatusScore(huLowerGua.wuxing, lunarMonthNumber),
+    getWuxingStatusScore(changeUpperGua.wuxing, lunarMonthNumber),
+    getWuxingStatusScore(changeLowerGua.wuxing, lunarMonthNumber)
+  ];
+
+  score += wuxingScores.reduce((sum, s) => sum + s, 0);
+  const normalizedScore = clamp((score + 50) / 10);
+  return normalizedScore;
+};
+
+const renderAuspiciousnessBar = score => {
+  const bar = document.getElementById('auspiciousnessBar');
+  if (!bar) {
+    console.error('找不到 auspiciousnessBar 元素');
+    return;
+  }
+  const percentage = score * 10;
+  const color = score >= 7 ? 'var(--positive-color)' : score >= 4 ? 'var(--secondary-color)' : 'var(--negative-color)';
+  bar.innerHTML = `<div class="score-bar" style="width: ${percentage}%; background: ${color};"></div>`;
+  document.getElementById('auspiciousnessIndex').textContent = `吉凶指數：${score.toFixed(1)} / 10`;
+};
+
+const renderWuxingAnalysis = result => {
+  const { tiGua, yongGua } = getTiYong(result);
+  const mainUpperGua = getTrigramInfo(result.uIdx);
+  const mainLowerGua = getTrigramInfo(result.lIdx);
+  const huUpperIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8;
+  const huLowerIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8;
+  const changeUpperIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8;
+  const changeLowerIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8;
+  const huUpperGua = getTrigramInfo(huUpperIdx);
+  const huLowerGua = getTrigramInfo(huLowerIdx);
+  const changeUpperGua = getTrigramInfo(changeUpperIdx);
+  const changeLowerGua = getTrigramInfo(changeLowerIdx);
+  const lunar = lunarCalendar.gregorianToLunar(new Date());
+  const { lunarMonth, season, lunarMonthNumber } = lunar;
+
+  renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber);
+  renderWuxingAnalysisText();
+
+  const score = calculateAuspiciousness(
+    result.hexMain, result.hexChange, result.hexHu, result.moving,
+    tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua,
+    lunarMonthNumber
+  );
+  renderAuspiciousnessBar(score);
+
+  const judgeBox = document.getElementById('judgeBox');
+  if (judgeBox) {
+    judgeBox.classList.remove('hidden');
+  } else {
+    console.error('找不到 judgeBox 元素');
+  }
+};
+
+const renderDetailedAnalysis = result => {
+  const detailedAnalysis = document.getElementById('detailedAnalysis');
+  if (!detailedAnalysis) {
+    console.error('找不到 detailedAnalysis 元素');
+    return;
+  }
+  detailedAnalysis.classList.remove('hidden');
+  const { tiGua, yongGua } = getTiYong(result);
+  const lunar = lunarCalendar.gregorianToLunar(new Date());
+  const mainUpperGua = getTrigramInfo(result.uIdx);
+  const mainLowerGua = getTrigramInfo(result.lIdx);
+  const huUpperIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8;
+  const huLowerIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8;
+  const changeUpperIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8;
+  const changeLowerIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8;
+  const huUpperGua = getTrigramInfo(huUpperIdx);
+  const huLowerGua = getTrigramInfo(huLowerIdx);
+  const changeUpperGua = getTrigramInfo(changeUpperIdx);
+  const changeLowerGua = getTrigramInfo(changeLowerIdx);
+
+  const { palace, hexagrams: palaceHexagrams } = getSamePalaceHexagrams(result.hexMain.name);
+  let analysis = `
+    <h4>詳細分析</h4>
+    <p><strong>宮位分析</strong>：本卦 ${result.hexMain.name} 屬於 ${palace} 宮，相關卦象：${palaceHexagrams.join('、')}。</p>
+    <p><strong>五行生克</strong>：體卦 (${tiGua.name}, ${tiGua.wuxing})，用卦 (${yongGua.name}, ${yongGua.wuxing})，關係：${getRelation(tiGua.wuxing, yongGua.wuxing)}。</p>
+    <p><strong>時間因素</strong>：農曆 ${lunar.lunarMonth}（${lunar.season}），影響五行強弱。</p>
+  `;
+  detailedAnalysis.innerHTML = analysis;
+};
+
+// Event Handlers
+const setupEventListeners = () => {
+  const tabButtons = document.querySelectorAll('.tab-button');
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      const target = document.getElementById(button.dataset.target);
+      if (target) {
+        target.classList.add('active');
+      } else {
+        console.error(`找不到目標內容: ${button.dataset.target}`);
       }
-      const dx = targetNode.x - sourceNode.x;
-      const dy = targetNode.y - sourceNode.y;
-      const length = Math.sqrt(dx * dx + dy * dy);
-      const offset = 40;
-      const startX = sourceNode.x + (dx * offset) / length;
-      const startY = sourceNode.y + (dy * offset) / length;
-      const endX = targetNode.x - (dx * offset) / length;
-      const endY = targetNode.y - (dy * offset) / length;
-      const midX = (startX + endX) / 2;
-      const midY = (startY + endY) / 2;
-
-      let markerStart = edge.markers.start || '';
-      let markerEnd = edge.markers.end || '';
-      svg.innerHTML += `
-        <line class="${edge.className}" x1="${startX}" y1="${startY}" x2="${endX}" y2="${endY}" stroke-width="${edge.strokeWidth || 2}" marker-start="${markerStart}" marker-end="${markerEnd}" />
-        <text class="wuxing-edge-label" x="${midX}" y="${midY + 5}">${edge.label}</text>
-      `;
     });
+  });
 
-    const renderWuxingAnalysisText = () => {
-      const lunar = lunarCalendar.gregorianToLunar(new Date());
-      document.getElementById('mainUpperWuxing').textContent = `${mainUpperGua.wuxing} (${getWuxingStatus(mainUpperGua.wuxing, lunar.lunarMonthNumber)})`;
-      document.getElementById('mainLowerWuxing').textContent = `${mainLowerGua.wuxing} (${getWuxingStatus(mainLowerGua.wuxing, lunar.lunarMonthNumber)})`;
-      document.getElementById('huUpperWuxing').textContent = `${huUpperGua.wuxing} (${getWuxingStatus(huUpperGua.wuxing, lunar.lunarMonthNumber)})`;
-      document.getElementById('huLowerWuxing').textContent = `${huLowerGua.wuxing} (${getWuxingStatus(huLowerGua.wuxing, lunar.lunarMonthNumber)})`;
-      document.getElementById('changeUpperWuxing').textContent = `${changeUpperGua.wuxing} (${getWuxingStatus(changeUpperGua.wuxing, lunar.lunarMonthNumber)})`;
-      document.getElementById('changeLowerWuxing').textContent = `${changeLowerGua.wuxing} (${getWuxingStatus(changeLowerGua.wuxing, lunar.lunarMonthNumber)})`;
-
-      document.getElementById('tiGuaWuxing').textContent = tiGua.wuxing;
-      document.getElementById('tiGuaWuxing2').textContent = tiGua.wuxing;
-      document.getElementById('tiGuaWuxing3').textContent = tiGua.wuxing;
-      document.getElementById('tiGuaWuxing4').textContent = tiGua.wuxing;
-      document.getElementById('tiGuaWuxing5').textContent = tiGua.wuxing;
-      document.getElementById('tiGuaWuxing6').textContent = tiGua.wuxing;
-
-      const relations = [
-        { id: 'mainUpperRelation', relation: getRelation(tiGua.wuxing, mainUpperGua.wuxing) },
-        { id: 'mainLowerRelation', relation: getRelation(tiGua.wuxing, mainLowerGua.wuxing) },
-        { id: 'huUpperRelation', relation: getRelation(tiGua.wuxing, huUpperGua.wuxing) },
-        { id: 'huLowerRelation', relation: getRelation(tiGua.wuxing, huLowerGua.wuxing) },
-        { id: 'changeUpperRelation', relation: getRelation(tiGua.wuxing, changeUpperGua.wuxing) },
-        { id: 'changeLowerRelation', relation: getRelation(tiGua.wuxing, changeLowerGua.wuxing) }
-      ];
-
-      relations.forEach(({ id, relation }) => {
-        const element = document.getElementById(id);
-        if (element) {
-          element.textContent = wuxingExplanations[relationMap[relation]]?.meaning || relation;
-          element.className = `wuxing-status ${relation === '用生體' || relation === '體剋用' ? 'positive' : relation === '比和' ? 'neutral' : 'negative'}`;
-        }
-      });
-    };
-
-    const calculateAuspiciousness = (mainHex, changeHex, huHex, moving, tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonthNumber) => {
-      let score = 0;
-
-      const mainJudgmentScore = (mainHex.judgment?.people || 5) + (mainHex.judgment?.affairs || 5) + (mainHex.judgment?.time || 5) + (mainHex.judgment?.place || 5) + (mainHex.judgment?.object || 5);
-      const changeJudgmentScore = (changeHex.judgment?.people || 5) + (changeHex.judgment?.affairs || 5) + (changeHex.judgment?.time || 5) + (changeHex.judgment?.place || 5) + (changeHex.judgment?.object || 5);
-      score += (mainJudgmentScore + changeJudgmentScore) / 10;
-
-      moving.forEach(lineIdx => {
-        const lineEntry = getLineEntryFor(mainHex, lineIdx);
-        score += lineEntry.score || 5;
-      });
-
-      const relations = [
-        getRelation(tiGua.wuxing, mainUpperGua.wuxing),
-        getRelation(tiGua.wuxing, mainLowerGua.wuxing),
-        getRelation(tiGua.wuxing, huUpperGua.wuxing),
-        getRelation(tiGua.wuxing, huLowerGua.wuxing),
-        getRelation(tiGua.wuxing, changeUpperGua.wuxing),
-        getRelation(tiGua.wuxing, changeLowerGua.wuxing)
-      ];
-
-      relations.forEach(relation => {
-        score += getRelationScore(relation);
-      });
-
-      const wuxingScores = [
-        getWuxingStatusScore(mainUpperGua.wuxing, lunarMonthNumber),
-        getWuxingStatusScore(mainLowerGua.wuxing, lunarMonthNumber),
-        getWuxingStatusScore(huUpperGua.wuxing, lunarMonthNumber),
-        getWuxingStatusScore(huLowerGua.wuxing, lunarMonthNumber),
-        getWuxingStatusScore(changeUpperGua.wuxing, lunarMonthNumber),
-        getWuxingStatusScore(changeLowerGua.wuxing, lunarMonthNumber)
-      ];
-
-      score += wuxingScores.reduce((sum, s) => sum + s, 0);
-
-      const normalizedScore = clamp((score + 50) / 10);
-      return normalizedScore;
-    };
-
-    const renderAuspiciousnessBar = score => {
-      const bar = document.getElementById('auspiciousnessBar');
-      if (!bar) {
-        console.error('找不到 auspiciousnessBar 元素');
+  const btnNumber = document.getElementById('btnNumber');
+  if (btnNumber) {
+    btnNumber.addEventListener('click', () => {
+      const numUpper = parseInt(document.getElementById('numUpper')?.value);
+      const numLower = parseInt(document.getElementById('numLower')?.value);
+      const numMoving = parseInt(document.getElementById('numMoving')?.value);
+      if (isNaN(numUpper) || isNaN(numLower) || isNaN(numMoving) || numUpper < 100 || numUpper > 999 || numLower < 100 || numLower > 999 || numMoving < 100 || numMoving > 999) {
+        alert('請輸入有效的三組100-999的數字！');
         return;
       }
-      const percentage = score * 10;
-      const color = score >= 7 ? 'var(--positive-color)' : score >= 4 ? 'var(--secondary-color)' : 'var(--negative-color)';
-      bar.innerHTML = `<div class="score-bar" style="width: ${percentage}%; background: ${color};"></div>`;
-      document.getElementById('auspiciousnessIndex').textContent = `吉凶指數：${score.toFixed(1)} / 10`;
-    };
+      const upperIdx = ((numUpper % 8) || 8);
+      const lowerIdx = ((numLower % 8) || 8);
+      const moving = [((numMoving % 6) || 6)];
+      generateGua(upperIdx, lowerIdx, moving, '數字取卦');
+    });
+  }
 
-    const renderWuxingAnalysis = result => {
-      const { tiGua, yongGua } = getTiYong(result);
-      const mainUpperGua = getTrigramInfo(result.uIdx);
-      const mainLowerGua = getTrigramInfo(result.lIdx);
-      const huUpperIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8;
-      const huLowerIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8;
-      const changeUpperIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8;
-      const changeLowerIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8;
-      const huUpperGua = getTrigramInfo(huUpperIdx);
-      const huLowerGua = getTrigramInfo(huLowerIdx);
-      const changeUpperGua = getTrigramInfo(changeUpperIdx);
-      const changeLowerGua = getTrigramInfo(changeLowerIdx);
-      const lunar = lunarCalendar.gregorianToLunar(new Date());
-      const { lunarMonth, season, lunarMonthNumber } = lunar;
+  const btnRandomNumber = document.getElementById('btnRandomNumber');
+  if (btnRandomNumber) {
+    btnRandomNumber.addEventListener('click', () => {
+      const upperIdx = Math.floor(Math.random() * 8) + 1;
+      const lowerIdx = Math.floor(Math.random() * 8) + 1;
+      const moving = [Math.floor(Math.random() * 6) + 1];
+      generateGua(upperIdx, lowerIdx, moving, '數字亂數取卦');
+    });
+  }
 
-      renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber);
-      renderWuxingAnalysisText();
-
-      const score = calculateAuspiciousness(
-        result.hexMain, result.hexChange, result.hexHu, result.moving,
-        tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua,
-        lunarMonthNumber
-      );
-      renderAuspiciousnessBar(score);
-
-      document.getElementById('judgeBox').classList.remove('hidden');
-    };
-
-    const renderDetailedAnalysis = result => {
-      const detailedAnalysis = document.getElementById('detailedAnalysis');
-      if (!detailedAnalysis) {
-        console.error('找不到 detailedAnalysis 元素');
+  const btnManual = document.getElementById('btnManual');
+  if (btnManual) {
+    btnManual.addEventListener('click', () => {
+      const upperIdx = parseInt(document.getElementById('selUpper')?.value);
+      const lowerIdx = parseInt(document.getElementById('selLower')?.value);
+      const movingInput = document.getElementById('inputMoving')?.value.trim();
+      if (!upperIdx || !lowerIdx) {
+        alert('請選擇上卦和下卦！');
         return;
       }
-      detailedAnalysis.classList.remove('hidden');
-      const { tiGua, yongGua } = getTiYong(result);
-      const lunar = lunarCalendar.gregorianToLunar(new Date());
-      const mainUpperGua = getTrigramInfo(result.uIdx);
-      const mainLowerGua = getTrigramInfo(result.lIdx);
-      const huUpperIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8;
-      const huLowerIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8;
-      const changeUpperIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8;
-      const changeLowerIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8;
-      const huUpperGua = getTrigramInfo(huUpperIdx);
-      const huLowerGua = getTrigramInfo(huLowerIdx);
-      const changeUpperGua = getTrigramInfo(changeUpperIdx);
-      const changeLowerGua = getTrigramInfo(changeLowerIdx);
+      const moving = movingInput ? movingInput.split(',').map(n => parseInt(n.trim())).filter(n => n >= 1 && n <= 6) : [];
+      if (movingInput && moving.length === 0) {
+        alert('動爻輸入格式錯誤，請輸入1-6的數字，用逗號分隔！');
+        return;
+      }
+      generateGua(upperIdx, lowerIdx, moving, '手動取卦');
+    });
+  }
 
-      const { palace, hexagrams: palaceHexagrams } = getSamePalaceHexagrams(result.hexMain.name);
-      let analysis = `
-        <h4>詳細分析</h4>
-        <p><strong>宮位分析</strong>：本卦 ${result.hexMain.name} 屬於 ${palace} 宮，相關卦象：${palaceHexagrams.join('、')}。</p>
-        <p><strong>五行生克</strong>：體卦 (${tiGua.name}, ${tiGua.wuxing})，用卦 (${yongGua.name}, ${yongGua.wuxing})，關係：${getRelation(tiGua.wuxing, yongGua.wuxing)}。</p>
-        <p><strong>時間因素</strong>：農曆 ${lunar.lunarMonth}（${lunar.season}），影響五行強弱。</p>
-      `;
-      detailedAnalysis.innerHTML = analysis;
-    };
-
-    // Event Handlers
-    const setupEventListeners = () => {
-      const tabButtons = document.querySelectorAll('.tab-button');
-      tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-          tabButtons.forEach(btn => btn.classList.remove('active'));
-          button.classList.add('active');
-          document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-          const target = document.getElementById(button.dataset.target);
-          if (target) {
-            target.classList.add('active');
-          } else {
-            console.error(`找不到目標內容: ${button.dataset.target}`);
-          }
-        });
-      });
-
-      document.getElementById('btnNumber')?.addEventListener('click', () => {
-        const numUpper = parseInt(document.getElementById('numUpper')?.value);
-        const numLower = parseInt(document.getElementById('numLower')?.value);
-        const numMoving = parseInt(document.getElementById('numMoving')?.value);
-        if (isNaN(numUpper) || isNaN(numLower) || isNaN(numMoving) || numUpper < 100 || numUpper > 999 || numLower < 100 || numLower > 999 || numMoving < 100 || numMoving > 999) {
-          alert('請輸入有效的三組100-999的數字！');
+  const btnTime = document.getElementById('btnTime');
+  if (btnTime) {
+    btnTime.addEventListener('click', () => {
+      const method = document.querySelector('input[name="time-method"]:checked')?.value;
+      let upperIdx, lowerIdx, moving;
+      if (method === 'modern') {
+        const dtInput = document.getElementById('dtInput')?.value;
+        if (!dtInput) {
+          alert('請選擇日期時間！');
           return;
         }
-        const upperIdx = ((numUpper % 8) || 8);
-        const lowerIdx = ((numLower % 8) || 8);
-        const moving = [((numMoving % 6) || 6)];
-        generateGua(upperIdx, lowerIdx, moving, '數字取卦');
-      });
-
-      document.getElementById('btnRandomNumber')?.addEventListener('click', () => {
-        const upperIdx = Math.floor(Math.random() * 8) + 1;
-        const lowerIdx = Math.floor(Math.random() * 8) + 1;
-        const moving = [Math.floor(Math.random() * 6) + 1];
-        generateGua(upperIdx, lowerIdx, moving, '數字亂數取卦');
-      });
-
-      document.getElementById('btnManual')?.addEventListener('click', () => {
-        const upperIdx = parseInt(document.getElementById('selUpper')?.value);
-        const lowerIdx = parseInt(document.getElementById('selLower')?.value);
-        const movingInput = document.getElementById('inputMoving')?.value.trim();
-        if (!upperIdx || !lowerIdx) {
-          alert('請選擇上卦和下卦！');
+        const date = new Date(dtInput);
+        if (isNaN(date.getTime())) {
+          alert('無效的日期時間！');
           return;
         }
-        const moving = movingInput ? movingInput.split(',').map(n => parseInt(n.trim())).filter(n => n >= 1 && n <= 6) : [];
-        if (movingInput && moving.length === 0) {
-          alert('動爻輸入格式錯誤，請輸入1-6的數字，用逗號分隔！');
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const hour = date.getHours();
+        const minute = date.getMinutes();
+        upperIdx = (((year + month + day) % 8) || 8);
+        lowerIdx = (((month + day + hour) % 8) || 8);
+        moving = [((hour + minute) % 6) || 6];
+      } else {
+        const dateInput = document.getElementById('dateInput')?.value;
+        const shichen = parseInt(document.getElementById('shichenInput')?.value);
+        const minute = parseInt(document.getElementById('minuteInput')?.value) || 0;
+        if (!dateInput || isNaN(shichen)) {
+          alert('請選擇日期和時辰！');
           return;
         }
-        generateGua(upperIdx, lowerIdx, moving, '手動取卦');
-      });
+        const date = new Date(dateInput);
+        if (isNaN(date.getTime())) {
+          alert('無效的日期！');
+          return;
+        }
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        upperIdx = (((year + month + day) % 8) || 8);
+        lowerIdx = (((month + day + shichen) % 8) || 8);
+        moving = [((shichen + minute) % 6) || 6];
+      }
+      generateGua(upperIdx, lowerIdx, moving, method === 'modern' ? '現代時間取卦' : '傳統時辰取卦');
+    });
+  }
 
-      document.getElementById('btnTime')?.addEventListener('click', () => {
-        const method = document.querySelector('input[name="time-method"]:checked')?.value;
-        let upperIdx, lowerIdx, moving;
-        if (method === 'modern') {
-          const dtInput = document.getElementById('dtInput')?.value;
-          if (!dtInput) {
-            alert('請選擇日期時間！');
-            return;
-          }
-          const date = new Date(dtInput);
-          if (isNaN(date.getTime())) {
-            alert('無效的日期時間！');
-            return;
-          }
-          const year = date.getFullYear();
-          const month = date.getMonth() + 1;
-          const day = date.getDate();
-          const hour = date.getHours();
-          const minute = date.getMinutes();
-          upperIdx = (((year + month + day) % 8) || 8);
-          lowerIdx = (((month + day + hour) % 8) || 8);
-          moving = [((hour + minute) % 6) || 6];
+  const nowQuick = document.getElementById('nowQuick');
+  if (nowQuick) {
+    nowQuick.addEventListener('click', () => {
+      const now = new Date();
+      const dtInput = document.getElementById('dtInput');
+      if (dtInput) {
+        dtInput.value = now.toISOString().slice(0, 16);
+      }
+    });
+  }
+
+  const btnImage = document.getElementById('btnImage');
+  if (btnImage) {
+    btnImage.addEventListener('click', () => {
+      const upperIdx = parseInt(document.getElementById('upperImageSelect')?.value);
+      const lowerIdx = parseInt(document.getElementById('lowerDirectionSelect')?.value);
+      const useMinute = document.getElementById('imageUseMinute')?.checked;
+      const movingInput = parseInt(document.getElementById('imageMovingInput')?.value);
+      if (!upperIdx || !lowerIdx) {
+        alert('請選擇上卦和下卦！');
+        return;
+      }
+      let moving = [];
+      if (useMinute) {
+        moving = [(new Date().getMinutes() % 6) || 6];
+      } else if (!isNaN(movingInput) && movingInput >= 1 && movingInput <= 6) {
+        moving = [movingInput];
+      } else {
+        alert('請輸入有效的動爻（1-6）或勾選使用當前分鐘！');
+        return;
+      }
+      generateGua(upperIdx, lowerIdx, moving, '以象取卦');
+    });
+  }
+
+  const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+  if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener('click', () => {
+      if (confirm('確定要清除所有歷史記錄？')) {
+        history = [];
+        saveHistory();
+        renderHistory();
+      }
+    });
+  }
+
+  const exportHistoryBtn = document.getElementById('exportHistoryBtn');
+  if (exportHistoryBtn) {
+    exportHistoryBtn.addEventListener('click', exportHistory);
+  }
+
+  const importHistoryBtn = document.getElementById('importHistoryBtn');
+  if (importHistoryBtn) {
+    importHistoryBtn.addEventListener('click', () => {
+      const input = document.getElementById('importHistoryInput');
+      if (input && input.files.length > 0) {
+        importHistory(input.files[0]);
+      } else {
+        alert('請選擇一個檔案！');
+      }
+    });
+  }
+
+  const judgeBtn = document.getElementById('judgeBtn');
+  if (judgeBtn) {
+    judgeBtn.addEventListener('click', () => {
+      if (currentResult) {
+        renderWuxingAnalysis(currentResult);
+        renderDetailedAnalysis(currentResult);
+      } else {
+        alert('請先進行取卦！');
+      }
+    });
+  }
+
+  const downloadSvgBtn = document.getElementById('downloadSvgBtn');
+  if (downloadSvgBtn) {
+    downloadSvgBtn.addEventListener('click', downloadSvg);
+  }
+
+  const openSvgWindowBtn = document.getElementById('openSvgWindowBtn');
+  if (openSvgWindowBtn) {
+    openSvgWindowBtn.addEventListener('click', openSvgInNewWindow);
+  }
+
+  const timeMethodRadios = document.querySelectorAll('input[name="time-method"]');
+  timeMethodRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      const modernInputs = document.getElementById('modern-time-inputs');
+      const traditionalInputs = document.getElementById('traditional-time-inputs');
+      if (modernInputs && traditionalInputs) {
+        modernInputs.classList.toggle('hidden', radio.value !== 'modern');
+        traditionalInputs.classList.toggle('hidden', radio.value !== 'traditional');
+      }
+    });
+  });
+};
+
+// Input Validation
+const setupInputValidation = () => {
+  const inputs = document.querySelectorAll('input[type="number"], input[type="text"]');
+  inputs.forEach(input => {
+    input.addEventListener('input', () => {
+      if (input.type === 'number') {
+        const min = parseInt(input.min);
+        const max = parseInt(input.max);
+        const value = parseInt(input.value);
+        if (isNaN(value) || (min && value < min) || (max && value > max)) {
+          input.setCustomValidity(`請輸入 ${min || 0} 到 ${max || '無上限'} 之間的數字`);
         } else {
-          const dateInput = document.getElementById('dateInput')?.value;
-          const shichen = parseInt(document.getElementById('shichenInput')?.value);
-          const minute = parseInt(document.getElementById('minuteInput')?.value) || 0;
-          if (!dateInput || isNaN(shichen)) {
-            alert('請選擇日期和時辰！');
-            return;
-          }
-          const date = new Date(dateInput);
-          if (isNaN(date.getTime())) {
-            alert('無效的日期！');
-            return;
-          }
-          const year = date.getFullYear();
-          const month = date.getMonth() + 1;
-          const day = date.getDate();
-          upperIdx = (((year + month + day) % 8) || 8);
-          lowerIdx = (((month + day + shichen) % 8) || 8);
-          moving = [((shichen + minute) % 6) || 6];
+          input.setCustomValidity('');
         }
-        generateGua(upperIdx, lowerIdx, moving, method === 'modern' ? '現代時間取卦' : '傳統時辰取卦');
-      });
-
-      document.getElementById('nowQuick')?.addEventListener('click', () => {
-        const now = new Date();
-        document.getElementById('dtInput').value = now.toISOString().slice(0, 16);
-      });
-
-      document.getElementById('btnImage')?.addEventListener('click', () => {
-        const upperIdx = parseInt(document.getElementById('upperImageSelect')?.value);
-        const lowerIdx = parseInt(document.getElementById('lowerDirectionSelect')?.value);
-        const useMinute = document.getElementById('imageUseMinute')?.checked;
-        const movingInput = parseInt(document.getElementById('imageMovingInput')?.value);
-        if (!upperIdx || !lowerIdx) {
-          alert('請選擇上卦和下卦！');
-          return;
-        }
-        let moving = [];
-        if (useMinute) {
-          moving = [(new Date().getMinutes() % 6) || 6];
-        } else if (!isNaN(movingInput) && movingInput >= 1 && movingInput <= 6) {
-          moving = [movingInput];
+      } else if (input.id === 'inputMoving') {
+        const value = input.value.trim();
+        if (value && !/^\d+(,\d+)*$/.test(value)) {
+          input.setCustomValidity('請輸入以逗號分隔的1-6數字，例如：1,3,5');
         } else {
-          alert('請輸入有效的動爻（1-6）或勾選使用當前分鐘！');
-          return;
+          input.setCustomValidity('');
         }
-        generateGua(upperIdx, lowerIdx, moving, '以象取卦');
-      });
+      }
+    });
+  });
+};
 
-      document.getElementById('clearHistoryBtn')?.addEventListener('click', () => {
-        if (confirm('確定要清除所有歷史記錄？')) {
-          history = [];
-          saveHistory();
-          renderHistory();
-        }
-      });
+// Initialize
+const init = async () => {
+  try {
+    await loadResources();
+    loadHistory();
+    setupEventListeners();
+    setupInputValidation();
+    const dtInput = document.getElementById('dtInput');
+    if (dtInput) {
+      dtInput.value = new Date().toISOString().slice(0, 16);
+    }
+  } catch (error) {
+    console.error('初始化失敗:', error);
+    alert('應用程式初始化失敗，請檢查網路或檔案！');
+  }
+};
 
-      document.getElementById('exportHistoryBtn')?.addEventListener('click', exportHistory);
-
-      document.getElementById('importHistoryBtn')?.addEventListener('click', () => {
-        const input = document.getElementById('importHistoryInput');
-        if (input.files.length > 0) {
-          importHistory(input.files[0]);
-        } else {
-          alert('請選擇一個檔案！');
-        }
-      });
-
-      document.getElementById('judgeBtn')?.addEventListener('click', () => {
-        if (currentResult) {
-          renderWuxingAnalysis(currentResult);
-          renderDetailedAnalysis(currentResult);
-        } else {
-          alert('請先進行取卦！');
-        }
-      });
-
-      document.getElementById('downloadSvgBtn')?.addEventListener('click', downloadSvg);
-      document.getElementById('openSvgWindowBtn')?.addEventListener('click', openSvgInNewWindow);
-
-      const timeMethodRadios = document.querySelectorAll('input[name="time-method"]');
-      timeMethodRadios.forEach(radio => {
-        radio.addEventListener('change', () => {
-          document.getElementById('modern-time-inputs').classList.toggle('hidden', radio.value !== 'modern');
-          document.getElementById('traditional-time-inputs').classList.toggle('hidden', radio.value !== 'traditional');
-        });
-      });
-    };
-
-    // Input Validation
-    const setupInputValidation = () => {
-      const inputs = document.querySelectorAll('input[type="number"], input[type="text"]');
-      inputs.forEach(input => {
-        input.addEventListener('input', () => {
-          if (input.type === 'number') {
-            const min = parseInt(input.min);
-            const max = parseInt(input.max);
-            const value = parseInt(input.value);
-            if (isNaN(value) || (min && value < min) || (max && value > max)) {
-              input.setCustomValidity(`請輸入 ${min || 0} 到 ${max || '無上限'} 之間的數字`);
-            } else {
-              input.setCustomValidity('');
-            }
-          } else if (input.id === 'inputMoving') {
-            const value = input.value.trim();
-            if (value && !/^\d+(,\d+)*$/.test(value)) {
-              input.setCustomValidity('請輸入以逗號分隔的1-6數字，例如：1,3,5');
-            } else {
-              input.setCustomValidity('');
-            }
-          }
-        });
-      });
-    };
-
-    // Initialize
-    const init = async () => {
-      await loadResources();
-      loadHistory();
-      setupEventListeners();
-      setupInputValidation();
-      document.getElementById('dtInput').value = new Date().toISOString().slice(0, 16);
-    };
-
-    init().catch(error => {
-      console.error('初始化失敗:', error);
-      alert('應用程式初始化失敗，請檢查網路或檔案！');
-    };
-   </script>
+init();
+</script>
+</xaiArtifact>
 </body>
 </html>
