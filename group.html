@@ -24,6 +24,16 @@ button:hover { background: #357ABD; }
 .student.leader::after { content: " ⭐"; }
 #unassigned { border: 2px dashed #aaa; background: #f4f4f4; padding: 10px; border-radius: 12px; width: 95%; margin: 20px auto 0 auto; }
 #unassigned h4 { text-align: center; color: #666; font-size: 18px; margin:0 0 10px 0; }
+
+/* ====== 列印樣式 ====== */
+@media print {
+  body { margin: 5mm; background: none; font-size: 12px; }
+  .toolbar, #leadersList, #unassigned { display: none !important; }  /* ← 加這行 */
+  .container { gap: 5px; justify-content: flex-start; }
+  .group { width: 180px; padding: 5px; min-height: auto; }
+  .students-container { gap: 2px; }
+  .student { padding: 3px; font-size: 12px; width: 100%; text-align: center; }
+}
 </style>
 </head>
 <body>
@@ -88,7 +98,7 @@ function createStudentDiv(stu){
 
   div.addEventListener("click", ()=>{
     let groupName = Object.keys(groups).find(g=>groups[g].some(s=>s.座號==stu.座號));
-    if(!groupName || groupName==="未分組") return; // 未分組不指定組長
+    if(!groupName || groupName==="未分組") return;
 
     groups[groupName].forEach(s=>s.isLeader=false);
     stu.isLeader=true;
@@ -159,7 +169,7 @@ function handleDrop(evt){
   let newGroupName=evt.to.closest(".group")?.dataset.groupName || "未分組";
   if(!groups[newGroupName]) groups[newGroupName]=[];
   groups[newGroupName].push(stu);
-  stu.isLeader=false; // 移動後重置組長
+  stu.isLeader=false;
   renderGroups();
 }
 
@@ -191,6 +201,7 @@ function assistGrouping(){
 
   groups = {};
   document.getElementById("groups").innerHTML="";
+  document.getElementById("unassigned-students").innerHTML="";
 
   for(let i=1;i<=numGroups;i++){ groups["第"+i+"組"]=[]; }
 
