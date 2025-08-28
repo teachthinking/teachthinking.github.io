@@ -1469,10 +1469,10 @@ function getGuaObject(guaName) {
           return;
         }
 
-        const relationClass = edge.relation.includes('生') ? 'generate' : edge.relation.includes('克') ? 'overcome' : 'harmony';
+        const relationClass = edge.relation.includes('生') ? 'generate' : edge.relation.includes('剋') ? 'overcome' : 'harmony';
         const marker = edge.relation.includes('生') ? 'arrow-generate' :
-                      edge.relation.includes('克') ? 'arrow-overcome' :
-                      edge.relation === '比和' : 'arrow-harmony' : 'arrow-harmony-reverse';
+                      edge.relation.includes('剋') ? 'arrow-overcome' :
+                      edge.relation === '比和' ? 'arrow-harmony' : 'arrow-harmony-reverse';
 
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         const dx = toNode.x - fromNode.x;
