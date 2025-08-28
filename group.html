@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>秀蜜老師學生分組系統</title>
+  <title>秀蜜學生分組系統</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   <style>
@@ -15,11 +15,12 @@
     .group { border-radius: 12px; padding: 15px; width: 240px; min-height: 150px; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.3s; }
     .group:hover { transform: scale(1.03); }
     .group h4 { text-align: center; margin: 0 0 10px 0; color: #444; }
-    .student { border: 1px solid #ccc; border-radius: 6px; padding: 6px; margin: 5px 0; background: #f9f9f9; cursor: pointer; transition: 0.2s; font-size: 14px; }
+    .student { border: 1px solid #ccc; border-radius: 6px; padding: 6px; margin: 5px 0; background: #f9f9f9; cursor: pointer; transition: 0.2s; font-size: 14px; user-select: none; }
     .student:hover { background: #e6f0ff; }
     .leader { background: #ffe066 !important; font-weight: bold; }
     #unassigned { border: 2px dashed #aaa; background: #f4f4f4; padding: 10px; border-radius: 12px; width: 95%; margin: 0 auto 20px auto; }
     #unassigned h4 { text-align: center; color: #666; }
+    #leadersList span { display: inline-block; margin: 5px 15px; font-weight: bold; color: #333; }
   </style>
 </head>
 <body>
@@ -40,10 +41,12 @@
   <h3 style="text-align:center;">分組區</h3>
   <div id="groups" class="container"></div>
 
+  <h3 style="text-align:center;">組長清單</h3>
+  <div id="leadersList" style="text-align:center; margin-bottom:20px;"></div>
+
   <script>
     let students = []; 
     let groups = {};   
-
     const colors = ["#d6eaff", "#d6ffd6", "#ffe6e6", "#f0d6ff", "#fff5cc", "#ffd6f5"];
 
     document.getElementById('fileInput').addEventListener('change', handleFile, false);
@@ -88,10 +91,7 @@
         const groupDiv = document.createElement("div");
         groupDiv.className = "group";
         groupDiv.id = "group-" + groupName;
-
-        if (groupName !== "未分組") {
-          groupDiv.style.background = colors[idx % colors.length];
-        }
+        if (groupName !== "未分組") groupDiv.style.background = colors[idx % colors.length];
 
         const title = document.createElement("h4");
         title.innerText = groupName;
@@ -104,8 +104,8 @@
           div.dataset.id = stu.座號;
           if (stu.isLeader) div.classList.add("leader");
 
-          // 點擊設定組長
-          div.addEventListener("click", () => toggleLeader(stu.座號));
+          // 雙擊設定組長
+          div.addEventListener("dblclick", () => toggleLeader(stu.座號));
 
           groupDiv.appendChild(div);
         });
@@ -132,6 +132,20 @@
         revertOnSpill: true,
         onAdd: updateGroups
       });
+
+      renderLeaders();
+    }
+
+    function renderLeaders() {
+      const div = document.getElementById("leadersList");
+      div.innerHTML = "";
+      Object.keys(groups).forEach(g => {
+        if (g === "未分組") return;
+        const leader = groups[g].find(s => s.isLeader);
+        const span = document.createElement("span");
+        span.innerText = leader ? `${g}: ${leader.姓名}` : `${g}: 無組長`;
+        div.appendChild(span);
+      });
     }
 
     function updateGroups(evt) {
@@ -145,6 +159,8 @@
 
       if (!groups[groupName]) groups[groupName] = [];
       groups[groupName].push(stu);
+
+      renderLeaders();
     }
 
     function addGroup() {
@@ -158,12 +174,9 @@
       if (!numGroups || numGroups <= 0) return;
 
       groups = {};
-      for (let i = 1; i <= numGroups; i++) {
-        groups["第" + i + "組"] = [];
-      }
+      for (let i = 1; i <= numGroups; i++) groups["第" + i + "組"] = [];
 
       let shuffled = [...students].sort(() => Math.random() - 0.5);
-
       shuffled.forEach((stu, index) => {
         let groupName = "第" + ((index % numGroups) + 1) + "組";
         groups[groupName].push(stu);
@@ -190,7 +203,6 @@
         if (groupName === "未分組") return;
         if (groups[groupName].length > 0) {
           groups[groupName].forEach(s => s.isLeader = false);
-          // 隨機挑選組長
           let randomIndex = Math.floor(Math.random() * groups[groupName].length);
           groups[groupName][randomIndex].isLeader = true;
         }
