@@ -270,6 +270,16 @@ function exportExcel(){
   XLSX.utils.book_append_sheet(wb,ws,"分組結果");
   XLSX.writeFile(wb,"分組結果.xlsx");
 }
+  // 在頁面關閉或重新整理前提醒
+window.addEventListener("beforeunload", function (e) {
+    // 判斷是否有學生資料
+    if (students.length > 0) {
+        // 標準方式設定訊息
+        e.preventDefault();
+        e.returnValue = "您尚未匯出分組結果，確定要離開嗎？";
+        return "您尚未匯出分組結果，確定要離開嗎？";
+    }
+});
 </script>
 </body>
 </html>
