@@ -861,18 +861,31 @@
       }
     }
 
-    function getTiYong(result) {
-      const moving = result.moving || [];
-      const upperIdx = result.uIdx;
-      const lowerIdx = result.lIdx;
-      const tiGua = moving.length === 0 || moving.every(m => m > 3)
-        ? getTrigramInfo(lowerIdx)
-        : getTrigramInfo(upperIdx);
-      const yongGua = moving.length === 0 || moving.every(m => m > 3)
-        ? getTrigramInfo(upperIdx)
-        : getTrigramInfo(lowerIdx);
-      return { tiGua, yongGua };
+function getTiYong(result) {
+  const moving = result.moving || [];
+  const upperIdx = result.uIdx;
+  const lowerIdx = result.lIdx;
+
+  let tiGua, yongGua;
+
+  if (moving.length === 0) {
+    tiGua = getTrigramInfo(lowerIdx);
+    yongGua = getTrigramInfo(upperIdx);
+  } else {
+    const maxMoving = Math.max(...moving);
+    console.log('最高動爻:', maxMoving);
+    if (maxMoving < 4) {
+      yongGua = getTrigramInfo(upperIdx);
+      tiGua = getTrigramInfo(lowerIdx);
+    } else {
+      yongGua = getTrigramInfo(lowerIdx);
+      tiGua = getTrigramInfo(upperIdx);
     }
+  }
+
+  console.log('體卦:', tiGua.name, '用卦:', yongGua.name);
+  return { tiGua, yongGua };
+}
 
     function getLineEntryFor(hex, lineIdx) {
       return hex.lines?.find(line => line.index === lineIdx) || { text: '無爻辭', meaning: '無解釋', score: 5 };
