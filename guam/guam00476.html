@@ -1685,39 +1685,13 @@ function renderDetailedAnalysis(result) {
     console.error('找不到 detailedAnalysis 元素');
     return;
   }
-  if (!wuxingExplanations || !wuxingExplanations.combined) {
-    console.error('wuxingExplanations 未載入');
-    detailedAnalysis.innerHTML = `<div class="wuxing-box"><h5>錯誤</h5><p>無法載入五行資料，請檢查配置。</p></div>`;
-    return;
-  }
-
   detailedAnalysis.classList.remove('hidden');
   detailedAnalysis.innerHTML = '';
 
-  const timestamp = new Date(result.timestamp || '2025-08-28T23:59:00+08:00');
+  const timestamp = new Date(result.timestamp || '2025-08-28T23:52:00+08:00');
   const { lunarMonth, season, lunarMonthNumber } = lunarCalendar.gregorianToLunar(timestamp);
   const { tiGua, yongGua } = getTiYong(result);
-  const arrow = '\u2192'; // Unicode 右箭頭
 
-  // 五行生克圖
-  detailedAnalysis.innerHTML += '<h4>五行生克圖</h4>';
-  const relations = [
-    { name: '本卦上卦（外在環境）', gua: getTrigramInfo(result.uIdx) },
-    { name: '本卦下卦（內在基礎）', gua: getTrigramInfo(result.lIdx) },
-    { name: '互卦上卦（潛在發展）', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8) },
-    { name: '互卦下卦（內在潛力）', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8) },
-    { name: '變卦上卦（未來趨勢）', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8) },
-    { name: '變卦下卦（變化基礎）', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8) }
-  ];
-
-  relations.forEach(({ name, gua }) => {
-    const relation = getRelation(tiGua.wuxing, gua.wuxing);
-    const status = getWuxingStatus(gua.wuxing, lunarMonthNumber);
-    const relationText = relationMap[relation] || relation;
-    detailedAnalysis.innerHTML += `<p>${name}：${gua.wuxing} (${status}) ${arrow} 體卦（${tiGua.wuxing}）：${relationText}</p>`;
-  });
-
-  // 詳細分析
   detailedAnalysis.innerHTML += `
     <h4>詳細分析</h4>
     <p><strong>占卜時間：</strong> ${timestamp.toLocaleString('zh-TW')}</p>
@@ -1728,7 +1702,16 @@ function renderDetailedAnalysis(result) {
     <p><strong>體卦五行建議：</strong> ${wuxingExplanations.wuxing_status[tiGua.wuxing]?.suggestions[getWuxingStatus(tiGua.wuxing, lunarMonthNumber)] || '無建議'}</p>
   `;
 
-  relations.forEach(({ name, gua, position = gua.position || '未知' }) => {
+  const relations = [
+    { name: '本卦上卦', gua: getTrigramInfo(result.uIdx), position: '上卦' },
+    { name: '本卦下卦', gua: getTrigramInfo(result.lIdx), position: '下卦' },
+    { name: '互卦上卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8), position: '上卦' },
+    { name: '互卦下卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8), position: '下卦' },
+    { name: '變卦上卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8), position: '上卦' },
+    { name: '變卦下卦', gua: getTrigramInfo(triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8), position: '下卦' }
+  ];
+
+  relations.forEach(({ name, gua, position }) => {
     const relation = getRelation(tiGua.wuxing, gua.wuxing);
     const status = getWuxingStatus(gua.wuxing, lunarMonthNumber);
     const relationKey = relationMap[relation] || '未知';
