@@ -1703,16 +1703,14 @@ async function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua
   // Ensure resources are loaded
   try {
     await loadResources();
-    if (!wuxingExplanations) {
-      throw new Error('wuxingExplanations is undefined');
-    }
+    if (!wuxingExplanations) throw new Error('wuxingExplanations is undefined');
   } catch (error) {
     console.error('Failed to load resources:', error);
-    alert('無法載入五行資料，請檢查網路或 wuxing_explanations.json 檔案！');
+    alert('無法載入五行資料，請檢查 wuxing_explanations.json！');
     return;
   }
 
-  // Fallback if tiGua is missing
+  // Fallback for missing tiGua
   let guas = { tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua };
   if (!tiGua) {
     console.warn('tiGua is missing, generating from Meihua method');
@@ -1739,8 +1737,12 @@ async function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua
 
   // Validate gua data
   const guaArray = [tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua];
+  guaArray.forEach((gua, index) => {
+    if (!gua || !gua.wuxing || !gua.name) {
+      console.error(`Invalid gua at index ${index}:`, gua);
+    }
+  });
   if (guaArray.some(gua => !gua || !gua.wuxing || !gua.name)) {
-    console.error('Invalid gua data:', guaArray);
     svg.innerHTML = '<text x="300" y="200" text-anchor="middle" fill="red" font-size="14">無法渲染圖表：卦象數據無效</text>';
     return;
   }
@@ -1793,7 +1795,7 @@ async function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua
     { id: 'changeLower', gua: changeLowerGua, label: '變卦下卦', x: 500, y: 300 }
   ];
 
-  // Define edges with updated relation mapping
+  // Define edges
   const edges = [
     { from: 'mainUpper', to: 'ti', relation: getRelation(mainUpperGua.wuxing, tiGua.wuxing) },
     { from: 'mainLower', to: 'ti', relation: getRelation(mainLowerGua.wuxing, tiGua.wuxing) },
@@ -1826,7 +1828,7 @@ async function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua
       const status = getWuxingStatus(gua.wuxing, lunarMonthNumber);
       const suggestion = wuxingExplanations.wuxing_status?.[gua.wuxing]?.suggestions?.[status] || '無建議';
       const relation = getRelation(gua.wuxing, tiGua.wuxing);
-      const detailKey = gua.name + (relation === '用生體' ? '生體' : relation === '用剋體' ? '剋體' : relation);
+      const detailKey = `${gua.name}${relation === '用生體' ? '生體' : relation === '用剄體' ? '剄體' : relation}`;
       const details = wuxingExplanations[relation]?.details?.[detailKey] || { description: '無詳細說明' };
       alert(`${label} (${gua.name})\n五行：${gua.wuxing}\n狀態：${status}\n建議：${suggestion}\n說明：${details.description || '無說明'}`);
     });
@@ -1883,6 +1885,8 @@ async function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua
     if (element) {
       element.textContent = item.relation;
       element.classList.add('wuxing-status', item.relation.includes('生') ? 'positive' : item.relation.includes('剄') ? 'negative' : 'neutral');
+    } else {
+      console.warn(`Element not found for ID: ${item.id}`);
     }
   });
 
@@ -1909,6 +1913,8 @@ async function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua
   const auspiciousnessBar = document.getElementById('auspiciousnessBar');
   if (auspiciousnessBar) {
     auspiciousnessBar.innerHTML = `<div class="score-bar" style="width: ${auspiciousnessIndex * 10}%; background: ${auspiciousnessIndex >= 7 ? 'var(--positive-color, #28a745)' : auspiciousnessIndex <= 3 ? 'var(--negative-color, #dc3545)' : 'var(--secondary-color, #007bff)'}"></div>`;
+  } else {
+    console.warn('auspiciousnessBar element not found');
   }
 
   const auspiciousnessIndexEl = document.getElementById('auspiciousnessIndex');
@@ -1920,6 +1926,8 @@ async function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua
   // Render Wuxing analysis
   renderWuxingAnalysis(currentResult?.question || '', lunarMonthNumber, guas);
 
+  // Log SVG content for debugging
+  console.log('SVG content:', svg.innerHTML);
   console.log('Wuxing diagram rendered successfully');
 }
   </script>
