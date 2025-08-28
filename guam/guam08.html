@@ -1697,20 +1697,25 @@ document.getElementById('judgeBtn').addEventListener('click', async () => {
         });
       });
     });
-    async function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
-  console.log('開始渲染五行圖表，參數：', { tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber });
+async function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
+  console.log('Rendering Wuxing diagram with parameters:', { tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber });
 
-  // 確保資源已載入
+  // Ensure resources are loaded
   try {
     await loadResources();
+    if (!wuxingExplanations) {
+      throw new Error('wuxingExplanations is undefined');
+    }
   } catch (error) {
-    console.error('資源載入失敗:', error);
-    alert('無法載入五行資料，請檢查網路或檔案！');
+    console.error('Failed to load resources:', error);
+    alert('無法載入五行資料，請檢查網路或 wuxing_explanations.json 檔案！');
     return;
   }
 
+  // Fallback if tiGua is missing
   let guas = { tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua };
   if (!tiGua) {
+    console.warn('tiGua is missing, generating from Meihua method');
     guas = generateGuaFromMeihua('time', new Date());
     tiGua = guas.tiGua;
     mainUpperGua = guas.mainUpperGua;
@@ -1723,7 +1728,7 @@ document.getElementById('judgeBtn').addEventListener('click', async () => {
 
   const svg = document.getElementById('wuxingSvg');
   if (!svg) {
-    console.error('找不到 wuxingSvg 元素');
+    console.error('wuxingSvg element not found');
     alert('無法找到 SVG 元素，請檢查 HTML 結構！');
     return;
   }
@@ -1732,36 +1737,37 @@ document.getElementById('judgeBtn').addEventListener('click', async () => {
   svg.setAttribute('height', '400');
   svg.style.display = 'block';
 
+  // Validate gua data
   const guaArray = [tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua];
   if (guaArray.some(gua => !gua || !gua.wuxing || !gua.name)) {
-    console.error('無效的卦象數據：', guaArray);
-    svg.innerHTML = '<text x="300" y="200" text-anchor="middle" fill="red" font-size="14">無法渲染圖表：數據無效</text>';
+    console.error('Invalid gua data:', guaArray);
+    svg.innerHTML = '<text x="300" y="200" text-anchor="middle" fill="red" font-size="14">無法渲染圖表：卦象數據無效</text>';
     return;
   }
 
-  // 定義箭頭標記
+  // Define arrow markers
   svg.innerHTML = `
     <defs>
       <marker id="arrow-generate" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-        <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--positive-color)" />
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--positive-color, #28a745)" />
       </marker>
       <marker id="arrow-overcome" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-        <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--negative-color)" />
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--negative-color, #dc3545)" />
       </marker>
       <marker id="arrow-harmony" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-        <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--secondary-color)" />
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--secondary-color, #007bff)" />
       </marker>
       <marker id="arrow-harmony-reverse" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-        <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--secondary-color)" />
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--secondary-color, #007bff)" />
       </marker>
     </defs>
   `;
 
-  // 添加標題
+  // Add title
   const question = currentResult?.question ? `問題：${currentResult.question.slice(0, 30)}${currentResult.question.length > 30 ? '...' : ''}` : '五行生克圖';
   svg.innerHTML += `<text x="300" y="30" text-anchor="middle" font-size="16" font-weight="bold">${question}</text>`;
 
-  // 添加五行狀態文字
+  // Add Wuxing status text
   const wuxingStatus = {
     '木': getWuxingStatus('木', lunarMonthNumber),
     '火': getWuxingStatus('火', lunarMonthNumber),
@@ -1776,7 +1782,7 @@ document.getElementById('judgeBtn').addEventListener('click', async () => {
                     `死：${Object.keys(wuxingStatus).find(k => wuxingStatus[k] === '死') || '無'}`;
   svg.innerHTML += `<text x="300" y="50" text-anchor="middle" font-size="14">${statusText}</text>`;
 
-  // 定義節點
+  // Define nodes
   const nodes = [
     { id: 'ti', gua: tiGua, label: '體卦', x: 200, y: 200 },
     { id: 'mainUpper', gua: mainUpperGua, label: '本卦上卦', x: 300, y: 100 },
@@ -1787,7 +1793,7 @@ document.getElementById('judgeBtn').addEventListener('click', async () => {
     { id: 'changeLower', gua: changeLowerGua, label: '變卦下卦', x: 500, y: 300 }
   ];
 
-  // 定義邊緣
+  // Define edges with updated relation mapping
   const edges = [
     { from: 'mainUpper', to: 'ti', relation: getRelation(mainUpperGua.wuxing, tiGua.wuxing) },
     { from: 'mainLower', to: 'ti', relation: getRelation(mainLowerGua.wuxing, tiGua.wuxing) },
@@ -1797,7 +1803,7 @@ document.getElementById('judgeBtn').addEventListener('click', async () => {
     { from: 'changeLower', to: 'ti', relation: getRelation(changeLowerGua.wuxing, tiGua.wuxing, true) }
   ];
 
-  // 渲染節點
+  // Render nodes
   nodes.forEach(node => {
     const { id, gua, label, x, y } = node;
     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -1815,20 +1821,23 @@ document.getElementById('judgeBtn').addEventListener('click', async () => {
     text.textContent = `${label}：${gua.name} (${gua.wuxing})`;
     svg.appendChild(text);
 
-    // 添加點擊事件
+    // Add click event for node details
     circle.addEventListener('click', () => {
       const status = getWuxingStatus(gua.wuxing, lunarMonthNumber);
-      const explanation = wuxingExplanations.wuxing_status?.[gua.wuxing]?.suggestions?.[status] || '無說明';
-      alert(`${label} (${gua.name})\n五行：${gua.wuxing}\n狀態：${status}\n建議：${explanation}`);
+      const suggestion = wuxingExplanations.wuxing_status?.[gua.wuxing]?.suggestions?.[status] || '無建議';
+      const relation = getRelation(gua.wuxing, tiGua.wuxing);
+      const detailKey = gua.name + (relation === '用生體' ? '生體' : relation === '用剋體' ? '剋體' : relation);
+      const details = wuxingExplanations[relation]?.details?.[detailKey] || { description: '無詳細說明' };
+      alert(`${label} (${gua.name})\n五行：${gua.wuxing}\n狀態：${status}\n建議：${suggestion}\n說明：${details.description || '無說明'}`);
     });
   });
 
-  // 渲染邊緣
+  // Render edges
   edges.forEach(edge => {
     const fromNode = nodes.find(n => n.id === edge.from);
     const toNode = nodes.find(n => n.id === edge.to);
     if (!fromNode || !toNode) {
-      console.warn(`邊緣繪製失敗，找不到節點: from=${edge.from}, to=${edge.to}`);
+      console.warn(`Failed to draw edge: from=${edge.from}, to=${edge.to}`);
       return;
     }
 
@@ -1859,7 +1868,7 @@ document.getElementById('judgeBtn').addEventListener('click', async () => {
     svg.appendChild(label);
   });
 
-  // 更新五行分析區域
+  // Update Wuxing analysis area
   const scoreItems = [
     { id: 'mainUpperRelation', wuxing: mainUpperGua.wuxing, relation: getRelation(mainUpperGua.wuxing, tiGua.wuxing) },
     { id: 'mainLowerRelation', wuxing: mainLowerGua.wuxing, relation: getRelation(mainLowerGua.wuxing, tiGua.wuxing) },
@@ -1887,7 +1896,7 @@ document.getElementById('judgeBtn').addEventListener('click', async () => {
     if (element) element.textContent = scoreItems[idx].wuxing;
   });
 
-  // 計算吉凶指數
+  // Calculate auspiciousness score
   let totalScore = 0;
   scoreItems.forEach(item => {
     totalScore += getRelationScore(item.relation);
@@ -1899,7 +1908,7 @@ document.getElementById('judgeBtn').addEventListener('click', async () => {
   const auspiciousnessIndex = clamp(Math.round(totalScore / scoreItems.length));
   const auspiciousnessBar = document.getElementById('auspiciousnessBar');
   if (auspiciousnessBar) {
-    auspiciousnessBar.innerHTML = `<div class="score-bar" style="width: ${auspiciousnessIndex * 10}%; background: ${auspiciousnessIndex >= 7 ? 'var(--positive-color)' : auspiciousnessIndex <= 3 ? 'var(--negative-color)' : 'var(--secondary-color)'}"></div>`;
+    auspiciousnessBar.innerHTML = `<div class="score-bar" style="width: ${auspiciousnessIndex * 10}%; background: ${auspiciousnessIndex >= 7 ? 'var(--positive-color, #28a745)' : auspiciousnessIndex <= 3 ? 'var(--negative-color, #dc3545)' : 'var(--secondary-color, #007bff)'}"></div>`;
   }
 
   const auspiciousnessIndexEl = document.getElementById('auspiciousnessIndex');
@@ -1908,10 +1917,10 @@ document.getElementById('judgeBtn').addEventListener('click', async () => {
     auspiciousnessIndexEl.classList.add(auspiciousnessIndex >= 7 ? 'positive' : auspiciousnessIndex <= 3 ? 'negative' : 'neutral');
   }
 
-  // 渲染五行分析
+  // Render Wuxing analysis
   renderWuxingAnalysis(currentResult?.question || '', lunarMonthNumber, guas);
 
-  console.log('五行圖表渲染完成');
+  console.log('Wuxing diagram rendered successfully');
 }
   </script>
 </body>
