@@ -1447,6 +1447,229 @@
         console.error('找不到 wuxingAnalysis 元素');
       }
     }
+    // 添加 renderWuxingDiagram
+function renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber) {
+  const svg = document.getElementById('wuxingSvg');
+  if (!svg) {
+    console.error('找不到 wuxingSvg 元素');
+    return;
+  }
+  svg.innerHTML = '';
+
+  const nodes = [
+    { wuxing: '木', x: 150, y: 100 },
+    { wuxing: '火', x: 250, y: 100 },
+    { wuxing: '土', x: 300, y: 200 },
+    { wuxing: '金', x: 250, y: 300 },
+    { wuxing: '水', x: 150, y: 300 }
+  ];
+
+  nodes.forEach(node => {
+    const isTiGua = tiGua.wuxing === node.wuxing;
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', node.x);
+    circle.setAttribute('cy', node.y);
+    circle.setAttribute('r', isTiGua ? 30 : 20);
+    circle.setAttribute('class', `wuxing-node ${node.wuxing}`);
+    svg.appendChild(circle);
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', node.x);
+    text.setAttribute('y', node.y + 5);
+    text.setAttribute('class', 'wuxing-node-text');
+    text.textContent = `${node.wuxing} (${getWuxingStatus(node.wuxing, lunarMonthNumber)})`;
+    svg.appendChild(text);
+  });
+
+  const relations = [
+    { from: '木', to: '火', type: 'generate' },
+    { from: '火', to: '土', type: 'generate' },
+    { from: '土', to: '金', type: 'generate' },
+    { from: '金', to: '水', type: 'generate' },
+    { from: '水', to: '木', type: 'generate' },
+    { from: '木', to: '土', type: 'overcome' },
+    { from: '土', to: '水', type: 'overcome' },
+    { from: '水', to: '火', type: 'overcome' },
+    { from: '火', to: '金', type: 'overcome' },
+    { from: '金', to: '木', type: 'overcome' }
+  ];
+
+  relations.forEach(rel => {
+    const fromNode = nodes.find(n => n.wuxing === rel.from);
+    const toNode = nodes.find(n => n.wuxing === rel.to);
+    if (fromNode && toNode) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', fromNode.x);
+      line.setAttribute('y1', fromNode.y);
+      line.setAttribute('x2', toNode.x);
+      line.setAttribute('y2', toNode.y);
+      line.setAttribute('class', `wuxing-edge-${rel.type}`);
+      svg.appendChild(line);
+    }
+  });
+}
+
+// 添加 renderDetailedAnalysis
+function renderDetailedAnalysis(result) {
+  const detailedAnalysisDiv = document.getElementById('detailedAnalysis');
+  if (!detailedAnalysisDiv) {
+    console.error('找不到 detailedAnalysis 元素');
+    return;
+  }
+  detailedAnalysisDiv.classList.remove('hidden');
+  detailedAnalysisDiv.innerHTML = `
+    <h4>詳細分析</h4>
+    <p>本卦：${result.hexMain?.name || '未知'}</p>
+    <p>互卦：${result.hexHu?.name || '未知'}</p>
+    <p>變卦：${result.hexChange?.name || '未知'}</p>
+    <p>問題：${result.question || '無'}</p>
+    <p>建議：根據卦象，宜謹慎行事，參考五行生克關係調整策略。</p>
+  `;
+}
+
+// 初始化
+document.addEventListener('DOMContentLoaded', () => {
+  loadResources().then(() => {
+    loadHistory();
+
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        button.classList.add('active');
+        document.getElementById(button.dataset.target).classList.add('active');
+      });
+    });
+
+    document.getElementById('btnNumber').addEventListener('click', () => {
+      const numUpper = parseInt(document.getElementById('numUpper').value);
+      const numLower = parseInt(document.getElementById('numLower').value);
+      const numMoving = parseInt(document.getElementById('numMoving').value);
+      if (isNaN(numUpper) || isNaN(numLower) || isNaN(numMoving) ||
+          numUpper < 100 || numUpper > 999 ||
+          numLower < 100 || numLower > 999 ||
+          numMoving < 100 || numMoving > 999) {
+        alert('請輸入有效的數字（100-999）！');
+        return;
+      }
+      const upperIdx = (numUpper % 8) || 8;
+      const lowerIdx = (numLower % 8) || 8;
+      const moving = [(numMoving % 6) || 6];
+      generateGua(upperIdx, lowerIdx, moving, '數字取卦');
+    });
+
+    document.getElementById('btnRandomNumber').addEventListener('click', () => {
+      const randomNum = () => Math.floor(Math.random() * 900) + 100;
+      const upperIdx = (randomNum() % 8) || 8;
+      const lowerIdx = (randomNum() % 8) || 8;
+      const moving = [(randomNum() % 6) || 6];
+      generateGua(upperIdx, lowerIdx, moving, '數字亂數取卦');
+    });
+
+    document.getElementById('btnManual').addEventListener('click', () => {
+      const selUpper = parseInt(document.getElementById('selUpper').value);
+      const selLower = parseInt(document.getElementById('selLower').value);
+      const inputMoving = document.getElementById('inputMoving').value.trim();
+      if (!selUpper || !selLower) {
+        alert('請選擇上卦和下卦！');
+        return;
+      }
+      const moving = inputMoving ? inputMoving.split(',').map(Number).filter(n => n >= 1 && n <= 6) : [];
+      generateGua(selUpper, selLower, moving, '手動取卦');
+    });
+
+    document.getElementById('btnTime').addEventListener('click', () => {
+      const timeMethod = document.querySelector('input[name="time-method"]:checked').value;
+      let upperIdx, lowerIdx, moving;
+      if (timeMethod === 'modern') {
+        const dtInput = document.getElementById('dtInput').value;
+        if (!dtInput) {
+          alert('請選擇日期時間！');
+          return;
+        }
+        const date = new Date(dtInput);
+        const total = date.getFullYear() + (date.getMonth() + 1) + date.getDate() + date.getHours();
+        upperIdx = (total % 8) || 8;
+        lowerIdx = ((total + date.getMinutes()) % 8) || 8;
+        moving = [(total % 6) || 6];
+        generateGua(upperIdx, lowerIdx, moving, '現代時間取卦', date.toLocaleString('zh-TW'));
+      } else {
+        const dateInput = document.getElementById('dateInput').value;
+        const shichen = parseInt(document.getElementById('shichenInput').value);
+        const minute = parseInt(document.getElementById('minuteInput').value) || 0;
+        if (!dateInput) {
+          alert('請選擇日期！');
+          return;
+        }
+        const date = new Date(dateInput);
+        const total = date.getFullYear() + (date.getMonth() + 1) + date.getDate() + shichen;
+        upperIdx = (total % 8) || 8;
+        lowerIdx = ((total + minute) % 8) || 8;
+        moving = [(total % 6) || 6];
+        generateGua(upperIdx, lowerIdx, moving, '傳統時辰取卦', date.toLocaleString('zh-TW'));
+      }
+    });
+
+    document.getElementById('btnImage').addEventListener('click', () => {
+      const upperIdx = parseInt(document.getElementById('upperImageSelect').value);
+      const lowerIdx = parseInt(document.getElementById('lowerDirectionSelect').value);
+      const useMinute = document.getElementById('imageUseMinute').checked;
+      const movingInput = parseInt(document.getElementById('imageMovingInput').value);
+      if (!upperIdx || !lowerIdx) {
+        alert('請選擇上卦和下卦！');
+        return;
+      }
+      const moving = useMinute ? [(Math.floor(new Date().getMinutes() / 10) % 6) || 6] : (movingInput >= 1 && movingInput <= 6 ? [movingInput] : []);
+      generateGua(upperIdx, lowerIdx, moving, '以象取卦');
+    });
+
+    document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+      if (confirm('確定要清除所有歷史記錄嗎？')) {
+        history = [];
+        saveHistory();
+        renderHistory();
+      }
+    });
+
+    document.getElementById('exportHistoryBtn').addEventListener('click', exportHistory);
+
+    document.getElementById('importHistoryBtn').addEventListener('click', () => {
+      const fileInput = document.getElementById('importHistoryInput');
+      if (fileInput.files.length > 0) {
+        importHistory(fileInput.files[0]);
+      } else {
+        alert('請選擇要匯入的檔案！');
+      }
+    });
+
+    document.getElementById('judgeBtn').addEventListener('click', () => {
+      if (currentResult) {
+        renderWuxingAnalysis(currentResult);
+      } else {
+        alert('請先進行占卜！');
+      }
+    });
+
+    document.getElementById('downloadSvgBtn').addEventListener('click', downloadSvg);
+    document.getElementById('openSvgWindowBtn').addEventListener('click', openSvgInNewWindow);
+
+    document.querySelectorAll('input[name="time-method"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        document.getElementById('modern-time-inputs').classList.toggle('hidden', radio.value !== 'modern');
+        document.getElementById('traditional-time-inputs').classList.toggle('hidden', radio.value !== 'traditional');
+      });
+    });
+
+    document.getElementById('nowQuick').addEventListener('click', () => {
+      const now = new Date();
+      const dtInput = document.getElementById('dtInput');
+      dtInput.value = now.toISOString().slice(0, 16);
+    });
+  }).catch(error => {
+    console.error('初始化失敗:', error);
+    alert('頁面初始化失敗，請檢查資源檔案或網路連線！');
+  });
+});
   </script>
 </body>
 </html>
