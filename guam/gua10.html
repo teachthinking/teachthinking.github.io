@@ -1502,38 +1502,7 @@ const renderAuspiciousnessBar = score => {
   document.getElementById('auspiciousnessIndex').textContent = `吉凶指數：${score.toFixed(1)} / 10`;
 };
 
-const renderWuxingAnalysis = result => {
-  const { tiGua, yongGua } = getTiYong(result);
-  const mainUpperGua = getTrigramInfo(result.uIdx);
-  const mainLowerGua = getTrigramInfo(result.lIdx);
-  const huUpperIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(3, 6))) || 8;
-  const huLowerIdx = triIndexByLines.get(JSON.stringify(result.huLines.slice(0, 3))) || 8;
-  const changeUpperIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(3, 6))) || 8;
-  const changeLowerIdx = triIndexByLines.get(JSON.stringify(result.changeLines.slice(0, 3))) || 8;
-  const huUpperGua = getTrigramInfo(huUpperIdx);
-  const huLowerGua = getTrigramInfo(huLowerIdx);
-  const changeUpperGua = getTrigramInfo(changeUpperIdx);
-  const changeLowerGua = getTrigramInfo(changeLowerIdx);
-  const lunar = lunarCalendar.gregorianToLunar(new Date());
-  const { lunarMonth, season, lunarMonthNumber } = lunar;
 
-  renderWuxingDiagram(tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua, lunarMonth, season, lunarMonthNumber);
-  renderWuxingAnalysisText();
-
-  const score = calculateAuspiciousness(
-    result.hexMain, result.hexChange, result.hexHu, result.moving,
-    tiGua, mainUpperGua, mainLowerGua, huUpperGua, huLowerGua, changeUpperGua, changeLowerGua,
-    lunarMonthNumber
-  );
-  renderAuspiciousnessBar(score);
-
-  const judgeBox = document.getElementById('judgeBox');
-  if (judgeBox) {
-    judgeBox.classList.remove('hidden');
-  } else {
-    console.error('找不到 judgeBox 元素');
-  }
-};
 
 const renderDetailedAnalysis = result => {
   const detailedAnalysis = document.getElementById('detailedAnalysis');
