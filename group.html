@@ -8,23 +8,22 @@
 <style>
 body { font-family: "Microsoft JhengHei", Arial; margin: 20px; background: linear-gradient(135deg,#eef2f3,#dfe9f3); }
 h2 { text-align: center; color: #333; margin-bottom: 20px; }
-.toolbar { text-align: center; margin-bottom: 20px; }
+.toolbar { text-align: center; margin-bottom: 10px; }
 button { margin: 5px; padding: 10px 15px; border: none; border-radius: 6px; background: #4a90e2; color: white; cursor: pointer; font-size: 14px; transition: 0.2s; }
 button:hover { background: #357ABD; }
+#leadersList { text-align:center; margin: 10px 0 20px 0; }
+#leadersList span { display: inline-block; margin: 5px 15px; font-weight: bold; color: #333; font-size:16px; }
 .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
 .group { border-radius: 12px; padding: 15px; width: 240px; min-height: 180px; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); position: relative; transition: 0.3s; }
 .group:hover { transform: scale(1.03); }
 .group h4 { text-align: center; margin: 0 0 10px 0; color: #444; }
-.students-container { min-height: 60px; display: flex; flex-direction: column; gap:6px; }
-#unassigned-students { display: flex; flex-wrap: wrap; gap: 8px; min-height: 60px; }
-.student { border: 1px solid #ccc; border-radius: 6px; padding: 10px; background: #f9f9f9; cursor: pointer; transition: 0.2s; font-size: 16px; position: relative; user-select: none; text-align:center; }
-#unassigned-students .student { width: 80px; font-size:14px; padding:6px; }
-.student:hover { background: #e6f0ff; }
+.students-container { min-height: 60px; display: flex; flex-wrap: wrap; gap:6px; justify-content:center; }
+.student { border: 1px solid #ccc; border-radius: 6px; padding: 10px; background: #f9f9f9; cursor: pointer; transition: 0.2s; font-size: 18px; position: relative; user-select: none; text-align:center; width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 .student.leader { background: #fff18d; font-weight: bold; }
-.student.leader::after { content: " ⭐"; }
-#unassigned { border: 2px dashed #aaa; background: #f4f4f4; padding: 10px; border-radius: 12px; width: 95%; margin: 0 auto 20px auto; }
-#unassigned h4 { text-align: center; color: #666; }
-#leadersList span { display: inline-block; margin: 5px 15px; font-weight: bold; color: #333; }
+.student.leader::after { content: "⭐"; position:absolute; top:2px; right:2px; font-size:16px; }
+#unassigned { border: 2px dashed #aaa; background: #f4f4f4; padding: 10px; border-radius: 12px; width: 95%; margin: 20px auto 0 auto; }
+#unassigned h4 { text-align: center; color: #666; font-size: 18px; }
+#unassigned-students { display: flex; flex-wrap: wrap; gap: 8px; min-height: 60px; justify-content: center; }
 </style>
 </head>
 <body>
@@ -38,15 +37,15 @@ button:hover { background: #357ABD; }
 <button onclick="exportExcel()">匯出 Excel</button>
 </div>
 
-<div id="unassigned" class="group" data-group-name="未分組"><h4>未分組學生</h4>
-  <div id="unassigned-students"></div>
-</div>
+<div id="leadersList"></div>
 
 <h3 style="text-align:center;">分組區</h3>
 <div id="groups" class="container"></div>
 
-<h3 style="text-align:center;">組長清單</h3>
-<div id="leadersList" style="text-align:center; margin-bottom:20px;"></div>
+<div id="unassigned" class="group" data-group-name="未分組">
+  <h4>未分組學生</h4>
+  <div id="unassigned-students"></div>
+</div>
 
 <script>
 let students = [];
@@ -63,10 +62,8 @@ function handleFile(e){
     const workbook=XLSX.read(data,{type:'array'});
     const sheet=workbook.Sheets[workbook.SheetNames[0]];
     const rows=XLSX.utils.sheet_to_json(sheet);
-
     students=rows.map(s=>({...s,isLeader:false}));
     groups={};
-
     if(rows.length>0) document.getElementById('title').innerText=rows[0].班級+" - "+rows[0].科目+" 學生分組";
 
     rows.forEach(s=>{
@@ -74,7 +71,6 @@ function handleFile(e){
       if(!groups[gName]) groups[gName]=[];
       groups[gName].push(s);
     });
-
     renderGroups(true);
   };
   reader.readAsArrayBuffer(file);
@@ -88,19 +84,10 @@ function createStudentDiv(stu){
   if(stu.isLeader) div.classList.add("leader");
 
   div.addEventListener("click", ()=>{
-    if(stu.isLeader){
-      stu.isLeader=false;
-      div.classList.remove("leader");
-    } else {
-      let groupName = Object.keys(groups).find(g=>groups[g].some(s=>s.座號==stu.座號));
-      groups[groupName].forEach(s=>s.isLeader=false);
-      stu.isLeader=true;
-      document.querySelectorAll("#group-"+groupName+" .student").forEach(d=>{
-        d.classList.remove("leader");
-        if(d.dataset.id==stu.座號) d.classList.add("leader");
-      });
-    }
-    renderLeaders();
+    let groupName = Object.keys(groups).find(g=>groups[g].some(s=>s.座號==stu.座號));
+    groups[groupName].forEach(s=>s.isLeader=false);
+    stu.isLeader=true;
+    renderGroups();
   });
 
   return div;
@@ -130,8 +117,6 @@ function renderGroups(first=false){
         animation:150,
         fallbackOnBody:true,
         revertOnSpill:true,
-        delay:100,
-        touchStartThreshold:5,
         onAdd: handleDrop
       });
 
@@ -143,8 +128,6 @@ function renderGroups(first=false){
       animation:150,
       fallbackOnBody:true,
       revertOnSpill:true,
-      delay:100,
-      touchStartThreshold:5,
       onAdd: handleDrop
     });
   }
@@ -152,11 +135,8 @@ function renderGroups(first=false){
   Object.keys(groups).forEach((groupName,idx)=>{
     const container = groupName==="未分組"?document.getElementById("unassigned-students"):document.querySelector("#group-"+groupName+" .students-container");
     container.innerHTML="";
-    groups[groupName].forEach(stu=>{
-      container.appendChild(createStudentDiv(stu));
-    });
+    groups[groupName].forEach(stu=>container.appendChild(createStudentDiv(stu)));
   });
-
   renderLeaders();
 }
 
@@ -182,12 +162,10 @@ function renderLeaders(){
   });
 }
 
-// 協助分組：包含未分組，分組前清空所有組別
 function assistGrouping(){
   const numGroups = parseInt(prompt("要分幾組？","4"));
   if(!numGroups || numGroups<=0) return;
 
-  // 取出所有學生（包含未分組）
   let allStudents = [];
   Object.keys(groups).forEach(g=>{
     allStudents = allStudents.concat(groups[g].map(s=>({...s,isLeader:false})));
@@ -198,15 +176,12 @@ function assistGrouping(){
   else if(method==="2"){ allStudents.sort((a,b)=>a.座號 - b.座號);}
   else { alert("輸入錯誤，使用隨機分組"); allStudents.sort(()=>Math.random()-0.5); }
 
-  // 清空原本所有組別（包含未分組）
   groups = {};
   document.getElementById("groups").innerHTML="";
   document.getElementById("unassigned-students").innerHTML="";
 
-  // 建立新組別
   for(let i=1;i<=numGroups;i++){ groups["第"+i+"組"]=[]; }
 
-  // 分配學生到新組
   allStudents.forEach((stu,index)=>{
     let groupName = "第"+((index % numGroups)+1)+"組";
     groups[groupName].push(stu);
@@ -215,7 +190,6 @@ function assistGrouping(){
   renderGroups(true);
 }
 
-// 隨機分組（現有組別）
 function randomAssign(){
   const groupNames = Object.keys(groups).filter(g=>g!=="未分組");
   if(groupNames.length === 0) { alert("先建立組別"); return; }
@@ -237,7 +211,6 @@ function randomAssign(){
   renderGroups();
 }
 
-// 隨機指定組長
 function autoAssignLeader(){
   Object.keys(groups).forEach(groupName=>{
     if(groupName==="未分組") return;
@@ -250,7 +223,6 @@ function autoAssignLeader(){
   renderGroups();
 }
 
-// 匯出 Excel
 function exportExcel(){
   let exportData=[];
   Object.keys(groups).forEach(g=>{
@@ -271,7 +243,6 @@ function exportExcel(){
   XLSX.writeFile(wb,"分組結果.xlsx");
 }
 
-// 離開提醒
 window.addEventListener("beforeunload", function (e) {
     if (students.length > 0) {
         e.preventDefault();
