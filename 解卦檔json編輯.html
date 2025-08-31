@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>梅花心易指南 - JSON 编辑器</title>
+    <style>
+        :root {
+            --primary-color: #8e44ad;
+            --secondary-color: #3498db;
+            --background-color: #f9f9f9;
+            --card-color: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --error-color: #e74c3c;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        
+        .sidebar {
+            background-color: var(--card-color);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .main-content {
+            background-color: var(--card-color);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            overflow: auto;
+            max-height: 80vh;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-import {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-export {
+            background-color: var(--success-color);
+        }
+        
+        .btn-reset {
+            background-color: var(--warning-color);
+        }
+        
+        .json-tree {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .json-node {
+            margin-left: 20px;
+        }
+        
+        .json-key {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .json-string {
+            color: var(--success-color);
+        }
+        
+        .json-number {
+            color: var(--secondary-color);
+        }
+        
+        .json-boolean {
+            color: var(--warning-color);
+        }
+        
+        .json-null {
+            color: var(--error-color);
+        }
+        
+        .collapsible {
+            cursor: pointer;
+        }
+        
+        .collapsible::before {
+            content: "➖ ";
+            font-size: 0.8rem;
+        }
+        
+        .collapsed::before {
+            content: "➕ ";
+        }
+        
+        .collapsed > .json-node {
+            display: none;
+        }
+        
+        .edit-area {
+            width: 100%;
+            min-height: 300px;
+            font-family: 'Courier New', monospace;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            resize: vertical;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .success {
+            background-color: rgba(39, 174, 96, 0.2);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+        }
+        
+        .error {
+            background-color: rgba(231, 76, 60, 0.2);
+            border: 1px solid var(--error-color);
+            color: var(--error-color);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                order: 2;
+            }
+            
+            .main-content {
+                order: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>梅花心易指南（家用版）</h1>
+        <p class="description">適用於現代人的生活易經解卦系統</p>
+    </header>
+    
+    <div class="container">
+        <div class="sidebar">
+            <h2>操作面板</h2>
+            <input type="file" id="fileInput" accept=".json" style="display: none;">
+            <button class="btn btn-import" id="importBtn">載入 JSON 檔案</button>
+            <button class="btn btn-export" id="exportBtn">匯出 JSON 檔案</button>
+            <button class="btn btn-reset" id="resetBtn">重置為預設值</button>
+            
+            <div class="message success" id="successMessage">操作成功！</div>
+            <div class="message error" id="errorMessage">發生錯誤！</div>
+            
+            <h3>使用說明</h3>
+            <p>1. 點擊「載入 JSON 檔案」選擇要編輯的 home.json 文件</p>
+            <p>2. 在右側編輯區修改內容</p>
+            <p>3. 完成編輯後點擊「匯出 JSON 檔案」保存</p>
+            <p>4. 可隨時點擊「重置為預設值」恢復原始數據</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="tabs">
+                <div class="tab active" data-tab="tree">樹狀檢視</div>
+                <div class="tab" data-tab="raw">原始 JSON</div>
+            </div>
+            
+            <div class="tab-content active" id="treeView">
+                <div id="jsonTree"></div>
+            </div>
+            
+            <div class="tab-content" id="rawJson">
+                <textarea class="edit-area" id="jsonEditor"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 預設的 JSON 數據
+        const defaultJson = {
+            "profile": {
+                "name": "梅花心易指南（家用版）",
+                "description": "適用於現代人的生活易經解卦系統，涵蓋事業、感情、健康、人際關係等人生面向"
+            },
+            "guaExplanations": {
+                "乾": "創造、領導、父親、剛健、自強不息、事業發展",
+                "兑": "溝通、喜悅、社交、言語、合作、情感表達",
+                "离": "光明、洞察、名聲、清晰、智慧、文明",
+                "震": "行動、變動、開始、突破、成長、創新",
+                "巽": "順應、入微、思考、計劃、柔韌、調整",
+                "坎": "險阻、挑戰、內省、深度、智慧、堅持",
+                "艮": "靜止、沉澱、等待、穩定、根基、終止",
+                "坤": "包容、母親、孕育、接收、耐心、養育"
+            },
+            "hexagramExplanations": {
+                "乾為天": "元亨利貞。剛健中正，純粹精也。現代解讀：處於強勢上升期，宜把握時機，自強不息，事業發展順利。",
+                "坤為地": "元亨，利牝馬之貞。現代解讀：以柔克剛，厚德載物，適合穩健發展，注重基礎建設。",
+                "水雷屯": "元亨利貞，勿用有攸往。現代解讀：萬物初生，艱難起步，需要耐心積累，不宜冒進。"
+                // 為簡化示例，這裡只顯示部分數據
+            },
+            "eventAnalysis": {
+                "sheng": "體卦{tiGua}生用卦{yongGua}，象徵您需要主動付出來應對{yongGuaDomain}領域的事務。",
+                "ke": "體卦{tiGua}克用卦{yongGua}，象徵您有能力主導{yongGuaDomain}領域的發展。",
+                "beiSheng": "用卦{yongGua}生體卦{tiGua}，象徵您會得到{yongGuaDomain}領域的幫助與支持。",
+                "beiKe": "用卦{yongGua}克體卦{tiGua}，象徵{yongGuaDomain}領域的事務給您帶來挑戰。",
+                "bihe": "體用兩卦五行比和，象徵此事順利和諧，易於成功。",
+                "tiGuaDomain": {
+                    "乾": "事業、領導、開創",
+                    "兑": "溝通、情感、社交", 
+                    "离": "智慧、名聲、清晰",
+                    "震": "行動、變化、開始",
+                    "巽": "思考、計劃、調整",
+                    "坎": "挑戰、內省、智慧",
+                    "艮": "靜止、等待、沉澱",
+                    "坤": "家庭、包容、接收"
+                },
+                "yongGuaDomain": {
+                    "乾": "事業發展方向",
+                    "兑": "人際感情關係",
+                    "离": "智慧名聲提升",
+                    "震": "行動變動時機",
+                    "巽": "思考計劃調整",
+                    "坎": "挑戰困難度過",
+                    "艮": "靜止等待時機",
+                    "坤": "家庭生活經營"
+                }
+            },
+            "dongYaoExplanations": {
+                "乾1爻": "潛龍勿用。現代解讀：時機未到，宜積蓄力量，等待時機。",
+                "乾2爻": "見龍在田，利見大人。現代解讀：展露頭角，獲得賞識，利於尋求指導。",
+                "乾3爻": "君子終日乾乾，夕惕若厲。現代解讀：勤奮努力，時刻警惕，避免失誤。"
+                // 為簡化示例，這裡只顯示部分數據
+            }
+        };
+
+        let currentJson = JSON.parse(JSON.stringify(defaultJson));
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const importBtn = document.getElementById('importBtn');
+            const exportBtn = document.getElementById('exportBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const fileInput = document.getElementById('fileInput');
+            const jsonEditor = document.getElementById('jsonEditor');
+            const jsonTree = document.getElementById('jsonTree');
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            // 初始化顯示
+            renderJsonTree(currentJson, jsonTree);
+            jsonEditor.value = JSON.stringify(currentJson, null, 2);
+            
+            // 切換標籤頁
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(tabId === 'tree' ? 'treeView' : 'rawJson').classList.add('active');
+                    
+                    if (tabId === 'raw') {
+                        jsonEditor.value = JSON.stringify(currentJson, null, 2);
+                    }
+                });
+            });
+            
+            // 導入按鈕點擊事件
+            importBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // 文件選擇事件
+            fileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const jsonContent = JSON.parse(e.target.result);
+                        currentJson = jsonContent;
+                        renderJsonTree(currentJson, jsonTree);
+                        jsonEditor.value = JSON.stringify(currentJson, null, 2);
+                        showMessage(successMessage, 'JSON 檔案載入成功！');
+                    } catch (error) {
+                        showMessage(errorMessage, 'JSON 解析錯誤：' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            });
+            
+            // 導出按鈕點擊事件
+            exportBtn.addEventListener('click', () => {
+                try {
+                    // 如果當前在原始JSON標籤頁，則從編輯器獲取內容
+                    if (document.getElementById('rawJson').classList.contains('active')) {
+                        currentJson = JSON.parse(jsonEditor.value);
+                    }
+                    
+                    const dataStr = JSON.stringify(currentJson, null, 2);
+                    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                    
+                    const exportFileDefaultName = 'home.json';
+                    
+                    const linkElement = document.createElement('a');
+                    linkElement.setAttribute('href', dataUri);
+                    linkElement.setAttribute('download', exportFileDefaultName);
+                    linkElement.click();
+                    
+                    showMessage(successMessage, 'JSON 檔案匯出成功！');
+                } catch (error) {
+                    showMessage(errorMessage, 'JSON 格式錯誤：' + error.message);
+                }
+            });
+            
+            // 重置按鈕點擊事件
+            resetBtn.addEventListener('click', () => {
+                currentJson = JSON.parse(JSON.stringify(defaultJson));
+                renderJsonTree(currentJson, jsonTree);
+                jsonEditor.value = JSON.stringify(currentJson, null, 2);
+                showMessage(successMessage, '已重置為預設值！');
+            });
+            
+            // 顯示訊息函數
+            function showMessage(element, text) {
+                element.textContent = text;
+                element.style.display = 'block';
+                
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, 3000);
+            }
+            
+            // 渲染JSON樹狀結構
+            function renderJsonTree(obj, parentElement) {
+                parentElement.innerHTML = '';
+                
+                for (const key in obj) {
+                    if (obj.hasOwnProperty(key)) {
+                        const value = obj[key];
+                        const itemElement = document.createElement('div');
+                        itemElement.className = 'json-item';
+                        
+                        if (typeof value === 'object' && value !== null) {
+                            const collapsible = document.createElement('div');
+                            collapsible.className = 'collapsible';
+                            collapsible.textContent = key;
+                            
+                            const node = document.createElement('div');
+                            node.className = 'json-node';
+                            
+                            itemElement.appendChild(collapsible);
+                            itemElement.appendChild(node);
+                            parentElement.appendChild(itemElement);
+                            
+                            renderJsonTree(value, node);
+                            
+                            collapsible.addEventListener('click', function() {
+                                this.classList.toggle('collapsed');
+                            });
+                        } else {
+                            const keySpan = document.createElement('span');
+                            keySpan.className = 'json-key';
+                            keySpan.textContent = key + ': ';
+                            
+                            let valueSpan = document.createElement('span');
+                            
+                            if (typeof value === 'string') {
+                                valueSpan.className = 'json-string';
+                                valueSpan.textContent = '"' + value + '"';
+                            } else if (typeof value === 'number') {
+                                valueSpan.className = 'json-number';
+                                valueSpan.textContent = value;
+                            } else if (typeof value === 'boolean') {
+                                valueSpan.className = 'json-boolean';
+                                valueSpan.textContent = value;
+                            } else if (value === null) {
+                                valueSpan.className = 'json-null';
+                                valueSpan.textContent = 'null';
+                            }
+                            
+                            // 添加編輯功能
+                            const editBtn = document.createElement('button');
+                            editBtn.textContent = '編輯';
+                            editBtn.style.marginLeft = '10px';
+                            editBtn.style.padding = '2px 5px';
+                            editBtn.style.fontSize = '0.8rem';
+                            
+                            editBtn.addEventListener('click', function() {
+                                const newValue = prompt(`請輸入新的值 for ${key}:`, value);
+                                if (newValue !== null) {
+                                    // 嘗試保持原始數據類型
+                                    let processedValue = newValue;
+                                    if (typeof value === 'number') {
+                                        processedValue = Number(newValue);
+                                    } else if (typeof value === 'boolean') {
+                                        processedValue = newValue.toLowerCase() === 'true';
+                                    }
+                                    
+                                    obj[key] = processedValue;
+                                    renderJsonTree(currentJson, jsonTree);
+                                    jsonEditor.value = JSON.stringify(currentJson, null, 2);
+                                }
+                            });
+                            
+                            itemElement.appendChild(keySpan);
+                            itemElement.appendChild(valueSpan);
+                            itemElement.appendChild(editBtn);
+                            parentElement.appendChild(itemElement);
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
