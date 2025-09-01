@@ -279,7 +279,7 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
         }
     }
 
-    // 生成報告 HTML
+    // 生成報告 HTML，增加 SVG 高度
     const reportHtml = `
         <h3>${caseName}</h3>
         <p><strong>輸入方式：</strong> ${inputMethod}</p>
@@ -299,7 +299,7 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
         <h4>推估應期：</h4>
         <ul>${expectedDatesHtml}</ul>
         ${caseAnalysisText}
-        <div class="case-graph-container"><svg id="caseGraph" width="600" height="400"></svg></div>
+        <div class="case-graph-container"><svg id="caseGraph" width="600" height="500"></svg></div>
     `;
 
     dom.resultArea.innerHTML = reportHtml;
@@ -322,13 +322,13 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
         reportHtml,
         timestamp: new Date().toISOString(),
         notes: dom.caseNotes.value,
-        guaData // 新增 guaData 至歷史記錄
+        guaData
     };
 
-    // 繪製卦象關係圖
+    // 繪製卦象關係圖，傳遞 caseName 用於標題
     const caseGraph = document.getElementById('caseGraph');
     if (caseGraph) {
-        drawGuaGraph(caseGraph, guaData);
+        drawGuaGraph(caseGraph, guaData, caseName);
     }
 }
 
@@ -393,8 +393,8 @@ function getChangingLineGuaNum(changingLine) {
     return changingLine > 3 ? 1 : 8; // 簡化
 }
 
-// 繪製五行生克關係圖
-function drawGuaGraph(svgElement, guaData) {
+// 繪製五行生克關係圖，新增 caseName 參數
+function drawGuaGraph(svgElement, guaData, caseName) {
     svgElement.innerHTML = `
         <defs>
             <marker id="arrowhead-sheng" markerWidth="6" markerHeight="4" refX="8" refY="2" orient="auto" fill="green">
@@ -406,6 +406,16 @@ function drawGuaGraph(svgElement, guaData) {
         </defs>
     `;
 
+    // 添加標題
+    const titleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    titleText.setAttribute('x', 300); // SVG 寬度 600，居中
+    titleText.setAttribute('y', 30); // 頂部位置
+    titleText.setAttribute('text-anchor', 'middle');
+    titleText.setAttribute('font-size', '16px');
+    titleText.classList.add('graph-title');
+    titleText.textContent = `${caseName} - 五行生克圖`;
+    svgElement.appendChild(titleText);
+
     const elementStrengths = getElementStrength(getCurrentMonthBranch());
     const strengthOrder = ['旺', '相', '休', '囚', '死'];
     const getWeight = (el) => {
@@ -414,12 +424,12 @@ function drawGuaGraph(svgElement, guaData) {
         return hexagramData.line_weights[4 - index] || 0.2;
     };
 
-    // 五行節點位置（圓形佈局，中心為300,200，半徑150）
+    // 五行節點位置（圓形佈局，中心為300,250，半徑150，Y 座標下移以居中）
     const elements = ['木', '火', '土', '金', '水'];
     const nodes = elements.map((el, i) => {
         const angle = (i * 2 * Math.PI) / 5 - Math.PI / 2; // 從頂部開始順時針
         const x = 300 + 150 * Math.cos(angle);
-        const y = 200 + 150 * Math.sin(angle);
+        const y = 250 + 150 * Math.sin(angle); // Y 從 200 改為 250 適應新高度
         return { id: el, label: el, element: el, x, y };
     });
 
@@ -628,10 +638,10 @@ function loadCase(index) {
     dom.notesSection.style.display = 'block';
     dom.caseNotes.value = currentCaseData.notes;
 
-    // 重新繪製五行生克圖
+    // 重新繪製五行生克圖，傳遞 caseName
     const caseGraph = document.getElementById('caseGraph');
     if (caseGraph && currentCaseData.guaData) {
-        drawGuaGraph(caseGraph, currentCaseData.guaData);
+        drawGuaGraph(caseGraph, currentCaseData.guaData, currentCaseData.caseName);
     }
 
     alert(`案件「${currentCaseData.caseName}」已成功載入！`);
