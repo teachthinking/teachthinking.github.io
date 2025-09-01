@@ -306,22 +306,33 @@
     
     function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName) {
         const mainGua = hexagramData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`] || { name: '未知卦名', summary: '無相關解釋。' };
+        
         const lowerHexagramBinary = toBinary(lowerGuaNum);
         const upperHexagramBinary = toBinary(upperGuaNum);
         const fullHexagramBinary = upperHexagramBinary + lowerHexagramBinary;
-        const interHexagramBinaryLower = fullHexagramBinary.substring(1, 4);
-        const interHexagramBinaryUpper = fullHexagramBinary.substring(2, 5);
+
+        // Corrected inter-hexagram logic
+        const interHexagramBinaryLower = fullHexagramBinary.substring(2, 5);
+        const interHexagramBinaryUpper = fullHexagramBinary.substring(1, 4);
+        
         const interGuaLowerNum = toDecimal(interHexagramBinaryLower);
         const interGuaUpperNum = toDecimal(interHexagramBinaryUpper);
         const interGua = hexagramData.hexagrams[`${interGuaUpperNum}_${interGuaLowerNum}`] || { name: '未知互卦', summary: '無相關解釋。' };
-        let changedUpperGuaNum = upperGuaNum;
-        let changedLowerGuaNum = lowerGuaNum;
-        if (changingLine > 3) {
-            changedUpperGuaNum = (upperGuaNum % 2 === 0) ? (upperGuaNum - 1 || 8) : (upperGuaNum + 1);
-        } else {
-            changedLowerGuaNum = (lowerGuaNum % 2 === 0) ? (lowerGuaNum - 1 || 8) : (lowerGuaNum + 1);
-        }
+        
+        // Corrected changing hexagram logic
+        let changedFullHexagramBinary = fullHexagramBinary.split('');
+        const lineIndex = 6 - changingLine;
+        changedFullHexagramBinary[lineIndex] = changedFullHexagramBinary[lineIndex] === '0' ? '1' : '0';
+        changedFullHexagramBinary = changedFullHexagramBinary.join('');
+        
+        const changedUpperGuaBinary = changedFullHexagramBinary.substring(0, 3);
+        const changedLowerGuaBinary = changedFullHexagramBinary.substring(3, 6);
+        
+        const changedUpperGuaNum = toDecimal(changedUpperGuaBinary);
+        const changedLowerGuaNum = toDecimal(changedLowerGuaBinary);
+        
         const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '無相關解釋。' };
+        
         let tiGua, yongGua;
         if (changingLine > 3) {
             tiGua = hexagramData.gua[lowerGuaNum];
