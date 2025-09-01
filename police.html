@@ -13,7 +13,7 @@
         .input-section { background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; }
         .input-section h2 { color: #34495e; margin-bottom: 10px; }
         .input-section p { color: #95a5a6; margin-bottom: 20px; }
-        input[type="number"], select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; box-sizing: border-box; }
+        input[type="number"], select, input[type="text"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; box-sizing: border-box; }
         button { padding: 12px 25px; border: none; border-radius: 5px; background-color: #3498db; color: white; font-size: 1em; cursor: pointer; transition: background-color 0.3s; }
         button:hover { background-color: #2980b9; }
         #resultArea { background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 30px; display: none; flex-direction: column; align-items: flex-start; margin-top: 20px; text-align: left; }
@@ -30,6 +30,14 @@
         .gua-selects { display: flex; justify-content: space-around; gap: 10px; margin-bottom: 15px; }
         #jsonStatus { font-size: 0.9em; color: #7f8c8d; margin-top: 10px; text-align: center; }
         #calculateBtn { width: 100%; margin-top: 20px; }
+        .case-notes-section { width: 100%; margin-top: 20px; }
+        .case-notes-section textarea { width: 100%; height: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; resize: vertical; box-sizing: border-box; }
+        .history-controls { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
+        .history-controls button { width: 48%; }
+        #historyList { width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin-top: 10px; text-align: left; }
+        .history-item { padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .history-item:hover { background-color: #f0f0f0; }
+        .history-item:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
@@ -41,6 +49,8 @@
     </div>
 
     <div class="input-section">
+        <input type="text" id="caseName" placeholder="請輸入案件名稱" />
+        
         <div class="tab-container">
             <button class="tab-btn active" onclick="openTab(event, 'manual')">手動取卦</button>
             <button class="tab-btn" onclick="openTab(event, 'number')">數字起卦</button>
@@ -80,9 +90,20 @@
         </div>
         
         <button id="calculateBtn" onclick="startCalculation()">開始推算</button>
+        
+        <div class="history-controls">
+            <button onclick="saveCase()">儲存案件</button>
+            <button onclick="showHistoryModal()">載入歷史案件</button>
+        </div>
     </div>
-
+    
     <div id="resultArea"></div>
+    
+    <div id="notesSection" class="case-notes-section" style="display: none;">
+        <h3>案件筆記</h3>
+        <p>記錄您的辦案心得與補充觀察。</p>
+        <textarea id="caseNotes" placeholder="在這裡輸入您的筆記..."></textarea>
+    </div>
     
     <p class="disclaimer">* 本系統為輔助工具，其分析結果僅供辦案參考與啟發思路，不應作為唯一的偵辦依據。</p>
 </div>
@@ -91,7 +112,9 @@
     let hexagramData = {};
     const numToGua = ['', '乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
     let currentDataSource = '預設檔案';
+    let currentCaseData = null; // 用來儲存當前卜卦的全部資料，方便儲存和載入
 
+    // 頁面載入時，從外部 JSON 檔案載入資料
     window.onload = async () => {
         const fileInput = document.getElementById('jsonFile');
         fileInput.addEventListener('change', handleFileUpload);
@@ -198,54 +221,44 @@
     }
 
     function startCalculation() {
+        if (Object.keys(hexagramData).length === 0 || !hexagramData.hexagrams) {
+            alert('卦象資料尚未載入，請先上傳 JSON 檔案或等待預設檔案載入。');
+            return;
+        }
+
         const activeTab = document.querySelector('.tab-content.active').id;
+        let lowerGuaNum, upperGuaNum, changingLine, inputMethod;
+
         if (activeTab === 'number') {
-            calculateByNumber();
+            const input = document.getElementById('numInput').value;
+            if (input.length !== 9 || isNaN(input)) {
+                alert('請輸入有效的9位數數字！');
+                return;
+            }
+            const numStr = String(input);
+            const sumLower = parseInt(numStr.substring(0, 3), 10);
+            const sumUpper = parseInt(numStr.substring(3, 6), 10);
+            const sumChange = parseInt(numStr.substring(6, 9), 10);
+            
+            lowerGuaNum = sumLower % 8 === 0 ? 8 : sumLower % 8;
+            upperGuaNum = sumUpper % 8 === 0 ? 8 : sumUpper % 8;
+            changingLine = sumChange % 6 === 0 ? 6 : sumChange % 6;
+            inputMethod = `數字 ${input}`;
         } else {
-            calculateManualGua();
-        }
-    }
-
-    function calculateByNumber() {
-        if (Object.keys(hexagramData).length === 0 || !hexagramData.hexagrams) {
-            alert('卦象資料尚未載入，請先上傳 JSON 檔案或等待預設檔案載入。');
-            return;
+            upperGuaNum = parseInt(document.getElementById('upperGuaSelect').value, 10);
+            lowerGuaNum = parseInt(document.getElementById('lowerGuaSelect').value, 10);
+            changingLine = parseInt(document.getElementById('changingLineManual').value, 10);
+            inputMethod = '手動取卦';
         }
 
-        const input = document.getElementById('numInput').value;
-        if (input.length !== 9 || isNaN(input)) {
-            alert('請輸入有效的9位數數字！');
-            return;
-        }
-        
         const caseType = document.getElementById('caseTypeSelect').value;
-        const numStr = String(input);
-        const sumLower = parseInt(numStr.substring(0, 3), 10);
-        const sumUpper = parseInt(numStr.substring(3, 6), 10);
-        const sumChange = parseInt(numStr.substring(6, 9), 10);
+        const caseName = document.getElementById('caseName').value || `未命名案件 - ${new Date().toLocaleString()}`;
         
-        const lowerGuaNum = sumLower % 8 === 0 ? 8 : sumLower % 8;
-        const upperGuaNum = sumUpper % 8 === 0 ? 8 : sumUpper % 8;
-        const changingLine = sumChange % 6 === 0 ? 6 : sumChange % 6;
-
-        generateReport(lowerGuaNum, upperGuaNum, changingLine, `數字 ${input}`, caseType);
+        generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName);
     }
-
-    function calculateManualGua() {
-        if (Object.keys(hexagramData).length === 0 || !hexagramData.hexagrams) {
-            alert('卦象資料尚未載入，請先上傳 JSON 檔案或等待預設檔案載入。');
-            return;
-        }
-
-        const upperGuaNum = parseInt(document.getElementById('upperGuaSelect').value, 10);
-        const lowerGuaNum = parseInt(document.getElementById('lowerGuaSelect').value, 10);
-        const changingLine = parseInt(document.getElementById('changingLineManual').value, 10);
-        const caseType = document.getElementById('caseTypeSelect').value;
-
-        generateReport(lowerGuaNum, upperGuaNum, changingLine, '手動取卦', caseType);
-    }
-
-    function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType) {
+    
+    function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName) {
+        // ... (卦象計算邏輯與前版本相同) ...
         const mainGua = hexagramData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`] || { name: '未知卦名', summary: '無相關解釋。' };
         
         const lowerHexagramBinary = toBinary(lowerGuaNum);
@@ -297,7 +310,7 @@
             caseAnalysisText += `<h4>專案案件分析：${caseData.name}</h4><p>${caseData.summary}</p>`;
             
             let foundAnalysis = false;
-            const guaKeys = [`${upperGuaNum}_${lowerGuaNum}`, `${interGuaUpperNum}_${interGuaLowerNum}`, `${changedUpperGuaNum}_${changedLowerGuaNum}`];
+            const guaKeys = [`${upperGuaNum}_${lowerGuaNum}`, `${interGuaUpperGuaNum}_${interGuaLowerNum}`, `${changedUpperGuaNum}_${changedLowerGuaNum}`];
             
             for (const key of guaKeys) {
                  if (caseData.related_hexagrams[key]) {
@@ -310,7 +323,7 @@
             }
         }
         
-        let report = `
+        const reportHtml = `
             <h3>${inputMethod}</h3>
             <p><strong>本卦</strong>：${mainGua.name} (${numToGua[upperGuaNum]}上${numToGua[lowerGuaNum]}下)</p>
             <p><strong>動爻</strong>：第 ${changingLine} 爻</p>
@@ -337,15 +350,112 @@
             </ul>
         `;
 
-        document.getElementById('resultArea').innerHTML = report;
+        currentCaseData = {
+            caseName: caseName,
+            timestamp: new Date().toISOString(),
+            inputMethod: inputMethod,
+            lowerGuaNum: lowerGuaNum,
+            upperGuaNum: upperGuaNum,
+            changingLine: changingLine,
+            caseType: caseType,
+            reportHtml: reportHtml,
+            notes: '' // 預設為空字串，載入時會填入
+        };
+
+        document.getElementById('resultArea').innerHTML = reportHtml;
         document.getElementById('resultArea').style.display = 'flex';
+        document.getElementById('notesSection').style.display = 'block';
+        document.getElementById('caseNotes').value = '';
+    }
+    
+    // 儲存案件到瀏覽器的 Local Storage
+    function saveCase() {
+        if (!currentCaseData) {
+            alert('請先進行卜卦推算後再儲存！');
+            return;
+        }
+        
+        currentCaseData.notes = document.getElementById('caseNotes').value;
+        
+        let cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+        cases.push(currentCaseData);
+        localStorage.setItem('divinationCases', JSON.stringify(cases));
+        
+        alert(`案件「${currentCaseData.caseName}」已成功儲存！`);
     }
 
+    // 顯示歷史案件列表
+    function showHistoryModal() {
+        const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+        if (cases.length === 0) {
+            alert('目前沒有歷史記錄。');
+            return;
+        }
+        
+        let historyHtml = '<div id="historyList">';
+        cases.forEach((c, index) => {
+            historyHtml += `<div class="history-item" onclick="loadCase(${index})">
+                <strong>${c.caseName}</strong> - ${new Date(c.timestamp).toLocaleString()}
+            </div>`;
+        });
+        historyHtml += '</div>';
+        
+        // 簡單的模態框效果
+        const modal = document.createElement('div');
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        modal.style.display = 'flex';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+        
+        const modalContent = document.createElement('div');
+        modalContent.style.backgroundColor = 'white';
+        modalContent.style.padding = '20px';
+        modalContent.style.borderRadius = '10px';
+        modalContent.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+        modalContent.style.maxWidth = '500px';
+        modalContent.style.width = '90%';
+        modalContent.innerHTML = `
+            <h3>載入歷史案件</h3>
+            <p>點擊案件名稱即可載入。</p>
+            ${historyHtml}
+            <button onclick="this.parentNode.parentNode.remove()">關閉</button>
+        `;
+        
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+    }
+    
+    // 載入選定的歷史案件
+    function loadCase(index) {
+        const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+        const caseToLoad = cases[index];
+        if (!caseToLoad) return;
+        
+        currentCaseData = caseToLoad;
+        document.getElementById('caseName').value = currentCaseData.caseName;
+        document.getElementById('resultArea').innerHTML = currentCaseData.reportHtml;
+        document.getElementById('resultArea').style.display = 'flex';
+        document.getElementById('notesSection').style.display = 'block';
+        document.getElementById('caseNotes').value = currentCaseData.notes;
+        
+        alert(`案件「${currentCaseData.caseName}」已成功載入！`);
+        
+        // 關閉模態框
+        document.querySelector('div[style*="background-color: rgba(0, 0, 0, 0.5)"]').remove();
+    }
+
+    // 輔助函式：十進制轉二進制（三位數）
     function toBinary(num) {
         if (num === 8) return '000';
         return (num - 1).toString(2).padStart(3, '0');
     }
 
+    // 輔助函式：二進制轉十進制
     function toDecimal(binaryStr) {
         const decimalValue = parseInt(binaryStr, 2);
         return (decimalValue === 0) ? 8 : decimalValue;
