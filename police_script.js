@@ -445,15 +445,15 @@ function drawGuaGraph(svgElement, guaData) {
 
         const weight = getWeight(fromNode.element);
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        // 縮短線條以避免箭頭與節點重疊
+        // 計算線條起點和終點，確保箭頭尖端位於圓邊緣
         const dx = toNode.x - fromNode.x;
         const dy = toNode.y - fromNode.y;
         const length = Math.sqrt(dx * dx + dy * dy);
-        const offset = 40; // 節點半徑
-        const x1 = fromNode.x + (dx * offset) / length;
-        const y1 = fromNode.y + (dy * offset) / length;
-        const x2 = toNode.x - (dx * offset) / length;
-        const y2 = toNode.y - (dy * offset) / length;
+        const radius = 40; // 節點半徑
+        const x1 = fromNode.x + (dx * radius) / length;
+        const y1 = fromNode.y + (dy * radius) / length;
+        const x2 = toNode.x - (dx * radius) / length;
+        const y2 = toNode.y - (dy * radius) / length;
         line.setAttribute('x1', x1);
         line.setAttribute('y1', y1);
         line.setAttribute('x2', x2);
@@ -472,15 +472,15 @@ function drawGuaGraph(svgElement, guaData) {
 
         const weight = getWeight(fromNode.element);
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        // 縮短線條以避免箭頭與節點重疊
+        // 計算線條起點和終點，確保箭頭尖端位於圓邊緣
         const dx = toNode.x - fromNode.x;
         const dy = toNode.y - fromNode.y;
         const length = Math.sqrt(dx * dx + dy * dy);
-        const offset = 40; // 節點半徑
-        const x1 = fromNode.x + (dx * offset) / length;
-        const y1 = fromNode.y + (dy * offset) / length;
-        const x2 = toNode.x - (dx * offset) / length;
-        const y2 = toNode.y - (dy * offset) / length;
+        const radius = 40; // 節點半徑
+        const x1 = fromNode.x + (dx * radius) / length;
+        const y1 = fromNode.y + (dy * radius) / length;
+        const x2 = toNode.x - (dx * radius) / length;
+        const y2 = toNode.y - (dy * radius) / length;
         line.setAttribute('x1', x1);
         line.setAttribute('y1', y1);
         line.setAttribute('x2', x2);
@@ -507,14 +507,14 @@ function drawGuaGraph(svgElement, guaData) {
 
         const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
         text.setAttribute('x', node.x);
-        text.setAttribute('y', node.y - 10); // 上移五行文字，避免箭頭遮擋
+        text.setAttribute('y', node.y - 10); // 五行文字上移
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('dominant-baseline', 'middle');
         text.classList.add('gua-text');
         text.textContent = node.label;
         group.appendChild(text);
 
-        // 添加卦名標籤（本卦、互卦、變卦的體用）
+        // 添加卦名標籤（本卦、互卦、變卦的體用，分行顯示）
         const guaLabels = [];
         if (guaData.mainTi.element === node.element) guaLabels.push(`本卦體 (${guaData.mainTi.gua.name})`);
         if (guaData.mainYong.element === node.element) guaLabels.push(`本卦用 (${guaData.mainYong.gua.name})`);
@@ -523,15 +523,34 @@ function drawGuaGraph(svgElement, guaData) {
         if (guaData.changedTi.element === node.element) guaLabels.push(`變卦體 (${guaData.changedTi.gua.name})`);
         if (guaData.changedYong.element === node.element) guaLabels.push(`變卦用 (${guaData.changedYong.gua.name})`);
 
-        if (guaLabels.length > 0) {
+        guaLabels.forEach((label, index) => {
             const labelText = document.createElementNS("http://www.w3.org/2000/svg", "text");
             labelText.setAttribute('x', node.x);
-            labelText.setAttribute('y', node.y + 15); // 下移卦名標籤，避免箭頭遮擋
+            labelText.setAttribute('y', node.y + 15 + index * 12); // 每行偏移 12px
             labelText.setAttribute('text-anchor', 'middle');
-            labelText.setAttribute('font-size', '10px'); // 減小字體以減少擁擠
-            labelText.textContent = guaLabels.join(', ');
+            labelText.setAttribute('font-size', '10px');
+            labelText.classList.add('gua-label');
+            labelText.textContent = label;
             group.appendChild(labelText);
-        }
+        });
+
+        // 添加懸停放大動畫
+        group.addEventListener('mouseover', () => {
+            circle.style.transform = 'scale(1.1)';
+            text.style.transform = 'scale(1.1)';
+            guaLabels.forEach((_, index) => {
+                const labelText = group.querySelectorAll('.gua-label')[index];
+                if (labelText) labelText.style.transform = 'scale(1.1)';
+            });
+        });
+        group.addEventListener('mouseout', () => {
+            circle.style.transform = 'scale(1)';
+            text.style.transform = 'scale(1)';
+            guaLabels.forEach((_, index) => {
+                const labelText = group.querySelectorAll('.gua-label')[index];
+                if (labelText) labelText.style.transform = 'scale(1)';
+            });
+        });
 
         svgElement.appendChild(group);
     });
