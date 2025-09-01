@@ -4,20 +4,375 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>梅花心易警察辦案輔助系統</title>
-    <link rel="stylesheet" href="police_styles.css">
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #27ae60;
+            --tertiary-color: #f39c12;
+            --danger-color: #e74c3c;
+            --bg-light: #f4f4f9;
+            --bg-dark: #fff;
+            --text-primary: #333;
+            --text-secondary: #7f8c8d;
+            --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: '微軟正黑體', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+        }
+
+        .input-section {
+            background-color: var(--bg-dark);
+            border-radius: 10px;
+            box-shadow: var(--box-shadow);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .input-section h2 {
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+
+        .input-section p {
+            color: #95a5a6;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], input[type="file"], select, textarea, input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #calculateBtn {
+            width: 100%;
+            margin-top: 20px;
+            background-color: var(--primary-color);
+        }
+
+        #calculateBtn:hover {
+            background-color: #2980b9;
+        }
+
+        .tab-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: 1px solid #ccc;
+            background-color: #ecf0f1;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .tab-btn:hover {
+            background-color: #bdc3c7;
+        }
+
+        .tab-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+            width: 100%;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .gua-selects {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .gua-selects div {
+            flex: 1;
+            text-align: center;
+        }
+        
+        #numInput {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        #jsonStatus {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        #resultArea {
+            background-color: var(--bg-dark);
+            border-radius: 10px;
+            box-shadow: var(--box-shadow);
+            padding: 30px;
+            display: none;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        #resultArea h3, #resultArea h4 {
+            color: #2c3e50;
+        }
+
+        #resultArea hr {
+            width: 100%;
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
+        }
+
+        .case-notes-section {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .case-notes-section textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .disclaimer {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .utility-links {
+            text-align: center;
+            margin-top: 20px;
+            border-top: 1px dashed #ccc;
+            padding-top: 10px;
+        }
+
+        .utility-links a {
+            margin: 0 10px;
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .utility-links a:hover {
+            color: #2980b9;
+        }
+
+        /* 卦象按鈕佈局 */
+        .history-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .history-controls button, .history-controls .full-width {
+            width: 100%;
+        }
+        .history-controls .full-width {
+            grid-column: 1 / span 2;
+        }
+        
+        /* 統一「案件管理」按鈕顏色 */
+        #btn-save, #btn-load { background-color: var(--secondary-color); }
+        #btn-save:hover, #btn-load:hover { background-color: #229955; }
+
+        #btn-export { background-color: var(--tertiary-color); }
+        #btn-export:hover { background-color: #e67e22; }
+        #btn-import { background-color: var(--tertiary-color); }
+        #btn-import:hover { background-color: #e67e22; }
+        #btn-clear { background-color: var(--danger-color); }
+        #btn-clear:hover { background-color: #c0392b; }
+
+        .file-import-label {
+            width: 100%;
+            display: block;
+            cursor: pointer;
+        }
+
+        #historyList {
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            text-align: left;
+        }
+
+        .history-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .history-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: left;
+        }
+
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-btn:hover, .close-btn:focus {
+            color: black;
+            text-decoration: none;
+        }
+
+        /* 新增的SVG圖表樣式 */
+        .case-graph-container {
+            width: 100%;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed #ccc;
+            text-align: center;
+        }
+
+        #caseGraph {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+        }
+
+        .graph-label {
+            font-size: 0.9em;
+        }
+
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            pointer-events: none;
+            white-space: nowrap;
+            display: none;
+        }
+    </style>
 </head>
 <body>
+
     <div class="container">
-        <div class="header">
+        <header class="header">
             <h1>梅花心易警察辦案輔助系統</h1>
             <p>運用古老易經智慧，為案件偵辦提供新視角與線索。</p>
-        </div>
+        </header>
 
-        <div class="input-section">
+        <section class="input-section">
+            <input type="text" id="caseName" placeholder="請輸入案件名稱" />
+            
             <div class="tab-container">
                 <button class="tab-btn active" data-tab="manual">手動取卦</button>
-                <button class="tab-btn" data-tab="number">數字取卦</button>
+                <button class="tab-btn" data-tab="number">數字起卦</button>
                 <button class="tab-btn" data-tab="time">時間取卦</button>
             </div>
 
@@ -25,80 +380,846 @@
                 <h2>手動取卦</h2>
                 <p>請依直覺或觀察到的事物，手動選擇上卦、下卦與動爻。</p>
                 <div class="gua-selects">
-                    <select id="upperGuaSelect">
-                        <option value="">選擇上卦</option>
-                    </select>
-                    <select id="lowerGuaSelect">
-                        <option value="">選擇下卦</option>
-                    </select>
+                    <div><label for="upperGuaSelect">上卦</label><select id="upperGuaSelect"></select></div>
+                    <div><label for="lowerGuaSelect">下卦</label><select id="lowerGuaSelect"></select></div>
                 </div>
-                <select id="changingLineManual">
-                    <option value="">動爻 (1-6)</option>
-                </select>
+                <label for="changingLineManual">動爻 (1-6)</label>
+                <select id="changingLineManual"></select>
             </div>
 
             <div id="number" class="tab-content">
-                <h2>數字取卦</h2>
-                <p>請輸入兩個數字（或更多），程式將依梅花心易規則自動推算。</p>
-                <input type="text" id="numInput" placeholder="輸入9位數數字" maxlength="9">
+                <h2>數字起卦</h2>
+                <p>請輸入9位數字，程式將自動推算。</p>
+                <input type="number" id="numInput" placeholder="請輸入9位數字" min="0" max="999999999" />
             </div>
 
             <div id="time" class="tab-content">
                 <h2>時間取卦</h2>
                 <p>程式將自動使用當前時間作為數字進行推算。</p>
-                <p>目前時間：<span id="currentTime"></span></p>
+                <p id="currentTimeDisplay">目前時間：</p>
             </div>
-
-            <input type="text" id="caseName" placeholder="輸入案件名稱 (選填)">
+            
             <select id="caseTypeSelect">
                 <option value="">請選擇案件類型 (選填)</option>
             </select>
 
             <div class="file-upload-section">
-                <p>或手動上傳 JSON 資料檔：</p>
+                <label for="jsonFile">或手動上傳 JSON 資料檔：</label>
                 <input type="file" id="jsonFile" accept=".json">
-                <p id="jsonStatus">* 目前使用的資料檔：未載入</p>
+                <p id="jsonStatus"></p>
             </div>
-
+            
             <button id="calculateBtn">開始推算</button>
+            
             <div class="history-controls">
                 <button id="btn-save">儲存案件</button>
                 <button id="btn-load">載入案件</button>
-                <button id="btn-export" class="full-width">匯出記錄</button>
-                <input type="file" id="importFile" accept=".json" style="display: none;">
-                <button id="btn-import" class="full-width">載入記錄</button>
+                <label class="file-import-label">
+                    <button id="btn-import">載入歷史記錄</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                </label>
+                <button id="btn-export">匯出歷史記錄</button>
                 <button id="btn-clear" class="full-width">清空歷史記錄</button>
             </div>
-        </div>
+        </section>
+        
+        <section id="resultArea" style="display:none;"></section>
 
-        <div id="resultArea" class="result-section" style="display: none;"></div>
-        <div id="caseGraphContainer" class="case-graph-container" style="display: none;">
-            <h3>五行生剋圖</h3>
-            <svg id="caseGraph"></svg>
-        </div>
-        <div id="notesSection" class="case-notes-section" style="display: none;">
+        <section id="caseGraphContainer" class="case-graph-container" style="display:none;">
+            <h3>五行生剋分析圖</h3>
+            <p class="graph-label">紅色箭頭為剋，藍色箭頭為生，線條越粗力量越強。</p>
+            <div id="caseGraph"></div>
+        </section>
+        
+        <section id="notesSection" class="case-notes-section" style="display:none;">
             <h3>案件筆記</h3>
             <p>記錄您的辦案心得與補充觀察。</p>
-            <textarea id="caseNotes"></textarea>
-        </div>
-
-        <p class="disclaimer">* 本系統為輔助工具，其分析結果僅供辦案參考與啟發思路，不應作為唯一的偵辦依據。</p>
-        <div class="utility-links">
-            <a href="#">編輯解卦檔</a> | 
-            <a href="#">使用說明</a> |
-            <a href="#">卜卦須知</a>
-        </div>
+            <textarea id="caseNotes" placeholder="在這裡輸入您的筆記..."></textarea>
+        </section>
+        
+        <footer class="footer">
+            <p class="disclaimer">* 本系統為輔助工具，其分析結果僅供辦案參考與啟發思路，不應作為唯一的偵辦依據。</p>
+            <div class="utility-links">
+                <a href="police_json.html">編輯解卦檔</a> | 
+                <a href="police_help.html">使用說明</a> |
+                <a href="divination_notes.html">卜卦須知</a>
+            </div>
+        </footer>
     </div>
 
     <div id="historyModal" class="modal">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
-            <h2>載入歷史案件</h2>
+            <h3>載入歷史案件</h3>
             <p>點擊案件名稱即可載入。</p>
             <div id="historyList"></div>
         </div>
     </div>
 
-    <script src="police_script.js"></script>
+    <div class="tooltip"></div>
+
+    <script>
+        // 核心資料與變數
+        let hexagramData = {};
+        let currentCaseData = null;
+        let isUnsaved = false;
+
+        // 嵌入式 JSON 資料
+        const embeddedData = JSON.parse(`
+            ${JSON.stringify({
+                "zhi_to_wu": { "子": "水", "丑": "土", "寅": "木", "卯": "木", "辰": "土", "巳": "火", "午": "火", "未": "土", "申": "金", "酉": "金", "戌": "土", "亥": "水" },
+                "five_to_season": { "木": ["寅", "卯"], "火": ["巳", "午"], "土": ["辰", "未", "戌", "丑"], "金": ["申", "酉"], "水": ["亥", "子"] },
+                "element_colors": { "金": "#f1c40f", "木": "#2ecc71", "水": "#3498db", "火": "#e74c3c", "土": "#e67e22" },
+                "five_elements_relations": {
+                    "金": { "生": "水", "剋": "木" },
+                    "木": { "生": "火", "剋": "土" },
+                    "水": { "生": "木", "剋": "火" },
+                    "火": { "生": "土", "剋": "金" },
+                    "土": { "生": "金", "剋": "水" }
+                },
+                "line_weights": [0.2, 0.4, 0.6, 0.8, 1.0],
+                "gua": {
+                    "1": { "name": "乾為天", "shortName": "乾", "element": "金", "direction": "西北", "feature": "圓、健、父、領導" },
+                    "2": { "name": "兌為澤", "shortName": "兌", "element": "金", "direction": "西", "feature": "口、悅、少女、律師" },
+                    "3": { "name": "離為火", "shortName": "離", "element": "火", "direction": "南", "feature": "火、麗、中女、文書" },
+                    "4": { "name": "震為雷", "shortName": "震", "element": "木", "direction": "東", "feature": "動、雷、長男、運動員" },
+                    "5": { "name": "巽為風", "shortName": "巽", "element": "木", "direction": "東南", "feature": "風、入、長女、商人" },
+                    "6": { "name": "坎為水", "shortName": "坎", "element": "水", "direction": "北", "feature": "險、陷、中男、盜賊" },
+                    "7": { "name": "艮為山", "shortName": "艮", "element": "土", "direction": "東北", "feature": "止、山、少男、山林人" },
+                    "8": { "name": "坤為地", "shortName": "坤", "element": "土", "direction": "西南", "feature": "順、地、母、農人" }
+                },
+                "hexagrams": {
+                    "1_1": { "name": "乾為天", "summary": "案件進展順利，但可能存在過於強勢的阻力或挑戰。"},
+                    "1_2": { "name": "天澤履", "summary": "案件應謹慎行事，如履薄冰，需注意細節，避免因小失大。"},
+                    "1_3": { "name": "天火同人", "summary": "案件與志同道合之人有關，或需廣泛尋求合作，從團隊中找到突破口。"},
+                    "1_4": { "name": "天雷無妄", "summary": "案件起因非預期，發展難以預測。應以公正態度對待，不帶預設立場。"},
+                    "1_5": { "name": "天風姤", "summary": "案件進展迅速，但可能伴隨意外的變數，需警惕嫌犯突然出現或脫逃。"},
+                    "1_6": { "name": "天水訟", "summary": "案件處於爭議或僵持階段，需訴諸法律程序或協商解決，不宜強硬。"},
+                    "1_7": { "name": "天山遯", "summary": "案件嫌犯可能已潛逃，偵查進入追緝階段，應廣泛發布通緝。"},
+                    "1_8": { "name": "天地否", "summary": "案件不通、閉塞，偵查困難，線索中斷。此時應重新整理思路，等待時機。"},
+                    "2_1": { "name": "澤天夬", "summary": "案件將有重大決斷或突破，可能因某人脫離團夥而豁然開朗。"},
+                    "2_2": { "name": "兌為澤", "summary": "案件與口舌、溝通、協議有關，需留意相關人員證詞的真實性。"},
+                    "2_3": { "name": "澤火革", "summary": "案件將有重大變革或轉機，可能需要改變偵查策略或運用新的技術手段。"},
+                    "2_4": { "name": "澤雷隨", "summary": "案件進展順利，有追隨或循序漸進的跡象。只要按部就班，終能成功。"},
+                    "2_5": { "name": "澤風大過", "summary": "案件存在風險或過度冒進。偵辦過程可能因過於樂觀而出現失誤，需謹慎。"},
+                    "2_6": { "name": "澤水困", "summary": "案件陷入困境，線索不足。警方可能面臨內外部壓力，應耐心等待轉機。"},
+                    "2_7": { "name": "澤山咸", "summary": "案件與感應、人際關係有關。可能是因感情糾葛而起，或是透過人脈關係找到線索。"},
+                    "2_8": { "name": "澤地萃", "summary": "案件與聚集、團夥有關，需注意多方勢力聚集。適合採取收網行動。"},
+                    "3_1": { "name": "火天大有", "summary": "案件進展順利，有所收穫。此卦象預示著警方掌握了足夠的證據，將大有斬獲。"},
+                    "3_2": { "name": "火澤睽", "summary": "案件關係複雜，各方意見不合或線索相互矛盾。需找出矛盾點並逐一釐清。"},
+                    "3_3": { "name": "離為火", "summary": "案件進展迅速，但可能伴隨情緒化或衝動的行為。需避免過於急躁，謹慎為上。"},
+                    "3_4": { "name": "火雷噬嗑", "summary": "案件需嚴懲不貸。此卦象暗示嫌犯罪行重大，應果斷採取行動，不留情面。"},
+                    "3_5": { "name": "火風鼎", "summary": "案件已進入穩定階段，證據鏈已形成。此時適合將案件送交法辦。"},
+                    "3_6": { "name": "火水未濟", "summary": "案件仍未結束，存在未解決的問題。可能有些細節或線索尚未釐清，需持續追蹤。"},
+                    "3_7": { "name": "火山旅", "summary": "案件與旅行、外地、移動有關。嫌犯可能在逃或頻繁移動，需跨轄區協查。"},
+                    "3_8": { "name": "火地晉", "summary": "案件進展迅速，光明在前。此卦象預示著案件即將水落石出，充滿希望。"},
+                    "4_1": { "name": "雷天大壯", "summary": "案件進展強勢，但也可能因過於強勢而有失誤。應避免過於衝動。"},
+                    "4_2": { "name": "雷澤歸妹", "summary": "案件關係錯綜複雜，可能涉及婚姻、感情或不正常的關係。需從人際關係網中尋找線索。"},
+                    "4_3": { "name": "雷火豐", "summary": "案件已掌握大量線索與證據，偵辦成果豐碩。此時是收網的絕佳時機。"},
+                    "4_4": { "name": "震為雷", "summary": "案件充滿變數與驚動，可能會有突然的事件發生。需做好應對突發狀況的準備。"},
+                    "4_5": { "name": "雷風恆", "summary": "案件進展穩定，持續追查將會有所成果。此卦象暗示需堅持不懈。"},
+                    "4_6": { "name": "雷水解", "summary": "案件將迎來轉機，困境即將解除。此時是突破僵局的最佳時機。"},
+                    "4_7": { "name": "雷山小過", "summary": "案件存在細微的疏忽或錯誤，可能是小地方出了問題。需仔細檢視所有細節。"},
+                    "4_8": { "name": "雷地豫", "summary": "案件進展輕鬆，充滿希望。此卦象預示著案件偵辦順利，將會如預期般發展。"},
+                    "5_1": { "name": "風天小畜", "summary": "案件進展緩慢，但已具備突破的潛力。需耐心等待時機成熟，不宜急躁。"},
+                    "5_2": { "name": "風澤中孚", "summary": "案件與信用、誠信有關。可能有人提供了虛假線索，或有人可以作為可靠的證人。"},
+                    "5_3": { "name": "風火家人", "summary": "案件與家庭、內部關係有關。嫌犯可能是熟人或家人，或線索隱藏在家庭內部。"},
+                    "5_4": { "name": "風雷益", "summary": "案件有增益、獲利的跡象。偵查過程可能意外獲得新的線索或線報。"},
+                    "5_5": { "name": "巽為風", "summary": "案件與傳播、資訊、流動有關。線索可能來自多方資訊或八卦，需仔細篩選。"},
+                    "5_6": { "name": "風水渙", "summary": "案件將會渙散、解散。嫌犯團夥可能已各自逃離，或內部不和而解散，難以追緝。"},
+                    "5_7": { "name": "風山漸", "summary": "案件循序漸進，穩步發展。此卦象預示著案件偵辦需耐心，不可操之過急。"},
+                    "5_8": { "name": "風地觀", "summary": "案件需仔細觀察，不宜妄動。此卦象暗示警方應扮演旁觀者，蒐集證據後再行動。"},
+                    "6_1": { "name": "水天需", "summary": "案件仍處於等待階段，不宜貿然行動。需有耐心，等待時機成熟。"},
+                    "6_2": { "name": "水澤節", "summary": "案件偵查需有所節制，避免不必要的資源浪費。在關鍵時刻集中火力。"},
+                    "6_3": { "name": "水火既濟", "summary": "案件已圓滿解決，所有線索都已釐清。此卦象預示著案件已偵破。"},
+                    "6_4": { "name": "水雷屯", "summary": "案件初期艱難，可能充滿阻力。需堅持不懈，才能突破困境。"},
+                    "6_5": { "name": "水風井", "summary": "案件與水源、古蹟、固定場所或傳統場所相關。嫌犯可能藏匿在這些地方。"},
+                    "6_6": { "name": "坎為水", "summary": "案件充滿險阻，可能會有意外發生。需謹慎應對，避免陷入陷阱。"},
+                    "6_7": { "name": "水山蹇", "summary": "案件進展困難，有阻礙。可能遭遇人為或自然的阻力，需尋求支援。"},
+                    "6_8": { "name": "水地比", "summary": "案件與親近、合作有關。此卦象預示警方可與線人或同僚合作，共同偵辦。"},
+                    "7_1": { "name": "山天大畜", "summary": "案件積累已久，但已掌握足夠線索。此時適合展開收網行動。"},
+                    "7_2": { "name": "山澤損", "summary": "案件可能因某種損失而有所進展。這損失可能是證據、嫌犯或資源。"},
+                    "7_3": { "name": "山火賁", "summary": "案件表面複雜，但內部簡單。需看透表象，抓住核心。"},
+                    "7_4": { "name": "山雷頤", "summary": "案件與口舌、飲食有關。嫌犯可能因口腹之慾而露出馬腳。"},
+                    "7_5": { "name": "山風蠱", "summary": "案件與內部腐敗、錯誤、問題有關。需先清理內部，才能順利偵辦。"},
+                    "7_6": { "name": "山水蒙", "summary": "案件線索混亂，有如迷霧。需有經驗的偵探引導，才能釐清真相。"},
+                    "7_7": { "name": "艮為山", "summary": "案件停滯不前，有如高山阻隔。此時不宜冒進，需靜待時機或改變策略。"},
+                    "7_8": { "name": "山地剝", "summary": "案件有剝落、瓦解的跡象。嫌犯團夥可能已四分五裂，偵辦將會更順利。"},
+                    "8_1": { "name": "地天泰", "summary": "案件進展順利，充滿希望。此卦象預示著案件即將水落石出。"},
+                    "8_2": { "name": "地澤臨", "summary": "案件已接近尾聲，可從高處俯視全局。此時適合進行最後的收網與逮捕。"},
+                    "8_3": { "name": "地火明夷", "summary": "案件黑暗、不明朗。嫌犯可能隱匿在暗處，或線索被掩蓋，需耐心挖掘。"},
+                    "8_4": { "name": "地雷復", "summary": "案件即將恢復正常，線索將會重新浮現。此卦象預示著案件將有新的突破。"},
+                    "8_5": { "name": "地風升", "summary": "案件將會上升、進展順利。此卦象預示著警方能步步高升，將案件偵破。"},
+                    "8_6": { "name": "地水師", "summary": "案件與軍隊、群體、集結有關。適合採取集體行動，將嫌犯一網打盡。"},
+                    "8_7": { "name": "地山謙", "summary": "案件需以謙虛、低調的態度對待，避免鋒芒畢露。可能有人協助辦案。"},
+                    "8_8": { "name": "坤為地", "summary": "案件進展緩慢，但腳踏實地。偵辦過程可能需要時間，但最終會有所成果。"}
+                },
+                "case_analysis": {
+                    "missing_person": {
+                        "name": "失蹤人口",
+                        "summary": "這類案件常因線索稀少而難以判斷生機。卦象可提供當事人的方位、狀態或案件的潛在轉折點。",
+                        "related_hexagrams": {
+                            "7_1": "【山天大畜】代表積壓、停滯。可能暗示失蹤人口是被某種原因留滯在某地，無法行動。",
+                            "6_5": "【水風井】代表固定的場所。暗示失蹤人口可能被困於某地，如地下室、廢棄的井中。",
+                            "6_6": "【坎為水】代表險、陷。此卦最凶，暗示當事人身處險境或已遭不測。",
+                            "1_7": "【天山遯】代表退隱、潛逃。可能暗示當事人是自願離家或遠行，而非被綁架。"
+                        }
+                    },
+                    "theft": {
+                        "name": "竊盜案",
+                        "summary": "竊盜案的偵辦重點在於嫌犯特徵、作案手法與贓物去向。卦象可提供相關線索。",
+                        "related_hexagrams": {
+                            "5_6": "【風水渙】代表散去。贓物可能已被銷贓或轉移，難以追回。",
+                            "4_2": "【雷澤歸妹】代表不正常的關係。暗示竊案可能與嫌犯的關係人有關，應從其關係網入手。",
+                            "6_3": "【水火既濟】代表已完成。此卦象可能預示贓物已脫手，嫌犯已逃逸，案件偵辦面臨困難。",
+                            "8_6": "【地水師】代表多人。竊案可能涉及團夥作案，而非單獨行動。"
+                        }
+                    },
+                    "online_crime": {
+                        "name": "網路犯罪",
+                        "summary": "網路犯罪常涉及匿名、虛擬與技術。卦象分析可從資訊流動、隱藏與破解的角度提供洞見。",
+                        "related_hexagrams": {
+                            "5_5": "【巽為風】代表網路、資訊傳播。此卦直接暗示案件與網路、資訊、傳播有關。",
+                            "6_6": "【坎為水】代表險、陷。此卦暗示嫌犯使用了高超的加密或隱匿技術，導致偵查陷入瓶頸。需尋求更專業的技術支援。",
+                            "6_4": "【水雷屯】代表初期艱難。暗示網路犯罪的偵辦在初期會遇到很多阻力，資料難以獲取，但只要堅持，終能突破困境。",
+                            "4_6": "【雷水解】代表解散。暗示嫌犯團夥可能已解散，或其成員因內部矛盾而決裂，這會是警方找到突破口的絕佳時機。"
+                        }
+                    },
+                    "organized_crime": {
+                        "name": "組織犯罪與幫派活動",
+                        "summary": "這類案件涉及多人、有組織，且常伴隨暴力。卦象分析可從團體、權力與衝突的角度提供洞見。",
+                        "related_hexagrams": {
+                            "8_6": "【地水師】代表多人、軍隊。此卦直接暗示案件涉及有組織的團夥，偵辦應採取集體行動，由有經驗的領導者指揮。",
+                            "4_1": "【雷天大壯】代表強大、聲勢。暗示幫派勢力強大，或其犯罪行為聲勢浩大，偵辦需有足夠的警力與資源支持。",
+                            "1_1": "【乾為天】代表領導、權威。卜到此卦可能預示偵辦重點在於鎖定幫派的核心領導人物，擒賊先擒王。",
+                            "3_4": "【火雷噬嗑】代表懲戒、啃食。此卦暗示需要強硬的手段來對付幫派成員，不可姑息。"
+                        }
+                    },
+                    "murder": {
+                        "name": "殺人案",
+                        "summary": "殺人案的卜卦通常涉及嚴重的後果，卦象可提供關於嫌犯、動機或關鍵證物的線索，但應謹慎使用。",
+                        "related_hexagrams": {
+                            "6_6": "【坎為水】代表險、陷。此卦最凶，可能暗示案件涉及血光之災、陷阱或不測。",
+                            "7_5": "【山風蠱】代表腐敗。可能暗示案件是由於家族內部、熟人之間的舊怨或不正當關係所導致。",
+                            "2_8": "【澤地萃】代表聚集。此卦可能暗示兇手與被害人之間有群體性的關聯，或是多人共謀犯案。",
+                            "3_2": "【火澤睽】代表離散、對立。此卦可能暗示兇手與被害人之間存在嚴重的矛盾或對立關係，是動機的關鍵所在。"
+                        }
+                    }
+                },
+                "element_relations": {
+                    "金": { "生": "水", "剋": "木" },
+                    "木": { "生": "火", "剋": "土" },
+                    "水": { "生": "木", "剋": "火" },
+                    "火": { "生": "土", "剋": "金" },
+                    "土": { "生": "金", "剋": "水" }
+                },
+                "line_summary": {
+                    "1": "案件的初始階段，是問題的根源。",
+                    "2": "案件的發展階段，代表線索或情況的變化。",
+                    "3": "案件的轉折點，可能會有意外事件發生。",
+                    "4": "案件進展的關鍵，代表新的線索或人物出現。",
+                    "5": "案件的高潮，是最終結果前的決定性因素。",
+                    "6": "案件的最終結果，是事情的結局。"
+                }
+            }`)
+        
+        let localData = {};
+        let currentDataSource = '預設檔案';
+
+        // DOM 元素引用
+        const dom = {
+            tabs: document.querySelectorAll('.tab-btn'),
+            tabContents: document.querySelectorAll('.tab-content'),
+            caseNameInput: document.getElementById('caseName'),
+            calculateBtn: document.getElementById('calculateBtn'),
+            upperGuaSelect: document.getElementById('upperGuaSelect'),
+            lowerGuaSelect: document.getElementById('lowerGuaSelect'),
+            changingLineManual: document.getElementById('changingLineManual'),
+            numInput: document.getElementById('numInput'),
+            caseTypeSelect: document.getElementById('caseTypeSelect'),
+            jsonFile: document.getElementById('jsonFile'),
+            jsonStatus: document.getElementById('jsonStatus'),
+            resultArea: document.getElementById('resultArea'),
+            notesSection: document.getElementById('notesSection'),
+            caseNotes: document.getElementById('caseNotes'),
+            btnSave: document.getElementById('btn-save'),
+            btnLoad: document.getElementById('btn-load'),
+            btnExport: document.getElementById('btn-export'),
+            btnImport: document.getElementById('btn-import'),
+            btnImportFile: document.getElementById('importFile'),
+            btnClear: document.getElementById('btn-clear'),
+            historyModal: document.getElementById('historyModal'),
+            historyList: document.getElementById('historyList'),
+            closeModalBtn: document.querySelector('.modal .close-btn'),
+            caseGraphContainer: document.getElementById('caseGraphContainer')
+        };
+        
+        const numToGua = ['', '乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
+        
+        // Correct mapping for trigram numbers to binary strings (bottom to top)
+        const trigramToBinary = {
+            1: '111', 2: '011', 3: '101', 4: '001',
+            5: '110', 6: '010', 7: '100', 8: '000'
+        };
+        
+        // Reverse mapping from binary strings to trigram numbers
+        const binaryToTrigram = Object.fromEntries(
+            Object.entries(trigramToBinary).map(([key, value]) => [value, parseInt(key)])
+        );
+        
+        window.onload = async () => {
+            // 使用嵌入式資料作為預設
+            localData = embeddedData;
+            populateGuaSelects();
+            populateCaseTypeSelect();
+            updateStatus('預設檔案');
+            
+            // 事件監聽器
+            dom.tabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    dom.tabs.forEach(t => t.classList.remove('active'));
+                    dom.tabContents.forEach(c => c.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    const targetTab = e.currentTarget.dataset.tab;
+                    document.getElementById(targetTab).classList.add('active');
+                    if (targetTab === 'time') {
+                        updateTimeDisplay();
+                    }
+                });
+            });
+
+            dom.calculateBtn.addEventListener('click', startCalculation);
+            dom.btnSave.addEventListener('click', saveCase);
+            dom.btnLoad.addEventListener('click', showHistoryModal);
+            dom.btnExport.addEventListener('click', exportCases);
+            dom.btnImport.addEventListener('click', () => dom.btnImportFile.click());
+            dom.btnClear.addEventListener('click', clearAllCases);
+            dom.jsonFile.addEventListener('change', handleFileUpload);
+            dom.btnImportFile.addEventListener('change', importCases);
+            dom.numInput.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9);
+            });
+            dom.closeModalBtn.addEventListener('click', () => dom.historyModal.style.display = 'none');
+            window.addEventListener('click', (event) => {
+                if (event.target === dom.historyModal) {
+                    dom.historyModal.style.display = 'none';
+                }
+            });
+            window.addEventListener('beforeunload', (event) => {
+                if (isUnsaved) {
+                    event.preventDefault();
+                    event.returnValue = '您有未儲存的案件，確定要離開嗎？未儲存的資料將會遺失。';
+                }
+            });
+        };
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    localData = JSON.parse(e.target.result);
+                    currentDataSource = `已載入「${file.name}」`;
+                    updateStatus(currentDataSource);
+                    alert('已成功載入新的 JSON 檔案。');
+                    populateCaseTypeSelect();
+                    populateGuaSelects();
+                } catch (error) {
+                    console.error('解析 JSON 檔案失敗:', error);
+                    alert('無效的 JSON 檔案，請檢查格式。');
+                    currentDataSource = '載入失敗，請檢查檔案格式。';
+                    updateStatus(currentDataSource);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function updateStatus(message) {
+            dom.jsonStatus.textContent = `* 目前使用的資料檔：${message}`;
+        }
+
+        function populateGuaSelects() {
+            const upperSelect = dom.upperGuaSelect;
+            const lowerSelect = dom.lowerGuaSelect;
+            const changingLineSelect = dom.changingLineManual;
+            
+            upperSelect.innerHTML = '';
+            lowerSelect.innerHTML = '';
+            changingLineSelect.innerHTML = '';
+
+            if (!localData.gua) return;
+
+            for (let i = 1; i <= 8; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = localData.gua[i].name;
+                upperSelect.appendChild(option.cloneNode(true));
+                lowerSelect.appendChild(option.cloneNode(true));
+            }
+
+            for (let i = 1; i <= 6; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `第 ${i} 爻`;
+                changingLineSelect.appendChild(option);
+            }
+        }
+
+        function populateCaseTypeSelect() {
+            const selectElement = dom.caseTypeSelect;
+            selectElement.innerHTML = '<option value="">請選擇案件類型 (選填)</option>';
+            if (localData.case_analysis) {
+                for (const key in localData.case_analysis) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = localData.case_analysis[key].name;
+                    selectElement.appendChild(option);
+                }
+            }
+        }
+        
+        function updateTimeDisplay() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            const hour = now.getHours();
+            const display = document.getElementById('currentTimeDisplay');
+            display.textContent = `目前時間：${year}年${month}月${day}日，${hour}時`;
+        }
+
+        function startCalculation() {
+            if (isUnsaved && !confirm('您有未儲存的案件，確定要進行新的推算嗎？未儲存的資料將會遺失。')) {
+                return;
+            }
+
+            if (Object.keys(localData).length === 0 || !localData.hexagrams) {
+                alert('卦象資料尚未載入，請先上傳 JSON 檔案或等待預設檔案載入。');
+                return;
+            }
+
+            const activeTab = document.querySelector('.tab-content.active').id;
+            let lowerGuaNum, upperGuaNum, changingLine, inputMethod;
+
+            if (activeTab === 'manual') {
+                upperGuaNum = parseInt(dom.upperGuaSelect.value, 10);
+                lowerGuaNum = parseInt(dom.lowerGuaSelect.value, 10);
+                changingLine = parseInt(dom.changingLineManual.value, 10);
+                inputMethod = '手動取卦';
+            } else if (activeTab === 'number') {
+                const input = dom.numInput.value;
+                if (input.length < 3 || isNaN(input)) {
+                    alert('請輸入有效的數字。');
+                    return;
+                }
+                const num1 = parseInt(input.substring(0, input.length/3), 10);
+                const num2 = parseInt(input.substring(input.length/3, input.length*2/3), 10);
+                const num3 = parseInt(input.substring(input.length*2/3, input.length), 10);
+                
+                if (isNaN(num1) || isNaN(num2) || isNaN(num3) || num1 < 1 || num2 < 1 || num3 < 1) {
+                    alert('請輸入有效的數字。');
+                    return;
+                }
+                
+                upperGuaNum = (num1 % 8 === 0) ? 8 : num1 % 8;
+                lowerGuaNum = (num2 % 8 === 0) ? 8 : num2 % 8;
+                changingLine = (num3 % 6 === 0) ? 6 : num3 % 6;
+                inputMethod = '數字取卦';
+
+            } else if (activeTab === 'time') {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = now.getMonth() + 1;
+                const day = now.getDate();
+                const hour = now.getHours();
+                
+                const upperSum = year + month + day;
+                const lowerSum = year + month + day + hour;
+                const changingSum = upperSum + lowerSum; 
+
+                upperGuaNum = (upperSum % 8 === 0) ? 8 : upperSum % 8;
+                lowerGuaNum = (lowerSum % 8 === 0) ? 8 : lowerSum % 8;
+                changingLine = (changingSum % 6 === 0) ? 6 : changingSum % 6;
+                inputMethod = '時間取卦';
+            }
+
+            const caseType = dom.caseTypeSelect.value;
+            const caseName = dom.caseNameInput.value || `未命名案件 - ${new Date().toLocaleString()}`;
+            
+            generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName);
+            
+            // Auto-save after successful calculation
+            saveCase();
+        }
+        
+        function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName) {
+            const mainGua = localData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`] || { name: '未知卦名', summary: '無相關解釋。' };
+            
+            const lowerHexagramBinary = trigramToBinary[lowerGuaNum];
+            const upperHexagramBinary = trigramToBinary[upperGuaNum];
+            const fullHexagramBinary = upperHexagramBinary + lowerHexagramBinary;
+
+            const interHexagramBinaryLower = fullHexagramBinary.substring(2, 5);
+            const interHexagramBinaryUpper = fullHexagramBinary.substring(1, 4);
+            
+            const interGuaLowerNum = binaryToTrigram[interHexagramBinaryLower];
+            const interGuaUpperNum = binaryToTrigram[interHexagramBinaryUpper];
+            const interGua = localData.hexagrams[`${interGuaUpperNum}_${interGuaLowerNum}`] || { name: '未知互卦', summary: '無相關解釋。' };
+            
+            let changedFullHexagramBinary = fullHexagramBinary.split('');
+            const lineIndex = 6 - changingLine;
+            changedFullHexagramBinary[lineIndex] = changedFullHexagramBinary[lineIndex] === '0' ? '1' : '0';
+            changedFullHexagramBinary = changedFullHexagramBinary.join('');
+            
+            const changedUpperGuaBinary = changedFullHexagramBinary.substring(0, 3);
+            const changedLowerGuaBinary = changedFullHexagramBinary.substring(3, 6);
+            
+            const changedUpperGuaNum = binaryToTrigram[changedUpperGuaBinary];
+            const changedLowerGuaNum = binaryToTragram[changedLowerGuaBinary];
+            
+            const changedGua = localData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '無相關解釋。' };
+            
+            let tiGua, yongGua;
+            if (changingLine > 3) {
+                tiGua = localData.gua[lowerGuaNum];
+                yongGua = localData.gua[upperGuaNum];
+            } else {
+                tiGua = localData.gua[upperGuaNum];
+                yongGua = localData.gua[lowerGuaNum];
+            }
+
+            let relationText = '';
+            let relationStatus = '';
+            const tiElement = tiGua.element;
+            const yongElement = yongGua.element;
+
+            if (tiElement === yongElement) { 
+                relationText = `體卦與用卦為**比和**關係`;
+                relationStatus = `**【平】**代表雙方勢均力敵，案件將按常理發展，但可能需要更多努力。`;
+            }
+            else if (localData.element_relations[tiElement].生 === yongElement) { 
+                relationText = `體卦${tiGua.name}生用卦${yongGua.name}，代表**我方生助對方**`; 
+                relationStatus = `**【凶】**這意味著警方主動付出，但案件進展緩慢，需防範嫌犯藉此脫逃。`; 
+            }
+            else if (localData.element_relations[tiElement].剋 === yongElement) { 
+                relationText = `體卦${tiGua.name}剋用卦${yongGua.name}，代表**我方克制對方**`; 
+                relationStatus = `**【吉】**這意味著警方能掌控局面，可成功將嫌犯繩之以法。`; 
+            }
+            else if (localData.element_relations[yongElement].生 === tiGua) { 
+                relationText = `用卦${yongGua.name}生體卦${tiGua.name}，代表**對方生助我方**`; 
+                relationStatus = `**【吉】**這意味著嫌犯或線索提供意外幫助，讓警方被動獲得突破。`; 
+            }
+            else if (localData.element_relations[yongElement].剋 === tiGua) { 
+                relationText = `用卦${yongGua.name}剋體卦${tiGua.name}，代表**對方克制我方**`; 
+                relationStatus = `**【凶】**這意味著警方辦案受阻，嫌犯反制能力強，需謹慎應對。`; 
+            }
+
+            let caseAnalysisText = '';
+            if (caseType && localData.case_analysis[caseType]) {
+                const caseData = localData.case_analysis[caseType];
+                caseAnalysisText += `<h4>專案案件分析：${caseData.name}</h4><p>${caseData.summary}</p>`;
+                let foundAnalysis = false;
+                const guaKeys = [`${upperGuaNum}_${lowerGuaNum}`, `${interGuaUpperNum}_${interGuaLowerNum}`, `${changedUpperGuaNum}_${changedLowerGuaNum}`];
+                for (const key of guaKeys) {
+                    if (caseData.related_hexagrams[key]) {
+                        caseAnalysisText += `<p><strong>${localData.hexagrams[key].name}：</strong>${caseData.related_hexagrams[key]}</p>`;
+                        foundAnalysis = true;
+                    }
+                }
+                if (!foundAnalysis) { caseAnalysisText += `<p>根據卦象，此案件的發展可能與特定類型關聯性較弱，建議從基本卦象分析入手。</p>`; }
+            }
+            
+            const reportHtml = `
+                <h3>${inputMethod}</h3>
+                <p><strong>本卦</strong>：${mainGua.name} (${numToGua[upperGuaNum]}上${numToGua[lowerGuaNum]}下)</p>
+                <p><strong>動爻</strong>：第 ${changingLine} 爻</p>
+                <p><strong>互卦</strong>：${interGua.name} (${numToGua[interGuaUpperNum]}上${numToGua[interGuaLowerNum]}下)</p>
+                <p><strong>變卦</strong>：${changedGua.name}</p>
+                <hr>
+                <h4>案件核心分析</h4>
+                <p><strong>本卦</strong>：${mainGua.summary}</p>
+                <p><strong>互卦 (隱藏狀況)</strong>：互卦代表案件的**中間過程**或**隱藏的狀況**。它顯示了案件中不為人知的內幕、潛在的關係變數或未來的走向。這暗示案件深層的真相可能與互卦「${interGua.name}」的卦義相關：**${interGua.summary}**</p>
+                <h4>案件發展與轉折</h4>
+                <p><strong>動爻</strong>：第 ${changingLine} 爻代表**${localData.line_summary[changingLine]}**，是案件的關鍵轉變點。</p>
+                <p><strong>變卦 (最終結果)</strong>：變卦代表案件的**最終結局**或**未來趨勢**。此卦象預示著案件的最終走向將會是「${changedGua.name}」，其主要含義為：**${changedGua.summary}**</p>
+                ${caseAnalysisText}
+                <h4>嫌犯與線索分析</h4>
+                <ul>
+                    <li><strong>嫌犯特徵</strong>：根據上卦「${localData.gua[upperGuaNum].name}」與下卦「${localData.gua[lowerGuaNum].name}」，嫌犯可能具有**${localData.gua[upperGuaNum].feature}**或**${localData.gua[lowerGuaNum].feature}**的特徵。</li>
+                    <li><strong>線索方位</strong>：關鍵線索可能位於**${localData.gua[lowerGuaNum].direction}**方，嫌犯可能藏匿在**${localData.gua[upperGuaNum].direction}**方。</li>
+                    <li><strong>體用生剋</strong>：${relationText}。${relationStatus}</li>
+                </ul>
+            `;
+
+            currentCaseData = {
+                caseName: caseName,
+                timestamp: new Date().toISOString(),
+                inputMethod: inputMethod,
+                lowerGuaNum: lowerGuaNum,
+                upperGuaNum: upperGuaNum,
+                changingLine: changingLine,
+                caseType: caseType,
+                reportHtml: reportHtml,
+                notes: ''
+            };
+            
+            dom.resultArea.innerHTML = reportHtml;
+            dom.resultArea.style.display = 'flex';
+            dom.notesSection.style.display = 'block';
+            dom.caseNotes.value = '';
+            isUnsaved = true;
+
+            // 繪製五行圖
+            dom.caseGraphContainer.style.display = 'block';
+            renderFiveElementGraph(lowerGuaNum, upperGuaNum);
+        }
+
+        // --- 五行生剋圖相關函式 ---
+        function getRelationType(sourceElement, targetElement) {
+            const relations = localData.five_elements_relations;
+            if (relations[sourceElement].生 === targetElement) return '生';
+            if (relations[sourceElement].剋 === targetElement) return '剋';
+            return null;
+        }
+
+        function renderFiveElementGraph(lowerGuaNum, upperGuaNum) {
+            const container = document.getElementById('caseGraph');
+            container.innerHTML = ''; // 清空舊圖表
+
+            const elements = ['金', '木', '水', '火', '土'];
+            const elementToGua = elements.reduce((acc, el) => {
+                acc[el] = Object.values(localData.gua).filter(g => g.element === el).map(g => g.shortName);
+                return acc;
+            }, {});
+
+            const elementPositions = {
+                '金': { x: 300, y: 100 }, '木': { x: 100, y: 250 }, '水': { x: 200, y: 450 },
+                '火': { x: 400, y: 250 }, '土': { x: 300, y: 350 }
+            };
+
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute('id', 'fiveElementGraph');
+            svg.setAttribute('width', '500');
+            svg.setAttribute('height', '500');
+            svg.setAttribute('viewBox', '0 0 500 500');
+
+            const elementsGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            elementsGroup.setAttribute('id', 'elementsGroup');
+            svg.appendChild(elementsGroup);
+
+            elements.forEach(element => {
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute('cx', elementPositions[element].x);
+                circle.setAttribute('cy', elementPositions[element].y);
+                circle.setAttribute('r', 40);
+                circle.setAttribute('fill', localData.element_colors[element]);
+                circle.setAttribute('stroke', 'black');
+                circle.setAttribute('stroke-width', 2);
+                circle.classList.add('element-circle');
+
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute('x', elementPositions[element].x);
+                text.setAttribute('y', elementPositions[element].y + 5);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('alignment-baseline', 'middle');
+                text.setAttribute('font-size', '20');
+                text.setAttribute('font-weight', 'bold');
+                text.setAttribute('fill', 'white');
+                text.textContent = element;
+
+                const guaText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                guaText.setAttribute('x', elementPositions[element].x);
+                guaText.setAttribute('y', elementPositions[element].y + 30);
+                guaText.setAttribute('text-anchor', 'middle');
+                guaText.setAttribute('font-size', '12');
+                guaText.setAttribute('fill', '#555');
+                guaText.textContent = elementToGua[element].join(', ');
+                
+                elementsGroup.appendChild(circle);
+                elementsGroup.appendChild(text);
+                elementsGroup.appendChild(guaText);
+            });
+
+            const tiGua = localData.gua[lowerGuaNum];
+            const yongGua = localData.gua[upperGuaNum];
+
+            const tiElement = tiGua.element;
+            const yongElement = yongGua.element;
+
+            function drawRelation(sourceElement, targetElement, color, weight) {
+                const start = elementPositions[sourceElement];
+                const end = elementPositions[targetElement];
+                const angle = Math.atan2(end.y - start.y, end.x - start.x);
+                const offset = 40;
+                const offsetStart = {
+                    x: start.x + offset * Math.cos(angle),
+                    y: start.y + offset * Math.sin(angle)
+                };
+                const offsetEnd = {
+                    x: end.x - offset * Math.cos(angle),
+                    y: end.y - offset * Math.sin(angle)
+                };
+
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute('x1', offsetStart.x);
+                line.setAttribute('y1', offsetStart.y);
+                line.setAttribute('x2', offsetEnd.x);
+                line.setAttribute('y2', offsetEnd.y);
+                line.setAttribute('stroke', color);
+                line.setAttribute('stroke-width', 2 + weight * 3);
+                line.setAttribute('marker-end', `url(#arrowhead-${color.slice(1)})`);
+                line.setAttribute('data-ti-element', tiElement);
+                line.setAttribute('data-yong-element', yongElement);
+                line.classList.add('relation-line');
+                svg.appendChild(line);
+
+                const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+                marker.setAttribute('id', `arrowhead-${color.slice(1)}`);
+                marker.setAttribute('viewBox', '0 0 10 10');
+                marker.setAttribute('refX', 8);
+                marker.setAttribute('refY', 5);
+                marker.setAttribute('markerWidth', 6);
+                marker.setAttribute('markerHeight', 6);
+                marker.setAttribute('orient', 'auto-start-reverse');
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+                path.setAttribute('fill', color);
+                marker.appendChild(path);
+                svg.appendChild(marker);
+            }
+
+            const relations = localData.five_elements_relations;
+            
+            for (const source in relations) {
+                const target_生 = relations[source].生;
+                const target_剋 = relations[source].剋;
+                
+                const isTiYongRelation_生 = (source === tiElement && target_生 === yongElement) || (source === yongElement && target_生 === tiElement);
+                const isTiYongRelation_剋 = (source === tiElement && target_剋 === yongElement) || (source === yongElement && target_剋 === tiElement);
+                
+                let weight_生 = 0.2;
+                if (isTiYongRelation_生) {
+                    weight_生 = 1.0;
+                }
+                
+                let weight_剋 = 0.2;
+                if (isTiYongRelation_剋) {
+                    weight_剋 = 1.0;
+                }
+
+                drawRelation(source, target_生, '#3498db', weight_生); // 生 (blue)
+                drawRelation(source, target_剋, '#e74c3c', weight_剋); // 剋 (red)
+            }
+            container.appendChild(svg);
+        }
+
+        function saveCase() {
+            if (!currentCaseData) { return; } // prevent saving if no case is calculated
+            currentCaseData.notes = dom.caseNotes.value;
+            let cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+            const existingIndex = cases.findIndex(c => c.timestamp === currentCaseData.timestamp);
+            if (existingIndex !== -1) { cases[existingIndex] = currentCaseData; }
+            else { cases.push(currentCaseData); }
+            localStorage.setItem('divinationCases', JSON.stringify(cases));
+            isUnsaved = false;
+        }
+
+        function showHistoryModal() {
+            const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+            if (cases.length === 0) { alert('目前沒有歷史記錄。'); return; }
+            const historyList = dom.historyList;
+            historyList.innerHTML = '';
+            cases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            cases.forEach((c, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'history-item';
+                itemDiv.onclick = () => {
+                    if (isUnsaved && !confirm('您有未儲存的案件，確定要載入歷史記錄嗎？未儲存的資料將會遺失。')) { return; }
+                    loadCase(index);
+                    dom.historyModal.style.display = 'none';
+                };
+                itemDiv.innerHTML = `<strong>${c.caseName}</strong> (${c.inputMethod})<br><small>${new Date(c.timestamp).toLocaleString()}</small>`;
+                historyList.appendChild(itemDiv);
+            });
+            dom.historyModal.style.display = 'flex';
+        }
+
+        function loadCase(index) {
+            const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+            const sortedCases = cases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            const caseToLoad = sortedCases[index];
+            if (!caseToLoad) return;
+            currentCaseData = caseToLoad;
+            dom.caseNameInput.value = currentCaseData.caseName;
+            dom.resultArea.innerHTML = currentCaseData.reportHtml;
+            dom.resultArea.style.display = 'flex';
+            dom.notesSection.style.display = 'block';
+            dom.caseNotes.value = currentCaseData.notes;
+            alert(`案件「${currentCaseData.caseName}」已成功載入！`);
+            isUnsaved = false;
+            
+            // Re-render the graph for the loaded case
+            renderFiveElementGraph(currentCaseData.lowerGuaNum, currentCaseData.upperGuaNum);
+        }
+
+        function exportCases() {
+            const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+            if (cases.length === 0) { alert('沒有可匯出的歷史記錄。'); return; }
+            const dataStr = JSON.stringify(cases, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'divination_history.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert('歷史記錄已成功匯出為 divination_history.json 檔案。');
+        }
+
+        function importCases(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const newCases = JSON.parse(e.target.result);
+                    if (!Array.isArray(newCases)) { throw new Error('檔案格式不正確，應為 JSON 陣列。'); }
+                    const currentCases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+                    const option = prompt('請選擇載入方式：\n輸入 "1" 覆蓋現有記錄\n輸入 "2" 合併到現有記錄\n(取消載入請按「取消」)');
+                    if (option === '1') {
+                        localStorage.setItem('divinationCases', JSON.stringify(newCases));
+                        alert('歷史記錄已成功覆蓋。');
+                    } else if (option === '2') {
+                        const mergedCases = currentCases.concat(newCases);
+                        localStorage.setItem('divinationCases', JSON.stringify(mergedCases));
+                        alert('歷史記錄已成功合併。');
+                    } else {
+                        alert('已取消載入。');
+                    }
+                    dom.btnImportFile.value = '';
+                } catch (error) {
+                    console.error('載入檔案失敗:', error);
+                    alert(`載入檔案失敗：${error.message}`);
+                    dom.btnImportFile.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function clearAllCases() {
+            if (confirm('確定要清空所有歷史記錄嗎？此動作無法復原。您要先匯出備份嗎？')) {
+                exportCases();
+                if(confirm('已匯出備份，確定要清空所有記錄嗎？')) {
+                    localStorage.removeItem('divinationCases');
+                    alert('所有歷史記錄已成功清空。');
+                }
+            }
+        }
+    </script>
+
 </body>
 </html>
