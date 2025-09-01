@@ -21,6 +21,13 @@
         #resultArea hr { width: 100%; border: 0; height: 1px; background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0)); }
         .disclaimer { font-size: 0.8em; color: #7f8c8d; margin-top: 20px; text-align: center; }
         .file-upload-section { margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px; }
+        .tab-container { display: flex; justify-content: center; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; border: 1px solid #ccc; background-color: #ecf0f1; cursor: pointer; transition: background-color 0.3s; }
+        .tab-btn:hover { background-color: #bdc3c7; }
+        .tab-btn.active { background-color: #3498db; color: white; border-color: #3498db; }
+        .tab-content { display: none; width: 100%; }
+        .tab-content.active { display: block; }
+        .gua-selects { display: flex; justify-content: space-around; gap: 10px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -32,15 +39,39 @@
     </div>
 
     <div class="input-section">
-        <h2>數字起卦 - 9位數</h2>
-        <p>請輸入與案件相關的9位數數字，例如車牌、時間或任何直覺想到的數字。</p>
-        <input type="number" id="numInput" placeholder="請輸入9位數" maxlength="9">
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="openTab(event, 'manual')">手動取卦</button>
+            <button class="tab-btn" onclick="openTab(event, 'number')">數字起卦</button>
+        </div>
+
+        <div id="manual" class="tab-content active">
+            <h2>手動取卦</h2>
+            <p>請依直覺或觀察到的事物，手動選擇上卦、下卦與動爻。</p>
+            <div class="gua-selects">
+                <div>
+                    <label for="upperGuaSelect">上卦</label>
+                    <select id="upperGuaSelect"></select>
+                </div>
+                <div>
+                    <label for="lowerGuaSelect">下卦</label>
+                    <select id="lowerGuaSelect"></select>
+                </div>
+            </div>
+            <label for="changingLineManual">動爻 (1-6)</label>
+            <select id="changingLineManual"></select>
+            <button onclick="calculateManualGua()">開始推算</button>
+        </div>
+
+        <div id="number" class="tab-content">
+            <h2>數字起卦 - 9位數</h2>
+            <p>請輸入與案件相關的9位數數字，例如車牌、時間或任何直覺想到的數字。</p>
+            <input type="number" id="numInput" placeholder="請輸入9位數" maxlength="9">
+            <button onclick="calculateByNumber()">開始推算</button>
+        </div>
 
         <select id="caseTypeSelect">
             <option value="">請選擇案件類型 (選填)</option>
         </select>
-        
-        <button onclick="calculateByNumber()">開始推算</button>
 
         <div class="file-upload-section">
             <label for="jsonFile">或手動上傳 JSON 資料檔：</label>
@@ -55,6 +86,7 @@
 
 <script>
     let hexagramData = {};
+    const numToGua = ['', '乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
 
     // 頁面載入時，從外部 JSON 檔案載入資料
     window.onload = async () => {
@@ -62,6 +94,7 @@
         fileInput.addEventListener('change', handleFileUpload);
         
         await loadDefaultData();
+        populateGuaSelects();
     };
 
     async function loadDefaultData() {
@@ -75,7 +108,6 @@
             populateCaseTypeSelect();
         } catch (error) {
             console.error('載入預設資料失敗:', error);
-            // 即使載入失敗也不會中斷，使用者可以手動上傳
             alert('無法自動載入預設資料，請手動上傳檔案。');
         }
     }
@@ -91,6 +123,7 @@
                 console.log('使用者上傳的資料載入成功！');
                 alert('已成功載入新的 JSON 檔案。');
                 populateCaseTypeSelect();
+                populateGuaSelects();
             } catch (error) {
                 console.error('解析 JSON 檔案失敗:', error);
                 alert('無效的 JSON 檔案，請檢查格式。');
@@ -99,9 +132,33 @@
         reader.readAsText(file);
     }
 
+    function populateGuaSelects() {
+        const upperSelect = document.getElementById('upperGuaSelect');
+        const lowerSelect = document.getElementById('lowerGuaSelect');
+        const changingLineSelect = document.getElementById('changingLineManual');
+        
+        upperSelect.innerHTML = '';
+        lowerSelect.innerHTML = '';
+        changingLineSelect.innerHTML = '';
+
+        for (let i = 1; i <= 8; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = hexagramData.gua[i].name;
+            upperSelect.appendChild(option.cloneNode(true));
+            lowerSelect.appendChild(option.cloneNode(true));
+        }
+
+        for (let i = 1; i <= 6; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `第 ${i} 爻`;
+            changingLineSelect.appendChild(option);
+        }
+    }
+
     function populateCaseTypeSelect() {
         const selectElement = document.getElementById('caseTypeSelect');
-        // 清空舊選項
         selectElement.innerHTML = '<option value="">請選擇案件類型 (選填)</option>';
         if (hexagramData.case_analysis) {
             for (const key in hexagramData.case_analysis) {
@@ -113,7 +170,20 @@
         }
     }
 
-    // 數字起卦主函式
+    function openTab(evt, tabName) {
+        let i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+
     function calculateByNumber() {
         if (Object.keys(hexagramData).length === 0 || !hexagramData.hexagrams) {
             alert('卦象資料尚未載入，請先上傳 JSON 檔案或等待預設檔案載入。');
@@ -140,10 +210,22 @@
         generateReport(lowerGuaNum, upperGuaNum, changingLine, input, caseType);
     }
 
-    // 卦象分析與報告生成函式
-    function generateReport(lowerGuaNum, upperGuaNum, changingLine, input, caseType) {
-        const numToGua = ['', '乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
+    function calculateManualGua() {
+        if (Object.keys(hexagramData).length === 0 || !hexagramData.hexagrams) {
+            alert('卦象資料尚未載入，請先上傳 JSON 檔案或等待預設檔案載入。');
+            return;
+        }
 
+        const upperGuaNum = parseInt(document.getElementById('upperGuaSelect').value, 10);
+        const lowerGuaNum = parseInt(document.getElementById('lowerGuaSelect').value, 10);
+        const changingLine = parseInt(document.getElementById('changingLineManual').value, 10);
+        const caseType = document.getElementById('caseTypeSelect').value;
+
+        generateReport(lowerGuaNum, upperGuaNum, changingLine, '手動取卦', caseType);
+    }
+
+    // 卦象分析與報告生成函式 (與先前版本相同)
+    function generateReport(lowerGuaNum, upperGuaNum, changingLine, input, caseType) {
         const mainGua = hexagramData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`] || { name: '未知卦名', summary: '無相關解釋。' };
         
         const lowerHexagramBinary = toBinary(lowerGuaNum);
@@ -209,7 +291,7 @@
         }
         
         let report = `
-            <h3>數字起卦：${input}</h3>
+            <h3>${typeof input === 'number' ? '數字起卦' : '手動取卦'}：${input}</h3>
             <p><strong>本卦</strong>：${mainGua.name} (${numToGua[upperGuaNum]}上${numToGua[lowerGuaNum]}下)</p>
             <p><strong>動爻</strong>：第 ${changingLine} 爻</p>
             <p><strong>互卦</strong>：${interGua.name} (${numToGua[interGuaUpperNum]}上${numToGua[interGuaLowerNum]}下)</p>
