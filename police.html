@@ -32,12 +32,50 @@
         #calculateBtn { width: 100%; margin-top: 20px; }
         .case-notes-section { width: 100%; margin-top: 20px; }
         .case-notes-section textarea { width: 100%; height: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; resize: vertical; box-sizing: border-box; }
-        .history-controls { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
-        .history-controls button { width: 48%; }
+        .history-controls { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-top: 20px; }
+        .history-controls button { width: 48%; margin-bottom: 5px; }
         #historyList { width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin-top: 10px; text-align: left; }
         .history-item { padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; }
         .history-item:hover { background-color: #f0f0f0; }
         .history-item:last-child { border-bottom: none; }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            text-align: left;
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-btn:hover,
+        .close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -94,6 +132,11 @@
         <div class="history-controls">
             <button onclick="saveCase()">儲存案件</button>
             <button onclick="showHistoryModal()">載入歷史案件</button>
+            <button onclick="exportCases()">匯出歷史記錄</button>
+            <label style="width: 48%;">
+                <button onclick="document.getElementById('importFile').click();">載入歷史記錄</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
+            </label>
         </div>
     </div>
     
@@ -108,19 +151,40 @@
     <p class="disclaimer">* 本系統為輔助工具，其分析結果僅供辦案參考與啟發思路，不應作為唯一的偵辦依據。</p>
 </div>
 
+<div id="historyModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h3>載入歷史案件</h3>
+        <p>點擊案件名稱即可載入。</p>
+        <div id="historyList"></div>
+    </div>
+</div>
+
 <script>
     let hexagramData = {};
     const numToGua = ['', '乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
     let currentDataSource = '預設檔案';
     let currentCaseData = null; // 用來儲存當前卜卦的全部資料，方便儲存和載入
+    let isUnsaved = false; // 標誌是否有未儲存的案件
 
     // 頁面載入時，從外部 JSON 檔案載入資料
     window.onload = async () => {
         const fileInput = document.getElementById('jsonFile');
         fileInput.addEventListener('change', handleFileUpload);
         
+        const importInput = document.getElementById('importFile');
+        importInput.addEventListener('change', importCases);
+
         await loadDefaultData();
         populateGuaSelects();
+
+        // 設置離開頁面時的警告
+        window.addEventListener('beforeunload', (event) => {
+            if (isUnsaved) {
+                event.preventDefault();
+                event.returnValue = '您有未儲存的案件，確定要離開嗎？';
+            }
+        });
     };
 
     async function loadDefaultData() {
@@ -221,6 +285,10 @@
     }
 
     function startCalculation() {
+        if (isUnsaved && !confirm('您有未儲存的案件，確定要進行新的推算嗎？未儲存的資料將會遺失。')) {
+            return;
+        }
+
         if (Object.keys(hexagramData).length === 0 || !hexagramData.hexagrams) {
             alert('卦象資料尚未載入，請先上傳 JSON 檔案或等待預設檔案載入。');
             return;
@@ -243,7 +311,7 @@
             lowerGuaNum = sumLower % 8 === 0 ? 8 : sumLower % 8;
             upperGuaNum = sumUpper % 8 === 0 ? 8 : sumUpper % 8;
             changingLine = sumChange % 6 === 0 ? 6 : sumChange % 6;
-            inputMethod = `數字 ${input}`;
+            inputMethod = '數字起卦';
         } else {
             upperGuaNum = parseInt(document.getElementById('upperGuaSelect').value, 10);
             lowerGuaNum = parseInt(document.getElementById('lowerGuaSelect').value, 10);
@@ -255,6 +323,8 @@
         const caseName = document.getElementById('caseName').value || `未命名案件 - ${new Date().toLocaleString()}`;
         
         generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName);
+
+        isUnsaved = true; // 標記為未儲存狀態
     }
     
     function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName) {
@@ -377,10 +447,18 @@
         currentCaseData.notes = document.getElementById('caseNotes').value;
         
         let cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
-        cases.push(currentCaseData);
+        // 檢查是否已存在，若存在則更新
+        const existingIndex = cases.findIndex(c => c.timestamp === currentCaseData.timestamp);
+        if (existingIndex !== -1) {
+            cases[existingIndex] = currentCaseData;
+        } else {
+            cases.push(currentCaseData);
+        }
+
         localStorage.setItem('divinationCases', JSON.stringify(cases));
         
         alert(`案件「${currentCaseData.caseName}」已成功儲存！`);
+        isUnsaved = false; // 標記為已儲存
     }
 
     // 顯示歷史案件列表
@@ -391,48 +469,40 @@
             return;
         }
         
-        let historyHtml = '<div id="historyList">';
+        const historyList = document.getElementById('historyList');
+        historyList.innerHTML = ''; // 清空舊內容
+        
+        cases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // 按時間降序排序
+
         cases.forEach((c, index) => {
-            historyHtml += `<div class="history-item" onclick="loadCase(${index})">
-                <strong>${c.caseName}</strong> - ${new Date(c.timestamp).toLocaleString()}
-            </div>`;
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'history-item';
+            itemDiv.onclick = () => {
+                if (isUnsaved && !confirm('您有未儲存的案件，確定要載入歷史記錄嗎？未儲存的資料將會遺失。')) {
+                    return;
+                }
+                loadCase(index);
+                closeModal();
+            };
+            itemDiv.innerHTML = `
+                <strong>${c.caseName}</strong> (${c.inputMethod})<br>
+                <small>${new Date(c.timestamp).toLocaleString()}</small>
+            `;
+            historyList.appendChild(itemDiv);
         });
-        historyHtml += '</div>';
-        
-        // 簡單的模態框效果
-        const modal = document.createElement('div');
-        modal.style.position = 'fixed';
-        modal.style.top = '0';
-        modal.style.left = '0';
-        modal.style.width = '100%';
-        modal.style.height = '100%';
-        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-        modal.style.display = 'flex';
-        modal.style.justifyContent = 'center';
-        modal.style.alignItems = 'center';
-        
-        const modalContent = document.createElement('div');
-        modalContent.style.backgroundColor = 'white';
-        modalContent.style.padding = '20px';
-        modalContent.style.borderRadius = '10px';
-        modalContent.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-        modalContent.style.maxWidth = '500px';
-        modalContent.style.width = '90%';
-        modalContent.innerHTML = `
-            <h3>載入歷史案件</h3>
-            <p>點擊案件名稱即可載入。</p>
-            ${historyHtml}
-            <button onclick="this.parentNode.parentNode.remove()">關閉</button>
-        `;
-        
-        modal.appendChild(modalContent);
-        document.body.appendChild(modal);
+
+        document.getElementById('historyModal').style.display = 'flex';
     }
     
+    function closeModal() {
+        document.getElementById('historyModal').style.display = 'none';
+    }
+
     // 載入選定的歷史案件
     function loadCase(index) {
         const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
-        const caseToLoad = cases[index];
+        const sortedCases = cases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const caseToLoad = sortedCases[index];
         if (!caseToLoad) return;
         
         currentCaseData = caseToLoad;
@@ -443,9 +513,64 @@
         document.getElementById('caseNotes').value = currentCaseData.notes;
         
         alert(`案件「${currentCaseData.caseName}」已成功載入！`);
-        
-        // 關閉模態框
-        document.querySelector('div[style*="background-color: rgba(0, 0, 0, 0.5)"]').remove();
+        isUnsaved = false; // 載入後標記為已儲存
+    }
+
+    // 匯出歷史記錄
+    function exportCases() {
+        const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+        if (cases.length === 0) {
+            alert('沒有可匯出的歷史記錄。');
+            return;
+        }
+        const dataStr = JSON.stringify(cases, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'divination_history.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert('歷史記錄已成功匯出為 divination_history.json 檔案。');
+    }
+
+    // 載入歷史記錄
+    function importCases(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const newCases = JSON.parse(e.target.result);
+                if (!Array.isArray(newCases)) {
+                    throw new Error('檔案格式不正確，應為 JSON 陣列。');
+                }
+                
+                const currentCases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+                const option = prompt('請選擇載入方式：\n輸入 "1" 覆蓋現有記錄\n輸入 "2" 合併到現有記錄\n(取消載入請按「取消」)');
+
+                if (option === '1') {
+                    localStorage.setItem('divinationCases', JSON.stringify(newCases));
+                    alert('歷史記錄已成功覆蓋。');
+                } else if (option === '2') {
+                    const mergedCases = currentCases.concat(newCases);
+                    localStorage.setItem('divinationCases', JSON.stringify(mergedCases));
+                    alert('歷史記錄已成功合併。');
+                } else {
+                    alert('已取消載入。');
+                }
+
+                document.getElementById('importFile').value = ''; // 清空檔案輸入，以便下次可以載入同一個檔案
+            } catch (error) {
+                console.error('載入檔案失敗:', error);
+                alert(`載入檔案失敗：${error.message}`);
+                document.getElementById('importFile').value = '';
+            }
+        };
+        reader.readAsText(file);
     }
 
     // 輔助函式：十進制轉二進制（三位數）
