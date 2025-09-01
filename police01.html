@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>梅花心易警察辦案輔助系統</title>
+    <style>
+        body { font-family: '微軟正黑體', 'Microsoft JhengHei', sans-serif; background-color: #f4f4f9; color: #333; display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 20px; min-height: 100vh; }
+        .container { display: flex; flex-direction: column; gap: 20px; max-width: 600px; width: 100%; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { color: #2c3e50; font-size: 2.5em; margin-bottom: 5px; }
+        .header p { color: #7f8c8d; font-size: 1.1em; }
+        .input-section { background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .input-section h2 { color: #34495e; margin-bottom: 10px; }
+        .input-section p { color: #95a5a6; margin-bottom: 20px; }
+        input[type="number"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; box-sizing: border-box; }
+        button { padding: 12px 25px; border: none; border-radius: 5px; background-color: #3498db; color: white; font-size: 1em; cursor: pointer; transition: background-color 0.3s; }
+        button:hover { background-color: #2980b9; }
+        #resultArea { background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 30px; display: none; flex-direction: column; align-items: flex-start; margin-top: 20px; text-align: left; }
+        #resultArea h3, #resultArea h4 { color: #2c3e50; }
+        #resultArea hr { width: 100%; border: 0; height: 1px; background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0)); }
+        .disclaimer { font-size: 0.8em; color: #7f8c8d; margin-top: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>梅花心易警察辦案輔助系統</h1>
+        <p>運用古老易經智慧，為案件偵辦提供新視角與線索。</p>
+    </div>
+
+    <div class="input-section">
+        <h2>數字起卦 - 9位數</h2>
+        <p>請輸入與案件相關的9位數數字，例如車牌、時間或任何直覺想到的數字。</p>
+        <input type="number" id="numInput" placeholder="請輸入9位數" maxlength="9">
+        <button onclick="calculateByNumber()">開始推算</button>
+    </div>
+
+    <div id="resultArea"></div>
+    
+    <p class="disclaimer">* 本系統為輔助工具，其分析結果僅供辦案參考與啟發思路，不應作為唯一的偵辦依據。</p>
+</div>
+
+<script>
+    let hexagramData = {};
+
+    // 頁面載入時，從外部 JSON 檔案載入資料
+    window.onload = async () => {
+        await loadData();
+    };
+
+    async function loadData() {
+        try {
+            const response = await fetch('hexagram_data.json');
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            hexagramData = await response.json();
+            console.log('卦象資料載入成功！');
+        } catch (error) {
+            console.error('載入卦象資料失敗:', error);
+            alert('無法載入卦象資料，請檢查檔案是否存在或路徑是否正確。');
+        }
+    }
+
+    // 數字起卦主函式
+    function calculateByNumber() {
+        if (Object.keys(hexagramData).length === 0) {
+            alert('卦象資料尚未載入，請稍候再試。');
+            return;
+        }
+
+        const input = document.getElementById('numInput').value;
+        if (input.length !== 9 || isNaN(input)) {
+            alert('請輸入有效的9位數數字！');
+            return;
+        }
+        
+        const numStr = String(input);
+        const sumLower = parseInt(numStr.substring(0, 3), 10);
+        const sumUpper = parseInt(numStr.substring(3, 6), 10);
+        const sumChange = parseInt(numStr.substring(6, 9), 10);
+        
+        const lowerGuaNum = sumLower % 8 === 0 ? 8 : sumLower % 8;
+        const upperGuaNum = sumUpper % 8 === 0 ? 8 : sumUpper % 8;
+        const changingLine = sumChange % 6 === 0 ? 6 : sumChange % 6;
+
+        generateReport(lowerGuaNum, upperGuaNum, changingLine, input);
+    }
+
+    // 卦象分析與報告生成函式
+    function generateReport(lowerGuaNum, upperGuaNum, changingLine, input) {
+        // 核心八卦陣列
+        const numToGua = ['', '乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
+
+        // 本卦
+        const mainGua = hexagramData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`] || { name: '未知卦名', summary: '無相關解釋。' };
+        
+        // 互卦（梅花易經典判斷法：二、三、四爻為下互卦；三、四、五爻為上互卦）
+        const lowerHexagramBinary = toBinary(lowerGuaNum);
+        const upperHexagramBinary = toBinary(upperGuaNum);
+        const fullHexagramBinary = upperHexagramBinary + lowerHexagramBinary;
+        const interHexagramBinaryLower = fullHexagramBinary.substring(1, 4);
+        const interHexagramBinaryUpper = fullHexagramBinary.substring(2, 5);
+        const interGuaLowerNum = toDecimal(interHexagramBinaryLower);
+        const interGuaUpperNum = toDecimal(interHexagramBinaryUpper);
+        const interGua = hexagramData.hexagrams[`${interGuaUpperNum}_${interGuaLowerNum}`] || { name: '未知互卦', summary: '無相關解釋。' };
+
+        // 變卦
+        let changedUpperGuaNum = upperGuaNum;
+        let changedLowerGuaNum = lowerGuaNum;
+        if (changingLine > 3) {
+            // 上卦的變爻
+            changedUpperGuaNum = (upperGuaNum % 2 === 0) ? (upperGuaNum - 1 || 8) : (upperGuaNum + 1);
+        } else {
+            // 下卦的變爻
+            changedLowerGuaNum = (lowerGuaNum % 2 === 0) ? (lowerGuaNum - 1 || 8) : (lowerGuaNum + 1);
+        }
+        const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '無相關解釋。' };
+
+        // 體用分析
+        const tiGua = (changingLine > 3) ? hexagramData.gua[upperGuaNum] : hexagramData.gua[lowerGuaNum];
+        const yongGua = (changingLine > 3) ? hexagramData.gua[lowerGuaNum] : hexagramData.gua[upperGuaNum];
+        
+        let relationText = '';
+        const tiElement = tiGua.element;
+        const yongElement = yongGua.element;
+
+        if (tiElement === yongElement) {
+            relationText = `${tiGua.name}與${yongGua.name}為**比和**關係，代表雙方勢均力敵，案件將按常理發展，但可能需要更多努力。`;
+        } else if (hexagramData.element_relations[tiElement].生 === yongElement) {
+            relationText = `${tiGua.name}生${yongGua.name}，代表**我方生助對方**。這意味著警方主動付出、積極追查，案件進展順利。`;
+        } else if (hexagramData.element_relations[tiElement].剋 === yongElement) {
+            relationText = `${tiGua.name}剋${yongGua.name}，代表**我方克制對方**。這意味著警方能掌控局面，可成功將嫌犯繩之以法。`;
+        } else if (hexagramData.element_relations[yongElement].生 === tiElement) {
+            relationText = `${yongGua.name}生${tiGua.name}，代表**對方生助我方**。這意味著嫌犯或線索提供意外幫助，讓警方被動獲得突破。`;
+        } else if (hexagramData.element_relations[yongElement].剋 === tiElement) {
+            relationText = `${yongGua.name}剋${tiGua.name}，代表**對方克制我方**。這意味著警方辦案受阻，嫌犯反制能力強，需謹慎應對。`;
+        }
+
+        let report = `
+            <h3>數字起卦：${input}</h3>
+            <p><strong>本卦</strong>：${mainGua.name} (${numToGua[upperGuaNum]}上${numToGua[lowerGuaNum]}下)</p>
+            <p><strong>動爻</strong>：第 ${changingLine} 爻</p>
+            <p><strong>互卦</strong>：${interGua.name} (${numToGua[interGuaUpperNum]}上${numToGua[interGuaLowerNum]}下)</p>
+            <p><strong>變卦</strong>：${changedGua.name}</p>
+            
+            <hr>
+            
+            <h4>案件核心分析</h4>
+            <p><strong>本卦</strong>：${mainGua.summary}</p>
+            <p><strong>互卦</strong>：互卦反映案件的隱藏狀況、中途變數或人際關係。這暗示案件深層的真相可能與互卦卦義相關。</p>
+            
+            <h4>案件發展與轉折</h4>
+            <p><strong>動爻</strong>：第 ${changingLine} 爻代表**${hexagramData.line_summary[changingLine]}**，是案件的關鍵轉變點。</p>
+            <p><strong>變卦</strong>：${changedGua.summary}</p>
+            
+            <h4>嫌犯與線索分析</h4>
+            <ul>
+                <li><strong>嫌犯特徵</strong>：根據上卦「${hexagramData.gua[upperGuaNum].name}」與下卦「${hexagramData.gua[lowerGuaNum].name}」，嫌犯可能具有**${hexagramData.gua[upperGuaNum].feature}**或**${hexagramData.gua[lowerGuaNum].feature}**的特徵。</li>
+                <li><strong>線索方位</strong>：關鍵線索可能位於**${hexagramData.gua[lowerGuaNum].direction}**方，嫌犯可能藏匿在**${hexagramData.gua[upperGuaNum].direction}**方。</li>
+                <li><strong>體用生剋</strong>：體卦（我方，警方）為**${tiGua.name}**，用卦（對方，嫌犯）為**${yongGua.name}**。${relationText}</li>
+            </ul>
+        `;
+
+        document.getElementById('resultArea').innerHTML = report;
+        document.getElementById('resultArea').style.display = 'flex';
+    }
+
+    // 輔助函式：十進制轉二進制（三位數）
+    function toBinary(num) {
+        if (num === 8) return '000'; // 坤為8，二進制為000
+        return (num - 1).toString(2).padStart(3, '0');
+    }
+
+    // 輔助函式：二進制轉十進制
+    function toDecimal(binaryStr) {
+        const decimalValue = parseInt(binaryStr, 2);
+        return (decimalValue === 0) ? 8 : decimalValue; // 000為坤8
+    }
+</script>
+
+</body>
+</html>
