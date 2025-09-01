@@ -23,7 +23,7 @@ const dom = {
     caseProgress: document.getElementById('caseProgress'),
     suspectClues: document.getElementById('suspectClues'),
     auspice: document.getElementById('auspice'),
-    notesSection: document.getElementById('caseNotes'),
+    yingQi: document.getElementById('yingQi'),
     caseNotes: document.getElementById('caseNotes'),
     btnSave: document.getElementById('btn-save'),
     btnLoad: document.getElementById('btn-load'),
@@ -98,6 +98,41 @@ function getAuspice(tiYongRelation) {
         default:
             return '中平：體用無明顯生剋，宜穩健行事。';
     }
+}
+
+// 應期分析
+function getYingQiAnalysis(tiGua, yongGua, changingLine) {
+    const now = new Date();
+    const month = now.getMonth() + 1; // 1-12
+    const zhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][month - 1];
+    const currentWuXing = hexagramData.zhi_to_wu[zhi];
+    const tiWuXing = hexagramData.gua[tiGua].element;
+    const yongWuXing = hexagramData.gua[yongGua].element;
+    
+    const stateOrder = ['旺', '相', '休', '囚', '死'];
+    const wuXingCycle = ['木', '火', '土', '金', '水'];
+    const tiIndex = wuXingCycle.indexOf(tiWuXing);
+    const yongIndex = wuXingCycle.indexOf(yongWuXing);
+    const currentIndex = wuXingCycle.indexOf(currentWuXing);
+    
+    const tiState = stateOrder[(tiIndex - currentIndex + 5) % 5];
+    const yongState = stateOrder[(yongIndex - currentIndex + 5) % 5];
+    
+    const seasonMonths = hexagramData.five_to_season[currentWuXing] || [];
+    const nextWuXing = wuXingCycle[(wuXingCycle.indexOf(currentWuXing) + 1) % 5];
+    const nextSeasonMonths = hexagramData.five_to_season[nextWuXing] || [];
+    
+    let yingQiText = `<h4>應期分析</h4><p>當前地支：${zhi}（${currentWuXing}），體卦（${hexagramData.gua[tiGua].name}）為${tiWuXing}，狀態：${tiState}；用卦（${hexagramData.gua[yongGua].name}）為${yongWuXing}，狀態：${yongState}。</p>`;
+    
+    if (tiState === '旺' || tiState === '相') {
+        yingQiText += `<p>體卦處於${tiState}，案件進展迅速，可能在當前季節（${seasonMonths.join('、')}月）內有重大突破。</p>`;
+    } else if (yongState === '旺' || yongState === '相') {
+        yingQiText += `<p>用卦處於${yongState}，線索或嫌犯動向活躍，建議在當前季節（${seasonMonths.join('、')}月）內集中調查。</p>`;
+    } else {
+        yingQiText += `<p>體用卦均非旺相，案件進展可能緩慢，建議等待下個五行季節（${nextWuXing}，${nextSeasonMonths.join('、')}月）再尋突破。</p>`;
+    }
+    
+    return yingQiText;
 }
 
 // 更新當前時間
@@ -239,11 +274,20 @@ function createShengkeDiagram(data) {
     const centerX = 300;
     const centerY = 250;
     const radius = 150;
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const zhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][month - 1];
+    const currentWuXing = hexagramData.zhi_to_wu[zhi];
+    const wuXingCycle = ['木', '火', '土', '金', '水'];
+    const currentIndex = wuXingCycle.indexOf(currentWuXing);
+    
     const nodes = elements.map((el, i) => {
         const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
         const x = centerX + radius * Math.cos(angle);
         const y = centerY + radius * Math.sin(angle);
-        return { id: el, label: el, wuXing: el, x, y, guaLabels: [] };
+        const stateIndex = (wuXingCycle.indexOf(el) - currentIndex + 5) % 5;
+        const lineWeight = hexagramData.line_weights[stateIndex];
+        return { id: el, label: el, wuXing: el, x, y, guaLabels: [], lineWeight };
     });
 
     Object.keys(data).forEach(key => {
@@ -265,7 +309,7 @@ function createShengkeDiagram(data) {
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         const color = hexagramData.element_colors[node.wuXing] || '#fff';
         g.innerHTML = `
-            <circle class="gua-node" cx="${node.x}" cy="${node.y}" r="40" fill="${color}"/>
+            <circle class="gua-node" cx="${node.x}" cy="${node.y}" r="40" fill="${color}" stroke-width="${node.lineWeight}"/>
             <text class="gua-text" x="${node.x}" y="${node.y - 10}" text-anchor="middle">${node.label}</text>
             ${node.guaLabels.map((label, i) => `
                 <text class="gua-text" x="${node.x}" y="${node.y + 10 + i * 15}" text-anchor="middle" font-size="10">${label.text}</text>
@@ -294,6 +338,7 @@ function createShengkeDiagram(data) {
             line.setAttribute('y2', toNode.y);
             line.setAttribute('class', 'relation-line sheng');
             line.setAttribute('marker-end', 'url(#arrowhead-sheng)');
+            line.setAttribute('stroke-width', fromNode.lineWeight);
             svg.appendChild(line);
         }
     });
@@ -309,6 +354,7 @@ function createShengkeDiagram(data) {
             line.setAttribute('y2', toNode.y);
             line.setAttribute('class', 'relation-line ke');
             line.setAttribute('marker-end', 'url(#arrowhead-ke)');
+            line.setAttribute('stroke-width', fromNode.lineWeight);
             svg.appendChild(line);
         }
     });
@@ -352,7 +398,7 @@ function startCalculation() {
     const tiYong = calculateTiYong(upper, lower, changingLine);
     const caseType = dom.caseTypeSelect.value;
     const caseName = dom.caseNameInput.value || '未命名案件';
-    const notes = dom.notesSection.value;
+    const notes = dom.caseNotes.value;
 
     currentCaseData = {
         caseName,
@@ -433,6 +479,9 @@ function displayResults(data) {
         <p>${auspice}</p>
     `;
 
+    // 應期分析
+    dom.yingQi.innerHTML = getYingQiAnalysis(data.tiGua, data.yongGua, data.changingLine);
+
     dom.resultArea.style.display = 'block';
 }
 
@@ -469,7 +518,7 @@ function showHistoryModal() {
             });
             dom.caseNameInput.value = currentCaseData.caseName;
             dom.caseTypeSelect.value = currentCaseData.caseType;
-            dom.notesSection.value = currentCaseData.notes;
+            dom.caseNotes.value = currentCaseData.notes;
             dom.historyModal.style.display = 'none';
             isUnsaved = false;
         });
