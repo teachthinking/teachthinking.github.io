@@ -301,7 +301,8 @@ button {
     color: black;
     text-decoration: none;
 }
-/* New styles for the SVG graph */
+
+/* 新增的SVG圖表樣式 */
 .case-graph-container {
     width: 100%;
     margin-top: 20px;
@@ -347,4 +348,3 @@ button {
 .relation-line.bihe {
     stroke: #f1c40f;
 }
-
