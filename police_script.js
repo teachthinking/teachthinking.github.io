@@ -19,11 +19,7 @@ const dom = {
     jsonFile: document.getElementById('jsonFile'),
     jsonStatus: document.getElementById('jsonStatus'),
     resultArea: document.getElementById('resultArea'),
-    guaResult: document.getElementById('guaResult'),
-    caseProgress: document.getElementById('caseProgress'),
-    suspectClues: document.getElementById('suspectClues'),
-    auspice: document.getElementById('auspice'),
-    yingQi: document.getElementById('yingQi'),
+    notesSection: document.getElementById('notesSection'),
     caseNotes: document.getElementById('caseNotes'),
     btnSave: document.getElementById('btn-save'),
     btnLoad: document.getElementById('btn-load'),
@@ -33,9 +29,7 @@ const dom = {
     btnClear: document.getElementById('btn-clear'),
     historyModal: document.getElementById('historyModal'),
     historyList: document.getElementById('historyList'),
-    closeModalBtn: document.querySelector('.modal .close-btn'),
-    caseGraph: document.getElementById('caseGraph'),
-    currentTime: document.getElementById('currentTime')
+    closeModalBtn: document.querySelector('.modal .close-btn')
 };
 
 // 卦象資料和轉換工具函式
@@ -63,105 +57,26 @@ const binaryToNumMap = {
 const toBinary = num => guaBinaryMap[num] || '000';
 const toDecimal = binaryStr => binaryToNumMap[binaryStr] || 8;
 
-// 五行生克關係
-const wuXingRelations = {
-    '木': { sheng: '火', ke: '土', beiSheng: '水', beiKe: '金', biHe: '木' },
-    '火': { sheng: '土', ke: '金', beiSheng: '木', beiKe: '水', biHe: '火' },
-    '土': { sheng: '金', ke: '水', beiSheng: '火', beiKe: '木', biHe: '土' },
-    '金': { sheng: '水', ke: '木', beiSheng: '土', beiKe: '火', biHe: '金' },
-    '水': { sheng: '木', ke: '火', beiSheng: '金', beiKe: '土', biHe: '水' }
-};
+// ----------------------
+// 應用程式核心邏輯
+// ----------------------
 
-// 生克吉凶判斷
-function getTiYongRelation(tiWuXing, yongWuXing) {
-    if (!tiWuXing || !yongWuXing) return '未知';
-    if (tiWuXing === yongWuXing) return '比和';
-    if (wuXingRelations[tiWuXing].sheng === yongWuXing) return '體生用';
-    if (wuXingRelations[tiWuXing].ke === yongWuXing) return '體剋用';
-    if (wuXingRelations[tiWuXing].beiSheng === yongWuXing) return '用生體';
-    if (wuXingRelations[tiWuXing].beiKe === yongWuXing) return '用剋體';
-    return '無關係';
-}
-
-function getAuspice(tiYongRelation) {
-    switch (tiYongRelation) {
-        case '用生體':
-            return '大吉：用卦生體卦，案件進展順利，易獲突破。';
-        case '比和':
-            return '吉：體用五行相同，案件穩定，進展順暢。';
-        case '體剋用':
-            return '次吉：體卦剋用卦，主動權在握，但需謹慎推進。';
-        case '體生用':
-            return '凶：體卦生用卦，力量耗損，需謹防阻力。';
-        case '用剄體':
-            return '大凶：用卦剄體卦，案件阻力大，需格外小心。';
-        default:
-            return '中平：體用無明顯生剄，宜穩健行事。';
-    }
-}
-
-// 應期分析
-function getYingQiAnalysis(tiGua, yongGua, changingLine) {
-    const now = new Date();
-    const month = now.getMonth() + 1; // 1-12
-    const zhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][month - 1];
-    const currentWuXing = hexagramData.zhi_to_wu[zhi];
-    const tiWuXing = hexagramData.gua[tiGua].element;
-    const yongWuXing = hexagramData.gua[yongGua].element;
-    
-    const stateOrder = ['旺', '相', '休', '囚', '死'];
-    const wuXingCycle = ['木', '火', '土', '金', '水'];
-    const tiIndex = wuXingCycle.indexOf(tiWuXing);
-    const yongIndex = wuXingCycle.indexOf(yongWuXing);
-    const currentIndex = wuXingCycle.indexOf(currentWuXing);
-    
-    const tiState = stateOrder[(tiIndex - currentIndex + 5) % 5];
-    const yongState = stateOrder[(yongIndex - currentIndex + 5) % 5];
-    
-    const seasonMonths = hexagramData.five_to_season[currentWuXing] || [];
-    const nextWuXing = wuXingCycle[(wuXingCycle.indexOf(currentWuXing) + 1) % 5];
-    const nextSeasonMonths = hexagramData.five_to_season[nextWuXing] || [];
-    
-    let yingQiText = `<h4>應期分析</h4><p>當前地支：${zhi}（${currentWuXing}），體卦（${hexagramData.gua[tiGua].name}）為${tiWuXing}，狀態：${tiState}；用卦（${hexagramData.gua[yongGua].name}）為${yongWuXing}，狀態：${yongState}。</p>`;
-    
-    if (tiState === '旺' || tiState === '相') {
-        yingQiText += `<p>體卦處於${tiState}，案件進展迅速，可能在當前季節（${seasonMonths.join('、')}月）內有重大突破。</p>`;
-    } else if (yongState === '旺' || yongState === '相') {
-        yingQiText += `<p>用卦處於${yongState}，線索或嫌犯動向活躍，建議在當前季節（${seasonMonths.join('、')}月）內集中調查。</p>`;
-    } else {
-        yingQiText += `<p>體用卦均非旺相，案件進展可能緩慢，建議等待下個五行季節（${nextWuXing}，${nextSeasonMonths.join('、')}月）再尋突破。</p>`;
-    }
-    
-    return yingQiText;
-}
-
-// 更新當前時間
-function updateCurrentTime() {
-    const now = new Date();
-    dom.currentTime.textContent = now.toLocaleString('zh-TW', {
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit',
-        hour12: false
-    });
-    setTimeout(updateCurrentTime, 1000);
-}
-
-// 載入初始資料
 async function loadInitialData() {
     try {
         const response = await fetch('police_data.json');
         if (!response.ok) {
-            throw new Error('無法載入預設 JSON 檔案。');
+            throw new Error(`無法載入預設 JSON 檔案，狀態碼：${response.status}`);
         }
         hexagramData = await response.json();
+        if (!hexagramData.hexagrams || Object.keys(hexagramData.hexagrams).length < 64) {
+            throw new Error('JSON 檔案缺少完整的卦象資料');
+        }
         updateStatus('預設檔案');
         populateGuaSelects();
         populateCaseTypeSelect();
-        updateCurrentTime();
     } catch (error) {
         console.error('載入預設資料失敗:', error);
-        updateStatus('載入失敗，請手動上傳檔案。');
-        alert('無法載入 police_data.json，請確認檔案是否存在或格式正確。');
+        updateStatus(`載入失敗：${error.message}，請手動上傳檔案。`);
     }
 }
 
@@ -173,13 +88,16 @@ function handleFileImport(event) {
     reader.onload = function(e) {
         try {
             hexagramData = JSON.parse(e.target.result);
+            if (!hexagramData.hexagrams || Object.keys(hexagramData.hexagrams).length < 64) {
+                throw new Error('JSON 檔案缺少完整的卦象資料');
+            }
             updateStatus(`已載入「${file.name}」`);
             alert('已成功載入新的 JSON 檔案。');
             populateGuaSelects();
             populateCaseTypeSelect();
         } catch (error) {
             console.error('解析 JSON 檔案失敗:', error);
-            alert('無效的 JSON 檔案，請檢查格式。');
+            alert(`無效的 JSON 檔案：${error.message}，請檢查格式。`);
             updateStatus('載入失敗，請檢查檔案格式。');
         }
     };
@@ -191,18 +109,13 @@ function updateStatus(message) {
 }
 
 function populateGuaSelects() {
-    const gua = hexagramData.gua;
-    if (!gua) {
-        console.error('卦象資料未載入');
-        return;
-    }
-    
+    const gua = hexagramData.gua || {};
     [dom.upperGuaSelect, dom.lowerGuaSelect].forEach(select => {
         select.innerHTML = '<option value="">選擇卦象</option>';
         for (let i = 1; i <= 8; i++) {
             const option = document.createElement('option');
             option.value = i;
-            option.textContent = gua[i].name;
+            option.textContent = gua[i]?.name || `卦 ${i}`;
             select.appendChild(option);
         }
     });
@@ -211,334 +124,375 @@ function populateGuaSelects() {
     for (let i = 1; i <= 6; i++) {
         const option = document.createElement('option');
         option.value = i;
-        option.textContent = `第${i}爻`;
+        option.textContent = `第 ${i} 爻`;
         dom.changingLineManual.appendChild(option);
     }
 }
 
 function populateCaseTypeSelect() {
-    const caseTypes = ['cyber_crime', 'organized_crime', 'missing_persons', 'traffic_accidents'];
-    dom.caseTypeSelect.innerHTML = '<option value="">選擇案件類型 (選填)</option>';
-    caseTypes.forEach(type => {
-        if (hexagramData[type]) {
+    const selectElement = dom.caseTypeSelect;
+    selectElement.innerHTML = '<option value="">請選擇案件類型 (選填)</option>';
+    if (hexagramData.case_analysis) {
+        for (const key in hexagramData.case_analysis) {
             const option = document.createElement('option');
-            option.value = type;
-            option.textContent = hexagramData[type].name;
-            dom.caseTypeSelect.appendChild(option);
-            console.log(`已添加案件類型：${hexagramData[type].name}`);
+            option.value = key;
+            option.textContent = hexagramData.case_analysis[key].name;
+            selectElement.appendChild(option);
         }
-    });
-}
-
-// 計算卦象
-function calculateGua(number) {
-    return ((number % 8) === 0) ? 8 : (number % 8);
-}
-
-function calculateHexagram(upperGua, lowerGua, changingLine) {
-    const benGua = `${upperGua}_${lowerGua}`;
-    let bianGua = benGua;
-    if (changingLine && changingLine >= 1 && changingLine <= 6) {
-        const upperBinary = toBinary(upperGua);
-        const lowerBinary = toBinary(lowerGua);
-        let fullBinary = (upperBinary + lowerBinary).split('');
-        fullBinary[6 - changingLine] = fullBinary[6 - changingLine] === '1' ? '0' : '1';
-        const newUpperBinary = fullBinary.slice(0, 3).join('');
-        const newLowerBinary = fullBinary.slice(3).join('');
-        const newUpper = toDecimal(newUpperBinary);
-        const newLower = toDecimal(newLowerBinary);
-        bianGua = `${newUpper}_${newLower}`;
     }
-    return { benGua, bianGua };
 }
 
-function calculateTiYong(upperGua, lowerGua, changingLine) {
-    const isXiaGuaDong = changingLine >= 1 && changingLine <= 3;
-    return {
-        tiGua: isXiaGuaDong ? upperGua : lowerGua,
-        yongGua: isXiaGuaDong ? lowerGua : upperGua,
-        dongYaoPosition: changingLine
-    };
-}
-
-// 五行生克圖
-function createShengkeDiagram(data) {
-    const svg = dom.caseGraph;
-    svg.innerHTML = `
-        <defs>
-            <marker id="arrowhead-sheng" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
-                <polygon points="0 0, 6 2, 0 4" fill="#27ae60"/>
-            </marker>
-            <marker id="arrowhead-ke" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
-                <polygon points="0 0, 6 2, 0 4" fill="#e74c3c"/>
-            </marker>
-        </defs>
-    `;
-    
-    const elements = ['木', '火', '土', '金', '水'];
-    const centerX = 300;
-    const centerY = 250;
-    const radius = 150;
-    const now = new Date();
-    const month = now.getMonth() + 1;
-    const zhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'][month - 1];
-    const currentWuXing = hexagramData.zhi_to_wu[zhi];
-    const wuXingCycle = ['木', '火', '土', '金', '水'];
-    const currentIndex = wuXingCycle.indexOf(currentWuXing);
-    
-    const nodes = elements.map((el, i) => {
-        const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
-        const stateIndex = (wuXingCycle.indexOf(el) - currentIndex + 5) % 5;
-        const lineWeight = hexagramData.line_weights[stateIndex];
-        return { id: el, label: el, wuXing: el, x, y, guaLabels: [], lineWeight };
-    });
-
-    Object.keys(data).forEach(key => {
-        const guaData = data[key];
-        const wuXing = guaData.wuXing;
-        const node = nodes.find(n => n.wuXing === wuXing);
-        if (node) {
-            let label = '';
-            if (key === 'ti') label = `體卦 (${guaData.name})`;
-            else if (key === 'benShang') label = `本卦上 (${guaData.name})`;
-            else if (key === 'benXia') label = `本卦下 (${guaData.name})`;
-            else if (key === 'bianShang') label = `變卦上 (${guaData.name})`;
-            else if (key === 'bianXia') label = `變卦下 (${guaData.name})`;
-            if (label) node.guaLabels.push({ text: label });
-        }
-    });
-
-    nodes.forEach(node => {
-        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        const color = hexagramData.element_colors[node.wuXing] || '#fff';
-        g.innerHTML = `
-            <circle class="gua-node" cx="${node.x}" cy="${node.y}" r="40" fill="${color}" stroke-width="${node.lineWeight}"/>
-            <text class="gua-text" x="${node.x}" y="${node.y - 10}" text-anchor="middle">${node.label}</text>
-            ${node.guaLabels.map((label, i) => `
-                <text class="gua-text" x="${node.x}" y="${node.y + 10 + i * 15}" text-anchor="middle" font-size="10">${label.text}</text>
-            `).join('')}
-        `;
-        svg.appendChild(g);
-    });
-
-    const shengRelations = [
-        { from: '木', to: '火' }, { from: '火', to: '土' }, { from: '土', to: '金' },
-        { from: '金', to: '水' }, { from: '水', to: '木' }
-    ];
-    const keRelations = [
-        { from: '木', to: '土' }, { from: '火', to: '金' }, { from: '土', to: '水' },
-        { from: '金', to: '木' }, { from: '水', to: '火' }
-    ];
-
-    shengRelations.forEach(rel => {
-        const fromNode = nodes.find(n => n.id === rel.from);
-        const toNode = nodes.find(n => n.id === rel.to);
-        if (fromNode && toNode) {
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', fromNode.x);
-            line.setAttribute('y1', fromNode.y);
-            line.setAttribute('x2', toNode.x);
-            line.setAttribute('y2', toNode.y);
-            line.setAttribute('class', 'relation-line sheng');
-            line.setAttribute('marker-end', 'url(#arrowhead-sheng)');
-            line.setAttribute('stroke-width', fromNode.lineWeight);
-            svg.appendChild(line);
-        }
-    });
-
-    keRelations.forEach(rel => {
-        const fromNode = nodes.find(n => n.id === rel.from);
-        const toNode = nodes.find(n => n.id === rel.to);
-        if (fromNode && toNode) {
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', fromNode.x);
-            line.setAttribute('y1', fromNode.y);
-            line.setAttribute('x2', toNode.x);
-            line.setAttribute('y2', toNode.y);
-            line.setAttribute('class', 'relation-line ke');
-            line.setAttribute('marker-end', 'url(#arrowhead-ke)');
-            line.setAttribute('stroke-width', fromNode.lineWeight);
-            svg.appendChild(line);
-        }
-    });
-}
-
-// 推算邏輯
 function startCalculation() {
-    if (!hexagramData.gua) {
-        alert('資料尚未載入，請確認 police_data.json 是否正確或重新上傳！');
+    if (isUnsaved) {
+        saveCase(true);
+    }
+
+    if (!hexagramData || !hexagramData.hexagrams || Object.keys(hexagramData.hexagrams).length === 0) {
+        alert('卦象資料尚未載入，請先上傳 JSON 檔案或等待預設檔案載入。');
         return;
     }
 
-    const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
-    let upperGua, lowerGua, changingLine;
+    const activeTabId = document.querySelector('.tab-content.active').id;
+    let lowerGuaNum, upperGuaNum, changingLine, inputMethod;
 
-    if (activeTab === 'manual-tab') {
-        upperGua = parseInt(dom.upperGuaSelect.value);
-        lowerGua = parseInt(dom.lowerGuaSelect.value);
-        changingLine = parseInt(dom.changingLineManual.value);
-        if (!upperGua || !lowerGua || isNaN(changingLine) || changingLine < 1 || changingLine > 6) {
-            alert('請選擇有效的上卦、下卦和動爻！');
-            return;
-        }
-    } else if (activeTab === 'number-tab') {
-        const numInput = dom.numInput.value;
-        if (!numInput || numInput.length !== 9 || !/^\d+$/.test(numInput)) {
-            alert('請輸入9位數數字！');
-            return;
-        }
-        const num = parseInt(numInput);
-        upperGua = calculateGua(num % 1000);
-        lowerGua = calculateGua(Math.floor(num / 1000) % 1000);
-        changingLine = calculateGua(num % 100) % 6 || 6;
-    } else if (activeTab === 'time-tab') {
+    if (activeTabId === 'time') {
         const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth() + 1;
-        const day = now.getDate();
-        const hour = now.getHours();
-        upperGua = calculateGua(year + month + day);
-        lowerGua = calculateGua(month + day + hour);
-        changingLine = calculateGua(year + month + day + hour) % 6 || 6;
+        const timeStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+        const input = timeStr.slice(-9);
+        document.getElementById('currentTime').textContent = now.toLocaleString();
+
+        if (input.length !== 9 || !/^\d{9}$/.test(input)) {
+            alert('時間取卦失敗：無法生成有效的9位數數字！');
+            return;
+        }
+
+        const sumLower = parseInt(input.substring(0, 3), 10);
+        const sumUpper = parseInt(input.substring(3, 6), 10);
+        const sumChange = parseInt(input.substring(6, 9), 10);
+        
+        lowerGuaNum = sumLower % 8 === 0 ? 8 : sumLower % 8;
+        upperGuaNum = sumUpper % 8 === 0 ? 8 : sumUpper % 8;
+        changingLine = sumChange % 6 === 0 ? 6 : sumChange % 6;
+        inputMethod = '時間起卦';
+    } else if (activeTabId === 'number') {
+        const input = dom.numInput.value;
+        if (input.length !== 9 || !/^\d{9}$/.test(input)) {
+            alert('請輸入有效的9位數數字！');
+            return;
+        }
+        const sumLower = parseInt(input.substring(0, 3), 10);
+        const sumUpper = parseInt(input.substring(3, 6), 10);
+        const sumChange = parseInt(input.substring(6, 9), 10);
+        
+        lowerGuaNum = sumLower % 8 === 0 ? 8 : sumLower % 8;
+        upperGuaNum = sumUpper % 8 === 0 ? 8 : sumUpper % 8;
+        changingLine = sumChange % 6 === 0 ? 6 : sumChange % 6;
+        inputMethod = '數字起卦';
+    } else {
+        upperGuaNum = parseInt(dom.upperGuaSelect.value, 10);
+        lowerGuaNum = parseInt(dom.lowerGuaSelect.value, 10);
+        changingLine = parseInt(dom.changingLineManual.value, 10);
+        inputMethod = '手動取卦';
+
+        if (!upperGuaNum || !lowerGuaNum || !changingLine) {
+            alert('請確保所有輸入欄位均已填寫！');
+            return;
+        }
     }
 
-    const { benGua, bianGua } = calculateHexagram(upperGua, lowerGua, changingLine);
-    const tiYong = calculateTiYong(upperGua, lowerGua, changingLine);
     const caseType = dom.caseTypeSelect.value;
-    const caseName = dom.caseNameInput.value || '未命名案件';
-    const notes = dom.caseNotes.value;
-
-    currentCaseData = {
-        caseName,
-        upperGua,
-        lowerGua,
-        changingLine,
-        benGua,
-        bianGua,
-        tiGua: tiYong.tiGua,
-        yongGua: tiYong.yongGua,
-        caseType,
-        notes,
-        timestamp: new Date().toISOString()
-    };
-
-    displayResults(currentCaseData);
-    createShengkeDiagram({
-        benShang: { name: numToGua[upperGua], wuXing: hexagramData.gua[upperGua].element },
-        benXia: { name: numToGua[lowerGua], wuXing: hexagramData.gua[lowerGua].element },
-        ti: { name: numToGua[tiYong.tiGua], wuXing: hexagramData.gua[tiYong.tiGua].element },
-        bianShang: { name: numToGua[parseInt(bianGua.split('_')[0])], wuXing: hexagramData.gua[parseInt(bianGua.split('_')[0])].element },
-        bianXia: { name: numToGua[parseInt(bianGua.split('_')[1])], wuXing: hexagramData.gua[parseInt(bianGua.split('_')[1])].element }
-    });
-
+    const caseName = dom.caseNameInput.value || `未命名案件 - ${new Date().toLocaleString()}`;
+    
+    generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName);
     isUnsaved = true;
 }
 
-// 顯示結果
-function displayResults(data) {
-    const gua = hexagramData.gua;
-    const hexagrams = hexagramData.hexagrams;
-    const caseTypeData = data.caseType ? hexagramData[data.caseType] : null;
-
-    // 基本卦象資訊
-    let resultHTML = `
-        <h4>本卦：${gua[data.upperGua].name} (${gua[data.upperGua].element}) 上, ${gua[data.lowerGua].name} (${gua[data.lowerGua].element}) 下</h4>
-        <p>${hexagrams[data.benGua]?.summary || '無特定解說'}</p>
-    `;
-    if (data.bianGua !== data.benGua) {
-        resultHTML += `
-            <h4>變卦：${gua[parseInt(data.bianGua.split('_')[0])].name} 上, ${gua[parseInt(data.bianGua.split('_')[1])].name} 下</h4>
-            <p>${hexagrams[data.bianGua]?.summary || '無特定解說'}</p>
-        `;
-    }
-    resultHTML += `
-        <h4>體卦：${gua[data.tiGua].name} (${gua[data.tiGua].element})</h4>
-        <h4>用卦：${gua[data.yongGua].name} (${gua[data.yongGua].element})</h4>
-    `;
-    dom.guaResult.innerHTML = resultHTML;
-
-    // 案件發展與轉折
-    let progressHTML = '<h4>案件發展與轉折</h4>';
-    if (caseTypeData && caseTypeData.related_hexagrams[data.benGua]) {
-        progressHTML += `<p>${caseTypeData.related_hexagrams[data.benGua]}</p>`;
-    } else {
-        progressHTML += `<p>根據卦象，案件可能涉及${gua[data.tiGua].feature}相關的特性，需關注${gua[data.yongGua].feature}的影響。請結合實際線索進一步分析。</p>`;
-    }
-    if (data.bianGua !== data.benGua && hexagrams[data.bianGua]) {
-        progressHTML += `<p>案件可能轉向${hexagrams[data.bianGua].summary}</p>`;
-    }
-    dom.caseProgress.innerHTML = progressHTML;
-
-    // 嫌犯與線索分析
-    let cluesHTML = '<h4>嫌犯與線索分析</h4>';
-    if (caseTypeData && caseTypeData.related_hexagrams[data.benGua]) {
-        cluesHTML += `<p>建議從${gua[data.yongGua].feature}相關的方向尋找線索，可能涉及${gua[data.yongGua].direction}方位或${gua[data.yongGua].element}屬性的環境/人物。</p>`;
-    } else {
-        cluesHTML += `<p>嫌犯或線索可能與${gua[data.yongGua].feature}有關，建議調查${gua[data.yongGua].direction}方位或${gua[data.yongGua].element}屬性的相關線索。</p>`;
-    }
-    dom.suspectClues.innerHTML = cluesHTML;
-
-    // 體用生克與吉凶
-    const tiYongRelation = getTiYongRelation(gua[data.tiGua].element, gua[data.yongGua].element);
-    const auspice = getAuspice(tiYongRelation);
-    dom.auspice.innerHTML = `
-        <h4>體用生克與吉凶</h4>
-        <p>體用關係：${tiYongRelation}</p>
-        <p>${auspice}</p>
-    `;
-
-    // 應期分析
-    dom.yingQi.innerHTML = getYingQiAnalysis(data.tiGua, data.yongGua, data.changingLine);
-
-    dom.resultArea.style.display = 'block';
-}
-
-// 儲存與載入
-function saveCase(silent = false) {
-    if (!currentCaseData) {
-        alert('無案件資料可儲存！');
+function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName) {
+    if (!hexagramData.hexagrams) {
+        console.error('hexagramData.hexagrams 未定義');
+        alert('卦象資料未載入，請檢查 JSON 檔案。');
         return;
     }
-    const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
-    cases.push(currentCaseData);
+
+    const mainGua = hexagramData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`] || { name: '未知卦名', summary: '無相關解釋。' };
+    const mainGuaBinary = toBinary(upperGuaNum) + toBinary(lowerGuaNum);
+    const interGuaUpperBinary = mainGuaBinary.substring(1, 4);
+    const interGuaLowerBinary = mainGuaBinary.substring(2, 5);
+    const interGuaUpperNum = toDecimal(interGuaUpperBinary);
+    const interGuaLowerNum = toDecimal(interGuaLowerBinary);
+    const interGua = hexagramData.hexagrams[`${interGuaUpperNum}_${interGuaLowerNum}`] || { name: '未知互卦', summary: '無相關解釋。' };
+
+    let changedGuaBinary = "";
+    for (let i = 0; i < 6; i++) {
+        const lineIndex = 6 - i;
+        if (lineIndex === changingLine) {
+            changedGuaBinary += (mainGuaBinary[i] === '0') ? '1' : '0';
+        } else {
+            changedGuaBinary += mainGuaBinary[i];
+        }
+    }
+    const changedUpperGuaNum = toDecimal(changedGuaBinary.substring(0, 3));
+    const changedLowerGuaNum = toDecimal(changedGuaBinary.substring(3, 6));
+    const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '無相關解釋。' };
+
+    let tiGuaNum, yongGuaNum;
+    if (changingLine > 3) {
+        tiGuaNum = lowerGuaNum;
+        yongGuaNum = upperGuaNum;
+    } else {
+        tiGuaNum = upperGuaNum;
+        yongGuaNum = lowerGuaNum;
+    }
+    const tiGua = hexagramData.gua[tiGuaNum] || { name: '未知體卦', element: '未知' };
+    const yongGua = hexagramData.gua[yongGuaNum] || { name: '未知用卦', element: '未知' };
+
+    let relationText = '';
+    const tiElement = tiGua.element;
+    const yongElement = yongGua.element;
+    const sheng = hexagramData.element_relations[tiElement]?.生;
+    const ke = hexagramData.element_relations[tiElement]?.剋;
+    let relationType = '比和';
+    let auspiciousness = '平';
+    if (tiElement === yongElement) {
+        relationText = `${tiGua.name}與${yongGua.name}比和，代表雙方力量平衡（平）。`;
+    } else if (sheng === yongElement) {
+        relationText = `${tiGua.name}生${yongGua.name}，代表我方生助對方（吉）。`;
+        relationType = '生';
+        auspiciousness = '吉';
+    } else if (ke === yongElement) {
+        relationText = `${tiGua.name}剋${yongGua.name}，代表我方壓制對方（凶）。`;
+        relationType = '剋';
+        auspiciousness = '凶';
+    } else {
+        relationText = `${tiGua.name}與${yongGua.name}無直接生剋關係，力量平衡（平）。`;
+    }
+
+    const guaData = {
+        mainTi: tiGua,
+        mainYong: yongGua,
+        interTi: hexagramData.gua[interGuaUpperNum] || { name: '未知', element: '未知' },
+        interYong: hexagramData.gua[interGuaLowerNum] || { name: '未知', element: '未知' },
+        changedTi: hexagramData.gua[changedUpperGuaNum] || { name: '未知', element: '未知' },
+        changedYong: hexagramData.gua[changedLowerGuaNum] || { name: '未知', element: '未知' },
+        relation: relationType
+    };
+
+    displayResults({
+        mainGua, interGua, changedGua, tiGua, yongGua, relationText, relationType, auspiciousness,
+        inputMethod, caseType, caseName, changingLine, guaData
+    });
+}
+
+function displayResults(data) {
+    const { mainGua, interGua, changedGua, tiGua, yongGua, relationText, relationType, auspiciousness, inputMethod, caseType, caseName, changingLine, guaData } = data;
+    const resultArea = document.getElementById('resultArea');
+    const caseGraphContainer = document.getElementById('caseGraphContainer');
+    const notesSection = document.getElementById('notesSection');
+
+    let html = `
+        <h3>${mainGua.name || '未知卦名'} (${inputMethod})</h3>
+        <p><strong>案件名稱：</strong>${caseName}</p>
+        <p><strong>主卦：</strong>${mainGua.name || '未知'} - ${mainGua.summary || '無相關解釋'}</p>
+        <p><strong>互卦：</strong>${interGua.name || '未知'} - ${interGua.summary || '無相關解釋'}</p>
+        <p><strong>變卦：</strong>${changedGua.name || '未知'} - ${changedGua.summary || '無相關解釋'}</p>
+        <p><strong>動爻：</strong>第 ${changingLine} 爻 - ${hexagramData.line_summary[changingLine] || '無動爻解釋'}</p>
+        <p><strong>體用關係：</strong>${relationText}</p>
+        <p><strong>吉凶：</strong>${auspiciousness}</p>
+    `;
+
+    if (caseType && hexagramData.case_analysis && hexagramData.case_analysis[caseType]) {
+        const analysis = hexagramData.case_analysis[caseType];
+        html += `
+            <h4>案件類型分析：${analysis.name}</h4>
+            <p>${analysis.summary}</p>
+        `;
+        if (analysis.related_hexagrams[`${data.upperGuaNum}_${data.lowerGuaNum}`]) {
+            html += `<p><strong>相關卦象分析：</strong>${analysis.related_hexagrams[`${data.upperGuaNum}_${data.lowerGuaNum}`]}</p>`;
+        }
+    }
+
+    const season = hexagramData.five_to_season[tiGua.element] || ['未知季節'];
+    html += `<p><strong>應期分析：</strong>案件可能在 ${season.join('、')} 月有突破。</p>`;
+
+    resultArea.innerHTML = html;
+    resultArea.style.display = 'flex';
+    notesSection.style.display = 'block';
+    caseGraphContainer.style.display = 'block';
+
+    const caseGraph = document.getElementById('caseGraph');
+    if (caseGraph) {
+        drawGuaGraph(caseGraph, guaData, caseName);
+    }
+
+    currentCaseData = { caseName, inputMethod, reportHtml: html, notes: dom.caseNotes.value, guaData, timestamp: new Date().toISOString() };
+}
+
+function drawGuaGraph(svgElement, guaData, caseName) {
+    const width = svgElement.clientWidth;
+    const height = 300;
+    svgElement.setAttribute('width', width);
+    svgElement.setAttribute('height', height);
+    d3.select(svgElement).selectAll("*").remove();
+
+    const svg = d3.select(svgElement)
+        .attr('width', width)
+        .attr('height', height);
+
+    const nodes = [
+        { id: 'mainTi', name: guaData.mainTi.name, element: guaData.mainTi.element, x: width * 0.25, y: height * 0.25 },
+        { id: 'mainYong', name: guaData.mainYong.name, element: guaData.mainYong.element, x: width * 0.75, y: height * 0.25 },
+        { id: 'interTi', name: guaData.interTi.name, element: guaData.interTi.element, x: width * 0.25, y: height * 0.5 },
+        { id: 'interYong', name: guaData.interYong.name, element: guaData.interYong.element, x: width * 0.75, y: height * 0.5 },
+        { id: 'changedTi', name: guaData.changedTi.name, element: guaData.changedTi.element, x: width * 0.25, y: height * 0.75 },
+        { id: 'changedYong', name: guaData.changedYong.name, element: guaData.changedYong.element, x: width * 0.75, y: height * 0.75 }
+    ];
+
+    const currentMonth = new Date().getMonth() + 1;
+    const lineWeights = hexagramData.line_weights || [0.2, 0.4, 0.6, 0.8, 1.0];
+    const elementColors = hexagramData.element_colors || {};
+
+    const links = [
+        { source: 'mainTi', target: 'mainYong', type: guaData.relation },
+        { source: 'interTi', target: 'interYong', type: getRelation(guaData.interTi.element, guaData.interYong.element) },
+        { source: 'changedTi', target: 'changedYong', type: getRelation(guaData.changedTi.element, guaData.changedYong.element) }
+    ];
+
+    svg.selectAll('.relation-line')
+        .data(links)
+        .enter()
+        .append('line')
+        .attr('class', d => `relation-line ${d.type.toLowerCase()}`)
+        .attr('x1', d => nodes.find(n => n.id === d.source).x)
+        .attr('y1', d => nodes.find(n => n.id === d.source).y)
+        .attr('x2', d => nodes.find(n => n.id === d.target).x)
+        .attr('y2', d => nodes.find(n => n.id === d.target).y)
+        .attr('stroke', d => elementColors[nodes.find(n => n.id === d.source).element] || '#333')
+        .attr('stroke-width', d => {
+            const sourceElement = nodes.find(n => n.id === d.source).element;
+            const seasonMonths = hexagramData.five_to_season[sourceElement] || [];
+            if (seasonMonths.includes(String(currentMonth))) return lineWeights[0]; // 旺
+            if (seasonMonths.includes(String((currentMonth + 1) % 12))) return lineWeights[1]; // 相
+            return lineWeights[4]; // 休/囚/死
+        });
+
+    svg.selectAll('.gua-node')
+        .data(nodes)
+        .enter()
+        .append('g')
+        .each(function(d) {
+            const group = d3.select(this);
+            group.append('circle')
+                .attr('class', 'gua-node')
+                .attr('cx', d.x)
+                .attr('cy', d.y)
+                .attr('r', 30)
+                .attr('fill', elementColors[d.element] || '#fff');
+
+            const guaLabels = [d.name, d.element, caseName];
+            guaLabels.forEach((label, index) => {
+                group.append('text')
+                    .attr('x', d.x)
+                    .attr('y', d.y + 15 + index * 12)
+                    .attr('text-anchor', 'middle')
+                    .attr('font-size', '10px')
+                    .attr('class', 'gua-label')
+                    .text(label);
+            });
+
+            group.on('mouseover', function() {
+                d3.select(this).select('circle').style('transform', 'scale(1.1)');
+                d3.select(this).selectAll('text').style('transform', 'scale(1.1)');
+            });
+            group.on('mouseout', function() {
+                d3.select(this).select('circle').style('transform', 'scale(1)');
+                d3.select(this).selectAll('text').style('transform', 'scale(1)');
+            });
+        });
+}
+
+function getRelation(el1, el2) {
+    if (!el1 || !el2 || !hexagramData.element_relations) return '比和';
+    if (el1 === el2) return '比和';
+    if (hexagramData.element_relations[el1]?.生 === el2) return '生';
+    if (hexagramData.element_relations[el1]?.剋 === el2) return '剋';
+    return '比和';
+}
+
+// ----------------------
+// 歷史記錄與資料管理
+// ----------------------
+
+function saveCase(isAutoSave = false) {
+    if (!currentCaseData) {
+        if (!isAutoSave) alert('請先進行卜卦推算後再儲存！');
+        return;
+    }
+    currentCaseData.notes = dom.caseNotes.value;
+    let cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+    const existingIndex = cases.findIndex(c => c.timestamp === currentCaseData.timestamp);
+    if (existingIndex !== -1) {
+        cases[existingIndex] = currentCaseData;
+    } else {
+        cases.push(currentCaseData);
+    }
     localStorage.setItem('divinationCases', JSON.stringify(cases));
+    if (!isAutoSave) {
+        alert(`案件「${currentCaseData.caseName}」已成功儲存！`);
+    }
     isUnsaved = false;
-    if (!silent) alert('案件已儲存！');
 }
 
 function showHistoryModal() {
     const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
-    dom.historyList.innerHTML = cases.length ? cases.map((c, i) => `
-        <div class="history-item" data-index="${i}">${c.caseName} (${new Date(c.timestamp).toLocaleString()})</div>
-    `).join('') : '<p>無歷史記錄</p>';
-    dom.historyModal.style.display = 'block';
-    dom.historyList.querySelectorAll('.history-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const index = item.dataset.index;
-            currentCaseData = cases[index];
-            displayResults(currentCaseData);
-            createShengkeDiagram({
-                benShang: { name: numToGua[currentCaseData.upperGua], wuXing: hexagramData.gua[currentCaseData.upperGua].element },
-                benXia: { name: numToGua[currentCaseData.lowerGua], wuXing: hexagramData.gua[currentCaseData.lowerGua].element },
-                ti: { name: numToGua[currentCaseData.tiGua], wuXing: hexagramData.gua[currentCaseData.tiGua].element },
-                bianShang: { name: numToGua[parseInt(currentCaseData.bianGua.split('_')[0])], wuXing: hexagramData.gua[parseInt(currentCaseData.bianGua.split('_')[0])].element },
-                bianXia: { name: numToGua[parseInt(currentCaseData.bianGua.split('_')[1])], wuXing: hexagramData.gua[parseInt(currentCaseData.bianGua.split('_')[1])].element }
-            });
-            dom.caseNameInput.value = currentCaseData.caseName;
-            dom.caseTypeSelect.value = currentCaseData.caseType;
-            dom.caseNotes.value = currentCaseData.notes;
+    if (cases.length === 0) {
+        alert('目前沒有歷史記錄。');
+        return;
+    }
+    dom.historyList.innerHTML = '';
+    cases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    cases.forEach((c, index) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'history-item';
+        itemDiv.innerHTML = `<strong>${c.caseName}</strong> (${c.inputMethod})<br><small>${new Date(c.timestamp).toLocaleString()}</small>`;
+        itemDiv.addEventListener('click', () => {
+            if (isUnsaved && !confirm('您有未儲存的案件，確定要載入歷史記錄嗎？未儲存的資料將會遺失。')) {
+                return;
+            }
+            loadCase(index);
             dom.historyModal.style.display = 'none';
-            isUnsaved = false;
         });
+        dom.historyList.appendChild(itemDiv);
     });
+    dom.historyModal.style.display = 'flex';
+}
+
+function loadCase(index) {
+    const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+    const sortedCases = cases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const caseToLoad = sortedCases[index];
+    if (!caseToLoad) return;
+    currentCaseData = caseToLoad;
+    dom.caseNameInput.value = currentCaseData.caseName;
+    dom.resultArea.innerHTML = currentCaseData.reportHtml;
+    dom.resultArea.style.display = 'flex';
+    dom.notesSection.style.display = 'block';
+    dom.caseNotes.value = currentCaseData.notes;
+
+    const caseGraph = document.getElementById('caseGraph');
+    const caseGraphContainer = document.getElementById('caseGraphContainer');
+    if (caseGraph && currentCaseData.guaData) {
+        caseGraphContainer.style.display = 'block';
+        drawGuaGraph(caseGraph, currentCaseData.guaData, currentCaseData.caseName);
+    }
+
+    alert(`案件「${currentCaseData.caseName}」已成功載入！`);
+    isUnsaved = false;
 }
 
 function exportCases() {
     const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
-    if (!cases.length) {
-        alert('無歷史記錄可匯出！');
+    if (cases.length === 0) {
+        alert('沒有可匯出的歷史記錄。');
         return;
     }
     const dataStr = JSON.stringify(cases, null, 2);
@@ -596,9 +550,19 @@ function clearAllCases() {
     }
 }
 
+// ----------------------
 // 事件監聽與初始化
+// ----------------------
+
 function init() {
     loadInitialData();
+
+    function updateCurrentTime() {
+        const now = new Date();
+        document.getElementById('currentTime').textContent = now.toLocaleString();
+    }
+    updateCurrentTime();
+    setInterval(updateCurrentTime, 1000);
 
     dom.tabs.forEach(tab => {
         tab.addEventListener('click', (e) => {
