@@ -624,7 +624,8 @@
             }`)
         
         let localData = {};
-        let currentDataSource = '預設檔案';
+        let currentCaseData = null;
+        let isUnsaved = false;
 
         // DOM 元素引用
         const dom = {
@@ -877,7 +878,7 @@
             const changedLowerGuaBinary = changedFullHexagramBinary.substring(3, 6);
             
             const changedUpperGuaNum = binaryToTrigram[changedUpperGuaBinary];
-            const changedLowerGuaNum = binaryToTragram[changedLowerGuaBinary];
+            const changedLowerGuaNum = binaryToTrigram[changedLowerGuaBinary];
             
             const changedGua = localData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '無相關解釋。' };
             
