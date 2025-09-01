@@ -21,8 +21,9 @@
         .hexagram-item textarea { width: 100%; height: 80px; margin-top: 10px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: vertical; }
         .case-type-item { margin-bottom: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; }
         .case-type-item h3 { margin: 0; }
-        .case-type-item input[type="text"] { width: calc(100% - 100px); padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; margin-right: 10px; }
+        .case-type-item p { margin: 5px 0; }
         .case-related-item { margin: 5px 0; padding: 8px; background-color: #e8f4f8; border: 1px solid #d4eaf0; border-radius: 4px; }
+        .file-upload-section { margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px; text-align: left; }
     </style>
 </head>
 <body>
@@ -34,34 +35,63 @@
         <button id="refreshBtn">刷新介面</button>
     </div>
 
+    <div class="file-upload-section">
+        <label for="jsonFile">或手動上傳 JSON 資料檔：</label>
+        <input type="file" id="jsonFile" accept=".json">
+    </div>
+
     <div id="editor">
-        </div>
+        <p style="text-align:center; color:#7f8c8d;">請上傳 JSON 檔案或等待預設檔案載入。</p>
+    </div>
 </div>
 
 <script>
     let jsonData = {};
 
-    // 頁面載入時從伺服器載入 JSON 檔案
     window.onload = async () => {
+        const fileInput = document.getElementById('jsonFile');
+        fileInput.addEventListener('change', handleFileUpload);
+        await loadDefaultData();
+    };
+
+    async function loadDefaultData() {
         try {
             const response = await fetch('hexagram_data.json');
             if (!response.ok) {
-                throw new Error('無法載入 hexagram_data.json，請確認檔案是否存在於同個資料夾。');
+                throw new Error('無法載入預設 JSON 檔案。');
             }
             jsonData = await response.json();
+            console.log('預設卦象資料載入成功！');
             renderEditor();
         } catch (error) {
-            alert(error.message);
-            console.error(error);
+            console.error('載入預設資料失敗:', error);
+            document.getElementById('editor').innerHTML = '<p style="text-align:center; color:#e74c3c;">無法自動載入預設資料，請手動上傳檔案。</p>';
         }
-    };
+    }
 
-    // 渲染編輯器介面
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                jsonData = JSON.parse(e.target.result);
+                console.log('使用者上傳的資料載入成功！');
+                alert('已成功載入新的 JSON 檔案。');
+                renderEditor();
+            } catch (error) {
+                console.error('解析 JSON 檔案失敗:', error);
+                alert('無效的 JSON 檔案，請檢查格式。');
+            }
+        };
+        reader.readAsText(file);
+    }
+
     function renderEditor() {
         const editorDiv = document.getElementById('editor');
         editorDiv.innerHTML = '';
 
-        // 渲染六十四卦部分
         const hexagramsSection = document.createElement('div');
         hexagramsSection.className = 'section';
         hexagramsSection.innerHTML = `<h2>六十四卦卦象解釋<span style="font-size:0.8em; color:#999; margin-left:10px;">點擊展開/收合</span></h2><div class="section-content"></div>`;
@@ -85,7 +115,6 @@
         }
         editorDiv.appendChild(hexagramsSection);
 
-        // 渲染案件類型部分
         const caseAnalysisSection = document.createElement('div');
         caseAnalysisSection.className = 'section';
         caseAnalysisSection.innerHTML = `<h2>案件類型分析<span style="font-size:0.8em; color:#999; margin-left:10px;">點擊展開/收合</span></h2><div class="section-content"></div>`;
@@ -112,7 +141,6 @@
         }
         editorDiv.appendChild(caseAnalysisSection);
 
-        // 綁定編輯事件
         editorDiv.querySelectorAll('textarea').forEach(textarea => {
             textarea.addEventListener('input', (e) => {
                 const key = e.target.dataset.key;
@@ -120,7 +148,6 @@
             });
         });
 
-        // 綁定展開/收合事件
         editorDiv.querySelectorAll('.section h2').forEach(h2 => {
             h2.addEventListener('click', () => {
                 h2.nextElementSibling.classList.toggle('open');
@@ -128,7 +155,6 @@
         });
     }
 
-    // 下載 JSON 檔案
     document.getElementById('downloadBtn').addEventListener('click', () => {
         const dataStr = JSON.stringify(jsonData, null, 2);
         const blob = new Blob([dataStr], { type: "application/json" });
@@ -142,7 +168,6 @@
         URL.revokeObjectURL(url);
     });
 
-    // 刷新介面
     document.getElementById('refreshBtn').addEventListener('click', () => {
         if (confirm('確定要刷新介面嗎？所有未下載的修改都將遺失！')) {
             window.location.reload();
