@@ -14,8 +14,7 @@
         .input-section h2 { color: #34495e; margin-bottom: 10px; }
         .input-section p { color: #95a5a6; margin-bottom: 20px; }
         input[type="number"], select, input[type="text"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; box-sizing: border-box; }
-        button { padding: 12px 25px; border: none; border-radius: 5px; background-color: #3498db; color: white; font-size: 1em; cursor: pointer; transition: background-color 0.3s; }
-        button:hover { background-color: #2980b9; }
+        button { padding: 12px 25px; border: none; border-radius: 5px; color: white; font-size: 1em; cursor: pointer; transition: background-color 0.3s; }
         #resultArea { background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 30px; display: none; flex-direction: column; align-items: flex-start; margin-top: 20px; text-align: left; }
         #resultArea h3, #resultArea h4 { color: #2c3e50; }
         #resultArea hr { width: 100%; border: 0; height: 1px; background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0)); }
@@ -29,24 +28,33 @@
         .tab-content.active { display: block; }
         .gua-selects { display: flex; justify-content: space-around; gap: 10px; margin-bottom: 15px; }
         #jsonStatus { font-size: 0.9em; color: #7f8c8d; margin-top: 10px; text-align: center; }
-        #calculateBtn { width: 100%; margin-top: 20px; }
+        #calculateBtn { width: 100%; margin-top: 20px; background-color: #3498db; }
+        #calculateBtn:hover { background-color: #2980b9; }
         .case-notes-section { width: 100%; margin-top: 20px; }
         .case-notes-section textarea { width: 100%; height: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; resize: vertical; box-sizing: border-box; }
-        .history-controls { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 15px; 
-            margin-top: 20px; 
+        
+        /* 卦象按鈕佈局 */
+        .history-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
         }
-        .history-controls button { 
-            width: 100%; 
+        .history-controls button, .history-controls .full-width {
+            width: 100%;
         }
+        .history-controls .full-width {
+            grid-column: 1 / span 2;
+        }
+
         #btn-save { background-color: #27ae60; }
         #btn-save:hover { background-color: #229955; }
         #btn-load { background-color: #3498db; }
         #btn-load:hover { background-color: #2980b9; }
         #btn-export { background-color: #f39c12; }
         #btn-export:hover { background-color: #e67e22; }
+        #btn-import { background-color: #f39c12; }
+        #btn-import:hover { background-color: #e67e22; }
         #btn-clear { background-color: #e74c3c; }
         #btn-clear:hover { background-color: #c0392b; }
 
@@ -119,12 +127,12 @@
         <div class="history-controls">
             <button id="btn-save" onclick="saveCase()">儲存案件</button>
             <button id="btn-load" onclick="showHistoryModal()">載入歷史案件</button>
-            <button id="btn-export" onclick="exportCases()">匯出歷史記錄</button>
             <label class="file-import-label">
                 <button id="btn-import" onclick="document.getElementById('importFile').click();">載入歷史記錄</button>
                 <input type="file" id="importFile" accept=".json" style="display: none;">
             </label>
-            <button id="btn-clear" onclick="clearAllCases()">清空歷史記錄</button>
+            <button id="btn-export" onclick="exportCases()">匯出歷史記錄</button>
+            <button id="btn-clear" class="full-width" onclick="clearAllCases()">清空歷史記錄</button>
         </div>
     </div>
     
@@ -141,7 +149,7 @@
     <div class="utility-links">
         <a href="police_json.html">編輯解卦檔</a> | 
         <a href="police_help.html">使用說明</a> |
-        <a href="police_notes.html">卜卦須知</a>
+        <a href="divination_notes.html">卜卦須知</a>
     </div>
 </div>
 
@@ -353,7 +361,7 @@
         else if (hexagramData.element_relations[tiElement].生 === yongElement) { relationText = `${tiGua.name}生${yongGua.name}，代表**我方生助對方**。這意味著警方主動付出、積極追查，案件進展順利。`; }
         else if (hexagramData.element_relations[tiElement].剋 === yongElement) { relationText = `${tiGua.name}剋${yongGua.name}，代表**我方克制對方**。這意味著警方能掌控局面，可成功將嫌犯繩之以法。`; }
         else if (hexagramData.element_relations[yongElement].生 === tiElement) { relationText = `${yongGua.name}生${tiGua.name}，代表**對方生助我方**。這意味著嫌犯或線索提供意外幫助，讓警方被動獲得突破。`; }
-        else if (hexagramData.element_relations[yongElement].剋 === tiElement) { relationText = `${yongGua.name}剋${tiGua.name}，代表**對方克制我方**。這意味著警方辦案受阻，嫌犯反制能力強，需謹慎應對。`; }
+        else if (hexagramData.element_relations[yongElement].剋 === tiGua) { relationText = `${yongGua.name}剋${tiGua.name}，代表**對方克制我方**。這意味著警方辦案受阻，嫌犯反制能力強，需謹慎應對。`; }
 
         let caseAnalysisText = '';
         if (caseType && hexagramData.case_analysis[caseType]) {
