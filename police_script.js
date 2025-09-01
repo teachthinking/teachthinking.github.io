@@ -248,7 +248,7 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
     // 推估應期 (簡化實現，實際邏輯可根據需求調整)
     const yongGuaElement = yongGua.element;
     const tiGuaElement = tiGua.element;
-    const changingLineElement = hexagramData.gua[getChangingLineGuaNum(changingLine)].element;
+    const changingLineElement = hexagramData.gua[changingLine > 3 ? upperGuaNum : lowerGuaNum].element;
     const expectedDates = predictEventDates({
         monthBranch: currentMonthBranch,
         dayBranch: getCurrentDayBranch(),
@@ -345,9 +345,9 @@ function getRelationText(tiGua, yongGua) {
     return `${tiGua.name}與${yongGua.name}為比和關係，勢均力敵。`;
 }
 
-// 取得當前月份地支 (簡化，使用陽曆月份轉換)
+// 取得當前月份地支
 function getCurrentMonthBranch() {
-    const date = new Date(); // 或使用固定日期 September 01, 2025
+    const date = new Date(); // 使用當前日期 2025-09-01
     date.setFullYear(2025, 8, 1); // September is month 8 (0-based)
     const month = date.getMonth() + 1;
     const branches = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
@@ -384,12 +384,12 @@ function predictEventDates({ monthBranch, dayBranch, yongElement, tiElement, don
     return dates;
 }
 
-// 取得動爻所屬卦數 (簡化)
+// 取得動爻所屬卦數
 function getChangingLineGuaNum(changingLine) {
     return changingLine > 3 ? 1 : 8; // 簡化
 }
 
-// 繪製卦象關係圖
+// 繪製五行生克關係圖
 function drawGuaGraph(svgElement, guaData) {
     svgElement.innerHTML = `
         <defs>
@@ -401,7 +401,7 @@ function drawGuaGraph(svgElement, guaData) {
             </marker>
         </defs>
     `;
-    
+
     const elementStrengths = getElementStrength(getCurrentMonthBranch());
     const strengthOrder = ['旺', '相', '休', '囚', '死'];
     const getWeight = (el) => {
@@ -409,52 +409,36 @@ function drawGuaGraph(svgElement, guaData) {
         const index = strengthOrder.indexOf(status);
         return hexagramData.line_weights[4 - index] || 0.2;
     };
-    
-    // 定義所有節點 (體用分開)
-    const nodes = [
-        { id: 'mainTi', label: `本卦體 (${guaData.mainTi.gua.name})`, element: guaData.mainTi.element, x: 100, y: 100 },
-        { id: 'mainYong', label: `本卦用 (${guaData.mainYong.gua.name})`, element: guaData.mainYong.element, x: 300, y: 100 },
-        { id: 'interTi', label: `互卦體 (${guaData.interTi.gua.name})`, element: guaData.interTi.element, x: 100, y: 200 },
-        { id: 'interYong', label: `互卦用 (${guaData.interYong.gua.name})`, element: guaData.interYong.element, x: 300, y: 200 },
-        { id: 'changedTi', label: `變卦體 (${guaData.changedTi.gua.name})`, element: guaData.changedTi.element, x: 100, y: 300 },
-        { id: 'changedYong', label: `變卦用 (${guaData.changedYong.gua.name})`, element: guaData.changedYong.element, x: 300, y: 300 }
-    ];
 
-    // 定義關係 (各體到用)
-    const relations = [
-        { from: 'mainTi', to: 'mainYong' },
-        { from: 'interTi', to: 'interYong' },
-        { from: 'changedTi', to: 'changedYong' }
-    ];
-
-    // 繪製所有線條
-    relations.forEach(rel => {
-        const fromNode = nodes.find(n => n.id === rel.from);
-        const toNode = nodes.find(n => n.id === rel.to);
-        if (!fromNode || !toNode || !fromNode.element || !toNode.element) return;
-        
-        const relation = getRelation(fromNode.element, toNode.element);
-        const color = relation === '生' ? 'sheng' : (relation === '剋' ? 'ke' : 'bihe');
-        const weight = getWeight(fromNode.element);
-
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute('x1', fromNode.x);
-        line.setAttribute('y1', fromNode.y);
-        line.setAttribute('x2', toNode.x);
-        line.setAttribute('y2', toNode.y);
-        line.setAttribute('stroke-width', weight * 8);
-        line.classList.add('relation-line', color);
-
-        if (relation !== '比和') {
-            line.setAttribute('marker-end', `url(#arrowhead-${color})`);
-        }
-        
-        svgElement.appendChild(line);
+    // 五行節點位置（圓形佈局，中心為300,200，半徑150）
+    const elements = ['木', '火', '土', '金', '水'];
+    const nodes = elements.map((el, i) => {
+        const angle = (i * 2 * Math.PI) / 5 - Math.PI / 2; // 從頂部開始順時針
+        const x = 300 + 150 * Math.cos(angle);
+        const y = 200 + 150 * Math.sin(angle);
+        return { id: el, label: el, element: el, x, y };
     });
 
-    // 繪製所有節點和文字
+    // 生關係（綠色實線）
+    const shengRelations = [
+        { from: '木', to: '火' },
+        { from: '火', to: '土' },
+        { from: '土', to: '金' },
+        { from: '金', to: '水' },
+        { from: '水', to: '木' }
+    ];
+
+    // 剋關係（紅色虛線）
+    const keRelations = [
+        { from: '木', to: '土' },
+        { from: '火', to: '金' },
+        { from: '土', to: '水' },
+        { from: '金', to: '木' },
+        { from: '水', to: '火' }
+    ];
+
+    // 繪製五行節點
     nodes.forEach(node => {
-        if (!node.element) return;
         const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
         const color = hexagramData.element_colors[node.element] || '#ccc';
 
@@ -475,7 +459,63 @@ function drawGuaGraph(svgElement, guaData) {
         text.textContent = node.label;
         group.appendChild(text);
 
+        // 添加卦名標籤（本卦、互卦、變卦的體用）
+        const guaLabels = [];
+        if (guaData.mainTi.element === node.element) guaLabels.push(`本卦體 (${guaData.mainTi.gua.name})`);
+        if (guaData.mainYong.element === node.element) guaLabels.push(`本卦用 (${guaData.mainYong.gua.name})`);
+        if (guaData.interTi.element === node.element) guaLabels.push(`互卦體 (${guaData.interTi.gua.name})`);
+        if (guaData.interYong.element === node.element) guaLabels.push(`互卦用 (${guaData.interYong.gua.name})`);
+        if (guaData.changedTi.element === node.element) guaLabels.push(`變卦體 (${guaData.changedTi.gua.name})`);
+        if (guaData.changedYong.element === node.element) guaLabels.push(`變卦用 (${guaData.changedYong.gua.name})`);
+
+        if (guaLabels.length > 0) {
+            const labelText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            labelText.setAttribute('x', node.x);
+            labelText.setAttribute('y', node.y + 20);
+            labelText.setAttribute('text-anchor', 'middle');
+            labelText.setAttribute('font-size', '12px');
+            labelText.textContent = guaLabels.join(', ');
+            group.appendChild(labelText);
+        }
+
         svgElement.appendChild(group);
+    });
+
+    // 繪製生關係線條
+    shengRelations.forEach(rel => {
+        const fromNode = nodes.find(n => n.id === rel.from);
+        const toNode = nodes.find(n => n.id === rel.to);
+        if (!fromNode || !toNode) return;
+
+        const weight = getWeight(fromNode.element);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute('x1', fromNode.x);
+        line.setAttribute('y1', fromNode.y);
+        line.setAttribute('x2', toNode.x);
+        line.setAttribute('y2', toNode.y);
+        line.setAttribute('stroke-width', weight * 8);
+        line.classList.add('relation-line', 'sheng');
+        line.setAttribute('marker-end', 'url(#arrowhead-sheng)');
+        svgElement.appendChild(line);
+    });
+
+    // 繪製剋關係線條
+    keRelations.forEach(rel => {
+        const fromNode = nodes.find(n => n.id === rel.from);
+        const toNode = nodes.find(n => n.id === rel.to);
+        if (!fromNode || !toNode) return;
+
+        const weight = getWeight(fromNode.element);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute('x1', fromNode.x);
+        line.setAttribute('y1', fromNode.y);
+        line.setAttribute('x2', toNode.x);
+        line.setAttribute('y2', toNode.y);
+        line.setAttribute('stroke-width', weight * 8);
+        line.setAttribute('stroke-dasharray', '5,5');
+        line.classList.add('relation-line', 'ke');
+        line.setAttribute('marker-end', 'url(#arrowhead-ke)');
+        svgElement.appendChild(line);
     });
 }
 
