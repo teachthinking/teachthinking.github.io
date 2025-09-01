@@ -306,25 +306,29 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
     dom.resultArea.style.display = 'flex';
     dom.notesSection.style.display = 'block';
 
+    // 儲存 guaData 以便歷史記錄載入時重建圖形
+    const guaData = {
+        mainTi: { gua: tiGua, element: tiGua.element },
+        mainYong: { gua: yongGua, element: yongGua.element },
+        interTi: { gua: interTiGua, element: interTiGua.element },
+        interYong: { gua: interYongGua, element: interYongGua.element },
+        changedTi: { gua: changedTiGua, element: changedTiGua.element },
+        changedYong: { gua: changedYongGua, element: changedYongGua.element }
+    };
+
     currentCaseData = {
         caseName,
         inputMethod,
         reportHtml,
         timestamp: new Date().toISOString(),
-        notes: dom.caseNotes.value
+        notes: dom.caseNotes.value,
+        guaData // 新增 guaData 至歷史記錄
     };
 
     // 繪製卦象關係圖
     const caseGraph = document.getElementById('caseGraph');
     if (caseGraph) {
-        drawGuaGraph(caseGraph, {
-            mainTi: { gua: tiGua, element: tiGua.element },
-            mainYong: { gua: yongGua, element: yongGua.element },
-            interTi: { gua: interTiGua, element: interTiGua.element },
-            interYong: { gua: interYongGua, element: interYongGua.element },
-            changedTi: { gua: changedTiGua, element: changedTiGua.element },
-            changedYong: { gua: changedYongGua, element: changedYongGua.element }
-        });
+        drawGuaGraph(caseGraph, guaData);
     }
 }
 
@@ -623,6 +627,13 @@ function loadCase(index) {
     dom.resultArea.style.display = 'flex';
     dom.notesSection.style.display = 'block';
     dom.caseNotes.value = currentCaseData.notes;
+
+    // 重新繪製五行生克圖
+    const caseGraph = document.getElementById('caseGraph');
+    if (caseGraph && currentCaseData.guaData) {
+        drawGuaGraph(caseGraph, currentCaseData.guaData);
+    }
+
     alert(`案件「${currentCaseData.caseName}」已成功載入！`);
     isUnsaved = false;
 }
