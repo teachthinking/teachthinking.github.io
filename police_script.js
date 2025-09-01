@@ -21,6 +21,8 @@ const dom = {
     resultArea: document.getElementById('resultArea'),
     notesSection: document.getElementById('notesSection'),
     caseNotes: document.getElementById('caseNotes'),
+    caseGraphContainer: document.getElementById('caseGraphContainer'),
+    caseGraph: document.getElementById('caseGraph'),
     btnSave: document.getElementById('btn-save'),
     btnLoad: document.getElementById('btn-load'),
     btnExport: document.getElementById('btn-export'),
@@ -220,7 +222,7 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
     const interGuaLowerBinary = mainGuaBinary.substring(2, 5);
     const interGuaUpperNum = toDecimal(interGuaUpperBinary);
     const interGuaLowerNum = toDecimal(interGuaLowerBinary);
-    const interGua = hexagramData.hexagrams[`${interGuaUpperNum}_${interGuaLowerNum}`] || { name: '未知互卦', summary: '無相關解釋。' };
+    const interGua = hexagramData.hexagrams[`${interGuaUpperNum}_${interGuaLowerNum}`] || { name: '未知互卦', summary: '案件中間階段，尚不明朗，需進一步觀察。' };
 
     let changedGuaBinary = "";
     for (let i = 0; i < 6; i++) {
@@ -233,7 +235,7 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
     }
     const changedUpperGuaNum = toDecimal(changedGuaBinary.substring(0, 3));
     const changedLowerGuaNum = toDecimal(changedGuaBinary.substring(3, 6));
-    const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '無相關解釋。' };
+    const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '案件最終結果不明，需更多線索。' };
 
     let tiGuaNum, yongGuaNum;
     if (changingLine > 3) {
@@ -279,22 +281,23 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
 
     displayResults({
         mainGua, interGua, changedGua, tiGua, yongGua, relationText, relationType, auspiciousness,
-        inputMethod, caseType, caseName, changingLine, guaData
+        inputMethod, caseType, caseName, changingLine, guaData, upperGuaNum, lowerGuaNum
     });
 }
 
 function displayResults(data) {
-    const { mainGua, interGua, changedGua, tiGua, yongGua, relationText, relationType, auspiciousness, inputMethod, caseType, caseName, changingLine, guaData } = data;
-    const resultArea = document.getElementById('resultArea');
-    const caseGraphContainer = document.getElementById('caseGraphContainer');
-    const notesSection = document.getElementById('notesSection');
+    const { mainGua, interGua, changedGua, tiGua, yongGua, relationText, relationType, auspiciousness, inputMethod, caseType, caseName, changingLine, guaData, upperGuaNum, lowerGuaNum } = data;
+    const resultArea = dom.resultArea;
+    const caseGraphContainer = dom.caseGraphContainer;
+    const notesSection = dom.notesSection;
 
     let html = `
         <h3>${mainGua.name || '未知卦名'} (${inputMethod})</h3>
         <p><strong>案件名稱：</strong>${caseName}</p>
-        <p><strong>主卦：</strong>${mainGua.name || '未知'} - ${mainGua.summary || '無相關解釋'}</p>
-        <p><strong>互卦：</strong>${interGua.name || '未知'} - ${interGua.summary || '無相關解釋'}</p>
-        <p><strong>變卦：</strong>${changedGua.name || '未知'} - ${changedGua.summary || '無相關解釋'}</p>
+        <h4>案件發展與轉折分析</h4>
+        <p><strong>主卦（起初狀態）：</strong>${mainGua.name || '未知'} - ${mainGua.summary || '無相關解釋'}</p>
+        <p><strong>互卦（中間發展）：</strong>${interGua.name || '未知'} - ${interGua.summary || '案件中間階段，尚不明朗，需進一步觀察'}</p>
+        <p><strong>變卦（最終轉折）：</strong>${changedGua.name || '未知'} - ${changedGua.summary || '案件最終結果不明，需更多線索'}</p>
         <p><strong>動爻：</strong>第 ${changingLine} 爻 - ${hexagramData.line_summary[changingLine] || '無動爻解釋'}</p>
         <p><strong>體用關係：</strong>${relationText}</p>
         <p><strong>吉凶：</strong>${auspiciousness}</p>
@@ -306,8 +309,11 @@ function displayResults(data) {
             <h4>案件類型分析：${analysis.name}</h4>
             <p>${analysis.summary}</p>
         `;
-        if (analysis.related_hexagrams[`${data.upperGuaNum}_${data.lowerGuaNum}`]) {
-            html += `<p><strong>相關卦象分析：</strong>${analysis.related_hexagrams[`${data.upperGuaNum}_${data.lowerGuaNum}`]}</p>`;
+        if (analysis.related_hexagrams[`${upperGuaNum}_${lowerGuaNum}`]) {
+            html += `<p><strong>相關卦象分析：</strong>${analysis.related_hexagrams[`${upperGuaNum}_${lowerGuaNum}`]}</p>`;
+        }
+        if (analysis.suspect_clue_analysis) {
+            html += `<p><strong>嫌犯與線索分析：</strong>${analysis.suspect_clue_analysis}</p>`;
         }
     }
 
@@ -319,7 +325,7 @@ function displayResults(data) {
     notesSection.style.display = 'block';
     caseGraphContainer.style.display = 'block';
 
-    const caseGraph = document.getElementById('caseGraph');
+    const caseGraph = dom.caseGraph;
     if (caseGraph) {
         drawGuaGraph(caseGraph, guaData, caseName);
     }
@@ -348,8 +354,15 @@ function drawGuaGraph(svgElement, guaData, caseName) {
     ];
 
     const currentMonth = new Date().getMonth() + 1;
-    const lineWeights = hexagramData.line_weights || [0.2, 0.4, 0.6, 0.8, 1.0];
-    const elementColors = hexagramData.element_colors || {};
+    const lineWeights = hexagramData.line_weights || [1.0, 0.8, 0.6, 0.4, 0.2];
+    const elementColors = hexagramData.element_colors || {
+        '金': '#f1c40f',
+        '木': '#2ecc71',
+        '水': '#3498db',
+        '火': '#e74c3c',
+        '土': '#8B4513'
+    };
+    const fiveStates = ['旺', '相', '休', '囚', '死'];
 
     const links = [
         { source: 'mainTi', target: 'mainYong', type: guaData.relation },
@@ -371,8 +384,31 @@ function drawGuaGraph(svgElement, guaData, caseName) {
             const sourceElement = nodes.find(n => n.id === d.source).element;
             const seasonMonths = hexagramData.five_to_season[sourceElement] || [];
             if (seasonMonths.includes(String(currentMonth))) return lineWeights[0]; // 旺
-            if (seasonMonths.includes(String((currentMonth + 1) % 12))) return lineWeights[1]; // 相
-            return lineWeights[4]; // 休/囚/死
+            if (seasonMonths.includes(String((currentMonth + 1) % 12 || 12))) return lineWeights[1]; // 相
+            if (seasonMonths.includes(String((currentMonth + 2) % 12 || 12))) return lineWeights[2]; // 休
+            if (seasonMonths.includes(String((currentMonth + 3) % 12 || 12))) return lineWeights[3]; // 囚
+            return lineWeights[4]; // 死
+        })
+        .attr('marker-end', d => `url(#arrow-${d.type.toLowerCase()})`);
+
+    // 添加箭頭標記
+    svg.append('defs').selectAll('marker')
+        .data(['生', '剋', '比和'])
+        .enter()
+        .append('marker')
+        .attr('id', d => `arrow-${d.toLowerCase()}`)
+        .attr('viewBox', '0 -5 10 10')
+        .attr('refX', 10)
+        .attr('refY', 0)
+        .attr('markerWidth', 6)
+        .attr('markerHeight', 6)
+        .attr('orient', 'auto')
+        .append('path')
+        .attr('d', 'M0,-5L10,0L0,5')
+        .attr('fill', d => {
+            if (d === '生') return '#2ecc71';
+            if (d === '剋') return '#e74c3c';
+            return '#f1c40f';
         });
 
     svg.selectAll('.gua-node')
@@ -386,17 +422,29 @@ function drawGuaGraph(svgElement, guaData, caseName) {
                 .attr('cx', d.x)
                 .attr('cy', d.y)
                 .attr('r', 30)
-                .attr('fill', elementColors[d.element] || '#fff');
+                .attr('fill', elementColors[d.element] || '#fff')
+                .attr('stroke', '#333')
+                .attr('stroke-width', 1);
 
-            const guaLabels = [d.name, d.element, caseName];
+            const stateIndex = (() => {
+                const seasonMonths = hexagramData.five_to_season[d.element] || [];
+                if (seasonMonths.includes(String(currentMonth))) return 0; // 旺
+                if (seasonMonths.includes(String((currentMonth + 1) % 12 || 12))) return 1; // 相
+                if (seasonMonths.includes(String((currentMonth + 2) % 12 || 12))) return 2; // 休
+                if (seasonMonths.includes(String((currentMonth + 3) % 12 || 12))) return 3; // 囚
+                return 4; // 死
+            })();
+            const guaLabels = [d.name, d.element, fiveStates[stateIndex], caseName];
             guaLabels.forEach((label, index) => {
-                group.append('text')
-                    .attr('x', d.x)
-                    .attr('y', d.y + 15 + index * 12)
-                    .attr('text-anchor', 'middle')
-                    .attr('font-size', '10px')
-                    .attr('class', 'gua-label')
-                    .text(label);
+                if (label) {
+                    group.append('text')
+                        .attr('x', d.x)
+                        .attr('y', d.y + (index === 0 ? -10 : index === 1 ? 2 : index === 2 ? 14 : 26))
+                        .attr('text-anchor', 'middle')
+                        .attr('font-size', '10px')
+                        .attr('class', 'gua-label')
+                        .text(label);
+                }
             });
 
             group.on('mouseover', function() {
@@ -478,10 +526,9 @@ function loadCase(index) {
     dom.notesSection.style.display = 'block';
     dom.caseNotes.value = currentCaseData.notes;
 
-    const caseGraph = document.getElementById('caseGraph');
-    const caseGraphContainer = document.getElementById('caseGraphContainer');
+    const caseGraph = dom.caseGraph;
     if (caseGraph && currentCaseData.guaData) {
-        caseGraphContainer.style.display = 'block';
+        dom.caseGraphContainer.style.display = 'block';
         drawGuaGraph(caseGraph, currentCaseData.guaData, currentCaseData.caseName);
     }
 
