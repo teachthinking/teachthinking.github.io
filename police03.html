@@ -20,7 +20,7 @@
             <div class="tab-container">
                 <button class="tab-btn active" data-tab="manual">手動取卦</button>
                 <button class="tab-btn" data-tab="number">數字起卦</button>
-                <button class="tab-btn" data-tab="time">時間取卦</button>
+                <button class="tab-btn" data-tab="time">時間起卦</button>
             </div>
 
             <div id="manual" class="tab-content active">
@@ -36,52 +36,51 @@
 
             <div id="number" class="tab-content">
                 <h2>數字起卦</h2>
-                <p>請輸入9位數字，程式將自動推算。</p>
-                <input type="number" id="numInput" placeholder="請輸入9位數字" min="0" max="999999999" />
+                <p>任意輸入一組數字 (總位數須大於3)。</p>
+                <input type="number" id="numInput" placeholder="輸入數字，例如：19861111" />
             </div>
 
             <div id="time" class="tab-content">
-                <h2>時間取卦</h2>
-                <p>程式將自動使用當前時間作為數字進行推算。</p>
-                <p id="currentTimeDisplay">目前時間：</p>
+                <h2>時間起卦</h2>
+                <p>以案件發生當下或當前的時間起卦。</p>
+                <p id="currentTimeDisplay"></p>
             </div>
-            
+
             <select id="caseTypeSelect">
                 <option value="">請選擇案件類型 (選填)</option>
             </select>
+            <button id="calculateBtn" class="full-width">開始推算</button>
 
             <div class="file-upload-section">
-                <label for="jsonFile">或手動上傳 JSON 資料檔：</label>
-                <input type="file" id="jsonFile" accept=".json">
-                <p id="jsonStatus"></p>
+                <p>或載入自訂義的解卦資料 (JSON)</p>
+                <input type="file" id="jsonFile" accept=".json" />
+                <span id="jsonStatus">* 目前使用的資料檔：預設檔案</span>
             </div>
-            
-            <button id="calculateBtn">開始推算</button>
-            
+        </section>
+        
+        <section class="case-controls-section">
+            <h2>案件管理</h2>
+            <div class="case-name-area">
+                <label for="caseName">案件名稱</label>
+                <input type="text" id="caseName" placeholder="輸入案件名稱" />
+            </div>
             <div class="history-controls">
                 <button id="btn-save">儲存案件</button>
                 <button id="btn-load">載入案件</button>
-                <label class="file-import-label">
-                    <button id="btn-import">載入歷史記錄</button>
-                    <input type="file" id="importFile" accept=".json" style="display: none;">
-                </label>
+                <button id="btn-import">載入歷史記錄</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
                 <button id="btn-export">匯出歷史記錄</button>
                 <button id="btn-clear" class="full-width">清空歷史記錄</button>
             </div>
         </section>
         
         <section id="resultArea" style="display:none;"></section>
-
-        <section id="caseGraphContainer" class="case-graph-container" style="display:none;">
-            <h3>五行生剋分析圖</h3>
-            <p class="graph-label">紅色箭頭為剋，藍色箭頭為生，線條越粗力量越強。</p>
-            <div id="caseGraph"></div>
-        </section>
         
         <section id="notesSection" class="case-notes-section" style="display:none;">
             <h3>案件筆記</h3>
             <p>記錄您的辦案心得與補充觀察。</p>
             <textarea id="caseNotes" placeholder="在這裡輸入您的筆記..."></textarea>
+            <button id="btn-save" class="full-width">儲存筆記</button>
         </section>
         
         <footer class="footer">
@@ -97,14 +96,12 @@
     <div id="historyModal" class="modal">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
-            <h3>載入歷史案件</h3>
-            <p>點擊案件名稱即可載入。</p>
+            <h2>歷史案件記錄</h2>
             <div id="historyList"></div>
         </div>
     </div>
-
-    <div class="tooltip"></div>
-
+    
     <script src="police_script.js"></script>
+    
 </body>
 </html>
