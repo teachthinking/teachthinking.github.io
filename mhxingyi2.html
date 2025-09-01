@@ -1034,115 +1034,115 @@
             svg.appendChild(line);
         }
 
-        // 生成五行生克圖（改為正五邊形佈局）
-        function createShengkeDiagram(data) {
-            const diagram = document.getElementById('shengke-diagram');
-            const svg = document.getElementById('lines-svg');
-            svg.innerHTML = `
-                <defs>
-                    <marker id="arrowhead-sheng" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                        <polygon points="0 0, 10 3.5, 0 7" fill="#27ae60"/>
-                    </marker>
-                    <marker id="arrowhead-ke" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                        <polygon points="0 0, 10 3.5, 0 7" fill="#e74c3c"/>
-                    </marker>
-                </defs>
-            `;
-            
-            // 五行節點（正五邊形佈局）
-            const elements = ['木', '火', '土', '金', '水'];
-            const centerX = 300; // SVG中心點
-            const centerY = 250;
-            const radius = 150; // 五邊形半徑
-            const nodes = elements.map((el, i) => {
-                const angle = (i * 2 * Math.PI / 5) - Math.PI / 2; // 從頂部開始順時針
-                const x = centerX + radius * Math.cos(angle);
-                const y = centerY + radius * Math.sin(angle);
-                return { id: el, label: el, wuXing: el, x, y, guaLabels: [] };
-            });
+// 生成五行生克圖（正五邊形佈局）
+function createShengkeDiagram(data) {
+    const diagram = document.getElementById('shengke-diagram');
+    const svg = document.getElementById('lines-svg');
+    svg.innerHTML = `
+        <defs>
+            <marker id="arrowhead-sheng" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+                <polygon points="0 0, 6 2, 0 4" fill="#27ae60"/>
+            </marker>
+            <marker id="arrowhead-ke" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+                <polygon points="0 0, 6 2, 0 4" fill="#e74c3c"/>
+            </marker>
+        </defs>
+    `;
+    
+    // 五行節點（正五邊形佈局）
+    const elements = ['木', '火', '土', '金', '水'];
+    const centerX = 300; // SVG中心點
+    const centerY = 250;
+    const radius = 150; // 五邊形半徑
+    const nodes = elements.map((el, i) => {
+        const angle = (i * 2 * Math.PI / 5) - Math.PI / 2; // 從頂部開始順時針
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        return { id: el, label: el, wuXing: el, x, y, guaLabels: [] };
+    });
 
-            // 為每個五行節點添加相關卦
-            Object.keys(data).forEach(key => {
-                const guaData = data[key];
-                const wuXing = guaData.wuXing;
-                const node = nodes.find(n => n.wuXing === wuXing);
-                if (node) {
-                    let label = '';
-                    if (key === 'ti') label = `體卦 (${guaData.name})`;
-                    else if (key === 'benShang') label = `本卦上 (${guaData.name})`;
-                    else if (key === 'benXia') label = `本卦下 (${guaData.name})`;
-                    else if (key === 'huShang') label = `互卦上 (${guaData.name})`;
-                    else if (key === 'huXia') label = `互卦下 (${guaData.name})`;
-                    else if (key === 'bianShang') label = `變卦上 (${guaData.name})`;
-                    else if (key === 'bianXia') label = `變卦下 (${guaData.name})`;
-                    if (label) node.guaLabels.push({ text: label, status: guaData.status });
-                }
-            });
-
-            // 繪製五行節點
-            nodes.forEach(node => {
-                const nodeElement = document.createElement('div');
-                nodeElement.className = `gua-node`;
-                nodeElement.id = node.id;
-                nodeElement.style.left = `${node.x - 45}px`; // 調整以中心對齊
-                nodeElement.style.top = `${node.y - 45}px`;  // 90px節點寬高
-                nodeElement.style.background = eightTrigrams[Object.keys(eightTrigrams).find(k => eightTrigrams[k].wuXing === node.wuXing)].color;
-                
-                // 顯示五行名稱和卦標籤
-                let innerHTML = `
-                    <div class="gua-symbol">${node.label}</div>
-                    <div class="gua-name">${node.wuXing}</div>
-                `;
-                node.guaLabels.forEach((label, index) => {
-                    innerHTML += `
-                        <div class="gua-name" style="font-size: 10px; margin-top: ${index * 12}px;">
-                            ${label.text}
-                            <span class="wangxiang-label ${wangXiangLabels[label.status]}">${label.status}</span>
-                        </div>
-                    `;
-                });
-                
-                nodeElement.innerHTML = innerHTML;
-                nodeElement.onclick = () => swapWithTiGua(node.id);
-                diagram.appendChild(nodeElement);
-            });
-
-            // 生關係
-            const shengRelations = [
-                { from: '木', to: '火' },
-                { from: '火', to: '土' },
-                { from: '土', to: '金' },
-                { from: '金', to: '水' },
-                { from: '水', to: '木' }
-            ];
-
-            // 剋關係
-            const keRelations = [
-                { from: '木', to: '土' },
-                { from: '火', to: '金' },
-                { from: '土', to: '水' },
-                { from: '金', to: '木' },
-                { from: '水', to: '火' }
-            ];
-
-            // 繪製生線條
-            shengRelations.forEach(rel => {
-                const fromNode = nodes.find(n => n.id === rel.from);
-                const toNode = nodes.find(n => n.id === rel.to);
-                if (!fromNode || !toNode) return;
-                const status = getWangXiangStatus(fromNode.wuXing);
-                drawShengkeLine(svg, fromNode.x, fromNode.y, toNode.x, toNode.y, 'sheng', status);
-            });
-
-            // 繪製剋線條
-            keRelations.forEach(rel => {
-                const fromNode = nodes.find(n => n.id === rel.from);
-                const toNode = nodes.find(n => n.id === rel.to);
-                if (!fromNode || !toNode) return;
-                const status = getWangXiangStatus(fromNode.wuXing);
-                drawShengkeLine(svg, fromNode.x, fromNode.y, toNode.x, toNode.y, 'ke', status);
-            });
+    // 為每個五行節點添加相關卦
+    Object.keys(data).forEach(key => {
+        const guaData = data[key];
+        const wuXing = guaData.wuXing;
+        const node = nodes.find(n => n.wuXing === wuXing);
+        if (node) {
+            let label = '';
+            if (key === 'ti') label = `體卦 (${guaData.name})`;
+            else if (key === 'benShang') label = `本卦上 (${guaData.name})`;
+            else if (key === 'benXia') label = `本卦下 (${guaData.name})`;
+            else if (key === 'huShang') label = `互卦上 (${guaData.name})`;
+            else if (key === 'huXia') label = `互卦下 (${guaData.name})`;
+            else if (key === 'bianShang') label = `變卦上 (${guaData.name})`;
+            else if (key === 'bianXia') label = `變卦下 (${guaData.name})`;
+            if (label) node.guaLabels.push({ text: label, status: guaData.status });
         }
+    });
+
+    // 繪製五行節點
+    nodes.forEach(node => {
+        const nodeElement = document.createElement('div');
+        nodeElement.className = `gua-node`;
+        nodeElement.id = node.id;
+        nodeElement.style.left = `${node.x - 45}px`; // 調整以中心對齊
+        nodeElement.style.top = `${node.y - 45}px`;  // 90px節點寬高
+        nodeElement.style.background = eightTrigrams[Object.keys(eightTrigrams).find(k => eightTrigrams[k].wuXing === node.wuXing)].color;
+        
+        // 顯示五行名稱和卦標籤
+        let innerHTML = `
+            <div class="gua-symbol">${node.label}</div>
+            <div class="gua-name">${node.wuXing}</div>
+        `;
+        node.guaLabels.forEach((label, index) => {
+            innerHTML += `
+                <div class="gua-name" style="font-size: 10px; margin-top: ${index * 12}px;">
+                    ${label.text}
+                    <span class="wangxiang-label ${wangXiangLabels[label.status]}">${label.status}</span>
+                </div>
+            `;
+        });
+        
+        nodeElement.innerHTML = innerHTML;
+        nodeElement.onclick = () => swapWithTiGua(node.id);
+        diagram.appendChild(nodeElement);
+    });
+
+    // 生關係
+    const shengRelations = [
+        { from: '木', to: '火' },
+        { from: '火', to: '土' },
+        { from: '土', to: '金' },
+        { from: '金', to: '水' },
+        { from: '水', to: '木' }
+    ];
+
+    // 剋關係
+    const keRelations = [
+        { from: '木', to: '土' },
+        { from: '火', to: '金' },
+        { from: '土', to: '水' },
+        { from: '金', to: '木' },
+        { from: '水', to: '火' }
+    ];
+
+    // 繪製生線條
+    shengRelations.forEach(rel => {
+        const fromNode = nodes.find(n => n.id === rel.from);
+        const toNode = nodes.find(n => n.id === rel.to);
+        if (!fromNode || !toNode) return;
+        const status = getWangXiangStatus(fromNode.wuXing);
+        drawShengkeLine(svg, fromNode.x, fromNode.y, toNode.x, toNode.y, 'sheng', status);
+    });
+
+    // 繪製剋線條
+    keRelations.forEach(rel => {
+        const fromNode = nodes.find(n => n.id === rel.from);
+        const toNode = nodes.find(n => n.id === rel.to);
+        if (!fromNode || !toNode) return;
+        const status = getWangXiangStatus(fromNode.wuXing);
+        drawShengkeLine(svg, fromNode.x, fromNode.y, toNode.x, toNode.y, 'ke', status);
+    });
+}
 
         // 卦象交換功能（需要調整以適應五行節點）
         function swapWithTiGua(guaId) {
