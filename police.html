@@ -28,13 +28,11 @@
         .tab-content.active { display: block; }
         .gua-selects { display: flex; justify-content: space-around; gap: 10px; margin-bottom: 15px; }
         #jsonStatus { font-size: 0.9em; color: #7f8c8d; margin-top: 10px; text-align: center; }
-        #calculateBtn {
-    width: 300px ;
-    max-width: 300px; /* 新增：設定最大寬度，避免過長 */
-    margin-top: 20px;
-    background-color: #3498db;
-}
-
+        #calculateBtn { 
+            width: 100%; 
+            margin-top: 20px; 
+            background-color: #3498db; 
+        }
         #calculateBtn:hover { background-color: #2980b9; }
         .case-notes-section { width: 100%; margin-top: 20px; }
         .case-notes-section textarea { width: 100%; height: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; resize: vertical; box-sizing: border-box; }
@@ -64,7 +62,7 @@
 
         /* 修正開始推算按鈕寬度 */
         .input-section button#calculateBtn, .input-section .file-upload-section button {
-            max-width: 100%; /* 統一按鈕長度 */
+            max-width: 250px; /* 統一按鈕長度 */
         }
         .history-controls button {
             max-width: 100%; /* 歷史控制按鈕恢復預設 */
@@ -296,8 +294,8 @@
     }
 
     function startCalculation() {
-        if (isUnsaved && !confirm('您有未儲存的案件，確定要進行新的推算嗎？未儲存的資料將會遺失。')) {
-            return;
+        if (isUnsaved) {
+            saveCase(true); // 自動儲存案件
         }
 
         if (Object.keys(hexagramData).length === 0 || !hexagramData.hexagrams) {
@@ -310,7 +308,8 @@
 
         if (activeTab === 'number') {
             const input = document.getElementById('numInput').value;
-            if (input.length !== 9 || isNaN(input)) {
+            // 修正數字起卦邏輯，確保只處理9位數數字
+            if (String(input).length !== 9 || isNaN(input)) {
                 alert('請輸入有效的9位數數字！');
                 return;
             }
@@ -429,15 +428,21 @@
         isUnsaved = true;
     }
     
-    function saveCase() {
-        if (!currentCaseData) { alert('請先進行卜卦推算後再儲存！'); return; }
+    function saveCase(isAutoSave = false) {
+        if (!currentCaseData) { 
+            if (isAutoSave) return;
+            alert('請先進行卜卦推算後再儲存！'); 
+            return; 
+        }
         currentCaseData.notes = document.getElementById('caseNotes').value;
         let cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
         const existingIndex = cases.findIndex(c => c.timestamp === currentCaseData.timestamp);
         if (existingIndex !== -1) { cases[existingIndex] = currentCaseData; }
         else { cases.push(currentCaseData); }
         localStorage.setItem('divinationCases', JSON.stringify(cases));
-        alert(`案件「${currentCaseData.caseName}」已成功儲存！`);
+        if (!isAutoSave) {
+            alert(`案件「${currentCaseData.caseName}」已成功儲存！`);
+        }
         isUnsaved = false;
     }
 
