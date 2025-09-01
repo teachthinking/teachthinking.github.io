@@ -34,7 +34,8 @@ const dom = {
     historyModal: document.getElementById('historyModal'),
     historyList: document.getElementById('historyList'),
     closeModalBtn: document.querySelector('.modal .close-btn'),
-    caseGraph: document.getElementById('caseGraph')
+    caseGraph: document.getElementById('caseGraph'),
+    currentTime: document.getElementById('currentTime')
 };
 
 // 卦象資料和轉換工具函式
@@ -99,6 +100,17 @@ function getAuspice(tiYongRelation) {
     }
 }
 
+// 更新當前時間
+function updateCurrentTime() {
+    const now = new Date();
+    dom.currentTime.textContent = now.toLocaleString('zh-TW', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false
+    });
+    setTimeout(updateCurrentTime, 1000);
+}
+
 // 載入初始資料
 async function loadInitialData() {
     try {
@@ -110,6 +122,7 @@ async function loadInitialData() {
         updateStatus('預設檔案');
         populateGuaSelects();
         populateCaseTypeSelect();
+        updateCurrentTime();
     } catch (error) {
         console.error('載入預設資料失敗:', error);
         updateStatus('載入失敗，請手動上傳檔案。');
@@ -323,6 +336,15 @@ function startCalculation() {
         upperGua = calculateGua(num % 1000);
         lowerGua = calculateGua(Math.floor(num / 1000) % 1000);
         changingLine = calculateGua(num % 100) % 6 || 6;
+    } else if (activeTab === 'time-tab') {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        const day = now.getDate();
+        const hour = now.getHours();
+        upperGua = calculateGua(year + month + day);
+        lowerGua = calculateGua(month + day + hour);
+        changingLine = calculateGua(year + month + day + hour) % 6 || 6;
     }
 
     const { benGua, bianGua } = calculateHexagram(upperGua, lowerGua, changingLine);
