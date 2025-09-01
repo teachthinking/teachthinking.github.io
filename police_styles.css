@@ -301,3 +301,50 @@ button {
     color: black;
     text-decoration: none;
 }
+/* New styles for the SVG graph */
+.case-graph-container {
+    width: 100%;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px dashed #ccc;
+    text-align: center;
+}
+
+#caseGraph {
+    max-width: 100%;
+    height: auto;
+    background-color: #fcfcfc;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.gua-node {
+    fill: #fff;
+    stroke: #333;
+    stroke-width: 1.5;
+    transition: transform 0.3s;
+}
+.gua-node:hover {
+    transform: scale(1.1);
+}
+.gua-text {
+    font-size: 14px;
+    font-weight: bold;
+    fill: #333;
+    pointer-events: none;
+}
+.relation-line {
+    fill: none;
+    stroke-linecap: round;
+    transition: stroke 0.3s, stroke-width 0.3s;
+}
+.relation-line.sheng {
+    stroke: green;
+}
+.relation-line.ke {
+    stroke: red;
+}
+.relation-line.bihe {
+    stroke: #f1c40f;
+}
+
