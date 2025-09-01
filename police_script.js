@@ -248,6 +248,70 @@ function startCalculation() {
     saveCase();
 }
 
+function getAuspiciousness(tiElement, yongElement) {
+    if (tiElement === yongElement) { 
+        return { status: '平', text: '比和' };
+    }
+    const relations = hexagramData.element_relations || {};
+    if (relations[tiElement] && relations[tiElement].剋 === yongElement) { 
+        return { status: '吉', text: '體卦剋用卦' };
+    }
+    if (relations[yongElement] && relations[yongElement].生 === tiElement) { 
+        return { status: '吉', text: '用卦生體卦' };
+    }
+    if (relations[yongElement] && relations[yongElement].剋 === tiElement) { 
+        return { status: '凶', text: '用卦剋體卦' };
+    }
+    if (relations[tiElement] && relations[tiElement].生 === yongElement) { 
+        return { status: '凶', text: '體卦生用卦' };
+    }
+    return { status: '未知', text: '關係不明' };
+}
+
+function calculateYingQi(yongGuaElement, tiGuaElement) {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+
+    const zhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+    const currentZhi = zhi[(month - 1) % 12];
+    const currentElement = hexagramData.zhi_to_wu[currentZhi];
+    
+    const yongElement = yongGuaElement;
+    const tiElement = tiGuaElement;
+    
+    const yingQi = [];
+    
+    // 應期一：沖應期 (以月建對沖)
+    const chongZhi = hexagramData.zhi_to_wu[hexagramData.five_to_season[yongElement].find(z => z !== currentZhi)];
+    if (chongZhi) {
+        yingQi.push(`【沖應期】在與**${yongElement}**對沖的月份或日子，可能出現重大轉折。`);
+    }
+
+    // 應期二：生扶應期
+    const shengFuYingQi = hexagramData.five_elements_relations[yongElement].生;
+    yingQi.push(`【生扶應期】在**${shengFuYingQi}**的月份或日子，案情可能得到有力支持。`);
+    
+    // 應期三：剋制應期
+    const keZhiYingQi = hexagramData.five_elements_relations[yongElement].剋;
+    yingQi.push(`【剋制應期】在**${keZhiYingQi}**的月份或日子，案情可能遇到阻礙或需要採取果斷行動。`);
+
+    // 應期四：比和應期
+    const biHeYingQi = hexagramData.five_elements_relations[yongElement].同;
+    yingQi.push(`【比和應期】在**${biHeYingQi}**的月份或日子，案情發展平順或出現相關線索。`);
+
+
+    let html = `
+        <h4>應期分析</h4>
+        <p>應期是判斷事件可能發生或結束時間的關鍵。根據卦象五行與時令五行的關係，提供以下幾種可能應期：</p>
+        <ul>
+            <li>${yingQi.join('</li><li>')}</li>
+        </ul>
+        <p>此處的應期為廣泛參考，實際應期需結合案件具體情況判斷。</p>
+    `;
+    return html;
+}
+
 function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName) {
     const mainGua = hexagramData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`] || { name: '未知卦名', summary: '無相關解釋。' };
     
@@ -284,32 +348,8 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
         yongGua = hexagramData.gua[lowerGuaNum];
     }
 
-    let relationText = '';
-    let relationStatus = '';
-    const tiElement = tiGua.element;
-    const yongElement = yongGua.element;
-
-    if (tiElement === yongElement) { 
-        relationText = `體卦與用卦為**比和**關係`;
-        relationStatus = `**【平】**代表雙方勢均力敵，案件將按常理發展，但可能需要更多努力。`;
-    }
-    else if (hexagramData.element_relations[tiElement].生 === yongElement) { 
-        relationText = `體卦${tiGua.name}生用卦${yongGua.name}，代表**我方生助對方**`; 
-        relationStatus = `**【凶】**這意味著警方主動付出，但案件進展緩慢，需防範嫌犯藉此脫逃。`; 
-    }
-    else if (hexagramData.element_relations[tiElement].剋 === yongElement) { 
-        relationText = `體卦${tiGua.name}剋用卦${yongGua.name}，代表**我方克制對方**`; 
-        relationStatus = `**【吉】**這意味著警方能掌控局面，可成功將嫌犯繩之以法。`; 
-    }
-    else if (hexagramData.element_relations[yongElement].生 === tiGua) { 
-        relationText = `用卦${yongGua.name}生體卦${tiGua.name}，代表**對方生助我方**`; 
-        relationStatus = `**【吉】**這意味著嫌犯或線索提供意外幫助，讓警方被動獲得突破。`; 
-    }
-    else if (hexagramData.element_relations[yongElement].剋 === tiGua) { 
-        relationText = `用卦${yongGua.name}剋體卦${tiGua.name}，代表**對方克制我方**`; 
-        relationStatus = `**【凶】**這意味著警方辦案受阻，嫌犯反制能力強，需謹慎應對。`; 
-    }
-
+    const auspiciousness = getAuspiciousness(tiGua.element, yongGua.element);
+    
     let caseAnalysisText = '';
     if (caseType && hexagramData.case_analysis[caseType]) {
         const caseData = hexagramData.case_analysis[caseType];
@@ -327,7 +367,7 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
     
     const reportHtml = `
         <h3>${inputMethod}</h3>
-        <p><strong>本卦</strong>：${mainGua.name} (${numToGua[upperGuaNum]}上${numToGua[lowerGuaNum]}下)</p>
+        <p><strong>本卦</strong>：${mainGua.name} (${numToGua[upperGuaNum]}上${numToGua[lowerGuaNum]}下) <span class="auspiciousness ${auspiciousness.status}">【${auspiciousness.status}】</span></p>
         <p><strong>動爻</strong>：第 ${changingLine} 爻</p>
         <p><strong>互卦</strong>：${interGua.name} (${numToGua[interGuaUpperNum]}上${numToGua[interGuaLowerNum]}下)</p>
         <p><strong>變卦</strong>：${changedGua.name}</p>
@@ -343,8 +383,9 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
         <ul>
             <li><strong>嫌犯特徵</strong>：根據上卦「${hexagramData.gua[upperGuaNum].name}」與下卦「${hexagramData.gua[lowerGuaNum].name}」，嫌犯可能具有**${hexagramData.gua[upperGuaNum].feature}**或**${hexagramData.gua[lowerGuaNum].feature}**的特徵。</li>
             <li><strong>線索方位</strong>：關鍵線索可能位於**${hexagramData.gua[lowerGuaNum].direction}**方，嫌犯可能藏匿在**${hexagramData.gua[upperGuaNum].direction}**方。</li>
-            <li><strong>體用生剋</strong>：${relationText}。${relationStatus}</li>
+            <li><strong>體用生剋</strong>：體卦${tiGua.name}與用卦${yongGua.name}為**${auspiciousness.text}**關係，此卦象為**【${auspiciousness.status}】**。</li>
         </ul>
+        ${calculateYingQi(yongGua.element, tiGua.element)}
     `;
 
     currentCaseData = {
