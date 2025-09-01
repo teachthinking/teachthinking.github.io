@@ -294,13 +294,16 @@
         let tabcontent = document.getElementsByClassName("tab-content");
         for (let i = 0; i < tabcontent.length; i++) {
             tabcontent[i].style.display = "none";
+            tabcontent[i].classList.remove("active");
         }
         let tablinks = document.getElementsByClassName("tab-btn");
         for (let i = 0; i < tablinks.length; i++) {
-            tablinks[i].className = tablinks[i].className.replace(" active", "");
+            tablinks[i].classList.remove("active");
         }
         document.getElementById(tabName).style.display = "block";
-        evt.currentTarget.className += " active";
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+
         if (tabName === 'time') {
             updateTimeDisplay();
         }
@@ -357,7 +360,7 @@
             
             const upperSum = year + month + day;
             const lowerSum = year + month + day + hour;
-            const changingSum = lowerSum;
+            const changingSum = upperSum + lowerSum; // 更正為上卦與下卦數字加總
 
             upperGuaNum = (upperSum % 8 === 0) ? 8 : upperSum % 8;
             lowerGuaNum = (lowerSum % 8 === 0) ? 8 : lowerSum % 8;
