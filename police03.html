@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>梅花心易警察辦案輔助系統</title>
     <link rel="stylesheet" href="police_styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -14,13 +15,13 @@
         </div>
 
         <div class="tab-container">
-            <button class="tab-btn active" data-tab="manual-tab">手動取卦</button>
-            <button class="tab-btn" data-tab="number-tab">數字起卦</button>
-            <button class="tab-btn" data-tab="time-tab">時間取卦</button>
+            <button class="tab-btn active" data-tab="manual">手動取卦</button>
+            <button class="tab-btn" data-tab="number">數字起卦</button>
+            <button class="tab-btn" data-tab="time">時間取卦</button>
         </div>
 
-        <div id="manual-tab" class="tab-content active">
-            <div class="input-section">
+        <div class="input-section">
+            <div id="manual" class="tab-content active">
                 <h2>手動取卦</h2>
                 <p>請依直覺或觀察到的事物，手動選擇上卦、下卦與動爻。</p>
                 <div class="gua-selects">
@@ -31,66 +32,58 @@
                         <option value="">選擇下卦</option>
                     </select>
                 </div>
-                <input type="text" id="changingLineManual" placeholder="動爻 (1-6)">
+                <select id="changingLineManual">
+                    <option value="">選擇動爻</option>
+                </select>
             </div>
-        </div>
 
-        <div id="number-tab" class="tab-content">
-            <div class="input-section">
+            <div id="number" class="tab-content">
                 <h2>數字起卦 - 9位數</h2>
                 <p>請輸入與案件相關的9位數數字，例如車牌、時間或任何直覺想到的數字。</p>
-                <input type="text" id="numInput" placeholder="輸入9位數數字">
+                <input type="text" id="numInput" maxlength="9" placeholder="輸入9位數字">
             </div>
-        </div>
 
-        <div id="time-tab" class="tab-content">
-            <div class="input-section">
+            <div id="time" class="tab-content">
                 <h2>時間取卦</h2>
                 <p>程式將自動使用當前時間作為數字進行推算。</p>
                 <p>目前時間：<span id="currentTime"></span></p>
             </div>
+
+            <div class="file-upload-section">
+                <label>案件名稱 (選填):</label>
+                <input type="text" id="caseName" placeholder="輸入案件名稱">
+                <label>請選擇案件類型 (選填):</label>
+                <select id="caseTypeSelect">
+                    <option value="">請選擇案件類型 (選填)</option>
+                </select>
+                <label>或手動上傳 JSON 資料檔：</label>
+                <input type="file" id="jsonFile" accept=".json">
+                <div id="jsonStatus">* 目前使用的資料檔：尚未載入</div>
+            </div>
+
+            <button id="calculateBtn">開始推算</button>
         </div>
 
-        <div class="input-section">
-            <input type="text" id="caseName" placeholder="請輸入案件名稱">
-            <select id="caseTypeSelect">
-                <option value="">選擇案件類型 (選填)</option>
-            </select>
-            <div class="file-upload-section">
-                <p>或手動上傳 JSON 資料檔：</p>
-                <input type="file" id="jsonFile" accept=".json">
-                <div id="jsonStatus">* 目前使用的資料檔：預設檔案</div>
-            </div>
-            <button id="calculateBtn">開始推算</button>
+        <div id="resultArea" style="display: none;"></div>
+
+        <div class="case-notes-section" id="notesSection" style="display: none;">
+            <h2>案件筆記</h2>
+            <p>記錄您的辦案心得與補充觀察。</p>
+            <textarea id="caseNotes" placeholder="請輸入案件筆記"></textarea>
+        </div>
+
+        <div class="case-graph-container" id="caseGraphContainer" style="display: none;">
+            <h2>五行生克關係圖</h2>
+            <svg id="caseGraph" width="100%" height="300"></svg>
         </div>
 
         <div class="history-controls">
             <button id="btn-save">儲存案件</button>
             <button id="btn-load">載入案件</button>
             <button id="btn-export">匯出歷史記錄</button>
-            <button id="btn-import">載入歷史記錄</button>
+            <button id="btn-import">匯入歷史記錄</button>
             <input type="file" id="importFile" accept=".json" style="display: none;">
             <button id="btn-clear" class="full-width">清空歷史記錄</button>
-        </div>
-
-        <div class="case-graph-container">
-            <h3>五行生克圖</h3>
-            <svg id="caseGraph" width="600" height="500"></svg>
-        </div>
-
-        <div id="resultArea">
-            <h3>卜卦結果</h3>
-            <hr>
-            <div id="guaResult"></div>
-            <div id="caseProgress"></div>
-            <div id="suspectClues"></div>
-            <div id="auspice"></div>
-            <div id="yingQi"></div>
-        </div>
-
-        <div class="case-notes-section">
-            <h3>案件筆記</h3>
-            <textarea id="caseNotes" placeholder="記錄您的辦案心得與補充觀察。"></textarea>
         </div>
 
         <div class="disclaimer">
