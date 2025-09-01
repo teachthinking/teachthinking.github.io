@@ -139,7 +139,7 @@
         }
         const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '無相關解釋。' };
 
-        // 體用分析 (已修正)
+        // 體用分析
         let tiGua, yongGua;
         if (changingLine > 3) {
             tiGua = hexagramData.gua[lowerGuaNum]; // 變爻在上，體卦在下
@@ -161,7 +161,7 @@
             relationText = `${tiGua.name}剋${yongGua.name}，代表**我方克制對方**。這意味著警方能掌控局面，可成功將嫌犯繩之以法。`;
         } else if (hexagramData.element_relations[yongElement].生 === tiElement) {
             relationText = `${yongGua.name}生${tiGua.name}，代表**對方生助我方**。這意味著嫌犯或線索提供意外幫助，讓警方被動獲得突破。`;
-        } else if (hexagramData.element_relations[yongElement].剋 === tiElement) {
+        } else if (hexagramData.element_relations[yongGua.element].剋 === tiElement) {
             relationText = `${yongGua.name}剋${tiGua.name}，代表**對方克制我方**。這意味著警方辦案受阻，嫌犯反制能力強，需謹慎應對。`;
         }
 
@@ -172,7 +172,7 @@
             caseAnalysisText += `<h4>專案案件分析：${caseData.name}</h4><p>${caseData.summary}</p>`;
             
             let foundAnalysis = false;
-            const guaKeys = [`${upperGuaNum}_${lowerGuaNum}`, `${interGuaUpperNum}_${interGuaLowerNum}`, `${changedUpperGuaNum}_${changedLowerGuaNum}`];
+            const guaKeys = [`${upperGuaNum}_${lowerGuaNum}`, `${interGuaUpperGuaNum}_${interGuaLowerGuaNum}`, `${changedUpperGuaNum}_${changedLowerGuaNum}`];
             
             for (const key of guaKeys) {
                  if (caseData.related_hexagrams[key]) {
@@ -196,11 +196,11 @@
             
             <h4>案件核心分析</h4>
             <p><strong>本卦</strong>：${mainGua.summary}</p>
-            <p><strong>互卦</strong>：互卦反映案件的隱藏狀況、中途變數或人際關係。這暗示案件深層的真相可能與互卦卦義相關。</p>
+            <p><strong>互卦 (隱藏狀況)</strong>：互卦代表案件的**中間過程**或**隱藏的狀況**。它顯示了案件中不為人知的內幕、潛在的關係變數或未來的走向。這暗示案件深層的真相可能與互卦「${interGua.name}」的卦義相關：**${interGua.summary}**</p>
             
             <h4>案件發展與轉折</h4>
             <p><strong>動爻</strong>：第 ${changingLine} 爻代表**${hexagramData.line_summary[changingLine]}**，是案件的關鍵轉變點。</p>
-            <p><strong>變卦</strong>：${changedGua.summary}</p>
+            <p><strong>變卦 (最終結果)</strong>：變卦代表案件的**最終結局**或**未來趨勢**。此卦象預示著案件的最終走向將會是「${changedGua.name}」，其主要含義為：**${changedGua.summary}**</p>
             
             ${caseAnalysisText}
             
