@@ -356,7 +356,7 @@
             const hour = now.getHours();
             
             const upperSum = year + month + day;
-            const lowerSum = upperSum + hour;
+            const lowerSum = year + month + day + hour;
             const changingSum = lowerSum;
 
             upperGuaNum = (upperSum % 8 === 0) ? 8 : upperSum % 8;
