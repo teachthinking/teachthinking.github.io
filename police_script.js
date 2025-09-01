@@ -209,20 +209,6 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
     const elementStrength = getElementStrength(currentMonthBranch);
     const elementStrengthsHtml = Object.keys(elementStrength).map(el => `<li><strong>${el}</strong>：${elementStrength[el]}</li>`).join('');
 
-
-// 取得動爻對應的單卦
-function getChangingLineGuaNum(changingLine) {
-    if (changingLine > 3) {
-        // 動爻在上卦，取上卦
-        return parseInt(dom.upperGuaSelect.value, 10);
-    } else {
-        // 動爻在下卦，取下卦
-        return parseInt(dom.lowerGuaSelect.value, 10);
-    }
-}
-
-
-    
     // 推估應期
     const yongGuaElement = hexagramData.gua[lowerGuaNum].element;
     const tiGuaElement = hexagramData.gua[upperGuaNum].element;
@@ -245,7 +231,7 @@ function getChangingLineGuaNum(changingLine) {
         const caseData = hexagramData.case_analysis[caseType];
         caseAnalysisText += `<h4>專案案件分析：${caseData.name}</h4><p>${caseData.summary}</p>`;
         let foundAnalysis = false;
-        const guaKeys = [`${upperGuaNum}_${lowerGuaNum}`, `${interGuaUpperGuaNum}_${interGuaLowerGuaNum}`, `${changedUpperGuaNum}_${changedLowerGuaNum}`];
+        const guaKeys = [`${upperGuaNum}_${lowerGuaNum}`, `${interGuaUpperNum}_${interGuaLowerNum}`, `${changedUpperGuaNum}_${changedLowerGuaNum}`];
         for (const key of guaKeys) {
             if (caseData.related_hexagrams[key]) {
                 caseAnalysisText += `<p><strong>${caseData.related_hexagrams[key]}</strong></p>`;
@@ -321,16 +307,26 @@ function getChangingLineGuaNum(changingLine) {
 // 輔助工具函式
 // ----------------------
 
+// 取得動爻對應的單卦
+function getChangingLineGuaNum(changingLine) {
+    if (changingLine > 3) {
+        // 動爻在上卦，取上卦
+        return parseInt(dom.upperGuaSelect.value, 10);
+    } else {
+        // 動爻在下卦，取下卦
+        return parseInt(dom.lowerGuaSelect.value, 10);
+    }
+}
+
 // 獲取當前月份地支
 function getCurrentMonthBranch() {
     const d = new Date();
     const month = d.getMonth() + 1;
-    // 簡化：以陽曆月份大致對應農曆地支
     const lunarMonths = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
-    return lunarMonths[(month - 1) % 12];
+    return lunarMonths[(month + 1) % 12]; // 調整月份對應關係
 }
 
-// 獲取當前日期地支（簡化，需精確日建需要複雜農曆轉換）
+// 獲取當前日期地支（簡化）
 function getCurrentDayBranch() {
     const d = new Date();
     const day = d.getDate();
@@ -342,15 +338,18 @@ function getCurrentDayBranch() {
 function getElementStrength(monthBranch) {
     const strengths = { '旺': '', '相': '', '休': '', '囚': '', '死': '' };
     const monthElement = hexagramData.zhi_to_wu[monthBranch];
+    if (!monthElement) return strengths; // 如果月份地支無對應五行，直接返回
+
     const sheng = hexagramData.element_relations[monthElement].生;
     const ke = hexagramData.element_relations[monthElement].剋;
-    const shengKe = Object.entries(hexagramData.element_relations).find(([k, v]) => v.生 === monthElement)[0];
-    const keSheng = Object.entries(hexagramData.element_relations).find(([k, v]) => v.剋 === monthElement)[0];
-
+    const shengWo = Object.entries(hexagramData.element_relations).find(([k, v]) => v.生 === monthElement);
+    const woKe = Object.entries(hexagramData.element_relations).find(([k, v]) => v.剋 === monthElement);
+    const keWo = Object.entries(hexagramData.element_relations).find(([k, v]) => v.剋 === monthElement);
+    
     strengths['旺'] = monthElement;
     strengths['相'] = sheng;
-    strengths['休'] = shengKe;
-    strengths['囚'] = keSheng;
+    strengths['休'] = shengWo ? shengWo[0] : '';
+    strengths['囚'] = woKe ? woKe[0] : '';
     strengths['死'] = ke;
     
     return strengths;
@@ -360,7 +359,6 @@ function getElementStrength(monthBranch) {
 function predictEventDates(params) {
     const scores = {};
     const elements = ['金', '木', '水', '火', '土'];
-    const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
     
     elements.forEach(el => {
         scores[el] = 0;
@@ -368,10 +366,11 @@ function predictEventDates(params) {
 
     const monthElement = hexagramData.zhi_to_wu[params.monthBranch];
     const dayElement = hexagramData.zhi_to_wu[params.dayBranch];
+    if (!monthElement || !dayElement) return {};
 
     // 1. 月令旺相
-    if (params.yongElement === monthElement) scores[params.yongElement] += 2; // 旺
-    if (hexagramData.element_relations[monthElement].生 === params.yongElement) scores[params.yongElement] += 1.5; // 相
+    if (params.yongElement === monthElement) scores[params.yongElement] += 2;
+    if (hexagramData.element_relations[monthElement].生 === params.yongElement) scores[params.yongElement] += 1.5;
 
     // 2. 日辰加權
     if (params.yongElement === dayElement) scores[params.yongElement] += 1;
@@ -390,18 +389,19 @@ function predictEventDates(params) {
     if (tiKeYong) scores[params.yongElement] -= 1.5;
 
     // 將分數轉換為具體應期
-    const sortedScores = Object.entries(scores).sort(([, a], [, b]) => b - a);
     const predictions = {};
-    sortedScores.forEach(([element, score]) => {
-        const branches = hexagramData.five_to_season[element];
+    for (const el in scores) {
+        const branches = hexagramData.five_to_season[el];
         if (branches) {
             branches.forEach(branch => {
-                predictions[`${branch}日`] = score;
+                predictions[`${branch}日`] = scores[el];
             });
         }
-    });
+    }
 
-    return predictions;
+    const sortedPredictions = Object.entries(predictions).sort(([, a], [, b]) => b - a);
+
+    return Object.fromEntries(sortedPredictions);
 }
 
 // 繪製SVG圖
@@ -409,9 +409,6 @@ function drawCaseGraph(guaData) {
     const svg = document.getElementById('caseGraph');
     if (!svg) return;
     svg.innerHTML = '';
-    
-    const elements = [guaData.main.element, guaData.inter.element, guaData.changed.element, guaData.ti.element, guaData.yong.element];
-    const uniqueElements = [...new Set(elements)];
     
     const elementStrengths = getElementStrength(getCurrentMonthBranch());
     const strengthOrder = ['旺', '相', '休', '囚', '死'];
