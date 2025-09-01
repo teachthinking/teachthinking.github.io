@@ -139,10 +139,16 @@
         }
         const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '無相關解釋。' };
 
-        // 體用分析
-        const tiGua = (changingLine > 3) ? hexagramData.gua[upperGuaNum] : hexagramData.gua[lowerGuaNum];
-        const yongGua = (changingLine > 3) ? hexagramData.gua[lowerGuaNum] : hexagramData.gua[upperGuaNum];
-        
+        // 體用分析 (已修正)
+        let tiGua, yongGua;
+        if (changingLine > 3) {
+            tiGua = hexagramData.gua[lowerGuaNum]; // 變爻在上，體卦在下
+            yongGua = hexagramData.gua[upperGuaNum]; // 變爻在上，用卦在上
+        } else {
+            tiGua = hexagramData.gua[upperGuaNum]; // 變爻在下，體卦在上
+            yongGua = hexagramData.gua[lowerGuaNum]; // 變爻在下，用卦在下
+        }
+
         let relationText = '';
         const tiElement = tiGua.element;
         const yongElement = yongGua.element;
@@ -155,7 +161,7 @@
             relationText = `${tiGua.name}剋${yongGua.name}，代表**我方克制對方**。這意味著警方能掌控局面，可成功將嫌犯繩之以法。`;
         } else if (hexagramData.element_relations[yongElement].生 === tiElement) {
             relationText = `${yongGua.name}生${tiGua.name}，代表**對方生助我方**。這意味著嫌犯或線索提供意外幫助，讓警方被動獲得突破。`;
-        } else if (hexagramData.element_relations[yongGua.element].剋 === tiElement) {
+        } else if (hexagramData.element_relations[yongElement].剋 === tiElement) {
             relationText = `${yongGua.name}剋${tiGua.name}，代表**對方克制我方**。這意味著警方辦案受阻，嫌犯反制能力強，需謹慎應對。`;
         }
 
@@ -166,9 +172,10 @@
             caseAnalysisText += `<h4>專案案件分析：${caseData.name}</h4><p>${caseData.summary}</p>`;
             
             let foundAnalysis = false;
-            for (const key in caseData.related_hexagrams) {
-                // 檢查本卦、互卦、變卦是否與此案件類型相關
-                if (key === `${upperGuaNum}_${lowerGuaNum}` || key === `${interGuaUpperNum}_${interGuaLowerNum}` || key === `${changedUpperGuaNum}_${changedLowerGuaNum}`) {
+            const guaKeys = [`${upperGuaNum}_${lowerGuaNum}`, `${interGuaUpperNum}_${interGuaLowerNum}`, `${changedUpperGuaNum}_${changedLowerGuaNum}`];
+            
+            for (const key of guaKeys) {
+                 if (caseData.related_hexagrams[key]) {
                     caseAnalysisText += `<p><strong>${caseData.related_hexagrams[key]}</strong></p>`;
                     foundAnalysis = true;
                 }
