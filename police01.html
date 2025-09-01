@@ -20,6 +20,7 @@
         #resultArea h3, #resultArea h4 { color: #2c3e50; }
         #resultArea hr { width: 100%; border: 0; height: 1px; background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0)); }
         .disclaimer { font-size: 0.8em; color: #7f8c8d; margin-top: 20px; text-align: center; }
+        .file-upload-section { margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px; }
     </style>
 </head>
 <body>
@@ -40,6 +41,11 @@
         </select>
         
         <button onclick="calculateByNumber()">開始推算</button>
+
+        <div class="file-upload-section">
+            <label for="jsonFile">或手動上傳 JSON 資料檔：</label>
+            <input type="file" id="jsonFile" accept=".json">
+        </div>
     </div>
 
     <div id="resultArea"></div>
@@ -52,26 +58,51 @@
 
     // 頁面載入時，從外部 JSON 檔案載入資料
     window.onload = async () => {
-        await loadData();
+        const fileInput = document.getElementById('jsonFile');
+        fileInput.addEventListener('change', handleFileUpload);
+        
+        await loadDefaultData();
     };
 
-    async function loadData() {
+    async function loadDefaultData() {
         try {
             const response = await fetch('hexagram_data.json');
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error('無法載入預設 JSON 檔案。');
             }
             hexagramData = await response.json();
-            console.log('卦象資料載入成功！');
+            console.log('預設卦象資料載入成功！');
             populateCaseTypeSelect();
         } catch (error) {
-            console.error('載入卦象資料失敗:', error);
-            alert('無法載入卦象資料，請檢查檔案是否存在或路徑是否正確。');
+            console.error('載入預設資料失敗:', error);
+            // 即使載入失敗也不會中斷，使用者可以手動上傳
+            alert('無法自動載入預設資料，請手動上傳檔案。');
         }
+    }
+
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                hexagramData = JSON.parse(e.target.result);
+                console.log('使用者上傳的資料載入成功！');
+                alert('已成功載入新的 JSON 檔案。');
+                populateCaseTypeSelect();
+            } catch (error) {
+                console.error('解析 JSON 檔案失敗:', error);
+                alert('無效的 JSON 檔案，請檢查格式。');
+            }
+        };
+        reader.readAsText(file);
     }
 
     function populateCaseTypeSelect() {
         const selectElement = document.getElementById('caseTypeSelect');
+        // 清空舊選項
+        selectElement.innerHTML = '<option value="">請選擇案件類型 (選填)</option>';
         if (hexagramData.case_analysis) {
             for (const key in hexagramData.case_analysis) {
                 const option = document.createElement('option');
@@ -84,8 +115,8 @@
 
     // 數字起卦主函式
     function calculateByNumber() {
-        if (Object.keys(hexagramData).length === 0) {
-            alert('卦象資料尚未載入，請稍候再試。');
+        if (Object.keys(hexagramData).length === 0 || !hexagramData.hexagrams) {
+            alert('卦象資料尚未載入，請先上傳 JSON 檔案或等待預設檔案載入。');
             return;
         }
 
@@ -111,13 +142,10 @@
 
     // 卦象分析與報告生成函式
     function generateReport(lowerGuaNum, upperGuaNum, changingLine, input, caseType) {
-        // 核心八卦陣列
         const numToGua = ['', '乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
 
-        // 本卦
         const mainGua = hexagramData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`] || { name: '未知卦名', summary: '無相關解釋。' };
         
-        // 互卦（梅花易經典判斷法：二、三、四爻為下互卦；三、四、五爻為上互卦）
         const lowerHexagramBinary = toBinary(lowerGuaNum);
         const upperHexagramBinary = toBinary(upperGuaNum);
         const fullHexagramBinary = upperHexagramBinary + lowerHexagramBinary;
@@ -127,26 +155,22 @@
         const interGuaUpperNum = toDecimal(interHexagramBinaryUpper);
         const interGua = hexagramData.hexagrams[`${interGuaUpperNum}_${interGuaLowerNum}`] || { name: '未知互卦', summary: '無相關解釋。' };
 
-        // 變卦
         let changedUpperGuaNum = upperGuaNum;
         let changedLowerGuaNum = lowerGuaNum;
         if (changingLine > 3) {
-            // 上卦的變爻
             changedUpperGuaNum = (upperGuaNum % 2 === 0) ? (upperGuaNum - 1 || 8) : (upperGuaNum + 1);
         } else {
-            // 下卦的變爻
             changedLowerGuaNum = (lowerGuaNum % 2 === 0) ? (lowerGuaNum - 1 || 8) : (lowerGuaNum + 1);
         }
         const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '無相關解釋。' };
 
-        // 體用分析
         let tiGua, yongGua;
         if (changingLine > 3) {
-            tiGua = hexagramData.gua[lowerGuaNum]; // 變爻在上，體卦在下
-            yongGua = hexagramData.gua[upperGuaNum]; // 變爻在上，用卦在上
+            tiGua = hexagramData.gua[lowerGuaNum];
+            yongGua = hexagramData.gua[upperGuaNum];
         } else {
-            tiGua = hexagramData.gua[upperGuaNum]; // 變爻在下，體卦在上
-            yongGua = hexagramData.gua[lowerGuaNum]; // 變爻在下，用卦在下
+            tiGua = hexagramData.gua[upperGuaNum];
+            yongGua = hexagramData.gua[lowerGuaNum];
         }
 
         let relationText = '';
@@ -161,18 +185,17 @@
             relationText = `${tiGua.name}剋${yongGua.name}，代表**我方克制對方**。這意味著警方能掌控局面，可成功將嫌犯繩之以法。`;
         } else if (hexagramData.element_relations[yongElement].生 === tiElement) {
             relationText = `${yongGua.name}生${tiGua.name}，代表**對方生助我方**。這意味著嫌犯或線索提供意外幫助，讓警方被動獲得突破。`;
-        } else if (hexagramData.element_relations[yongGua.element].剋 === tiElement) {
+        } else if (hexagramData.element_relations[yongElement].剋 === tiElement) {
             relationText = `${yongGua.name}剋${tiGua.name}，代表**對方克制我方**。這意味著警方辦案受阻，嫌犯反制能力強，需謹慎應對。`;
         }
 
-        // 案件類型分析
         let caseAnalysisText = '';
         if (caseType && hexagramData.case_analysis[caseType]) {
             const caseData = hexagramData.case_analysis[caseType];
             caseAnalysisText += `<h4>專案案件分析：${caseData.name}</h4><p>${caseData.summary}</p>`;
             
             let foundAnalysis = false;
-            const guaKeys = [`${upperGuaNum}_${lowerGuaNum}`, `${interGuaUpperGuaNum}_${interGuaLowerGuaNum}`, `${changedUpperGuaNum}_${changedLowerGuaNum}`];
+            const guaKeys = [`${upperGuaNum}_${lowerGuaNum}`, `${interGuaUpperNum}_${interGuaLowerNum}`, `${changedUpperGuaNum}_${changedLowerGuaNum}`];
             
             for (const key of guaKeys) {
                  if (caseData.related_hexagrams[key]) {
