@@ -303,13 +303,13 @@
                 return;
             }
             const numStr = String(input);
-            const sumLower = parseInt(numStr.substring(0, 3), 10);
-            const sumUpper = parseInt(numStr.substring(3, 6), 10);
-            const sumChange = parseInt(numStr.substring(6, 9), 10);
+            const num1 = parseInt(numStr.substring(0, 3), 10);
+            const num2 = parseInt(numStr.substring(3, 6), 10);
+            const num3 = parseInt(numStr.substring(6, 9), 10);
             
-            lowerGuaNum = sumLower % 8 === 0 ? 8 : sumLower % 8;
-            upperGuaNum = sumUpper % 8 === 0 ? 8 : sumUpper % 8;
-            changingLine = sumChange % 6 === 0 ? 6 : sumChange % 6;
+            upperGuaNum = num1 % 8 === 0 ? 8 : num1 % 8;
+            lowerGuaNum = num2 % 8 === 0 ? 8 : num2 % 8;
+            changingLine = (num1 + num2 + num3) % 6 === 0 ? 6 : (num1 + num2 + num3) % 6;
             inputMethod = '數字起卦';
         } else {
             upperGuaNum = parseInt(document.getElementById('upperGuaSelect').value, 10);
@@ -359,7 +359,7 @@
         if (tiElement === yongElement) { relationText = `${tiGua.name}與${yongGua.name}為**比和**關係，代表雙方勢均力敵，案件將按常理發展，但可能需要更多努力。`; }
         else if (hexagramData.element_relations[tiElement].生 === yongElement) { relationText = `${tiGua.name}生${yongGua.name}，代表**我方生助對方**。這意味著警方主動付出、積極追查，案件進展順利。`; }
         else if (hexagramData.element_relations[tiElement].剋 === yongElement) { relationText = `${tiGua.name}剋${yongGua.name}，代表**我方克制對方**。這意味著警方能掌控局面，可成功將嫌犯繩之以法。`; }
-        else if (hexagramData.element_relations[yongElement].生 === tiElement) { relationText = `${yongGua.name}生${tiGua.name}，代表**對方生助我方**。這意味著嫌犯或線索提供意外幫助，讓警方被動獲得突破。`; }
+        else if (hexagramData.element_relations[yongElement].生 === tiGua) { relationText = `${yongGua.name}生${tiGua.name}，代表**對方生助我方**。這意味著嫌犯或線索提供意外幫助，讓警方被動獲得突破。`; }
         else if (hexagramData.element_relations[yongElement].剋 === tiGua) { relationText = `${yongGua.name}剋${tiGua.name}，代表**對方克制我方**。這意味著警方辦案受阻，嫌犯反制能力強，需謹慎應對。`; }
 
         let caseAnalysisText = '';
