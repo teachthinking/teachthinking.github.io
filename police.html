@@ -32,8 +32,30 @@
         #calculateBtn { width: 100%; margin-top: 20px; }
         .case-notes-section { width: 100%; margin-top: 20px; }
         .case-notes-section textarea { width: 100%; height: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; resize: vertical; box-sizing: border-box; }
-        .history-controls { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-top: 20px; }
-        .history-controls button { width: 48%; margin-bottom: 5px; }
+        .history-controls { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+            margin-top: 20px; 
+        }
+        .history-controls button { 
+            width: 100%; 
+        }
+        #btn-save { background-color: #27ae60; }
+        #btn-save:hover { background-color: #229955; }
+        #btn-load { background-color: #3498db; }
+        #btn-load:hover { background-color: #2980b9; }
+        #btn-export { background-color: #f39c12; }
+        #btn-export:hover { background-color: #e67e22; }
+        #btn-clear { background-color: #e74c3c; }
+        #btn-clear:hover { background-color: #c0392b; }
+
+        .file-import-label {
+            width: 100%;
+            display: block;
+            cursor: pointer;
+        }
+
         #historyList { width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin-top: 10px; text-align: left; }
         .history-item { padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; }
         .history-item:hover { background-color: #f0f0f0; }
@@ -95,14 +117,14 @@
         <button id="calculateBtn" onclick="startCalculation()">開始推算</button>
         
         <div class="history-controls">
-            <button onclick="saveCase()">儲存案件</button>
-            <button onclick="showHistoryModal()">載入歷史案件</button>
-            <button onclick="exportCases()">匯出歷史記錄</button>
-            <label style="width: 48%;">
-                <button onclick="document.getElementById('importFile').click();">載入歷史記錄</button>
+            <button id="btn-save" onclick="saveCase()">儲存案件</button>
+            <button id="btn-load" onclick="showHistoryModal()">載入歷史案件</button>
+            <button id="btn-export" onclick="exportCases()">匯出歷史記錄</button>
+            <label class="file-import-label">
+                <button id="btn-import" onclick="document.getElementById('importFile').click();">載入歷史記錄</button>
                 <input type="file" id="importFile" accept=".json" style="display: none;">
             </label>
-            <button onclick="clearAllCases()" style="background-color: #e74c3c;">清空歷史記錄</button>
+            <button id="btn-clear" onclick="clearAllCases()">清空歷史記錄</button>
         </div>
     </div>
     
