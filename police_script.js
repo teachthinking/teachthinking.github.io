@@ -263,8 +263,9 @@ function createShengkeDiagram(data) {
 
     nodes.forEach(node => {
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        const color = hexagramData.element_colors[node.wuXing] || '#fff';
         g.innerHTML = `
-            <circle class="gua-node" cx="${node.x}" cy="${node.y}" r="40"/>
+            <circle class="gua-node" cx="${node.x}" cy="${node.y}" r="40" fill="${color}"/>
             <text class="gua-text" x="${node.x}" y="${node.y - 10}" text-anchor="middle">${node.label}</text>
             ${node.guaLabels.map((label, i) => `
                 <text class="gua-text" x="${node.x}" y="${node.y + 10 + i * 15}" text-anchor="middle" font-size="10">${label.text}</text>
@@ -347,8 +348,8 @@ function startCalculation() {
         changingLine = calculateGua(year + month + day + hour) % 6 || 6;
     }
 
-    const { benGua, bianGua } = calculateHexagram(upperGua, lowerGua, changingLine);
-    const tiYong = calculateTiYong(upperGua, lowerGua, changingLine);
+    const { benGua, bianGua } = calculateHexagram(upper, lower, changingLine);
+    const tiYong = calculateTiYong(upper, lower, changingLine);
     const caseType = dom.caseTypeSelect.value;
     const caseName = dom.caseNameInput.value || '未命名案件';
     const notes = dom.notesSection.value;
