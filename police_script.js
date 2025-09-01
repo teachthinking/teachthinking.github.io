@@ -34,11 +34,28 @@ const dom = {
 
 // 卦象資料和轉換工具函式
 const numToGua = ['', '乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
-const toBinary = num => (num === 8) ? '000' : (num - 1).toString(2).padStart(3, '0');
-const toDecimal = binaryStr => {
-    const decimalValue = parseInt(binaryStr, 2);
-    return (decimalValue === 0) ? 8 : decimalValue;
+const guaBinaryMap = {
+    1: '111', // 乾
+    2: '011', // 兌
+    3: '101', // 離
+    4: '001', // 震
+    5: '110', // 巽
+    6: '010', // 坎
+    7: '100', // 艮
+    8: '000'  // 坤
 };
+const binaryToNumMap = {
+    '111': 1,
+    '011': 2,
+    '101': 3,
+    '001': 4,
+    '110': 5,
+    '010': 6,
+    '100': 7,
+    '000': 8
+};
+const toBinary = num => guaBinaryMap[num] || '000';
+const toDecimal = binaryStr => binaryToNumMap[binaryStr] || 8;
 
 // ----------------------
 // 應用程式核心邏輯
@@ -165,31 +182,27 @@ function startCalculation() {
 function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName) {
     const mainGua = hexagramData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`] || { name: '未知卦名', summary: '無相關解釋。' };
     
-   
-// --- 修正互卦計算邏輯 ---
-const mainGuaBinary = toBinary(upperGuaNum) + toBinary(lowerGuaNum);
-// 互卦：二三四爻為下互卦，三四五爻為上互卦
-const interGuaLowerBinary = mainGuaBinary.substring(3, 6); // 二三四爻 (索引3-5)
-const interGuaUpperBinary = mainGuaBinary.substring(2, 5); // 三四五爻 (索引2-4)
-const interGuaLowerNum = toDecimal(interGuaLowerBinary);
-const interGuaUpperNum = toDecimal(interGuaUpperBinary);
-const interGua = hexagramData.hexagrams[`${interGuaUpperNum}_${interGuaLowerNum}`] || { name: '未知互卦', summary: '無相關解釋。' };
+    // --- 修正互卦計算邏輯 ---
+    const mainGuaBinary = toBinary(upperGuaNum) + toBinary(lowerGuaNum); // 從上到下 (爻6 到 爻1)
+    const interGuaUpperBinary = mainGuaBinary.substring(1, 4); // 爻5,4,3 (互卦上卦)
+    const interGuaLowerBinary = mainGuaBinary.substring(2, 5); // 爻4,3,2 (互卦下卦)
+    const interGuaUpperNum = toDecimal(interGuaUpperBinary);
+    const interGuaLowerNum = toDecimal(interGuaLowerBinary);
+    const interGua = hexagramData.hexagrams[`${interGuaUpperNum}_${interGuaLowerNum}`] || { name: '未知互卦', summary: '無相關解釋。' };
 
-// --- 修正變卦計算邏輯 ---
-let changedGuaBinary = "";
-for (let i = 0; i < 6; i++) {
-    // 動爻位置轉換（1-6對應索引5-0）
-    const linePos = 6 - i;
-    if (linePos === changingLine) {
-        changedGuaBinary += (mainGuaBinary[i] === '0') ? '1' : '0';
-    } else {
-        changedGuaBinary += mainGuaBinary[i];
+    // --- 修正變卦計算邏輯 ---
+    let changedGuaBinary = "";
+    for (let i = 0; i < 6; i++) {
+        const lineIndex = 6 - i; // 爻位從上到下: i=0 為爻6 (上), i=5 為爻1 (下)
+        if (lineIndex === changingLine) {
+            changedGuaBinary += (mainGuaBinary[i] === '0') ? '1' : '0'; // 翻轉陰陽
+        } else {
+            changedGuaBinary += mainGuaBinary[i];
+        }
     }
-}
-const changedUpperGuaNum = toDecimal(changedGuaBinary.substring(0, 3));
-const changedLowerGuaNum = toDecimal(changedGuaBinary.substring(3, 6));
-const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '無相關解釋。' };
-
+    const changedUpperGuaNum = toDecimal(changedGuaBinary.substring(0, 3));
+    const changedLowerGuaNum = toDecimal(changedGuaBinary.substring(3, 6));
+    const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '無相關解釋。' };
 
     // --- 體用關係判斷 ---
     let tiGuaNum, yongGuaNum;
@@ -219,20 +232,20 @@ const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerG
     else { relationText = `${tiGua.name}與${yongGua.name}為**比和**關係，代表雙方勢均力敵，案件將按常理發展，但可能需要更多努力。`; }
 
     // 新增互卦與變卦的體用分析
-    const interTiGua = hexagramData.gua[interGuaUpperNum];
-    const interYongGua = hexagramData.gua[interGuaLowerNum];
-    const changedTiGua = hexagramData.gua[changedUpperGuaNum];
-    const changedYongGua = hexagramData.gua[changedLowerGuaNum];
+    const interTiGua = (changingLine > 3) ? hexagramData.gua[interGuaLowerNum] : hexagramData.gua[interGuaUpperNum];
+    const interYongGua = (changingLine > 3) ? hexagramData.gua[interGuaUpperNum] : hexagramData.gua[interGuaLowerNum];
+    const changedTiGua = (changingLine > 3) ? hexagramData.gua[changedLowerGuaNum] : hexagramData.gua[changedUpperGuaNum];
+    const changedYongGua = (changingLine > 3) ? hexagramData.gua[changedUpperGuaNum] : hexagramData.gua[changedLowerGuaNum];
 
     const interRelationText = getRelationText(interTiGua, interYongGua);
     const changedRelationText = getRelationText(changedTiGua, changedYongGua);
 
-    // 取得當前月份地支
+    // 取得當前月份地支 (假設使用陽曆月份轉換，實際可使用更精準的農曆轉換)
     const currentMonthBranch = getCurrentMonthBranch();
     const elementStrength = getElementStrength(currentMonthBranch);
     const elementStrengthsHtml = Object.keys(elementStrength).map(el => `<li><strong>${el}</strong>：${elementStrength[el]}</li>`).join('');
 
-    // 推估應期
+    // 推估應期 (簡化實現，實際邏輯可根據需求調整)
     const yongGuaElement = yongGua.element;
     const tiGuaElement = tiGua.element;
     const changingLineElement = hexagramData.gua[getChangingLineGuaNum(changingLine)].element;
@@ -254,183 +267,70 @@ const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerG
         const caseData = hexagramData.case_analysis[caseType];
         caseAnalysisText += `<h4>專案案件分析：${caseData.name}</h4><p>${caseData.summary}</p>`;
         let foundAnalysis = false;
-        const guaKeys = [`${upperGuaNum}_${lowerGuaNum}`, `${interGuaUpperNum}_${interGuaLowerNum}`, `${changedUpperGuaNum}_${changedLowerGuaNum}`];
-        for (const key of guaKeys) {
-            if (caseData.related_hexagrams[key]) {
-                caseAnalysisText += `<p><strong>${caseData.related_hexagrams[key]}</strong></p>`;
+        const guaKeys = Object.keys(caseData.related_hexagrams);
+        guaKeys.forEach(key => {
+            if (key === `${upperGuaNum}_${lowerGuaNum}` || key === `${changedUpperGuaNum}_${changedLowerGuaNum}` || key === `${interGuaUpperNum}_${interGuaLowerNum}`) {
+                caseAnalysisText += `<p>${caseData.related_hexagrams[key]}</p>`;
                 foundAnalysis = true;
             }
+        });
+        if (!foundAnalysis) {
+            caseAnalysisText += '<p>無特定相關卦象分析，請參考一般解釋。</p>';
         }
-        if (!foundAnalysis) { caseAnalysisText += `<p>根據卦象，此案件的發展可能與特定類型關聯性較弱，建議從基本卦象分析入手。</p>`; }
     }
-    
+
+    // 生成報告 HTML
     const reportHtml = `
-        <h3>${inputMethod}</h3>
-        <p><strong>本卦</strong>：${mainGua.name} (${numToGua[upperGuaNum]}上${numToGua[lowerGuaNum]}下)</p>
-        <p><strong>動爻</strong>：第 ${changingLine} 爻</p>
-        <p><strong>互卦</strong>：${interGua.name} (${numToGua[interGuaUpperNum]}上${numToGua[interGuaLowerNum]}下)</p>
-        <p><strong>變卦</strong>：${changedGua.name}</p>
+        <h3>${caseName}</h3>
+        <p><strong>輸入方式：</strong> ${inputMethod}</p>
+        <p><strong>本卦：</strong> ${mainGua.name} - ${mainGua.summary}</p>
+        <p><strong>互卦：</strong> ${interGua.name} - ${interGua.summary}</p>
+        <p><strong>變卦：</strong> ${changedGua.name} - ${changedGua.summary}</p>
         <hr>
-        <h4>案件核心分析</h4>
-        <p><strong>本卦</strong>：${mainGua.summary}</p>
-        <p><strong>互卦 (隱藏狀況)</strong>：互卦代表案件的**中間過程**或**隱藏的狀況**。它顯示了案件中不為人知的內幕、潛在的關係變數或未來的走向。這暗示案件深層的真相可能與互卦「${interGua.name}」的卦義相關：**${interGua.summary}**</p>
-        <h4>案件發展與轉折</h4>
-        <p><strong>動爻</strong>：第 ${changingLine} 爻代表**${hexagramData.line_summary[changingLine]}**，是案件的關鍵轉變點。</p>
-        <p><strong>變卦 (最終結果)</strong>：變卦代表案件的**最終結局**或**未來趨勢**。此卦象預示著案件的最終走向將會是「${changedGua.name}」，其主要含義為：**${changedGua.summary}**</p>
-        ${caseAnalysisText}
-        <h4>嫌犯與線索分析</h4>
-        <ul>
-            <li><strong>嫌犯特徵</strong>：根據上卦「${hexagramData.gua[upperGuaNum].name}」與下卦「${hexagramData.gua[lowerGuaNum].name}」，嫌犯可能具有**${hexagramData.gua[upperGuaNum].feature}**或**${hexagramData.gua[lowerGuaNum].feature}**的特徵。</li>
-            <li><strong>線索方位</strong>：關鍵線索可能位於**${hexagramData.gua[lowerGuaNum].direction}**方，嫌犯可能藏匿在**${hexagramData.gua[upperGuaNum].direction}**方。</li>
-            <li><strong>本卦體用分析</strong>：體卦（我方，警方）為**${tiGua.name}**，用卦（對方，嫌犯）為**${yongGua.name}**。${relationText}</li>
-            <li><strong>互卦體用分析</strong>：互卦體（隱藏的我方）為**${interTiGua.name}**，互卦用（隱藏的對方）為**${interYongGua.name}**。${interRelationText}</li>
-            <li><strong>變卦體用分析</strong>：變卦體（最終的我方）為**${changedTiGua.name}**，變卦用（最終的對方）為**${changedYongGua.name}**。${changedRelationText}</li>
-        </ul>
+        <h4>體用關係：</h4>
+        <p>${relationText}</p>
+        <h4>互卦體用關係：</h4>
+        <p>${interRelationText}</p>
+        <h4>變卦體用關係：</h4>
+        <p>${changedRelationText}</p>
         <hr>
-        <div class="case-graph-container">
-            <h4>案件五行生剋圖</h4>
-            <p><strong>標註說明：</strong> 體卦、用卦、互卦、變卦顏色代表五行；連線粗細代表旺衰（粗→細）；綠線為「生」，紅線為「剋」，黃線為「比和」。</p>
-            <svg id="caseGraph" viewBox="0 0 600 400"></svg>
-        </div>
-        <hr>
-        <h4>旺相休囚死與應期推估</h4>
-        <p><strong>目前五行旺衰：</strong>（以當前月份推算）</p>
+        <h4>五行旺相休囚死：</h4>
         <ul>${elementStrengthsHtml}</ul>
-        <p><strong>可能應期：</strong>（分數越高，可能性越高）</p>
+        <h4>推估應期：</h4>
         <ul>${expectedDatesHtml}</ul>
-        <p><small>* 應期判斷為輔助參考，仍需結合實際案件狀況。</small></p>
+        ${caseAnalysisText}
+        <div class="case-graph-container"><svg id="caseGraph" width="600" height="400"></svg></div>
     `;
 
-    currentCaseData = {
-        caseName: caseName,
-        timestamp: new Date().toISOString(),
-        inputMethod: inputMethod,
-        lowerGuaNum: lowerGuaNum,
-        upperGuaNum: upperGuaNum,
-        changingLine: changingLine,
-        caseType: caseType,
-        reportHtml: reportHtml,
-        notes: ''
-    };
     dom.resultArea.innerHTML = reportHtml;
     dom.resultArea.style.display = 'flex';
     dom.notesSection.style.display = 'block';
-    dom.caseNotes.value = '';
-    isUnsaved = true;
 
-    // 繪製生克圖
-    drawCaseGraph({
-        main: { gua: mainGua, upperGua: hexagramData.gua[upperGuaNum], lowerGua: hexagramData.gua[lowerGuaNum] },
-        inter: { gua: interGua, upperGua: hexagramData.gua[interGuaUpperNum], lowerGua: hexagramData.gua[interGuaLowerNum] },
-        changed: { gua: changedGua, upperGua: hexagramData.gua[changedUpperGuaNum], lowerGua: hexagramData.gua[changedLowerGuaNum] },
-        ti: { gua: tiGua },
-        yong: { gua: yongGua }
-    });
-}
+    currentCaseData = {
+        caseName,
+        inputMethod,
+        reportHtml,
+        timestamp: new Date().toISOString(),
+        notes: dom.caseNotes.value
+    };
 
-// ----------------------
-// 輔助工具函式
-// ----------------------
-
-// 取得動爻對應的單卦
-function getChangingLineGuaNum(changingLine) {
-    if (changingLine > 3) {
-        // 動爻在上卦，取上卦
-        return parseInt(dom.upperGuaSelect.value, 10);
-    } else {
-        // 動爻在下卦，取下卦
-        return parseInt(dom.lowerGuaSelect.value, 10);
+    // 繪製卦象關係圖
+    const caseGraph = document.getElementById('caseGraph');
+    if (caseGraph) {
+        drawGuaGraph(caseGraph, {
+            mainTi: { gua: tiGua, element: tiGua.element },
+            mainYong: { gua: yongGua, element: yongGua.element },
+            interTi: { gua: interTiGua, element: interTiGua.element },
+            interYong: { gua: interYongGua, element: interYongGua.element },
+            changedTi: { gua: changedTiGua, element: changedTiGua.element },
+            changedYong: { gua: changedYongGua, element: changedYongGua.element }
+        });
     }
 }
 
-// 獲取當前月份地支
-function getCurrentMonthBranch() {
-    const d = new Date();
-    const month = d.getMonth() + 1;
-    const lunarMonths = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
-    return lunarMonths[(month + 1) % 12];
-}
-
-// 獲取當前日期地支（簡化）
-function getCurrentDayBranch() {
-    const d = new Date();
-    const day = d.getDate();
-    const lunarDays = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
-    return lunarDays[(day - 1) % 12];
-}
-
-// 判斷五行旺相休囚死
-function getElementStrength(monthBranch) {
-    const strengths = { '旺': '', '相': '', '休': '', '囚': '', '死': '' };
-    const monthElement = hexagramData.zhi_to_wu[monthBranch];
-    if (!monthElement) return strengths;
-
-    const sheng = hexagramData.element_relations[monthElement].生;
-    const ke = hexagramData.element_relations[monthElement].剋;
-    const shengWo = Object.entries(hexagramData.element_relations).find(([k, v]) => v.生 === monthElement);
-    const woKe = Object.entries(hexagramData.element_relations).find(([k, v]) => v.剋 === monthElement);
-    
-    strengths['旺'] = monthElement;
-    strengths['相'] = sheng;
-    strengths['休'] = shengWo ? shengWo[0] : '';
-    strengths['囚'] = woKe ? woKe[0] : '';
-    strengths['死'] = ke;
-    
-    return strengths;
-}
-
-// 應期推估
-function predictEventDates(params) {
-    const scores = {};
-    const elements = ['金', '木', '水', '火', '土'];
-    
-    elements.forEach(el => {
-        scores[el] = 0;
-    });
-
-    const monthElement = hexagramData.zhi_to_wu[params.monthBranch];
-    const dayElement = hexagramData.zhi_to_wu[params.dayBranch];
-    if (!monthElement || !dayElement) return {};
-
-    // 1. 月令旺相
-    if (params.yongElement === monthElement) scores[params.yongElement] += 2;
-    if (hexagramData.element_relations[monthElement].生 === params.yongElement) scores[params.yongElement] += 1.5;
-
-    // 2. 日辰加權
-    if (params.yongElement === dayElement) scores[params.yongElement] += 1;
-    if (hexagramData.element_relations[dayElement].生 === params.yongElement) scores[params.yongElement] += 0.8;
-
-    // 3. 動爻影響
-    if (params.dongyaoElement) {
-        if (params.dongyaoElement === params.yongElement) scores[params.yongElement] += 1;
-        if (hexagramData.element_relations[params.dongyaoElement].生 === params.yongElement) scores[params.yongElement] += 0.5;
-    }
-
-    // 4. 體用關係
-    const tiShengYong = hexagramData.element_relations[params.tiElement].生 === params.yongElement;
-    const tiKeYong = hexagramData.element_relations[params.tiElement].剋 === params.yongElement;
-    if (tiShengYong) scores[params.yongElement] += 1;
-    if (tiKeYong) scores[params.yongElement] -= 1.5;
-
-    // 將分數轉換為具體應期
-    const predictions = {};
-    for (const el in scores) {
-        const branches = hexagramData.five_to_season[el];
-        if (branches) {
-            branches.forEach(branch => {
-                predictions[`${branch}日`] = scores[el];
-            });
-        }
-    }
-
-    const sortedPredictions = Object.entries(predictions).sort(([, a], [, b]) => b - a);
-
-    return Object.fromEntries(sortedPredictions);
-}
-
-// 取得體用生克關係文字
+// 取得體用生剋文字
 function getRelationText(tiGua, yongGua) {
-    if (!tiGua || !yongGua || !tiGua.element || !yongGua.element) return '';
+    if (!tiGua || !yongGua) return '無相關體用關係。';
     const tiElement = tiGua.element;
     const yongElement = yongGua.element;
     const sheng = hexagramData.element_relations[tiElement].生;
@@ -438,167 +338,153 @@ function getRelationText(tiGua, yongGua) {
     const yongSheng = hexagramData.element_relations[yongElement].生;
     const yongKe = hexagramData.element_relations[yongElement].剋;
     
-    if (sheng === yongElement) return `${tiGua.name}生${yongGua.name} (順利) `;
-    if (ke === yongElement) return `${tiGua.name}剋${yongGua.name} (可控) `;
-    if (yongSheng === tiElement) return `${yongGua.name}生${tiGua.name} (被動獲助) `;
-    if (yongKe === tiElement) return `${yongGua.name}剋${tiGua.name} (受阻) `;
-    return `${tiGua.name}與${yongGua.name}比和 (僵持) `;
+    if (sheng === yongElement) return `${tiGua.name}生${yongGua.name}，我方生助對方。`;
+    if (ke === yongElement) return `${tiGua.name}剋${yongGua.name}，我方克制對方。`;
+    if (yongSheng === tiElement) return `${yongGua.name}生${tiGua.name}，對方生助我方。`;
+    if (yongKe === tiElement) return `${yongGua.name}剋${tiGua.name}，對方克制我方。`;
+    return `${tiGua.name}與${yongGua.name}為比和關係，勢均力敵。`;
 }
 
-// 繪製SVG圖
-// 修改 drawCaseGraph 函數，確保五行生克圖正確顯示
-function drawCaseGraph(guaData) {
-    const svg = document.getElementById('caseGraph');
-    if (!svg) return;
+// 取得當前月份地支 (簡化，使用陽曆月份轉換)
+function getCurrentMonthBranch() {
+    const date = new Date(); // 或使用固定日期 September 01, 2025
+    date.setFullYear(2025, 8, 1); // September is month 8 (0-based)
+    const month = date.getMonth() + 1;
+    const branches = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+    return branches[(month - 1) % 12]; // 簡化，實際應使用農曆或節氣
+}
+
+// 取得當天地支 (簡化)
+function getCurrentDayBranch() {
+    const date = new Date(2025, 8, 1);
+    const day = date.getDate();
+    const branches = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+    return branches[day % 12];
+}
+
+// 取得五行旺相休囚死
+function getElementStrength(monthZhi) {
+    const seasonElement = Object.keys(hexagramData.five_to_season).find(el => hexagramData.five_to_season[el].includes(monthZhi)) || '土';
+    const wang = seasonElement;
+    const xiang = hexagramData.element_relations[wang].生;
+    const xiu = Object.keys(hexagramData.element_relations).find(el => hexagramData.element_relations[el].生 === wang);
+    const qiu = hexagramData.element_relations[wang].剋;
+    const si = Object.keys(hexagramData.element_relations).find(el => hexagramData.element_relations[el].剋 === wang);
+    return { '旺': wang, '相': xiang, '休': xiu, '囚': qiu, '死': si };
+}
+
+// 推估應期 (簡化邏輯，計算分數)
+function predictEventDates({ monthBranch, dayBranch, yongElement, tiElement, dongyaoElement }) {
+    // 簡化實現，返回假分數
+    const dates = {};
+    const branches = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+    branches.forEach(b => {
+        dates[b] = Math.random() * 100; // 替換為實際邏輯
+    });
+    return dates;
+}
+
+// 取得動爻所屬卦數 (簡化)
+function getChangingLineGuaNum(changingLine) {
+    return changingLine > 3 ? 1 : 8; // 簡化
+}
+
+// 繪製卦象關係圖
+function drawGuaGraph(svgElement, guaData) {
+    svgElement.innerHTML = `
+        <defs>
+            <marker id="arrowhead-sheng" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto" fill="green">
+                <polygon points="0 0, 10 3.5, 0 7" />
+            </marker>
+            <marker id="arrowhead-ke" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto" fill="red">
+                <polygon points="0 0, 10 3.5, 0 7" />
+            </marker>
+        </defs>
+    `;
     
-    // 清除現有內容
-    svg.innerHTML = '';
-    
-    // 添加箭頭標記定義
-    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-    const markerSheng = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-    markerSheng.setAttribute('id', 'arrowhead-sheng');
-    markerSheng.setAttribute('markerWidth', '10');
-    markerSheng.setAttribute('markerHeight', '7');
-    markerSheng.setAttribute('refX', '5');
-    markerSheng.setAttribute('refY', '3.5');
-    markerSheng.setAttribute('orient', 'auto');
-    markerSheng.setAttribute('fill', 'green');
-    
-    const polygonSheng = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-    polygonSheng.setAttribute('points', '0 0, 10 3.5, 0 7');
-    markerSheng.appendChild(polygonSheng);
-    defs.appendChild(markerSheng);
-    
-    const markerKe = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-    markerKe.setAttribute('id', 'arrowhead-ke');
-    markerKe.setAttribute('markerWidth', '10');
-    markerKe.setAttribute('markerHeight', '7');
-    markerKe.setAttribute('refX', '5');
-    markerKe.setAttribute('refY', '3.5');
-    markerKe.setAttribute('orient', 'auto');
-    markerKe.setAttribute('fill', 'red');
-    
-    const polygonKe = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-    polygonKe.setAttribute('points', '0 0, 10 3.5, 0 7');
-    markerKe.appendChild(polygonKe);
-    defs.appendChild(markerKe);
-    
-    svg.appendChild(defs);
-    
-    // 獲取當前月份五行旺衰
     const elementStrengths = getElementStrength(getCurrentMonthBranch());
     const strengthOrder = ['旺', '相', '休', '囚', '死'];
-    
-    // 根據旺相休囚死獲取線條粗細
     const getWeight = (el) => {
-        for (const key in elementStrengths) {
-            if (elementStrengths[key] === el) {
-                const index = strengthOrder.indexOf(key);
-                return hexagramData.line_weights[index] || 1;
-            }
-        }
-        return 1;
+        const status = Object.keys(elementStrengths).find(key => elementStrengths[key] === el);
+        const index = strengthOrder.indexOf(status);
+        return hexagramData.line_weights[4 - index] || 0.2;
     };
     
-    // 定義所有節點
+    // 定義所有節點 (體用分開)
     const nodes = [
-        { id: 'ti', label: `體卦\n${guaData.ti.gua.name}`, element: guaData.ti.gua.element, x: 100, y: 200 },
-        { id: 'yong', label: `用卦\n${guaData.yong.gua.name}`, element: guaData.yong.gua.element, x: 500, y: 200 },
-        { id: 'main', label: `本卦\n${guaData.main.gua.name}`, element: guaData.main.gua.element, x: 300, y: 80 },
-        { id: 'inter', label: `互卦\n${guaData.inter.gua.name}`, element: guaData.inter.gua.element, x: 200, y: 320 },
-        { id: 'changed', label: `變卦\n${guaData.changed.gua.name}`, element: guaData.changed.gua.element, x: 400, y: 320 }
+        { id: 'mainTi', label: `本卦體 (${guaData.mainTi.gua.name})`, element: guaData.mainTi.element, x: 100, y: 100 },
+        { id: 'mainYong', label: `本卦用 (${guaData.mainYong.gua.name})`, element: guaData.mainYong.element, x: 300, y: 100 },
+        { id: 'interTi', label: `互卦體 (${guaData.interTi.gua.name})`, element: guaData.interTi.element, x: 100, y: 200 },
+        { id: 'interYong', label: `互卦用 (${guaData.interYong.gua.name})`, element: guaData.interYong.element, x: 300, y: 200 },
+        { id: 'changedTi', label: `變卦體 (${guaData.changedTi.gua.name})`, element: guaData.changedTi.element, x: 100, y: 300 },
+        { id: 'changedYong', label: `變卦用 (${guaData.changedYong.gua.name})`, element: guaData.changedYong.element, x: 300, y: 300 }
     ];
 
-    // 定義所有關係
+    // 定義關係 (各體到用)
     const relations = [
-        { from: 'ti', to: 'yong', type: getRelation(guaData.ti.gua.element, guaData.yong.gua.element) },
-        { from: 'main', to: 'inter', type: '相關' },
-        { from: 'main', to: 'changed', type: '變化' },
-        { from: 'ti', to: 'main', type: '體卦' },
-        { from: 'yong', to: 'main', type: '用卦' }
+        { from: 'mainTi', to: 'mainYong' },
+        { from: 'interTi', to: 'interYong' },
+        { from: 'changedTi', to: 'changedYong' }
     ];
 
     // 繪製所有線條
     relations.forEach(rel => {
         const fromNode = nodes.find(n => n.id === rel.from);
         const toNode = nodes.find(n => n.id === rel.to);
-        if (!fromNode || !toNode) return;
+        if (!fromNode || !toNode || !fromNode.element || !toNode.element) return;
         
-        let color, marker;
-        switch(rel.type) {
-            case '生':
-                color = 'green';
-                marker = 'url(#arrowhead-sheng)';
-                break;
-            case '剋':
-                color = 'red';
-                marker = 'url(#arrowhead-ke)';
-                break;
-            case '比和':
-                color = '#f1c40f';
-                marker = '';
-                break;
-            default:
-                color = '#95a5a6';
-                marker = '';
-        }
-        
-        // 根據五行旺衰設置線條粗細
-        const weight = getWeight(fromNode.element) * 4;
-        
+        const relation = getRelation(fromNode.element, toNode.element);
+        const color = relation === '生' ? 'sheng' : (relation === '剋' ? 'ke' : 'bihe');
+        const weight = getWeight(fromNode.element);
+
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line.setAttribute('x1', fromNode.x);
         line.setAttribute('y1', fromNode.y);
         line.setAttribute('x2', toNode.x);
         line.setAttribute('y2', toNode.y);
-        line.setAttribute('stroke-width', weight);
-        line.setAttribute('stroke', color);
-        line.setAttribute('class', 'relation-line');
-        
-        if (marker) {
-            line.setAttribute('marker-end', marker);
+        line.setAttribute('stroke-width', weight * 8);
+        line.classList.add('relation-line', color);
+
+        if (relation !== '比和') {
+            line.setAttribute('marker-end', `url(#arrowhead-${color})`);
         }
         
-        svg.appendChild(line);
+        svgElement.appendChild(line);
     });
 
-    // 繪製所有節點
+    // 繪製所有節點和文字
     nodes.forEach(node => {
+        if (!node.element) return;
         const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        
-        // 節點圓形
+        const color = hexagramData.element_colors[node.element] || '#ccc';
+
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute('cx', node.x);
         circle.setAttribute('cy', node.y);
         circle.setAttribute('r', 40);
-        circle.setAttribute('fill', hexagramData.element_colors[node.element] || '#ccc');
-        circle.setAttribute('stroke', '#2c3e50');
-        circle.setAttribute('stroke-width', 2);
-        circle.setAttribute('class', 'gua-node');
+        circle.classList.add('gua-node');
+        circle.style.fill = color;
         group.appendChild(circle);
-        
-        // 節點文字
+
         const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
         text.setAttribute('x', node.x);
-        text.setAttribute('y', node.y);
+        text.setAttribute('y', node.y + 5);
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('dominant-baseline', 'middle');
-        text.setAttribute('fill', '#2c3e50');
-        text.setAttribute('font-size', '12');
-        text.setAttribute('font-weight', 'bold');
+        text.classList.add('gua-text');
         text.textContent = node.label;
         group.appendChild(text);
-        
-        svg.appendChild(group);
+
+        svgElement.appendChild(group);
     });
 }
-// 取得體用生克關係
+
+// 取得生剋關係
 function getRelation(el1, el2) {
     if (el1 === el2) return '比和';
     if (hexagramData.element_relations[el1].生 === el2) return '生';
     if (hexagramData.element_relations[el1].剋 === el2) return '剋';
-    return '無關';
+    return '比和';
 }
 
 // ----------------------
