@@ -307,9 +307,9 @@
         let lowerGuaNum, upperGuaNum, changingLine, inputMethod;
 
         if (activeTab === 'number') {
-            const input = document.getElementById('numInput').value;
-            // 修正數字起卦邏輯，確保只處理9位數數字
-            if (String(input).length !== 9 || isNaN(input)) {
+            const input = document.getElementById('numInput').value.trim();
+            // 修正數字起卦邏輯，加入更嚴格的驗證
+            if (input === '' || !/^\d{9}$/.test(input)) {
                 alert('請輸入有效的9位數數字！');
                 return;
             }
