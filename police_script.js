@@ -46,7 +46,7 @@ const toDecimal = binaryStr => {
 
 async function loadInitialData() {
     try {
-        const response = await fetch('police.json');
+        const response = await fetch('police_data.json');
         if (!response.ok) {
             throw new Error('無法載入預設 JSON 檔案。');
         }
