@@ -13,7 +13,7 @@
         .input-section { background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; }
         .input-section h2 { color: #34495e; margin-bottom: 10px; }
         .input-section p { color: #95a5a6; margin-bottom: 20px; }
-        input[type="number"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; box-sizing: border-box; }
+        input[type="number"], select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; box-sizing: border-box; }
         button { padding: 12px 25px; border: none; border-radius: 5px; background-color: #3498db; color: white; font-size: 1em; cursor: pointer; transition: background-color 0.3s; }
         button:hover { background-color: #2980b9; }
         #resultArea { background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 30px; display: none; flex-direction: column; align-items: flex-start; margin-top: 20px; text-align: left; }
@@ -34,6 +34,11 @@
         <h2>數字起卦 - 9位數</h2>
         <p>請輸入與案件相關的9位數數字，例如車牌、時間或任何直覺想到的數字。</p>
         <input type="number" id="numInput" placeholder="請輸入9位數" maxlength="9">
+
+        <select id="caseTypeSelect">
+            <option value="">請選擇案件類型 (選填)</option>
+        </select>
+        
         <button onclick="calculateByNumber()">開始推算</button>
     </div>
 
@@ -58,9 +63,22 @@
             }
             hexagramData = await response.json();
             console.log('卦象資料載入成功！');
+            populateCaseTypeSelect();
         } catch (error) {
             console.error('載入卦象資料失敗:', error);
             alert('無法載入卦象資料，請檢查檔案是否存在或路徑是否正確。');
+        }
+    }
+
+    function populateCaseTypeSelect() {
+        const selectElement = document.getElementById('caseTypeSelect');
+        if (hexagramData.case_analysis) {
+            for (const key in hexagramData.case_analysis) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = hexagramData.case_analysis[key].name;
+                selectElement.appendChild(option);
+            }
         }
     }
 
@@ -77,6 +95,8 @@
             return;
         }
         
+        const caseType = document.getElementById('caseTypeSelect').value;
+        
         const numStr = String(input);
         const sumLower = parseInt(numStr.substring(0, 3), 10);
         const sumUpper = parseInt(numStr.substring(3, 6), 10);
@@ -86,11 +106,11 @@
         const upperGuaNum = sumUpper % 8 === 0 ? 8 : sumUpper % 8;
         const changingLine = sumChange % 6 === 0 ? 6 : sumChange % 6;
 
-        generateReport(lowerGuaNum, upperGuaNum, changingLine, input);
+        generateReport(lowerGuaNum, upperGuaNum, changingLine, input, caseType);
     }
 
     // 卦象分析與報告生成函式
-    function generateReport(lowerGuaNum, upperGuaNum, changingLine, input) {
+    function generateReport(lowerGuaNum, upperGuaNum, changingLine, input, caseType) {
         // 核心八卦陣列
         const numToGua = ['', '乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
 
@@ -135,10 +155,29 @@
             relationText = `${tiGua.name}剋${yongGua.name}，代表**我方克制對方**。這意味著警方能掌控局面，可成功將嫌犯繩之以法。`;
         } else if (hexagramData.element_relations[yongElement].生 === tiElement) {
             relationText = `${yongGua.name}生${tiGua.name}，代表**對方生助我方**。這意味著嫌犯或線索提供意外幫助，讓警方被動獲得突破。`;
-        } else if (hexagramData.element_relations[yongElement].剋 === tiElement) {
+        } else if (hexagramData.element_relations[yongGua.element].剋 === tiElement) {
             relationText = `${yongGua.name}剋${tiGua.name}，代表**對方克制我方**。這意味著警方辦案受阻，嫌犯反制能力強，需謹慎應對。`;
         }
 
+        // 案件類型分析
+        let caseAnalysisText = '';
+        if (caseType && hexagramData.case_analysis[caseType]) {
+            const caseData = hexagramData.case_analysis[caseType];
+            caseAnalysisText += `<h4>專案案件分析：${caseData.name}</h4><p>${caseData.summary}</p>`;
+            
+            let foundAnalysis = false;
+            for (const key in caseData.related_hexagrams) {
+                // 檢查本卦、互卦、變卦是否與此案件類型相關
+                if (key === `${upperGuaNum}_${lowerGuaNum}` || key === `${interGuaUpperNum}_${interGuaLowerNum}` || key === `${changedUpperGuaNum}_${changedLowerGuaNum}`) {
+                    caseAnalysisText += `<p><strong>${caseData.related_hexagrams[key]}</strong></p>`;
+                    foundAnalysis = true;
+                }
+            }
+            if (!foundAnalysis) {
+                caseAnalysisText += `<p>根據卦象，此案件的發展可能與特定類型關聯性較弱，建議從基本卦象分析入手。</p>`;
+            }
+        }
+        
         let report = `
             <h3>數字起卦：${input}</h3>
             <p><strong>本卦</strong>：${mainGua.name} (${numToGua[upperGuaNum]}上${numToGua[lowerGuaNum]}下)</p>
@@ -156,6 +195,8 @@
             <p><strong>動爻</strong>：第 ${changingLine} 爻代表**${hexagramData.line_summary[changingLine]}**，是案件的關鍵轉變點。</p>
             <p><strong>變卦</strong>：${changedGua.summary}</p>
             
+            ${caseAnalysisText}
+            
             <h4>嫌犯與線索分析</h4>
             <ul>
                 <li><strong>嫌犯特徵</strong>：根據上卦「${hexagramData.gua[upperGuaNum].name}」與下卦「${hexagramData.gua[lowerGuaNum].name}」，嫌犯可能具有**${hexagramData.gua[upperGuaNum].feature}**或**${hexagramData.gua[lowerGuaNum].feature}**的特徵。</li>
@@ -170,14 +211,14 @@
 
     // 輔助函式：十進制轉二進制（三位數）
     function toBinary(num) {
-        if (num === 8) return '000'; // 坤為8，二進制為000
+        if (num === 8) return '000';
         return (num - 1).toString(2).padStart(3, '0');
     }
 
     // 輔助函式：二進制轉十進制
     function toDecimal(binaryStr) {
         const decimalValue = parseInt(binaryStr, 2);
-        return (decimalValue === 0) ? 8 : decimalValue; // 000為坤8
+        return (decimalValue === 0) ? 8 : decimalValue;
     }
 </script>
 
