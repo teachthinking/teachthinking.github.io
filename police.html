@@ -28,6 +28,8 @@
         .tab-content { display: none; width: 100%; }
         .tab-content.active { display: block; }
         .gua-selects { display: flex; justify-content: space-around; gap: 10px; margin-bottom: 15px; }
+        #jsonStatus { font-size: 0.9em; color: #7f8c8d; margin-top: 10px; text-align: center; }
+        #calculateBtn { width: 100%; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -59,14 +61,12 @@
             </div>
             <label for="changingLineManual">動爻 (1-6)</label>
             <select id="changingLineManual"></select>
-            <button onclick="calculateManualGua()">開始推算</button>
         </div>
 
         <div id="number" class="tab-content">
             <h2>數字起卦 - 9位數</h2>
             <p>請輸入與案件相關的9位數數字，例如車牌、時間或任何直覺想到的數字。</p>
             <input type="number" id="numInput" placeholder="請輸入9位數" maxlength="9">
-            <button onclick="calculateByNumber()">開始推算</button>
         </div>
 
         <select id="caseTypeSelect">
@@ -76,7 +76,10 @@
         <div class="file-upload-section">
             <label for="jsonFile">或手動上傳 JSON 資料檔：</label>
             <input type="file" id="jsonFile" accept=".json">
+            <p id="jsonStatus"></p>
         </div>
+        
+        <button id="calculateBtn" onclick="startCalculation()">開始推算</button>
     </div>
 
     <div id="resultArea"></div>
@@ -87,8 +90,8 @@
 <script>
     let hexagramData = {};
     const numToGua = ['', '乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
+    let currentDataSource = '預設檔案';
 
-    // 頁面載入時，從外部 JSON 檔案載入資料
     window.onload = async () => {
         const fileInput = document.getElementById('jsonFile');
         fileInput.addEventListener('change', handleFileUpload);
@@ -104,11 +107,13 @@
                 throw new Error('無法載入預設 JSON 檔案。');
             }
             hexagramData = await response.json();
-            console.log('預設卦象資料載入成功！');
+            currentDataSource = '預設檔案';
+            updateStatus();
             populateCaseTypeSelect();
         } catch (error) {
             console.error('載入預設資料失敗:', error);
-            alert('無法自動載入預設資料，請手動上傳檔案。');
+            currentDataSource = '載入失敗，請手動上傳檔案。';
+            updateStatus();
         }
     }
 
@@ -120,16 +125,23 @@
         reader.onload = function(e) {
             try {
                 hexagramData = JSON.parse(e.target.result);
-                console.log('使用者上傳的資料載入成功！');
+                currentDataSource = `已載入「${file.name}」`;
+                updateStatus();
                 alert('已成功載入新的 JSON 檔案。');
                 populateCaseTypeSelect();
                 populateGuaSelects();
             } catch (error) {
                 console.error('解析 JSON 檔案失敗:', error);
                 alert('無效的 JSON 檔案，請檢查格式。');
+                currentDataSource = '載入失敗，請檢查檔案格式。';
+                updateStatus();
             }
         };
         reader.readAsText(file);
+    }
+
+    function updateStatus() {
+        document.getElementById('jsonStatus').textContent = `* 目前使用的資料檔：${currentDataSource}`;
     }
 
     function populateGuaSelects() {
@@ -140,6 +152,8 @@
         upperSelect.innerHTML = '';
         lowerSelect.innerHTML = '';
         changingLineSelect.innerHTML = '';
+
+        if (!hexagramData.gua) return;
 
         for (let i = 1; i <= 8; i++) {
             const option = document.createElement('option');
@@ -171,17 +185,25 @@
     }
 
     function openTab(evt, tabName) {
-        let i, tabcontent, tablinks;
-        tabcontent = document.getElementsByClassName("tab-content");
-        for (i = 0; i < tabcontent.length; i++) {
+        let tabcontent = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < tabcontent.length; i++) {
             tabcontent[i].style.display = "none";
         }
-        tablinks = document.getElementsByClassName("tab-btn");
-        for (i = 0; i < tablinks.length; i++) {
+        let tablinks = document.getElementsByClassName("tab-btn");
+        for (let i = 0; i < tablinks.length; i++) {
             tablinks[i].className = tablinks[i].className.replace(" active", "");
         }
         document.getElementById(tabName).style.display = "block";
         evt.currentTarget.className += " active";
+    }
+
+    function startCalculation() {
+        const activeTab = document.querySelector('.tab-content.active').id;
+        if (activeTab === 'number') {
+            calculateByNumber();
+        } else {
+            calculateManualGua();
+        }
     }
 
     function calculateByNumber() {
@@ -197,7 +219,6 @@
         }
         
         const caseType = document.getElementById('caseTypeSelect').value;
-        
         const numStr = String(input);
         const sumLower = parseInt(numStr.substring(0, 3), 10);
         const sumUpper = parseInt(numStr.substring(3, 6), 10);
@@ -207,7 +228,7 @@
         const upperGuaNum = sumUpper % 8 === 0 ? 8 : sumUpper % 8;
         const changingLine = sumChange % 6 === 0 ? 6 : sumChange % 6;
 
-        generateReport(lowerGuaNum, upperGuaNum, changingLine, input, caseType);
+        generateReport(lowerGuaNum, upperGuaNum, changingLine, `數字 ${input}`, caseType);
     }
 
     function calculateManualGua() {
@@ -224,8 +245,7 @@
         generateReport(lowerGuaNum, upperGuaNum, changingLine, '手動取卦', caseType);
     }
 
-    // 卦象分析與報告生成函式 (與先前版本相同)
-    function generateReport(lowerGuaNum, upperGuaNum, changingLine, input, caseType) {
+    function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType) {
         const mainGua = hexagramData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`] || { name: '未知卦名', summary: '無相關解釋。' };
         
         const lowerHexagramBinary = toBinary(lowerGuaNum);
@@ -291,7 +311,7 @@
         }
         
         let report = `
-            <h3>${typeof input === 'number' ? '數字起卦' : '手動取卦'}：${input}</h3>
+            <h3>${inputMethod}</h3>
             <p><strong>本卦</strong>：${mainGua.name} (${numToGua[upperGuaNum]}上${numToGua[lowerGuaNum]}下)</p>
             <p><strong>動爻</strong>：第 ${changingLine} 爻</p>
             <p><strong>互卦</strong>：${interGua.name} (${numToGua[interGuaUpperNum]}上${numToGua[interGuaLowerNum]}下)</p>
@@ -321,13 +341,11 @@
         document.getElementById('resultArea').style.display = 'flex';
     }
 
-    // 輔助函式：十進制轉二進制（三位數）
     function toBinary(num) {
         if (num === 8) return '000';
         return (num - 1).toString(2).padStart(3, '0');
     }
 
-    // 輔助函式：二進制轉十進制
     function toDecimal(binaryStr) {
         const decimalValue = parseInt(binaryStr, 2);
         return (decimalValue === 0) ? 8 : decimalValue;
