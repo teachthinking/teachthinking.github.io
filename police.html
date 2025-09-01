@@ -360,7 +360,7 @@
             
             const upperSum = year + month + day;
             const lowerSum = year + month + day + hour;
-            const changingSum = upperSum + lowerSum; // 更正為上卦與下卦數字加總
+            const changingSum = upperSum + lowerSum; 
 
             upperGuaNum = (upperSum % 8 === 0) ? 8 : upperSum % 8;
             lowerGuaNum = (lowerSum % 8 === 0) ? 8 : lowerSum % 8;
@@ -482,14 +482,13 @@
     }
     
     function saveCase() {
-        if (!currentCaseData) { alert('請先進行卜卦推算後再儲存！'); return; }
+        if (!currentCaseData) { return; } // prevent saving if no case is calculated
         currentCaseData.notes = document.getElementById('caseNotes').value;
         let cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
         const existingIndex = cases.findIndex(c => c.timestamp === currentCaseData.timestamp);
         if (existingIndex !== -1) { cases[existingIndex] = currentCaseData; }
         else { cases.push(currentCaseData); }
         localStorage.setItem('divinationCases', JSON.stringify(cases));
-        alert(`案件「${currentCaseData.caseName}」已成功儲存！`);
         isUnsaved = false;
     }
 
