@@ -46,11 +46,10 @@
         .history-controls .full-width {
             grid-column: 1 / span 2;
         }
+        /* 統一「案件管理」按鈕顏色 */
+        #btn-save, #btn-load { background-color: #27ae60; }
+        #btn-save:hover, #btn-load:hover { background-color: #229955; }
 
-        #btn-save { background-color: #27ae60; }
-        #btn-save:hover { background-color: #229955; }
-        #btn-load { background-color: #3498db; }
-        #btn-load:hover { background-color: #2980b9; }
         #btn-export { background-color: #f39c12; }
         #btn-export:hover { background-color: #e67e22; }
         #btn-import { background-color: #f39c12; }
@@ -126,7 +125,7 @@
         
         <div class="history-controls">
             <button id="btn-save" onclick="saveCase()">儲存案件</button>
-            <button id="btn-load" onclick="showHistoryModal()">載入歷史案件</button>
+            <button id="btn-load" onclick="showHistoryModal()">載入案件</button>
             <label class="file-import-label">
                 <button id="btn-import" onclick="document.getElementById('importFile').click();">載入歷史記錄</button>
                 <input type="file" id="importFile" accept=".json" style="display: none;">
