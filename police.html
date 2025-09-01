@@ -91,7 +91,6 @@
         
         <div class="tab-container">
             <button class="tab-btn active" onclick="openTab(event, 'manual')">手動取卦</button>
-            <button class="tab-btn" onclick="openTab(event, 'number')">數字起卦</button>
         </div>
 
         <div id="manual" class="tab-content active">
@@ -103,12 +102,6 @@
             </div>
             <label for="changingLineManual">動爻 (1-6)</label>
             <select id="changingLineManual"></select>
-        </div>
-
-        <div id="number" class="tab-content">
-            <h2>數字起卦 - 9位數</h2>
-            <p>請輸入與案件相關的9位數數字，例如車牌、時間或任何直覺想到的數字。</p>
-            <input type="text" id="numInput" placeholder="請輸入9位數" maxlength="9" pattern="[0-9]{9}">
         </div>
 
         <select id="caseTypeSelect">
@@ -296,22 +289,7 @@
         const activeTab = document.querySelector('.tab-content.active').id;
         let lowerGuaNum, upperGuaNum, changingLine, inputMethod;
 
-        if (activeTab === 'number') {
-            const input = document.getElementById('numInput').value;
-            if (input.length !== 9 || isNaN(input)) {
-                alert('請輸入有效的9位數數字！');
-                return;
-            }
-            const numStr = String(input);
-            const num1 = parseInt(numStr.substring(0, 3), 10);
-            const num2 = parseInt(numStr.substring(3, 6), 10);
-            const num3 = parseInt(numStr.substring(6, 9), 10);
-            
-            upperGuaNum = num1 % 8 === 0 ? 8 : num1 % 8;
-            lowerGuaNum = num2 % 8 === 0 ? 8 : num2 % 8;
-            changingLine = (num1 + num2 + num3) % 6 === 0 ? 6 : (num1 + num2 + num3) % 6;
-            inputMethod = '數字起卦';
-        } else {
+        if (activeTab === 'manual') {
             upperGuaNum = parseInt(document.getElementById('upperGuaSelect').value, 10);
             lowerGuaNum = parseInt(document.getElementById('lowerGuaSelect').value, 10);
             changingLine = parseInt(document.getElementById('changingLineManual').value, 10);
