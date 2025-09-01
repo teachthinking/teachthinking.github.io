@@ -393,11 +393,11 @@ function getChangingLineGuaNum(changingLine) {
 function drawGuaGraph(svgElement, guaData) {
     svgElement.innerHTML = `
         <defs>
-            <marker id="arrowhead-sheng" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto" fill="green">
-                <polygon points="0 0, 10 3.5, 0 7" />
+            <marker id="arrowhead-sheng" markerWidth="6" markerHeight="4" refX="8" refY="2" orient="auto" fill="green">
+                <polygon points="0 0, 6 2, 0 4" />
             </marker>
-            <marker id="arrowhead-ke" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto" fill="red">
-                <polygon points="0 0, 10 3.5, 0 7" />
+            <marker id="arrowhead-ke" markerWidth="6" markerHeight="4" refX="8" refY="2" orient="auto" fill="red">
+                <polygon points="0 0, 6 2, 0 4" />
             </marker>
         </defs>
     `;
@@ -437,6 +437,61 @@ function drawGuaGraph(svgElement, guaData) {
         { from: '水', to: '火' }
     ];
 
+    // 繪製生關係線條
+    shengRelations.forEach(rel => {
+        const fromNode = nodes.find(n => n.id === rel.from);
+        const toNode = nodes.find(n => n.id === rel.to);
+        if (!fromNode || !toNode) return;
+
+        const weight = getWeight(fromNode.element);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        // 縮短線條以避免箭頭與節點重疊
+        const dx = toNode.x - fromNode.x;
+        const dy = toNode.y - fromNode.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const offset = 40; // 節點半徑
+        const x1 = fromNode.x + (dx * offset) / length;
+        const y1 = fromNode.y + (dy * offset) / length;
+        const x2 = toNode.x - (dx * offset) / length;
+        const y2 = toNode.y - (dy * offset) / length;
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke-width', weight * 8);
+        line.classList.add('relation-line', 'sheng');
+        line.setAttribute('marker-end', 'url(#arrowhead-sheng)');
+        svgElement.appendChild(line);
+    });
+
+    // 繪製剋關係線條
+    keRelations.forEach(rel => {
+        const fromNode = nodes.find(n => n.id === rel.from);
+        const toNode = nodes.find(n => n.id === rel.to);
+        if (!fromNode || !toNode) return;
+
+        const weight = getWeight(fromNode.element);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        // 縮短線條以避免箭頭與節點重疊
+        const dx = toNode.x - fromNode.x;
+        const dy = toNode.y - fromNode.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const offset = 40; // 節點半徑
+        const x1 = fromNode.x + (dx * offset) / length;
+        const y1 = fromNode.y + (dy * offset) / length;
+        const x2 = toNode.x - (dx * offset) / length;
+        const y2 = toNode.y - (dy * offset) / length;
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke-width', weight * 8);
+        line.setAttribute('stroke-dasharray', '5,5');
+        line.classList.add('relation-line', 'ke');
+        line.setAttribute('marker-end', 'url(#arrowhead-ke)');
+        svgElement.appendChild(line);
+    });
+
     // 繪製五行節點
     nodes.forEach(node => {
         const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -452,7 +507,7 @@ function drawGuaGraph(svgElement, guaData) {
 
         const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
         text.setAttribute('x', node.x);
-        text.setAttribute('y', node.y + 5);
+        text.setAttribute('y', node.y - 10); // 上移五行文字，避免箭頭遮擋
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('dominant-baseline', 'middle');
         text.classList.add('gua-text');
@@ -471,51 +526,14 @@ function drawGuaGraph(svgElement, guaData) {
         if (guaLabels.length > 0) {
             const labelText = document.createElementNS("http://www.w3.org/2000/svg", "text");
             labelText.setAttribute('x', node.x);
-            labelText.setAttribute('y', node.y + 20);
+            labelText.setAttribute('y', node.y + 15); // 下移卦名標籤，避免箭頭遮擋
             labelText.setAttribute('text-anchor', 'middle');
-            labelText.setAttribute('font-size', '12px');
+            labelText.setAttribute('font-size', '10px'); // 減小字體以減少擁擠
             labelText.textContent = guaLabels.join(', ');
             group.appendChild(labelText);
         }
 
         svgElement.appendChild(group);
-    });
-
-    // 繪製生關係線條
-    shengRelations.forEach(rel => {
-        const fromNode = nodes.find(n => n.id === rel.from);
-        const toNode = nodes.find(n => n.id === rel.to);
-        if (!fromNode || !toNode) return;
-
-        const weight = getWeight(fromNode.element);
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute('x1', fromNode.x);
-        line.setAttribute('y1', fromNode.y);
-        line.setAttribute('x2', toNode.x);
-        line.setAttribute('y2', toNode.y);
-        line.setAttribute('stroke-width', weight * 8);
-        line.classList.add('relation-line', 'sheng');
-        line.setAttribute('marker-end', 'url(#arrowhead-sheng)');
-        svgElement.appendChild(line);
-    });
-
-    // 繪製剋關係線條
-    keRelations.forEach(rel => {
-        const fromNode = nodes.find(n => n.id === rel.from);
-        const toNode = nodes.find(n => n.id === rel.to);
-        if (!fromNode || !toNode) return;
-
-        const weight = getWeight(fromNode.element);
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute('x1', fromNode.x);
-        line.setAttribute('y1', fromNode.y);
-        line.setAttribute('x2', toNode.x);
-        line.setAttribute('y2', toNode.y);
-        line.setAttribute('stroke-width', weight * 8);
-        line.setAttribute('stroke-dasharray', '5,5');
-        line.classList.add('relation-line', 'ke');
-        line.setAttribute('marker-end', 'url(#arrowhead-ke)');
-        svgElement.appendChild(line);
     });
 }
 
