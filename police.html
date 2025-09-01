@@ -1,560 +1,536 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>梅花心易警察辦案輔助系統</title>
-    <style>
-        body { font-family: '微軟正黑體', 'Microsoft JhengHei', sans-serif; background-color: #f4f4f9; color: #333; display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 20px; min-height: 100vh; }
-        .container { display: flex; flex-direction: column; gap: 20px; max-width: 600px; width: 100%; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { color: #2c3e50; font-size: 2.5em; margin-bottom: 5px; }
-        .header p { color: #7f8c8d; font-size: 1.1em; }
-        input[type="number"], select, input[type="text"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; box-sizing: border-box; }
-        .input-section { background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .input-section h2 { color: #34495e; margin-bottom: 10px; }
-        .input-section p { color: #95a5a6; margin-bottom: 20px; }
-        button { padding: 12px 25px; border: none; border-radius: 5px; color: white; font-size: 1em; cursor: pointer; transition: background-color 0.3s; }
-        #resultArea { background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 30px; display: none; flex-direction: column; align-items: flex-start; margin-top: 20px; text-align: left; }
-        #resultArea h3, #resultArea h4 { color: #2c3e50; }
-        #resultArea hr { width: 100%; border: 0; height: 1px; background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0)); }
-        .disclaimer { font-size: 0.8em; color: #7f8c8d; margin-top: 20px; text-align: center; }
-        .file-upload-section { margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px; }
-        .tab-container { display: flex; justify-content: center; margin-bottom: 20px; }
-        .tab-btn { padding: 10px 20px; border: 1px solid #ccc; background-color: #ecf0f1; cursor: pointer; transition: background-color 0.3s; }
-        .tab-btn:hover { background-color: #bdc3c7; }
-        .tab-btn.active { background-color: #3498db; color: white; border-color: #3498db; }
-        .tab-content { display: none; width: 100%; }
-        .tab-content.active { display: block; }
-        .gua-selects { display: flex; justify-content: space-around; gap: 10px; margin-bottom: 15px; }
-        #jsonStatus { font-size: 0.9em; color: #7f8c8d; margin-top: 10px; text-align: center; }
-        #calculateBtn { 
-            width: 100%; 
-            margin-top: 20px; 
-            background-color: #3498db; 
-        }
-        #calculateBtn:hover { background-color: #2980b9; }
-        .case-notes-section { width: 100%; margin-top: 20px; }
-        .case-notes-section textarea { width: 100%; height: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; resize: vertical; box-sizing: border-box; }
-        
-        /* 卦象按鈕佈局 */
-        .history-controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .history-controls button, .history-controls .full-width {
-            width: 100%;
-        }
-        .history-controls .full-width {
-            grid-column: 1 / span 2;
-        }
-        /* 固定按鈕寬度並統一顏色 */
-        #btn-save, #btn-load { background-color: #27ae60; }
-        #btn-save:hover, #btn-load:hover { background-color: #229955; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>梅花心易警察辦案輔助系統</title>
+    <style>
+        body { font-family: '微軟正黑體', 'Microsoft JhengHei', sans-serif; background-color: #f4f4f9; color: #333; display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 20px; min-height: 100vh; }
+        .container { display: flex; flex-direction: column; gap: 20px; max-width: 600px; width: 100%; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { color: #2c3e50; font-size: 2.5em; margin-bottom: 5px; }
+        .header p { color: #7f8c8d; font-size: 1.1em; }
+        .input-section { background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .input-section h2 { color: #34495e; margin-bottom: 10px; }
+        .input-section p { color: #95a5a6; margin-bottom: 20px; }
+        input[type="number"], select, input[type="text"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; box-sizing: border-box; }
+        button { padding: 12px 25px; border: none; border-radius: 5px; color: white; font-size: 1em; cursor: pointer; transition: background-color 0.3s; }
+        #resultArea { background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 30px; display: none; flex-direction: column; align-items: flex-start; margin-top: 20px; text-align: left; }
+        #resultArea h3, #resultArea h4 { color: #2c3e50; }
+        #resultArea hr { width: 100%; border: 0; height: 1px; background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0)); }
+        .disclaimer { font-size: 0.8em; color: #7f8c8d; margin-top: 20px; text-align: center; }
+        .file-upload-section { margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px; }
+        .tab-container { display: flex; justify-content: center; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; border: 1px solid #ccc; background-color: #ecf0f1; cursor: pointer; transition: background-color 0.3s; }
+        .tab-btn:hover { background-color: #bdc3c7; }
+        .tab-btn.active { background-color: #3498db; color: white; border-color: #3498db; }
+        .tab-content { display: none; width: 100%; }
+        .tab-content.active { display: block; }
+        .gua-selects { display: flex; justify-content: space-around; gap: 10px; margin-bottom: 15px; }
+        #jsonStatus { font-size: 0.9em; color: #7f8c8d; margin-top: 10px; text-align: center; }
+        #calculateBtn { width: 100%; margin-top: 20px; background-color: #3498db; }
+        #calculateBtn:hover { background-color: #2980b9; }
+        .case-notes-section { width: 100%; margin-top: 20px; }
+        .case-notes-section textarea { width: 100%; height: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; resize: vertical; box-sizing: border-box; }
+        
+        /* 卦象按鈕佈局 */
+        .history-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .history-controls button, .history-controls .full-width {
+            width: 100%;
+        }
+        .history-controls .full-width {
+            grid-column: 1 / span 2;
+        }
+        /* 統一「案件管理」按鈕顏色 */
+        #btn-save, #btn-load { background-color: #27ae60; }
+        #btn-save:hover, #btn-load:hover { background-color: #229955; }
 
-        #btn-export, #btn-import { background-color: #f39c12; }
-        #btn-export:hover, #btn-import:hover { background-color: #e67e22; }
+        #btn-export { background-color: #f39c12; }
+        #btn-export:hover { background-color: #e67e22; }
+        #btn-import { background-color: #f39c12; }
+        #btn-import:hover { background-color: #e67e22; }
+        #btn-clear { background-color: #e74c3c; }
+        #btn-clear:hover { background-color: #c0392b; }
 
-        #btn-clear { background-color: #e74c3c; }
-        #btn-clear:hover { background-color: #c0392b; }
+        .file-import-label {
+            width: 100%;
+            display: block;
+            cursor: pointer;
+        }
 
-        /* 修正開始推算按鈕寬度 */
-        .input-section button#calculateBtn, .input-section .file-upload-section button {
-            max-width: 250px; /* 統一按鈕長度 */
-        }
-        .history-controls button {
-            max-width: 100%; /* 歷史控制按鈕恢復預設 */
-        }
+        #historyList { width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin-top: 10px; text-align: left; }
+        .history-item { padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .history-item:hover { background-color: #f0f0f0; }
+        .history-item:last-child { border-bottom: none; }
+        .utility-links { text-align: center; margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 10px; }
+        .utility-links a { margin: 0 10px; color: #3498db; text-decoration: none; transition: color 0.3s; }
+        .utility-links a:hover { color: #2980b9; }
 
-        .file-import-label {
-            width: 100%;
-            display: block;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        #historyList { width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin-top: 10px; text-align: left; }
-        .history-item { padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; }
-        .history-item:hover { background-color: #f0f0f0; }
-        .history-item:last-child { border-bottom: none; }
-        .utility-links { text-align: center; margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 10px; }
-        .utility-links a { margin: 0 10px; color: #3498db; text-decoration: none; transition: color 0.3s; }
-        .utility-links a:hover { color: #2980b9; }
-
-        /* Modal Styles */
-        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); justify-content: center; align-items: center; }
-        .modal-content { background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); text-align: left; }
-        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
-        .close-btn:hover, .close-btn:focus { color: black; text-decoration: none; cursor: pointer; }
-    </style>
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); justify-content: center; align-items: center; }
+        .modal-content { background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); text-align: left; }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .close-btn:hover, .close-btn:focus { color: black; text-decoration: none; cursor: pointer; }
+    </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <h1>梅花心易警察辦案輔助系統</h1>
-        <p>運用古老易經智慧，為案件偵辦提供新視角與線索。</p>
-    </div>
+    <div class="header">
+        <h1>梅花心易警察辦案輔助系統</h1>
+        <p>運用古老易經智慧，為案件偵辦提供新視角與線索。</p>
+    </div>
 
-    <div class="input-section">
-        <input type="text" id="caseName" placeholder="請輸入案件名稱" />
-        
-        <div class="tab-container">
-            <button class="tab-btn active" onclick="openTab(event, 'manual')">手動取卦</button>
-            <button class="tab-btn" onclick="openTab(event, 'number')">數字起卦</button>
-        </div>
+    <div class="input-section">
+        <input type="text" id="caseName" placeholder="請輸入案件名稱" />
+        
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="openTab(event, 'manual')">手動取卦</button>
+            <button class="tab-btn" onclick="openTab(event, 'number')">數字起卦</button>
+        </div>
 
-        <div id="manual" class="tab-content active">
-            <h2>手動取卦</h2>
-            <p>請依直覺或觀察到的事物，手動選擇上卦、下卦與動爻。</p>
-            <div class="gua-selects">
-                <div><label for="upperGuaSelect">上卦</label><select id="upperGuaSelect"></select></div>
-                <div><label for="lowerGuaSelect">下卦</label><select id="lowerGuaSelect"></select></div>
-            </div>
-            <label for="changingLineManual">動爻 (1-6)</label>
-            <select id="changingLineManual"></select>
-        </div>
+        <div id="manual" class="tab-content active">
+            <h2>手動取卦</h2>
+            <p>請依直覺或觀察到的事物，手動選擇上卦、下卦與動爻。</p>
+            <div class="gua-selects">
+                <div><label for="upperGuaSelect">上卦</label><select id="upperGuaSelect"></select></div>
+                <div><label for="lowerGuaSelect">下卦</label><select id="lowerGuaSelect"></select></div>
+            </div>
+            <label for="changingLineManual">動爻 (1-6)</label>
+            <select id="changingLineManual"></select>
+        </div>
 
-        <div id="number" class="tab-content">
-            <h2>數字起卦 - 9位數</h2>
-            <p>請輸入與案件相關的9位數數字，例如車牌、時間或任何直覺想到的數字。</p>
-            <input type="text" id="numInput" placeholder="請輸入9位數字" maxlength="9" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0, 9)">
-        </div>
+        <div id="number" class="tab-content">
+            <h2>數字起卦 - 9位數</h2>
+            <p>請輸入與案件相關的9位數數字，例如車牌、時間或任何直覺想到的數字。</p>
+            <input type="text" id="numInput" placeholder="請輸入9位數" maxlength="9" pattern="[0-9]{9}">
+        </div>
 
-        <select id="caseTypeSelect">
-            <option value="">請選擇案件類型 (選填)</option>
-        </select>
+        <select id="caseTypeSelect">
+            <option value="">請選擇案件類型 (選填)</option>
+        </select>
 
-        <div class="file-upload-section">
-            <label for="jsonFile">或手動上傳 JSON 資料檔：</label>
-            <input type="file" id="jsonFile" accept=".json">
-            <p id="jsonStatus"></p>
-        </div>
-        
-        <button id="calculateBtn" onclick="startCalculation()">開始推算</button>
-        
-        <div class="history-controls">
-            <button id="btn-save" onclick="saveCase()">儲存案件</button>
-            <button id="btn-load" onclick="showHistoryModal()">載入案件</button>
-            <button id="btn-import" onclick="document.getElementById('importFile').click();">載入歷史記錄</button>
-            <input type="file" id="importFile" accept=".json" style="display: none;">
-            <button id="btn-export" onclick="exportCases()">匯出歷史記錄</button>
-            <button id="btn-clear" class="full-width" onclick="clearAllCases()">清空歷史記錄</button>
-        </div>
-    </div>
-    
-    <div id="resultArea"></div>
-    
-    <div id="notesSection" class="case-notes-section" style="display: none;">
-        <h3>案件筆記</h3>
-        <p>記錄您的辦案心得與補充觀察。</p>
-        <textarea id="caseNotes" placeholder="在這裡輸入您的筆記..."></textarea>
-    </div>
-    
-    <p class="disclaimer">* 本系統為輔助工具，其分析結果僅供辦案參考與啟發思路，不應作為唯一的偵辦依據。</p>
-    
-    <div class="utility-links">
-        <a href="police_json.html">編輯解卦檔</a> | 
-        <a href="police_help.html">使用說明</a> |
-        <a href="divination_notes.html">卜卦須知</a>
-    </div>
+        <div class="file-upload-section">
+            <label for="jsonFile">或手動上傳 JSON 資料檔：</label>
+            <input type="file" id="jsonFile" accept=".json">
+            <p id="jsonStatus"></p>
+        </div>
+        
+        <button id="calculateBtn" onclick="startCalculation()">開始推算</button>
+        
+        <div class="history-controls">
+            <button id="btn-save" onclick="saveCase()">儲存案件</button>
+            <button id="btn-load" onclick="showHistoryModal()">載入案件</button>
+            <label class="file-import-label">
+                <button id="btn-import" onclick="document.getElementById('importFile').click();">載入歷史記錄</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
+            </label>
+            <button id="btn-export" onclick="exportCases()">匯出歷史記錄</button>
+            <button id="btn-clear" class="full-width" onclick="clearAllCases()">清空歷史記錄</button>
+        </div>
+    </div>
+    
+    <div id="resultArea"></div>
+    
+    <div id="notesSection" class="case-notes-section" style="display: none;">
+        <h3>案件筆記</h3>
+        <p>記錄您的辦案心得與補充觀察。</p>
+        <textarea id="caseNotes" placeholder="在這裡輸入您的筆記..."></textarea>
+    </div>
+    
+    <p class="disclaimer">* 本系統為輔助工具，其分析結果僅供辦案參考與啟發思路，不應作為唯一的偵辦依據。</p>
+    
+    <div class="utility-links">
+        <a href="police_json.html">編輯解卦檔</a> | 
+        <a href="police_help.html">使用說明</a> |
+        <a href="divination_notes.html">卜卦須知</a>
+    </div>
 </div>
 
 <div id="historyModal" class="modal">
-    <div class="modal-content">
-        <span class="close-btn" onclick="closeModal()">&times;</span>
-        <h3>載入歷史案件</h3>
-        <p>點擊案件名稱即可載入。</p>
-        <div id="historyList"></div>
-    </div>
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h3>載入歷史案件</h3>
+        <p>點擊案件名稱即可載入。</p>
+        <div id="historyList"></div>
+    </div>
 </div>
 
 <script>
-    let hexagramData = {};
-    const numToGua = ['', '乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
-    let currentDataSource = '預設檔案';
-    let currentCaseData = null;
-    let isUnsaved = false;
+    let hexagramData = {};
+    const numToGua = ['', '乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
+    let currentDataSource = '預設檔案';
+    let currentCaseData = null;
+    let isUnsaved = false;
 
-    window.onload = async () => {
-        const fileInput = document.getElementById('jsonFile');
-        fileInput.addEventListener('change', handleFileUpload);
-        
-        const importInput = document.getElementById('importFile');
-        importInput.addEventListener('change', importCases);
+    window.onload = async () => {
+        const fileInput = document.getElementById('jsonFile');
+        fileInput.addEventListener('change', handleFileUpload);
+        
+        const importInput = document.getElementById('importFile');
+        importInput.addEventListener('change', importCases);
 
-        await loadDefaultData();
-        populateGuaSelects();
+        await loadDefaultData();
+        populateGuaSelects();
 
-        window.addEventListener('beforeunload', (event) => {
-            if (isUnsaved) {
-                event.preventDefault();
-                event.returnValue = '您有未儲存的案件，確定要離開嗎？';
-            }
-        });
-    };
+        window.addEventListener('beforeunload', (event) => {
+            if (isUnsaved) {
+                event.preventDefault();
+                event.returnValue = '您有未儲存的案件，確定要離開嗎？未儲存的資料將會遺失。';
+            }
+        });
+    };
 
-    async function loadDefaultData() {
-        try {
-            const response = await fetch('hexagram_data.json');
-            if (!response.ok) {
-                throw new Error('無法載入預設 JSON 檔案。');
-            }
-            hexagramData = await response.json();
-            currentDataSource = '預設檔案';
-            updateStatus();
-            populateCaseTypeSelect();
-        } catch (error) {
-            console.error('載入預設資料失敗:', error);
-            currentDataSource = '載入失敗，請手動上傳檔案。';
-            updateStatus();
-        }
-    }
+    async function loadDefaultData() {
+        try {
+            const response = await fetch('hexagram_data.json');
+            if (!response.ok) {
+                throw new Error('無法載入預設 JSON 檔案。');
+            }
+            hexagramData = await response.json();
+            currentDataSource = '預設檔案';
+            updateStatus();
+            populateCaseTypeSelect();
+        } catch (error) {
+            console.error('載入預設資料失敗:', error);
+            currentDataSource = '載入失敗，請手動上傳檔案。';
+            updateStatus();
+        }
+    }
 
-    function handleFileUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                hexagramData = JSON.parse(e.target.result);
-                currentDataSource = `已載入「${file.name}」`;
-                updateStatus();
-                alert('已成功載入新的 JSON 檔案。');
-                populateCaseTypeSelect();
-                populateGuaSelects();
-            } catch (error) {
-                console.error('解析 JSON 檔案失敗:', error);
-                alert('無效的 JSON 檔案，請檢查格式。');
-                currentDataSource = '載入失敗，請檢查檔案格式。';
-                updateStatus();
-            }
-        };
-        reader.readAsText(file);
-    }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                hexagramData = JSON.parse(e.target.result);
+                currentDataSource = `已載入「${file.name}」`;
+                updateStatus();
+                alert('已成功載入新的 JSON 檔案。');
+                populateCaseTypeSelect();
+                populateGuaSelects();
+            } catch (error) {
+                console.error('解析 JSON 檔案失敗:', error);
+                alert('無效的 JSON 檔案，請檢查格式。');
+                currentDataSource = '載入失敗，請檢查檔案格式。';
+                updateStatus();
+            }
+        };
+        reader.readAsText(file);
+    }
 
-    function updateStatus() {
-        document.getElementById('jsonStatus').textContent = `* 目前使用的資料檔：${currentDataSource}`;
-    }
+    function updateStatus() {
+        document.getElementById('jsonStatus').textContent = `* 目前使用的資料檔：${currentDataSource}`;
+    }
 
-    function populateGuaSelects() {
-        const upperSelect = document.getElementById('upperGuaSelect');
-        const lowerSelect = document.getElementById('lowerGuaSelect');
-        const changingLineSelect = document.getElementById('changingLineManual');
-        
-        upperSelect.innerHTML = '';
-        lowerSelect.innerHTML = '';
-        changingLineSelect.innerHTML = '';
+    function populateGuaSelects() {
+        const upperSelect = document.getElementById('upperGuaSelect');
+        const lowerSelect = document.getElementById('lowerGuaSelect');
+        const changingLineSelect = document.getElementById('changingLineManual');
+        
+        upperSelect.innerHTML = '';
+        lowerSelect.innerHTML = '';
+        changingLineSelect.innerHTML = '';
 
-        if (!hexagramData.gua) return;
+        if (!hexagramData.gua) return;
 
-        for (let i = 1; i <= 8; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = hexagramData.gua[i].name;
-            upperSelect.appendChild(option.cloneNode(true));
-            lowerSelect.appendChild(option.cloneNode(true));
-        }
+        for (let i = 1; i <= 8; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = hexagramData.gua[i].name;
+            upperSelect.appendChild(option.cloneNode(true));
+            lowerSelect.appendChild(option.cloneNode(true));
+        }
 
-        for (let i = 1; i <= 6; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = `第 ${i} 爻`;
-            changingLineSelect.appendChild(option);
-        }
-    }
+        for (let i = 1; i <= 6; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `第 ${i} 爻`;
+            changingLineSelect.appendChild(option);
+        }
+    }
 
-    function populateCaseTypeSelect() {
-        const selectElement = document.getElementById('caseTypeSelect');
-        selectElement.innerHTML = '<option value="">請選擇案件類型 (選填)</option>';
-        if (hexagramData.case_analysis) {
-            for (const key in hexagramData.case_analysis) {
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = hexagramData.case_analysis[key].name;
-                selectElement.appendChild(option);
-            }
-        }
-    }
+    function populateCaseTypeSelect() {
+        const selectElement = document.getElementById('caseTypeSelect');
+        selectElement.innerHTML = '<option value="">請選擇案件類型 (選填)</option>';
+        if (hexagramData.case_analysis) {
+            for (const key in hexagramData.case_analysis) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = hexagramData.case_analysis[key].name;
+                selectElement.appendChild(option);
+            }
+        }
+    }
 
-    function openTab(evt, tabName) {
-        let tabcontent = document.getElementsByClassName("tab-content");
-        for (let i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].style.display = "none";
-        }
-        let tablinks = document.getElementsByClassName("tab-btn");
-        for (let i = 0; i < tablinks.length; i++) {
-            tablinks[i].className = tablinks[i].className.replace(" active", "");
-        }
-        document.getElementById(tabName).style.display = "block";
-        evt.currentTarget.className += " active";
-    }
+    function openTab(evt, tabName) {
+        let tabcontent = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        let tablinks = document.getElementsByClassName("tab-btn");
+        for (let i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
 
-    function startCalculation() {
-        if (isUnsaved) {
-            saveCase(true); // 自動儲存案件
-        }
+    function startCalculation() {
+        if (isUnsaved && !confirm('您有未儲存的案件，確定要進行新的推算嗎？未儲存的資料將會遺失。')) {
+            return;
+        }
 
-        if (Object.keys(hexagramData).length === 0 || !hexagramData.hexagrams) {
-            alert('卦象資料尚未載入，請先上傳 JSON 檔案或等待預設檔案載入。');
-            return;
-        }
+        if (Object.keys(hexagramData).length === 0 || !hexagramData.hexagrams) {
+            alert('卦象資料尚未載入，請先上傳 JSON 檔案或等待預設檔案載入。');
+            return;
+        }
 
-        const activeTab = document.querySelector('.tab-content.active').id;
-        let lowerGuaNum, upperGuaNum, changingLine, inputMethod;
+        const activeTab = document.querySelector('.tab-content.active').id;
+        let lowerGuaNum, upperGuaNum, changingLine, inputMethod;
 
-        if (activeTab === 'number') {
-            const input = document.getElementById('numInput').value;
-            // 驗證輸入是否為9位數字
-            if (input === '' || !/^\d{9}$/.test(input)) {
-                alert('請輸入有效的9位數數字！');
-                return;
-            }
-            const numStr = String(input);
-            const sumLower = parseInt(numStr.substring(0, 3), 10);
-            const sumUpper = parseInt(numStr.substring(3, 6), 10);
-            const sumChange = parseInt(numStr.substring(6, 9), 10);
-            
-            // --- 修正開始 ---
-            lowerGuaNum = sumLower % 8;
-            upperGuaNum = sumUpper % 8;
-            changingLine = sumChange % 6;
-            
-            if (lowerGuaNum === 0) lowerGuaNum = 8;
-            if (upperGuaNum === 0) upperGuaNum = 8;
-            if (changingLine === 0) changingLine = 6;
-            // --- 修正結束 ---
+        if (activeTab === 'number') {
+            const input = document.getElementById('numInput').value;
+            if (input.length !== 9 || isNaN(input)) {
+                alert('請輸入有效的9位數數字！');
+                return;
+            }
+            const numStr = String(input);
+            const sumLower = parseInt(numStr.substring(0, 3), 10);
+            const sumUpper = parseInt(numStr.substring(3, 6), 10);
+            const sumChange = parseInt(numStr.substring(6, 9), 10);
+            
+            lowerGuaNum = sumLower % 8 === 0 ? 8 : sumLower % 8;
+            upperGuaNum = sumUpper % 8 === 0 ? 8 : sumUpper % 8;
+            changingLine = sumChange % 6 === 0 ? 6 : sumChange % 6;
+            inputMethod = '數字起卦';
+        } else {
+            upperGuaNum = parseInt(document.getElementById('upperGuaSelect').value, 10);
+            lowerGuaNum = parseInt(document.getElementById('lowerGuaSelect').value, 10);
+            changingLine = parseInt(document.getElementById('changingLineManual').value, 10);
+            inputMethod = '手動取卦';
+        }
 
-            inputMethod = '數字起卦';
-        } else {
-            upperGuaNum = parseInt(document.getElementById('upperGuaSelect').value, 10);
-            lowerGuaNum = parseInt(document.getElementById('lowerGuaSelect').value, 10);
-            changingLine = parseInt(document.getElementById('changingLineManual').value, 10);
-            inputMethod = '手動取卦';
-        }
+        const caseType = document.getElementById('caseTypeSelect').value;
+        const caseName = document.getElementById('caseName').value || `未命名案件 - ${new Date().toLocaleString()}`;
+        
+        generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName);
 
-        const caseType = document.getElementById('caseTypeSelect').value;
-        const caseName = document.getElementById('caseName').value || `未命名案件 - ${new Date().toLocaleString()}`;
-        
-        generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName);
+        isUnsaved = true;
+    }
+    
+    function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName) {
+        const mainGua = hexagramData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`] || { name: '未知卦名', summary: '無相關解釋。' };
+        const lowerHexagramBinary = toBinary(lowerGuaNum);
+        const upperHexagramBinary = toBinary(upperGuaNum);
+        const fullHexagramBinary = upperHexagramBinary + lowerHexagramBinary;
+        const interHexagramBinaryLower = fullHexagramBinary.substring(1, 4);
+        const interHexagramBinaryUpper = fullHexagramBinary.substring(2, 5);
+        const interGuaLowerNum = toDecimal(interHexagramBinaryLower);
+        const interGuaUpperNum = toDecimal(interHexagramBinaryUpper);
+        const interGua = hexagramData.hexagrams[`${interGuaUpperNum}_${interGuaLowerNum}`] || { name: '未知互卦', summary: '無相關解釋。' };
+        let changedUpperGuaNum = upperGuaNum;
+        let changedLowerGuaNum = lowerGuaNum;
+        if (changingLine > 3) {
+            changedUpperGuaNum = (upperGuaNum % 2 === 0) ? (upperGuaNum - 1 || 8) : (upperGuaNum + 1);
+        } else {
+            changedLowerGuaNum = (lowerGuaNum % 2 === 0) ? (lowerGuaNum - 1 || 8) : (lowerGuaNum + 1);
+        }
+        const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '無相關解釋。' };
+        let tiGua, yongGua;
+        if (changingLine > 3) {
+            tiGua = hexagramData.gua[lowerGuaNum];
+            yongGua = hexagramData.gua[upperGuaNum];
+        } else {
+            tiGua = hexagramData.gua[upperGuaNum];
+            yongGua = hexagramData.gua[lowerGuaNum];
+        }
 
-        isUnsaved = true;
-    }
-    
-    function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName) {
-        const mainGua = hexagramData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`] || { name: '未知卦名', summary: '無相關解釋。' };
-        const lowerHexagramBinary = toBinary(lowerGuaNum);
-        const upperHexagramBinary = toBinary(upperGuaNum);
-        const fullHexagramBinary = upperHexagramBinary + lowerHexagramBinary;
-        const interHexagramBinaryLower = fullHexagramBinary.substring(1, 4);
-        const interHexagramBinaryUpper = fullHexagramBinary.substring(2, 5);
-        const interGuaLowerNum = toDecimal(interHexagramBinaryLower);
-        const interGuaUpperNum = toDecimal(interHexagramBinaryUpper);
-        const interGua = hexagramData.hexagrams[`${interGuaUpperNum}_${interGuaLowerNum}`] || { name: '未知互卦', summary: '無相關解釋。' };
-        let changedUpperGuaNum = upperGuaNum;
-        let changedLowerGuaNum = lowerGuaNum;
-        if (changingLine > 3) {
-            changedUpperGuaNum = (upperGuaNum % 2 === 0) ? (upperGuaNum - 1 || 8) : (upperGuaNum + 1);
-        } else {
-            changedLowerGuaNum = (lowerGuaNum % 2 === 0) ? (lowerGuaNum - 1 || 8) : (lowerGuaNum + 1);
-        }
-        const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '無相關解釋。' };
-        let tiGua, yongGua;
-        if (changingLine > 3) {
-            tiGua = hexagramData.gua[lowerGuaNum];
-            yongGua = hexagramData.gua[upperGuaNum];
-        } else {
-            tiGua = hexagramData.gua[upperGuaNum];
-            yongGua = hexagramData.gua[lowerGuaNum];
-        }
+        let relationText = '';
+        const tiElement = tiGua.element;
+        const yongElement = yongGua.element;
+        if (tiElement === yongElement) { relationText = `${tiGua.name}與${yongGua.name}為**比和**關係，代表雙方勢均力敵，案件將按常理發展，但可能需要更多努力。`; }
+        else if (hexagramData.element_relations[tiElement].生 === yongElement) { relationText = `${tiGua.name}生${yongGua.name}，代表**我方生助對方**。這意味著警方主動付出、積極追查，案件進展順利。`; }
+        else if (hexagramData.element_relations[tiElement].剋 === yongElement) { relationText = `${tiGua.name}剋${yongGua.name}，代表**我方克制對方**。這意味著警方能掌控局面，可成功將嫌犯繩之以法。`; }
+        else if (hexagramData.element_relations[yongElement].生 === tiElement) { relationText = `${yongGua.name}生${tiGua.name}，代表**對方生助我方**。這意味著嫌犯或線索提供意外幫助，讓警方被動獲得突破。`; }
+        else if (hexagramData.element_relations[yongElement].剋 === tiGua) { relationText = `${yongGua.name}剋${tiGua.name}，代表**對方克制我方**。這意味著警方辦案受阻，嫌犯反制能力強，需謹慎應對。`; }
 
-        let relationText = '';
-        const tiElement = tiGua.element;
-        const yongElement = yongGua.element;
-        if (tiElement === yongElement) { relationText = `${tiGua.name}與${yongGua.name}為**比和**關係，代表雙方勢均力敵，案件將按常理發展，但可能需要更多努力。`; }
-        else if (hexagramData.element_relations[tiElement].生 === yongElement) { relationText = `${tiGua.name}生${yongGua.name}，代表**我方生助對方**。這意味著警方主動付出、積極追查，案件進展順利。`; }
-        else if (hexagramData.element_relations[tiElement].剋 === yongElement) { relationText = `${tiGua.name}剋${yongGua.name}，代表**我方克制對方**。這意味著警方能掌控局面，可成功將嫌犯繩之以法。`; }
-        else if (hexagramData.element_relations[yongElement].生 === tiElement) { relationText = `${yongGua.name}生${tiGua.name}，代表**對方生助我方**。這意味著嫌犯或線索提供意外幫助，讓警方被動獲得突破。`; }
-        else if (hexagramData.element_relations[yongElement].剋 === tiGua) { relationText = `${yongGua.name}剋${tiGua.name}，代表**對方克制我方**。這意味著警方辦案受阻，嫌犯反制能力強，需謹慎應對。`; }
+        let caseAnalysisText = '';
+        if (caseType && hexagramData.case_analysis[caseType]) {
+            const caseData = hexagramData.case_analysis[caseType];
+            caseAnalysisText += `<h4>專案案件分析：${caseData.name}</h4><p>${caseData.summary}</p>`;
+            let foundAnalysis = false;
+            const guaKeys = [`${upperGuaNum}_${lowerGuaNum}`, `${interGuaUpperNum}_${interGuaLowerNum}`, `${changedUpperGuaNum}_${changedLowerGuaNum}`];
+            for (const key of guaKeys) {
+                 if (caseData.related_hexagrams[key]) {
+                    caseAnalysisText += `<p><strong>${caseData.related_hexagrams[key]}</strong></p>`;
+                    foundAnalysis = true;
+                }
+            }
+            if (!foundAnalysis) { caseAnalysisText += `<p>根據卦象，此案件的發展可能與特定類型關聯性較弱，建議從基本卦象分析入手。</p>`; }
+        }
+        
+        const reportHtml = `
+            <h3>${inputMethod}</h3>
+            <p><strong>本卦</strong>：${mainGua.name} (${numToGua[upperGuaNum]}上${numToGua[lowerGuaNum]}下)</p>
+            <p><strong>動爻</strong>：第 ${changingLine} 爻</p>
+            <p><strong>互卦</strong>：${interGua.name} (${numToGua[interGuaUpperNum]}上${numToGua[interGuaLowerNum]}下)</p>
+            <p><strong>變卦</strong>：${changedGua.name}</p>
+            <hr>
+            <h4>案件核心分析</h4>
+            <p><strong>本卦</strong>：${mainGua.summary}</p>
+            <p><strong>互卦 (隱藏狀況)</strong>：互卦代表案件的**中間過程**或**隱藏的狀況**。它顯示了案件中不為人知的內幕、潛在的關係變數或未來的走向。這暗示案件深層的真相可能與互卦「${interGua.name}」的卦義相關：**${interGua.summary}**</p>
+            <h4>案件發展與轉折</h4>
+            <p><strong>動爻</strong>：第 ${changingLine} 爻代表**${hexagramData.line_summary[changingLine]}**，是案件的關鍵轉變點。</p>
+            <p><strong>變卦 (最終結果)</strong>：變卦代表案件的**最終結局**或**未來趨勢**。此卦象預示著案件的最終走向將會是「${changedGua.name}」，其主要含義為：**${changedGua.summary}**</p>
+            ${caseAnalysisText}
+            <h4>嫌犯與線索分析</h4>
+            <ul>
+                <li><strong>嫌犯特徵</strong>：根據上卦「${hexagramData.gua[upperGuaNum].name}」與下卦「${hexagramData.gua[lowerGuaNum].name}」，嫌犯可能具有**${hexagramData.gua[upperGuaNum].feature}**或**${hexagramData.gua[lowerGuaNum].feature}**的特徵。</li>
+                <li><strong>線索方位</strong>：關鍵線索可能位於**${hexagramData.gua[lowerGuaNum].direction}**方，嫌犯可能藏匿在**${hexagramData.gua[upperGuaNum].direction}**方。</li>
+                <li><strong>體用生剋</strong>：體卦（我方，警方）為**${tiGua.name}**，用卦（對方，嫌犯）為**${yongGua.name}**。${relationText}</li>
+            </ul>
+        `;
 
-        let caseAnalysisText = '';
-        if (caseType && hexagramData.case_analysis[caseType]) {
-            const caseData = hexagramData.case_analysis[caseType];
-            caseAnalysisText += `<h4>專案案件分析：${caseData.name}</h4><p>${caseData.summary}</p>`;
-            let foundAnalysis = false;
-            const guaKeys = [`${upperGuaNum}_${lowerGuaNum}`, `${interGuaUpperGuaNum}_${interGuaLowerNum}`, `${changedUpperGuaNum}_${changedLowerGuaNum}`];
-            for (const key of guaKeys) {
-                 if (caseData.related_hexagrams[key]) {
-                    caseAnalysisText += `<p><strong>${caseData.related_hexagrams[key]}</strong></p>`;
-                    foundAnalysis = true;
-                }
-            }
-            if (!foundAnalysis) { caseAnalysisText += `<p>根據卦象，此案件的發展可能與特定類型關聯性較弱，建議從基本卦象分析入手。</p>`; }
-        }
-        
-        const reportHtml = `
-            <h3>${inputMethod}</h3>
-            <p><strong>本卦</strong>：${mainGua.name} (${numToGua[upperGuaNum]}上${numToGua[lowerGuaNum]}下)</p>
-            <p><strong>動爻</strong>：第 ${changingLine} 爻</p>
-            <p><strong>互卦</strong>：${interGua.name} (${numToGua[interGuaUpperNum]}上${numToGua[interGuaLowerNum]}下)</p>
-            <p><strong>變卦</strong>：${changedGua.name}</p>
-            <hr>
-            <h4>案件核心分析</h4>
-            <p><strong>本卦</strong>：${mainGua.summary}</p>
-            <p><strong>互卦 (隱藏狀況)</strong>：互卦代表案件的**中間過程**或**隱藏的狀況**。它顯示了案件中不為人知的內幕、潛在的關係變數或未來的走向。這暗示案件深層的真相可能與互卦「${interGua.name}」的卦義相關：**${interGua.summary}**</p>
-            <h4>案件發展與轉折</h4>
-            <p><strong>動爻</strong>：第 ${changingLine} 爻代表**${hexagramData.line_summary[changingLine]}**，是案件的關鍵轉變點。</p>
-            <p><strong>變卦 (最終結果)</strong>：變卦代表案件的**最終結局**或**未來趨勢**。此卦象預示著案件的最終走向將會是「${changedGua.name}」，其主要含義為：**${changedGua.summary}**</p>
-            ${caseAnalysisText}
-            <h4>嫌犯與線索分析</h4>
-            <ul>
-                <li><strong>嫌犯特徵</strong>：根據上卦「${hexagramData.gua[upperGuaNum].name}」與下卦「${hexagramData.gua[lowerGuaNum].name}」，嫌犯可能具有**${hexagramData.gua[upperGuaNum].feature}**或**${hexagramData.gua[lowerGuaNum].feature}**的特徵。</li>
-                <li><strong>線索方位</strong>：關鍵線索可能位於**${hexagramData.gua[lowerGuaNum].direction}**方，嫌犯可能藏匿在**${hexagramData.gua[upperGuaNum].direction}**方。</li>
-                <li><strong>體用生剋</strong>：體卦（我方，警方）為**${tiGua.name}**，用卦（對方，嫌犯）為**${yongGua.name}**。${relationText}</li>
-            </ul>
-        `;
+        currentCaseData = {
+            caseName: caseName,
+            timestamp: new Date().toISOString(),
+            inputMethod: inputMethod,
+            lowerGuaNum: lowerGuaNum,
+            upperGuaNum: upperGuaNum,
+            changingLine: changingLine,
+            caseType: caseType,
+            reportHtml: reportHtml,
+            notes: ''
+        };
+        document.getElementById('resultArea').innerHTML = reportHtml;
+        document.getElementById('resultArea').style.display = 'flex';
+        document.getElementById('notesSection').style.display = 'block';
+        document.getElementById('caseNotes').value = '';
+        isUnsaved = true;
+    }
+    
+    function saveCase() {
+        if (!currentCaseData) { alert('請先進行卜卦推算後再儲存！'); return; }
+        currentCaseData.notes = document.getElementById('caseNotes').value;
+        let cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+        const existingIndex = cases.findIndex(c => c.timestamp === currentCaseData.timestamp);
+        if (existingIndex !== -1) { cases[existingIndex] = currentCaseData; }
+        else { cases.push(currentCaseData); }
+        localStorage.setItem('divinationCases', JSON.stringify(cases));
+        alert(`案件「${currentCaseData.caseName}」已成功儲存！`);
+        isUnsaved = false;
+    }
 
-        currentCaseData = {
-            caseName: caseName,
-            timestamp: new Date().toISOString(),
-            inputMethod: inputMethod,
-            lowerGuaNum: lowerGuaNum,
-            upperGuaNum: upperGuaNum,
-            changingLine: changingLine,
-            caseType: caseType,
-            reportHtml: reportHtml,
-            notes: ''
-        };
-        document.getElementById('resultArea').innerHTML = reportHtml;
-        document.getElementById('resultArea').style.display = 'flex';
-        document.getElementById('notesSection').style.display = 'block';
-        document.getElementById('caseNotes').value = '';
-        isUnsaved = true;
-    }
-    
-    function saveCase(isAutoSave = false) {
-        if (!currentCaseData) { 
-            if (isAutoSave) return;
-            alert('請先進行卜卦推算後再儲存！'); 
-            return; 
-        }
-        currentCaseData.notes = document.getElementById('caseNotes').value;
-        let cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
-        const existingIndex = cases.findIndex(c => c.timestamp === currentCaseData.timestamp);
-        if (existingIndex !== -1) { cases[existingIndex] = currentCaseData; }
-        else { cases.push(currentCaseData); }
-        localStorage.setItem('divinationCases', JSON.stringify(cases));
-        if (!isAutoSave) {
-            alert(`案件「${currentCaseData.caseName}」已成功儲存！`);
-        }
-        isUnsaved = false;
-    }
+    function showHistoryModal() {
+        const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+        if (cases.length === 0) { alert('目前沒有歷史記錄。'); return; }
+        const historyList = document.getElementById('historyList');
+        historyList.innerHTML = '';
+        cases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        cases.forEach((c, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'history-item';
+            itemDiv.onclick = () => {
+                if (isUnsaved && !confirm('您有未儲存的案件，確定要載入歷史記錄嗎？未儲存的資料將會遺失。')) { return; }
+                loadCase(index);
+                closeModal();
+            };
+            itemDiv.innerHTML = `<strong>${c.caseName}</strong> (${c.inputMethod})<br><small>${new Date(c.timestamp).toLocaleString()}</small>`;
+            historyList.appendChild(itemDiv);
+        });
+        document.getElementById('historyModal').style.display = 'flex';
+    }
+    
+    function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
 
-    function showHistoryModal() {
-        const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
-        if (cases.length === 0) { alert('目前沒有歷史記錄。'); return; }
-        const historyList = document.getElementById('historyList');
-        historyList.innerHTML = '';
-        cases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        cases.forEach((c, index) => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'history-item';
-            itemDiv.onclick = () => {
-                if (isUnsaved && !confirm('您有未儲存的案件，確定要載入歷史記錄嗎？未儲存的資料將會遺失。')) { return; }
-                loadCase(index);
-                closeModal();
-            };
-            itemDiv.innerHTML = `<strong>${c.caseName}</strong> (${c.inputMethod})<br><small>${new Date(c.timestamp).toLocaleString()}</small>`;
-            historyList.appendChild(itemDiv);
-        });
-        document.getElementById('historyModal').style.display = 'flex';
-    }
-    
-    function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
+    function loadCase(index) {
+        const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+        const sortedCases = cases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const caseToLoad = sortedCases[index];
+        if (!caseToLoad) return;
+        currentCaseData = caseToLoad;
+        document.getElementById('caseName').value = currentCaseData.caseName;
+        document.getElementById('resultArea').innerHTML = currentCaseData.reportHtml;
+        document.getElementById('resultArea').style.display = 'flex';
+        document.getElementById('notesSection').style.display = 'block';
+        document.getElementById('caseNotes').value = currentCaseData.notes;
+        alert(`案件「${currentCaseData.caseName}」已成功載入！`);
+        isUnsaved = false;
+    }
 
-    function loadCase(index) {
-        const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
-        const sortedCases = cases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        const caseToLoad = sortedCases[index];
-        if (!caseToLoad) return;
-        currentCaseData = caseToLoad;
-        document.getElementById('caseName').value = currentCaseData.caseName;
-        document.getElementById('resultArea').innerHTML = currentCaseData.reportHtml;
-        document.getElementById('resultArea').style.display = 'flex';
-        document.getElementById('notesSection').style.display = 'block';
-        document.getElementById('caseNotes').value = currentCaseData.notes;
-        alert(`案件「${currentCaseData.caseName}」已成功載入！`);
-        isUnsaved = false;
-    }
+    function exportCases() {
+        const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+        if (cases.length === 0) { alert('沒有可匯出的歷史記錄。'); return; }
+        const dataStr = JSON.stringify(cases, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'divination_history.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert('歷史記錄已成功匯出為 divination_history.json 檔案。');
+    }
 
-    function exportCases() {
-        const cases = JSON.parse(localStorage.getItem('divinationCases')) || [];
-        if (cases.length === 0) { alert('沒有可匯出的歷史記錄。'); return; }
-        const dataStr = JSON.stringify(cases, null, 2);
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'divination_history.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        alert('歷史記錄已成功匯出為 divination_history.json 檔案。');
-    }
+    function importCases(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const newCases = JSON.parse(e.target.result);
+                if (!Array.isArray(newCases)) { throw new Error('檔案格式不正確，應為 JSON 陣列。'); }
+                const currentCases = JSON.parse(localStorage.getItem('divinationCases')) || [];
+                const option = prompt('請選擇載入方式：\n輸入 "1" 覆蓋現有記錄\n輸入 "2" 合併到現有記錄\n(取消載入請按「取消」)');
+                if (option === '1') {
+                    localStorage.setItem('divinationCases', JSON.stringify(newCases));
+                    alert('歷史記錄已成功覆蓋。');
+                } else if (option === '2') {
+                    const mergedCases = currentCases.concat(newCases);
+                    localStorage.setItem('divinationCases', JSON.stringify(mergedCases));
+                    alert('歷史記錄已成功合併。');
+                } else {
+                    alert('已取消載入。');
+                }
+                document.getElementById('importFile').value = '';
+            } catch (error) {
+                console.error('載入檔案失敗:', error);
+                alert(`載入檔案失敗：${error.message}`);
+                document.getElementById('importFile').value = '';
+            }
+        };
+        reader.readAsText(file);
+    }
+    
+    function clearAllCases() {
+        if (confirm('確定要清空所有歷史記錄嗎？此動作無法復原。您要先匯出備份嗎？')) {
+            exportCases();
+            if(confirm('已匯出備份，確定要清空所有記錄嗎？')) {
+                localStorage.removeItem('divinationCases');
+                alert('所有歷史記錄已成功清空。');
+            }
+        }
+    }
 
-    function importCases(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const newCases = JSON.parse(e.target.result);
-                if (!Array.isArray(newCases)) { throw new Error('檔案格式不正確，應為 JSON 陣列。'); }
-                const currentCases = JSON.parse(localStorage.getItem('divinationCases')) || [];
-                const option = prompt('請選擇載入方式：\n輸入 "1" 覆蓋現有記錄\n輸入 "2" 合併到現有記錄\n(取消載入請按「取消」)');
-                if (option === '1') {
-                    localStorage.setItem('divinationCases', JSON.stringify(newCases));
-                    alert('歷史記錄已成功覆蓋。');
-                } else if (option === '2') {
-                    const mergedCases = currentCases.concat(newCases);
-                    localStorage.setItem('divinationCases', JSON.stringify(mergedCases));
-                    alert('歷史記錄已成功合併。');
-                } else {
-                    alert('已取消載入。');
-                }
-                document.getElementById('importFile').value = '';
-            } catch (error) {
-                console.error('載入檔案失敗:', error);
-                alert(`載入檔案失敗：${error.message}`);
-                document.getElementById('importFile').value = '';
-            }
-        };
-        reader.readAsText(file);
-    }
-    
-    function clearAllCases() {
-        if (confirm('確定要清空所有歷史記錄嗎？此動作無法復原。您要先匯出備份嗎？')) {
-            exportCases();
-            if(confirm('已匯出備份，確定要清空所有記錄嗎？')) {
-                localStorage.removeItem('divinationCases');
-                alert('所有歷史記錄已成功清空。');
-            }
-        }
-    }
+    function toBinary(num) {
+        if (num === 8) return '000';
+        return (num - 1).toString(2).padStart(3, '0');
+    }
 
-    function toBinary(num) {
-        if (num === 8) return '000';
-        return (num - 1).toString(2).padStart(3, '0');
-    }
-
-    function toDecimal(binaryStr) {
-        const decimalValue = parseInt(binaryStr, 2);
-        return (decimalValue === 0) ? 8 : decimalValue;
-    }
+    function toDecimal(binaryStr) {
+        const decimalValue = parseInt(binaryStr, 2);
+        return (decimalValue === 0) ? 8 : decimalValue;
+    }
 </script>
 
 </body>
