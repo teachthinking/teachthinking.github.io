@@ -93,10 +93,10 @@ function getAuspice(tiYongRelation) {
             return '次吉：體卦剋用卦，主動權在握，但需謹慎推進。';
         case '體生用':
             return '凶：體卦生用卦，力量耗損，需謹防阻力。';
-        case '用剋體':
-            return '大凶：用卦剋體卦，案件阻力大，需格外小心。';
+        case '用剄體':
+            return '大凶：用卦剄體卦，案件阻力大，需格外小心。';
         default:
-            return '中平：體用無明顯生剋，宜穩健行事。';
+            return '中平：體用無明顯生剄，宜穩健行事。';
     }
 }
 
@@ -161,6 +161,7 @@ async function loadInitialData() {
     } catch (error) {
         console.error('載入預設資料失敗:', error);
         updateStatus('載入失敗，請手動上傳檔案。');
+        alert('無法載入 police_data.json，請確認檔案是否存在或格式正確。');
     }
 }
 
@@ -191,7 +192,10 @@ function updateStatus(message) {
 
 function populateGuaSelects() {
     const gua = hexagramData.gua;
-    if (!gua) return;
+    if (!gua) {
+        console.error('卦象資料未載入');
+        return;
+    }
     
     [dom.upperGuaSelect, dom.lowerGuaSelect].forEach(select => {
         select.innerHTML = '<option value="">選擇卦象</option>';
@@ -221,6 +225,7 @@ function populateCaseTypeSelect() {
             option.value = type;
             option.textContent = hexagramData[type].name;
             dom.caseTypeSelect.appendChild(option);
+            console.log(`已添加案件類型：${hexagramData[type].name}`);
         }
     });
 }
@@ -230,12 +235,12 @@ function calculateGua(number) {
     return ((number % 8) === 0) ? 8 : (number % 8);
 }
 
-function calculateHexagram(upper, lower, changingLine) {
-    const benGua = `${upper}_${lower}`;
+function calculateHexagram(upperGua, lowerGua, changingLine) {
+    const benGua = `${upperGua}_${lowerGua}`;
     let bianGua = benGua;
     if (changingLine && changingLine >= 1 && changingLine <= 6) {
-        const upperBinary = toBinary(upper);
-        const lowerBinary = toBinary(lower);
+        const upperBinary = toBinary(upperGua);
+        const lowerBinary = toBinary(lowerGua);
         let fullBinary = (upperBinary + lowerBinary).split('');
         fullBinary[6 - changingLine] = fullBinary[6 - changingLine] === '1' ? '0' : '1';
         const newUpperBinary = fullBinary.slice(0, 3).join('');
@@ -247,11 +252,11 @@ function calculateHexagram(upper, lower, changingLine) {
     return { benGua, bianGua };
 }
 
-function calculateTiYong(upper, lower, changingLine) {
+function calculateTiYong(upperGua, lowerGua, changingLine) {
     const isXiaGuaDong = changingLine >= 1 && changingLine <= 3;
     return {
-        tiGua: isXiaGuaDong ? upper : lower,
-        yongGua: isXiaGuaDong ? lower : upper,
+        tiGua: isXiaGuaDong ? upperGua : lowerGua,
+        yongGua: isXiaGuaDong ? lowerGua : upperGua,
         dongYaoPosition: changingLine
     };
 }
@@ -362,6 +367,11 @@ function createShengkeDiagram(data) {
 
 // 推算邏輯
 function startCalculation() {
+    if (!hexagramData.gua) {
+        alert('資料尚未載入，請確認 police_data.json 是否正確或重新上傳！');
+        return;
+    }
+
     const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
     let upperGua, lowerGua, changingLine;
 
@@ -394,8 +404,8 @@ function startCalculation() {
         changingLine = calculateGua(year + month + day + hour) % 6 || 6;
     }
 
-    const { benGua, bianGua } = calculateHexagram(upper, lower, changingLine);
-    const tiYong = calculateTiYong(upper, lower, changingLine);
+    const { benGua, bianGua } = calculateHexagram(upperGua, lowerGua, changingLine);
+    const tiYong = calculateTiYong(upperGua, lowerGua, changingLine);
     const caseType = dom.caseTypeSelect.value;
     const caseName = dom.caseNameInput.value || '未命名案件';
     const notes = dom.caseNotes.value;
