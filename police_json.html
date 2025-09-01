@@ -20,10 +20,16 @@
         .hexagram-item h3 { margin: 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .hexagram-item textarea { width: 100%; height: 80px; margin-top: 10px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: vertical; }
         .case-type-item { margin-bottom: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; }
-        .case-type-item h3 { margin: 0; }
-        .case-type-item p { margin: 5px 0; }
-        .case-related-item { margin: 5px 0; padding: 8px; background-color: #e8f4f8; border: 1px solid #d4eaf0; border-radius: 4px; }
+        .case-type-item h3 { margin: 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .case-type-item input[type="text"] { width: calc(100% - 10px); padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; margin-bottom: 5px; }
+        .case-type-item textarea { width: calc(100% - 10px); height: 60px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: vertical; }
+        .case-related-item { display: flex; align-items: center; margin-top: 5px; }
+        .case-related-item input, .case-related-item button { margin-left: 5px; }
         .file-upload-section { margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px; text-align: left; }
+        .add-new-btn { background-color: #2ecc71; }
+        .add-new-btn:hover { background-color: #27ae60; }
+        .delete-btn { background-color: #e74c3c; }
+        .delete-btn:hover { background-color: #c0392b; }
     </style>
 </head>
 <body>
@@ -38,6 +44,7 @@
     <div class="file-upload-section">
         <label for="jsonFile">或手動上傳 JSON 資料檔：</label>
         <input type="file" id="jsonFile" accept=".json">
+        <p id="jsonStatus"></p>
     </div>
 
     <div id="editor">
@@ -47,10 +54,12 @@
 
 <script>
     let jsonData = {};
+    let currentDataSource = '預設檔案';
 
     window.onload = async () => {
         const fileInput = document.getElementById('jsonFile');
         fileInput.addEventListener('change', handleFileUpload);
+        
         await loadDefaultData();
     };
 
@@ -61,11 +70,14 @@
                 throw new Error('無法載入預設 JSON 檔案。');
             }
             jsonData = await response.json();
-            console.log('預設卦象資料載入成功！');
+            currentDataSource = '預設檔案';
+            updateStatus();
             renderEditor();
         } catch (error) {
             console.error('載入預設資料失敗:', error);
             document.getElementById('editor').innerHTML = '<p style="text-align:center; color:#e74c3c;">無法自動載入預設資料，請手動上傳檔案。</p>';
+            currentDataSource = '載入失敗，請手動上傳檔案。';
+            updateStatus();
         }
     }
 
@@ -77,21 +89,30 @@
         reader.onload = function(e) {
             try {
                 jsonData = JSON.parse(e.target.result);
-                console.log('使用者上傳的資料載入成功！');
+                currentDataSource = `已載入「${file.name}」`;
+                updateStatus();
                 alert('已成功載入新的 JSON 檔案。');
                 renderEditor();
             } catch (error) {
                 console.error('解析 JSON 檔案失敗:', error);
                 alert('無效的 JSON 檔案，請檢查格式。');
+                currentDataSource = '載入失敗，請檢查檔案格式。';
+                updateStatus();
             }
         };
         reader.readAsText(file);
     }
+    
+    function updateStatus() {
+        document.getElementById('jsonStatus').textContent = `* 目前使用的資料檔：${currentDataSource}`;
+    }
 
+    // 渲染編輯器介面
     function renderEditor() {
         const editorDiv = document.getElementById('editor');
         editorDiv.innerHTML = '';
 
+        // 渲染六十四卦部分
         const hexagramsSection = document.createElement('div');
         hexagramsSection.className = 'section';
         hexagramsSection.innerHTML = `<h2>六十四卦卦象解釋<span style="font-size:0.8em; color:#999; margin-left:10px;">點擊展開/收合</span></h2><div class="section-content"></div>`;
@@ -115,6 +136,7 @@
         }
         editorDiv.appendChild(hexagramsSection);
 
+        // 渲染案件類型部分
         const caseAnalysisSection = document.createElement('div');
         caseAnalysisSection.className = 'section';
         caseAnalysisSection.innerHTML = `<h2>案件類型分析<span style="font-size:0.8em; color:#999; margin-left:10px;">點擊展開/收合</span></h2><div class="section-content"></div>`;
@@ -125,29 +147,51 @@
             const itemDiv = document.createElement('div');
             itemDiv.className = 'case-type-item';
             itemDiv.innerHTML = `
-                <h3>${caseType.name}</h3>
-                <p>${caseType.summary}</p>
-                <h4>相關卦象</h4>
-                <div class="case-related-list"></div>
+                <h3>${caseType.name} <button class="delete-btn" onclick="deleteCaseType('${key}')">刪除</button></h3>
+                <div class="editor-content" style="display:none;">
+                    <h4>名稱</h4>
+                    <input type="text" value="${caseType.name}" oninput="updateCaseTypeName('${key}', this.value)">
+                    <h4>簡介</h4>
+                    <textarea oninput="updateCaseTypeSummary('${key}', this.value)">${caseType.summary}</textarea>
+                    <h4>相關卦象</h4>
+                    <div class="case-related-list"></div>
+                    <button class="add-new-btn" onclick="addRelatedHexagram('${key}')">新增相關卦象</button>
+                </div>
             `;
+            itemDiv.querySelector('h3').onclick = (e) => {
+                if (e.target.tagName.toLowerCase() !== 'button') {
+                    const editorContent = itemDiv.querySelector('.editor-content');
+                    editorContent.style.display = editorContent.style.display === 'none' ? 'block' : 'none';
+                }
+            };
+
             const relatedList = itemDiv.querySelector('.case-related-list');
             for (const relatedKey in caseType.related_hexagrams) {
-                const relatedItem = document.createElement('div');
-                relatedItem.className = 'case-related-item';
-                relatedItem.textContent = `${jsonData.hexagrams[relatedKey]?.name}：${caseType.related_hexagrams[relatedKey]}`;
-                relatedList.appendChild(relatedItem);
+                renderRelatedHexagramItem(relatedList, key, relatedKey, caseType.related_hexagrams[relatedKey]);
             }
+            
             caseAnalysisContent.appendChild(itemDiv);
         }
+
+        const addCaseTypeBtn = document.createElement('button');
+        addCaseTypeBtn.className = 'add-new-btn';
+        addCaseTypeBtn.textContent = '新增案件類型';
+        addCaseTypeBtn.onclick = addNewCaseType;
+        caseAnalysisContent.appendChild(addCaseTypeBtn);
+
         editorDiv.appendChild(caseAnalysisSection);
 
+        // 綁定編輯事件
         editorDiv.querySelectorAll('textarea').forEach(textarea => {
             textarea.addEventListener('input', (e) => {
                 const key = e.target.dataset.key;
-                jsonData.hexagrams[key].summary = e.target.value;
+                if (key) {
+                    jsonData.hexagrams[key].summary = e.target.value;
+                }
             });
         });
 
+        // 綁定展開/收合事件
         editorDiv.querySelectorAll('.section h2').forEach(h2 => {
             h2.addEventListener('click', () => {
                 h2.nextElementSibling.classList.toggle('open');
@@ -155,6 +199,83 @@
         });
     }
 
+    // 更新案件類型名稱
+    function updateCaseTypeName(key, value) {
+        jsonData.case_analysis[key].name = value;
+    }
+
+    // 更新案件類型簡介
+    function updateCaseTypeSummary(key, value) {
+        jsonData.case_analysis[key].summary = value;
+    }
+
+    // 更新相關卦象內容
+    function updateRelatedHexagram(caseKey, hexagramKey, value) {
+        jsonData.case_analysis[caseKey].related_hexagrams[hexagramKey] = value;
+    }
+
+    // 新增相關卦象
+    function addRelatedHexagram(caseKey) {
+        const hexagramKey = prompt("請輸入卦象編號 (例如：1_2)：");
+        if (hexagramKey && hexagramKey.includes('_')) {
+            const analysis = prompt("請輸入解卦說明：");
+            if (analysis) {
+                jsonData.case_analysis[caseKey].related_hexagrams[hexagramKey] = analysis;
+                renderEditor(); // 重新渲染以更新介面
+            }
+        } else if (hexagramKey !== null) {
+            alert("無效的卦象編號，請輸入正確格式 (例如：1_2)。");
+        }
+    }
+
+    // 渲染相關卦象項目
+    function renderRelatedHexagramItem(parent, caseKey, hexagramKey, analysis) {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'case-related-item';
+        
+        const hexagramName = jsonData.hexagrams[hexagramKey] ? jsonData.hexagrams[hexagramKey].name : '未知卦';
+        
+        itemDiv.innerHTML = `
+            <span>${hexagramKey} - ${hexagramName}：</span>
+            <input type="text" value="${analysis}" oninput="updateRelatedHexagram('${caseKey}', '${hexagramKey}', this.value)">
+            <button class="delete-btn" onclick="deleteRelatedHexagram('${caseKey}', '${hexagramKey}')">刪除</button>
+        `;
+        parent.appendChild(itemDiv);
+    }
+    
+    // 刪除相關卦象
+    function deleteRelatedHexagram(caseKey, hexagramKey) {
+        if (confirm(`確定要刪除卦象 ${hexagramKey} 嗎？`)) {
+            delete jsonData.case_analysis[caseKey].related_hexagrams[hexagramKey];
+            renderEditor();
+        }
+    }
+
+    // 新增案件類型
+    function addNewCaseType() {
+        const newKey = prompt("請輸入案件類型代號 (例如：theft)：");
+        if (newKey) {
+            const newName = prompt("請輸入案件類型名稱 (例如：竊盜案)：");
+            if (newName) {
+                jsonData.case_analysis[newKey] = {
+                    name: newName,
+                    summary: "請在此輸入案件類型簡介。",
+                    related_hexagrams: {}
+                };
+                renderEditor();
+            }
+        }
+    }
+    
+    // 刪除案件類型
+    function deleteCaseType(key) {
+        if (confirm(`確定要刪除案件類型「${jsonData.case_analysis[key].name}」嗎？`)) {
+            delete jsonData.case_analysis[key];
+            renderEditor();
+        }
+    }
+
+    // 下載 JSON 檔案
     document.getElementById('downloadBtn').addEventListener('click', () => {
         const dataStr = JSON.stringify(jsonData, null, 2);
         const blob = new Blob([dataStr], { type: "application/json" });
@@ -168,6 +289,7 @@
         URL.revokeObjectURL(url);
     });
 
+    // 刷新介面
     document.getElementById('refreshBtn').addEventListener('click', () => {
         if (confirm('確定要刷新介面嗎？所有未下載的修改都將遺失！')) {
             window.location.reload();
