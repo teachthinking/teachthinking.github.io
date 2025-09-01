@@ -10,10 +10,10 @@
         .header { text-align: center; margin-bottom: 20px; }
         .header h1 { color: #2c3e50; font-size: 2.5em; margin-bottom: 5px; }
         .header p { color: #7f8c8d; font-size: 1.1em; }
+        input[type="number"], select, input[type="text"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; box-sizing: border-box; }
         .input-section { background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; }
         .input-section h2 { color: #34495e; margin-bottom: 10px; }
         .input-section p { color: #95a5a6; margin-bottom: 20px; }
-        input[type="number"], select, input[type="text"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; box-sizing: border-box; }
         button { padding: 12px 25px; border: none; border-radius: 5px; color: white; font-size: 1em; cursor: pointer; transition: background-color 0.3s; }
         #resultArea { background-color: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 30px; display: none; flex-direction: column; align-items: flex-start; margin-top: 20px; text-align: left; }
         #resultArea h3, #resultArea h4 { color: #2c3e50; }
@@ -120,7 +120,7 @@
         <div id="number" class="tab-content">
             <h2>數字起卦 - 9位數</h2>
             <p>請輸入與案件相關的9位數數字，例如車牌、時間或任何直覺想到的數字。</p>
-            <input type="number" id="numInput" placeholder="請輸入9位數" maxlength="9">
+            <input type="text" id="numInput" placeholder="請輸入9位數字" maxlength="9" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0, 9)">
         </div>
 
         <select id="caseTypeSelect">
@@ -307,8 +307,8 @@
         let lowerGuaNum, upperGuaNum, changingLine, inputMethod;
 
         if (activeTab === 'number') {
-            const input = document.getElementById('numInput').value.trim();
-            // 修正數字起卦邏輯，加入更嚴格的驗證
+            const input = document.getElementById('numInput').value;
+            // 驗證輸入是否為9位數字
             if (input === '' || !/^\d{9}$/.test(input)) {
                 alert('請輸入有效的9位數數字！');
                 return;
