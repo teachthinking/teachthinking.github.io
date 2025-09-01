@@ -258,7 +258,6 @@
     }
     
     function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName) {
-        // ... (卦象計算邏輯與前版本相同) ...
         const mainGua = hexagramData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`] || { name: '未知卦名', summary: '無相關解釋。' };
         
         const lowerHexagramBinary = toBinary(lowerGuaNum);
@@ -310,7 +309,7 @@
             caseAnalysisText += `<h4>專案案件分析：${caseData.name}</h4><p>${caseData.summary}</p>`;
             
             let foundAnalysis = false;
-            const guaKeys = [`${upperGuaNum}_${lowerGuaNum}`, `${interGuaUpperGuaNum}_${interGuaLowerNum}`, `${changedUpperGuaNum}_${changedLowerGuaNum}`];
+            const guaKeys = [`${upperGuaNum}_${lowerGuaNum}`, `${interGuaUpperNum}_${interGuaLowerNum}`, `${changedUpperGuaNum}_${changedLowerGuaNum}`];
             
             for (const key of guaKeys) {
                  if (caseData.related_hexagrams[key]) {
