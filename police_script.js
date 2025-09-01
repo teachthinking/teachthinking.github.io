@@ -251,8 +251,8 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
     let relationText = '';
     const tiElement = tiGua.element;
     const yongElement = yongGua.element;
-    const sheng = hexagramData.element_relations[tiElement]?.生;
-    const ke = hexagramData.element_relations[tiElement]?.剋;
+    const sheng = hexagramData.element_relations?.[tiElement]?.生;
+    const ke = hexagramData.element_relations?.[tiElement]?.剋;
     let relationType = '比和';
     let auspiciousness = '平';
     if (tiElement === yongElement) {
@@ -285,6 +285,68 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
     });
 }
 
+function generateSuspectClueAnalysis(caseType, upperGuaNum, lowerGuaNum, tiGua, yongGua) {
+    if (!caseType || !hexagramData.case_analysis?.[caseType]) {
+        return '未選擇案件類型，無法提供具體嫌犯與線索分析。請選擇案件類型以獲取更精確的建議。';
+    }
+
+    const analysis = hexagramData.case_analysis[caseType];
+    const hexKey = `${upperGuaNum}_${lowerGuaNum}`;
+    let suspectClueText = analysis.related_hexagrams[hexKey] || analysis.summary;
+
+    // 根據卦象特徵和案件類型生成嫌犯與線索分析
+    const tiFeature = tiGua.feature || '未知';
+    const yongFeature = yongGua.feature || '未知';
+    let analysisText = `根據卦象特徵，嫌犯或關鍵線索可能具有以下特徵：\n`;
+    
+    switch (caseType) {
+        case 'drug_crime':
+            analysisText += `- 嫌犯可能為 ${yongFeature} 相關角色（例如盜賊、隱秘行動者）。\n`;
+            analysisText += `- 線索可能指向隱蔽地點（如 ${tiGua.direction} 方向）或涉及 ${yongGua.element} 相關環境（例如金屬場所、水邊）。\n`;
+            analysisText += `- 建議：調查夜間交易、線民情報或 ${tiGua.direction} 方向的隱秘場所。`;
+            break;
+        case 'fraud':
+            analysisText += `- 嫌犯可能擅長 ${yongFeature}（例如口才、欺騙）。\n`;
+            analysisText += `- 線索可能在通訊記錄或 ${tiGua.direction} 方向的固定地點。\n`;
+            analysisText += `- 建議：檢查數位通訊、銀行流水或人頭帳戶。`;
+            break;
+        case 'theft_robbery':
+            analysisText += `- 嫌犯可能為 ${yongFeature}（例如行動迅速、隱秘潛入者）。\n`;
+            analysisText += `- 線索可能在 ${tiGua.direction} 或涉及快速移動的交通工具。\n`;
+            analysisText += `- 建議：調查監視器、車輛記錄或潛入通道。`;
+            break;
+        case 'sexual_assault_domestic_violence':
+            analysisText += `- 嫌犯可能與 ${yongFeature}（例如情感糾葛、家庭關係）有關。\n`;
+            analysisText += `- 線索可能在受害者的社交圈或 ${tiGua.direction} 的住所。\n`;
+            analysisText += `- 建議：調查嫌犯與受害者的關係網，保護受害者安全。`;
+            break;
+        case 'cyber_crime':
+            analysisText += `- 嫌犯可能為 ${yongFeature}（例如技術專家、匿名者）。\n`;
+            analysisText += `- 線索可能在網路IP或 ${tiGua.direction} 的伺服器地點。\n`;
+            analysisText += `- 建議：尋求技術支援，追蹤數位足跡。`;
+            break;
+        case 'organized_crime':
+            analysisText += `- 嫌犯可能為 ${yongFeature}（例如領導者、團夥成員）。\n`;
+            analysisText += `- 線索可能指向 ${tiGua.direction} 的團夥據點。\n`;
+            analysisText += `- 建議：鎖定核心領導，部署集體行動。`;
+            break;
+        case 'missing_persons':
+            analysisText += `- 失蹤者可能與 ${yongFeature}（例如旅行者、移動者）有關。\n`;
+            analysisText += `- 線索可能在 ${tiGua.direction} 或異地。\n`;
+            analysisText += `- 建議：擴大搜尋範圍，檢查交通記錄。`;
+            break;
+        case 'traffic_accidents':
+            analysisText += `- 肇事者可能為 ${yongFeature}（例如急躁、快速移動者）。\n`;
+            analysisText += `- 線索可能在 ${tiGua.direction} 的路口或監視器。\n`;
+            analysisText += `- 建議：還原事故現場，檢查行車記錄。`;
+            break;
+        default:
+            analysisText += `- 無法提供具體分析，請確認案件類型。`;
+    }
+
+    return `${suspectClueText}\n${analysisText}`;
+}
+
 function displayResults(data) {
     const { mainGua, interGua, changedGua, tiGua, yongGua, relationText, relationType, auspiciousness, inputMethod, caseType, caseName, changingLine, guaData, upperGuaNum, lowerGuaNum } = data;
     const resultArea = dom.resultArea;
@@ -298,23 +360,23 @@ function displayResults(data) {
         <p><strong>主卦（起初狀態）：</strong>${mainGua.name || '未知'} - ${mainGua.summary || '無相關解釋'}</p>
         <p><strong>互卦（中間發展）：</strong>${interGua.name || '未知'} - ${interGua.summary || '案件中間階段，尚不明朗，需進一步觀察'}</p>
         <p><strong>變卦（最終轉折）：</strong>${changedGua.name || '未知'} - ${changedGua.summary || '案件最終結果不明，需更多線索'}</p>
-        <p><strong>動爻：</strong>第 ${changingLine} 爻 - ${hexagramData.line_summary[changingLine] || '無動爻解釋'}</p>
+        <p><strong>動爻：</strong>第 ${changingLine} 爻 - ${hexagramData.line_summary?.[changingLine] || '無動爻解釋'}</p>
         <p><strong>體用關係：</strong>${relationText}</p>
         <p><strong>吉凶：</strong>${auspiciousness}</p>
     `;
 
-    if (caseType && hexagramData.case_analysis && hexagramData.case_analysis[caseType]) {
+    if (caseType && hexagramData.case_analysis?.[caseType]) {
         const analysis = hexagramData.case_analysis[caseType];
         html += `
             <h4>案件類型分析：${analysis.name}</h4>
             <p>${analysis.summary}</p>
         `;
-        if (analysis.related_hexagrams[`${upperGuaNum}_${lowerGuaNum}`]) {
-            html += `<p><strong>相關卦象分析：</strong>${analysis.related_hexagrams[`${upperGuaNum}_${lowerGuaNum}`]}</p>`;
+        const hexKey = `${upperGuaNum}_${lowerGuaNum}`;
+        if (analysis.related_hexagrams[hexKey]) {
+            html += `<p><strong>相關卦象分析：</strong>${analysis.related_hexagrams[hexKey]}</p>`;
         }
-        if (analysis.suspect_clue_analysis) {
-            html += `<p><strong>嫌犯與線索分析：</strong>${analysis.suspect_clue_analysis}</p>`;
-        }
+        html += `<h4>嫌犯與線索分析</h4>
+                 <p>${generateSuspectClueAnalysis(caseType, upperGuaNum, lowerGuaNum, tiGua, yongGua)}</p>`;
     }
 
     const season = hexagramData.five_to_season[tiGua.element] || ['未知季節'];
@@ -354,13 +416,13 @@ function drawGuaGraph(svgElement, guaData, caseName) {
     ];
 
     const currentMonth = new Date().getMonth() + 1;
-    const lineWeights = hexagramData.line_weights || [1.0, 0.8, 0.6, 0.4, 0.2];
+    const lineWeights = hexagramData.line_weights || [0.2, 0.4, 0.6, 0.8, 1.0];
     const elementColors = hexagramData.element_colors || {
         '金': '#f1c40f',
         '木': '#2ecc71',
         '水': '#3498db',
         '火': '#e74c3c',
-        '土': '#8B4513'
+        '土': '#e67e22'
     };
     const fiveStates = ['旺', '相', '休', '囚', '死'];
 
@@ -370,28 +432,6 @@ function drawGuaGraph(svgElement, guaData, caseName) {
         { source: 'changedTi', target: 'changedYong', type: getRelation(guaData.changedTi.element, guaData.changedYong.element) }
     ];
 
-    svg.selectAll('.relation-line')
-        .data(links)
-        .enter()
-        .append('line')
-        .attr('class', d => `relation-line ${d.type.toLowerCase()}`)
-        .attr('x1', d => nodes.find(n => n.id === d.source).x)
-        .attr('y1', d => nodes.find(n => n.id === d.source).y)
-        .attr('x2', d => nodes.find(n => n.id === d.target).x)
-        .attr('y2', d => nodes.find(n => n.id === d.target).y)
-        .attr('stroke', d => elementColors[nodes.find(n => n.id === d.source).element] || '#333')
-        .attr('stroke-width', d => {
-            const sourceElement = nodes.find(n => n.id === d.source).element;
-            const seasonMonths = hexagramData.five_to_season[sourceElement] || [];
-            if (seasonMonths.includes(String(currentMonth))) return lineWeights[0]; // 旺
-            if (seasonMonths.includes(String((currentMonth + 1) % 12 || 12))) return lineWeights[1]; // 相
-            if (seasonMonths.includes(String((currentMonth + 2) % 12 || 12))) return lineWeights[2]; // 休
-            if (seasonMonths.includes(String((currentMonth + 3) % 12 || 12))) return lineWeights[3]; // 囚
-            return lineWeights[4]; // 死
-        })
-        .attr('marker-end', d => `url(#arrow-${d.type.toLowerCase()})`);
-
-    // 添加箭頭標記
     svg.append('defs').selectAll('marker')
         .data(['生', '剋', '比和'])
         .enter()
@@ -410,6 +450,31 @@ function drawGuaGraph(svgElement, guaData, caseName) {
             if (d === '剋') return '#e74c3c';
             return '#f1c40f';
         });
+
+    svg.selectAll('.relation-line')
+        .data(links)
+        .enter()
+        .append('line')
+        .attr('class', d => `relation-line ${d.type.toLowerCase()}`)
+        .attr('x1', d => nodes.find(n => n.id === d.source).x)
+        .attr('y1', d => nodes.find(n => n.id === d.source).y)
+        .attr('x2', d => nodes.find(n => n.id === d.target).x)
+        .attr('y2', d => nodes.find(n => n.id === d.target).y)
+        .attr('stroke', d => {
+            if (d.type === '生') return '#2ecc71';
+            if (d.type === '剋') return '#e74c3c';
+            return '#f1c40f';
+        })
+        .attr('stroke-width', d => {
+            const sourceElement = nodes.find(n => n.id === d.source).element;
+            const seasonMonths = hexagramData.five_to_season[sourceElement] || [];
+            if (seasonMonths.includes(String(currentMonth))) return lineWeights[4]; // 旺
+            if (seasonMonths.includes(String((currentMonth + 1) % 12 || 12))) return lineWeights[3]; // 相
+            if (seasonMonths.includes(String((currentMonth + 2) % 12 || 12))) return lineWeights[2]; // 休
+            if (seasonMonths.includes(String((currentMonth + 3) % 12 || 12))) return lineWeights[1]; // 囚
+            return lineWeights[0]; // 死
+        })
+        .attr('marker-end', d => `url(#arrow-${d.type.toLowerCase()})`);
 
     svg.selectAll('.gua-node')
         .data(nodes)
@@ -588,9 +653,9 @@ function importCases(event) {
 }
 
 function clearAllCases() {
-    if (confirm('確定要清空所有歷史記錄嗎？此動作無法復原。您要先匯出備份嗎？')) {
+    if (confirm('確定要清空所有歷史記錄吗？此動作無法復原。您要先匯出備份吗？')) {
         exportCases();
-        if (confirm('已匯出備份，確定要清空所有記錄嗎？')) {
+        if (confirm('已匯出備份，確定要清空所有記錄吗？')) {
             localStorage.removeItem('divinationCases');
             alert('所有歷史記錄已成功清空。');
         }
@@ -645,7 +710,7 @@ function init() {
     window.addEventListener('beforeunload', (event) => {
         if (isUnsaved) {
             event.preventDefault();
-            event.returnValue = '您有未儲存的案件，確定要離開嗎？';
+            event.returnValue = '您有未儲存的案件，確定要離開吗？';
         }
     });
 }
