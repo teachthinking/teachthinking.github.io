@@ -440,12 +440,12 @@ function renderFiveElementGraph(lowerGuaNum, upperGuaNum) {
     svg.setAttribute('height', '500');
     svg.setAttribute('viewBox', '0 0 500 500');
 
-    const elementsGroup = document.createElementNS("http://www.w3.0rg/2000/svg", "g");
+    const elementsGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
     elementsGroup.setAttribute('id', 'elementsGroup');
     svg.appendChild(elementsGroup);
 
     elements.forEach(element => {
-        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        const circle = document.createElementNS("http://www.w3.0rg/2000/svg", "circle");
         circle.setAttribute('cx', elementPositions[element].x);
         circle.setAttribute('cy', elementPositions[element].y);
         circle.setAttribute('r', 40);
