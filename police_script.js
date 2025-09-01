@@ -176,7 +176,8 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
     // --- 修正變卦計算邏輯 ---
     let changedGuaBinary = "";
     for (let i = 0; i < 6; i++) {
-        if (i === 6 - changingLine) {
+        const lineIndex = 6 - i; // 確保從第六爻開始
+        if (lineIndex === changingLine) {
             changedGuaBinary += (mainGuaBinary[i] === '0') ? '1' : '0';
         } else {
             changedGuaBinary += mainGuaBinary[i];
@@ -315,11 +316,11 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
 
     // 繪製生克圖
     drawCaseGraph({
-        main: { num: `${upperGuaNum}_${lowerGuaNum}`, element: mainGua.element },
-        inter: { num: `${interGuaUpperNum}_${interGuaLowerNum}`, element: interGua.element },
-        changed: { num: `${changedUpperGuaNum}_${changedLowerGuaNum}`, element: changedGua.element },
-        ti: { num: tiGua.num, element: tiGua.element, name: tiGua.name },
-        yong: { num: yongGua.num, element: yongGua.element, name: yongGua.name }
+        main: { gua: hexagramData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`], num: `${upperGuaNum}_${lowerGuaNum}` },
+        inter: { gua: hexagramData.hexagrams[`${interGuaUpperNum}_${interGuaLowerNum}`], num: `${interGuaUpperNum}_${interGuaLowerNum}` },
+        changed: { gua: hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`], num: `${changedUpperGuaNum}_${changedLowerGuaNum}` },
+        ti: { gua: tiGua, num: tiGuaNum },
+        yong: { gua: yongGua, num: yongGuaNum }
     });
 }
 
@@ -425,6 +426,7 @@ function predictEventDates(params) {
 
 // 取得體用生克關係文字
 function getRelationText(tiGua, yongGua) {
+    if (!tiGua || !yongGua || !tiGua.element || !yongGua.element) return '';
     const tiElement = tiGua.element;
     const yongElement = yongGua.element;
     const sheng = hexagramData.element_relations[tiElement].生;
@@ -462,11 +464,11 @@ function drawCaseGraph(guaData) {
     };
     
     const nodes = [
-        { id: 'main', label: hexagramData.hexagrams[guaData.main.num].name, element: guaData.main.element, x: 200, y: 150 },
-        { id: 'inter', label: hexagramData.hexagrams[guaData.inter.num].name, element: guaData.inter.element, x: 400, y: 150 },
-        { id: 'changed', label: hexagramData.hexagrams[guaData.changed.num].name, element: guaData.changed.element, x: 300, y: 300 },
-        { id: 'ti', label: guaData.ti.name, element: guaData.ti.element, x: 100, y: 300 },
-        { id: 'yong', label: guaData.yong.name, element: guaData.yong.element, x: 500, y: 300 }
+        { id: 'main', label: guaData.main.gua.name, element: guaData.main.gua.element, x: 200, y: 150 },
+        { id: 'inter', label: guaData.inter.gua.name, element: guaData.inter.gua.element, x: 400, y: 150 },
+        { id: 'changed', label: guaData.changed.gua.name, element: guaData.changed.gua.element, x: 300, y: 300 },
+        { id: 'ti', label: guaData.ti.gua.name, element: guaData.ti.gua.element, x: 100, y: 300 },
+        { id: 'yong', label: guaData.yong.gua.name, element: guaData.yong.gua.element, x: 500, y: 300 }
     ];
 
     const relations = [
@@ -479,7 +481,7 @@ function drawCaseGraph(guaData) {
     relations.forEach(rel => {
         const fromNode = nodes.find(n => n.id === rel.from);
         const toNode = nodes.find(n => n.id === rel.to);
-        if (!fromNode || !toNode) return;
+        if (!fromNode || !toNode || !fromNode.element || !toNode.element) return;
         
         const relation = getRelation(fromNode.element, toNode.element);
         const color = relation === '生' ? 'sheng' : (relation === '剋' ? 'ke' : 'bihe');
@@ -502,10 +504,11 @@ function drawCaseGraph(guaData) {
 
     // Draw nodes and text
     nodes.forEach(node => {
+        if (!node.element) return;
         const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
         const color = hexagramData.element_colors[node.element] || '#ccc';
 
-        const circle = document.createElementNS("http://www.w3.2.org/2000/svg", "circle");
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute('cx', node.x);
         circle.setAttribute('cy', node.y);
         circle.setAttribute('r', 40);
