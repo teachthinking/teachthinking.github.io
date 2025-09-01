@@ -165,27 +165,31 @@ function startCalculation() {
 function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, caseType, caseName) {
     const mainGua = hexagramData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`] || { name: '未知卦名', summary: '無相關解釋。' };
     
-    // --- 修正互卦計算邏輯 ---
-    const mainGuaBinary = toBinary(upperGuaNum) + toBinary(lowerGuaNum);
-    const interGuaLowerBinary = mainGuaBinary.substring(1, 4);
-    const interGuaUpperBinary = mainGuaBinary.substring(2, 5);
-    const interGuaLowerNum = toDecimal(interGuaLowerBinary);
-    const interGuaUpperNum = toDecimal(interGuaUpperBinary);
-    const interGua = hexagramData.hexagrams[`${interGuaUpperNum}_${interGuaLowerNum}`] || { name: '未知互卦', summary: '無相關解釋。' };
+   
+// --- 修正互卦計算邏輯 ---
+const mainGuaBinary = toBinary(upperGuaNum) + toBinary(lowerGuaNum);
+// 互卦：二三四爻為下互卦，三四五爻為上互卦
+const interGuaLowerBinary = mainGuaBinary.substring(3, 6); // 二三四爻 (索引3-5)
+const interGuaUpperBinary = mainGuaBinary.substring(2, 5); // 三四五爻 (索引2-4)
+const interGuaLowerNum = toDecimal(interGuaLowerBinary);
+const interGuaUpperNum = toDecimal(interGuaUpperBinary);
+const interGua = hexagramData.hexagrams[`${interGuaUpperNum}_${interGuaLowerNum}`] || { name: '未知互卦', summary: '無相關解釋。' };
 
-    // --- 修正變卦計算邏輯 ---
-    let changedGuaBinary = "";
-    for (let i = 0; i < 6; i++) {
-        const lineIndex = 6 - i; // 確保從第六爻開始
-        if (lineIndex === changingLine) {
-            changedGuaBinary += (mainGuaBinary[i] === '0') ? '1' : '0';
-        } else {
-            changedGuaBinary += mainGuaBinary[i];
-        }
+// --- 修正變卦計算邏輯 ---
+let changedGuaBinary = "";
+for (let i = 0; i < 6; i++) {
+    // 動爻位置轉換（1-6對應索引5-0）
+    const linePos = 6 - i;
+    if (linePos === changingLine) {
+        changedGuaBinary += (mainGuaBinary[i] === '0') ? '1' : '0';
+    } else {
+        changedGuaBinary += mainGuaBinary[i];
     }
-    const changedUpperGuaNum = toDecimal(changedGuaBinary.substring(0, 3));
-    const changedLowerGuaNum = toDecimal(changedGuaBinary.substring(3, 6));
-    const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '無相關解釋。' };
+}
+const changedUpperGuaNum = toDecimal(changedGuaBinary.substring(0, 3));
+const changedLowerGuaNum = toDecimal(changedGuaBinary.substring(3, 6));
+const changedGua = hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`] || { name: '未知變卦', summary: '無相關解釋。' };
+
 
     // --- 體用關係判斷 ---
     let tiGuaNum, yongGuaNum;
@@ -442,97 +446,153 @@ function getRelationText(tiGua, yongGua) {
 }
 
 // 繪製SVG圖
+// 修改 drawCaseGraph 函數，確保五行生克圖正確顯示
 function drawCaseGraph(guaData) {
     const svg = document.getElementById('caseGraph');
     if (!svg) return;
-    svg.innerHTML = `
-        <defs>
-            <marker id="arrowhead-sheng" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto" fill="green">
-                <polygon points="0 0, 10 3.5, 0 7" />
-            </marker>
-            <marker id="arrowhead-ke" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto" fill="red">
-                <polygon points="0 0, 10 3.5, 0 7" />
-            </marker>
-        </defs>
-    `;
     
+    // 清除現有內容
+    svg.innerHTML = '';
+    
+    // 添加箭頭標記定義
+    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    const markerSheng = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+    markerSheng.setAttribute('id', 'arrowhead-sheng');
+    markerSheng.setAttribute('markerWidth', '10');
+    markerSheng.setAttribute('markerHeight', '7');
+    markerSheng.setAttribute('refX', '5');
+    markerSheng.setAttribute('refY', '3.5');
+    markerSheng.setAttribute('orient', 'auto');
+    markerSheng.setAttribute('fill', 'green');
+    
+    const polygonSheng = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    polygonSheng.setAttribute('points', '0 0, 10 3.5, 0 7');
+    markerSheng.appendChild(polygonSheng);
+    defs.appendChild(markerSheng);
+    
+    const markerKe = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+    markerKe.setAttribute('id', 'arrowhead-ke');
+    markerKe.setAttribute('markerWidth', '10');
+    markerKe.setAttribute('markerHeight', '7');
+    markerKe.setAttribute('refX', '5');
+    markerKe.setAttribute('refY', '3.5');
+    markerKe.setAttribute('orient', 'auto');
+    markerKe.setAttribute('fill', 'red');
+    
+    const polygonKe = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    polygonKe.setAttribute('points', '0 0, 10 3.5, 0 7');
+    markerKe.appendChild(polygonKe);
+    defs.appendChild(markerKe);
+    
+    svg.appendChild(defs);
+    
+    // 獲取當前月份五行旺衰
     const elementStrengths = getElementStrength(getCurrentMonthBranch());
     const strengthOrder = ['旺', '相', '休', '囚', '死'];
+    
+    // 根據旺相休囚死獲取線條粗細
     const getWeight = (el) => {
-        const index = strengthOrder.findIndex(key => elementStrengths[key] === el);
-        return hexagramData.line_weights[4 - index] || 0.1;
+        for (const key in elementStrengths) {
+            if (elementStrengths[key] === el) {
+                const index = strengthOrder.indexOf(key);
+                return hexagramData.line_weights[index] || 1;
+            }
+        }
+        return 1;
     };
     
     // 定義所有節點
     const nodes = [
-        { id: 'ti', label: `體卦 (${guaData.ti.gua.name})`, element: guaData.ti.gua.element, x: 100, y: 150 },
-        { id: 'yong', label: `用卦 (${guaData.yong.gua.name})`, element: guaData.yong.gua.element, x: 500, y: 150 },
-        { id: 'main', label: `本卦 (${guaData.main.gua.name})`, element: guaData.main.gua.element, x: 300, y: 50 },
-        { id: 'inter', label: `互卦 (${guaData.inter.gua.name})`, element: guaData.inter.gua.element, x: 150, y: 300 },
-        { id: 'changed', label: `變卦 (${guaData.changed.gua.name})`, element: guaData.changed.gua.element, x: 450, y: 300 }
+        { id: 'ti', label: `體卦\n${guaData.ti.gua.name}`, element: guaData.ti.gua.element, x: 100, y: 200 },
+        { id: 'yong', label: `用卦\n${guaData.yong.gua.name}`, element: guaData.yong.gua.element, x: 500, y: 200 },
+        { id: 'main', label: `本卦\n${guaData.main.gua.name}`, element: guaData.main.gua.element, x: 300, y: 80 },
+        { id: 'inter', label: `互卦\n${guaData.inter.gua.name}`, element: guaData.inter.gua.element, x: 200, y: 320 },
+        { id: 'changed', label: `變卦\n${guaData.changed.gua.name}`, element: guaData.changed.gua.element, x: 400, y: 320 }
     ];
 
     // 定義所有關係
     const relations = [
-        { from: 'ti', to: 'yong' },
-        { from: 'ti', to: 'main' },
-        { from: 'yong', to: 'main' },
-        { from: 'main', to: 'inter' },
-        { from: 'main', to: 'changed' }
+        { from: 'ti', to: 'yong', type: getRelation(guaData.ti.gua.element, guaData.yong.gua.element) },
+        { from: 'main', to: 'inter', type: '相關' },
+        { from: 'main', to: 'changed', type: '變化' },
+        { from: 'ti', to: 'main', type: '體卦' },
+        { from: 'yong', to: 'main', type: '用卦' }
     ];
 
     // 繪製所有線條
     relations.forEach(rel => {
         const fromNode = nodes.find(n => n.id === rel.from);
         const toNode = nodes.find(n => n.id === rel.to);
-        if (!fromNode || !toNode || !fromNode.element || !toNode.element) return;
+        if (!fromNode || !toNode) return;
         
-        const relation = getRelation(fromNode.element, toNode.element);
-        const color = relation === '生' ? 'sheng' : (relation === '剋' ? 'ke' : 'bihe');
-        const weight = getWeight(fromNode.element);
-
+        let color, marker;
+        switch(rel.type) {
+            case '生':
+                color = 'green';
+                marker = 'url(#arrowhead-sheng)';
+                break;
+            case '剋':
+                color = 'red';
+                marker = 'url(#arrowhead-ke)';
+                break;
+            case '比和':
+                color = '#f1c40f';
+                marker = '';
+                break;
+            default:
+                color = '#95a5a6';
+                marker = '';
+        }
+        
+        // 根據五行旺衰設置線條粗細
+        const weight = getWeight(fromNode.element) * 4;
+        
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line.setAttribute('x1', fromNode.x);
         line.setAttribute('y1', fromNode.y);
         line.setAttribute('x2', toNode.x);
         line.setAttribute('y2', toNode.y);
-        line.setAttribute('stroke-width', weight * 8);
-        line.classList.add('relation-line', color);
-
-        if (relation !== '比和') {
-            line.setAttribute('marker-end', `url(#arrowhead-${color})`);
+        line.setAttribute('stroke-width', weight);
+        line.setAttribute('stroke', color);
+        line.setAttribute('class', 'relation-line');
+        
+        if (marker) {
+            line.setAttribute('marker-end', marker);
         }
         
         svg.appendChild(line);
     });
 
-    // 繪製所有節點和文字
+    // 繪製所有節點
     nodes.forEach(node => {
-        if (!node.element) return;
         const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        const color = hexagramData.element_colors[node.element] || '#ccc';
-
+        
+        // 節點圓形
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute('cx', node.x);
         circle.setAttribute('cy', node.y);
         circle.setAttribute('r', 40);
-        circle.classList.add('gua-node');
-        circle.style.fill = color;
+        circle.setAttribute('fill', hexagramData.element_colors[node.element] || '#ccc');
+        circle.setAttribute('stroke', '#2c3e50');
+        circle.setAttribute('stroke-width', 2);
+        circle.setAttribute('class', 'gua-node');
         group.appendChild(circle);
-
+        
+        // 節點文字
         const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
         text.setAttribute('x', node.x);
-        text.setAttribute('y', node.y + 5);
+        text.setAttribute('y', node.y);
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('dominant-baseline', 'middle');
-        text.classList.add('gua-text');
+        text.setAttribute('fill', '#2c3e50');
+        text.setAttribute('font-size', '12');
+        text.setAttribute('font-weight', 'bold');
         text.textContent = node.label;
         group.appendChild(text);
-
+        
         svg.appendChild(group);
     });
 }
-
 // 取得體用生克關係
 function getRelation(el1, el2) {
     if (el1 === el2) return '比和';
