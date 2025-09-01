@@ -46,7 +46,7 @@ const toDecimal = binaryStr => {
 
 async function loadInitialData() {
     try {
-        const response = await fetch('police_data.json');
+        const response = await fetch('police.json');
         if (!response.ok) {
             throw new Error('無法載入預設 JSON 檔案。');
         }
@@ -176,7 +176,7 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
     // --- 修正變卦計算邏輯 ---
     let changedGuaBinary = "";
     for (let i = 0; i < 6; i++) {
-        const lineIndex = 6 - i; // 從上到下對應動爻1到6
+        const lineIndex = 6 - i; // 確保從第六爻開始
         if (lineIndex === changingLine) {
             changedGuaBinary += (mainGuaBinary[i] === '0') ? '1' : '0';
         } else {
