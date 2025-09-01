@@ -209,6 +209,20 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
     const elementStrength = getElementStrength(currentMonthBranch);
     const elementStrengthsHtml = Object.keys(elementStrength).map(el => `<li><strong>${el}</strong>：${elementStrength[el]}</li>`).join('');
 
+
+// 取得動爻對應的單卦
+function getChangingLineGuaNum(changingLine) {
+    if (changingLine > 3) {
+        // 動爻在上卦，取上卦
+        return parseInt(dom.upperGuaSelect.value, 10);
+    } else {
+        // 動爻在下卦，取下卦
+        return parseInt(dom.lowerGuaSelect.value, 10);
+    }
+}
+
+
+    
     // 推估應期
     const yongGuaElement = hexagramData.gua[lowerGuaNum].element;
     const tiGuaElement = hexagramData.gua[upperGuaNum].element;
