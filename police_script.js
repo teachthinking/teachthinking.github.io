@@ -176,7 +176,7 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
     // --- 修正變卦計算邏輯 ---
     let changedGuaBinary = "";
     for (let i = 0; i < 6; i++) {
-        const lineIndex = 6 - i; // 確保從第六爻開始
+        const lineIndex = 6 - i; // 從上到下對應動爻1到6
         if (lineIndex === changingLine) {
             changedGuaBinary += (mainGuaBinary[i] === '0') ? '1' : '0';
         } else {
@@ -316,11 +316,11 @@ function generateReport(lowerGuaNum, upperGuaNum, changingLine, inputMethod, cas
 
     // 繪製生克圖
     drawCaseGraph({
-        main: { gua: hexagramData.hexagrams[`${upperGuaNum}_${lowerGuaNum}`], num: `${upperGuaNum}_${lowerGuaNum}` },
-        inter: { gua: hexagramData.hexagrams[`${interGuaUpperNum}_${interGuaLowerNum}`], num: `${interGuaUpperNum}_${interGuaLowerNum}` },
-        changed: { gua: hexagramData.hexagrams[`${changedUpperGuaNum}_${changedLowerGuaNum}`], num: `${changedUpperGuaNum}_${changedLowerGuaNum}` },
-        ti: { gua: tiGua, num: tiGuaNum },
-        yong: { gua: yongGua, num: yongGuaNum }
+        main: { gua: mainGua, upperGua: hexagramData.gua[upperGuaNum], lowerGua: hexagramData.gua[lowerGuaNum] },
+        inter: { gua: interGua, upperGua: hexagramData.gua[interGuaUpperNum], lowerGua: hexagramData.gua[interGuaLowerNum] },
+        changed: { gua: changedGua, upperGua: hexagramData.gua[changedUpperGuaNum], lowerGua: hexagramData.gua[changedLowerGuaNum] },
+        ti: { gua: tiGua },
+        yong: { gua: yongGua }
     });
 }
 
@@ -463,21 +463,25 @@ function drawCaseGraph(guaData) {
         return hexagramData.line_weights[4 - index] || 0.1;
     };
     
+    // 定義所有節點
     const nodes = [
-        { id: 'main', label: guaData.main.gua.name, element: guaData.main.gua.element, x: 200, y: 150 },
-        { id: 'inter', label: guaData.inter.gua.name, element: guaData.inter.gua.element, x: 400, y: 150 },
-        { id: 'changed', label: guaData.changed.gua.name, element: guaData.changed.gua.element, x: 300, y: 300 },
-        { id: 'ti', label: guaData.ti.gua.name, element: guaData.ti.gua.element, x: 100, y: 300 },
-        { id: 'yong', label: guaData.yong.gua.name, element: guaData.yong.gua.element, x: 500, y: 300 }
+        { id: 'ti', label: `體卦 (${guaData.ti.gua.name})`, element: guaData.ti.gua.element, x: 100, y: 150 },
+        { id: 'yong', label: `用卦 (${guaData.yong.gua.name})`, element: guaData.yong.gua.element, x: 500, y: 150 },
+        { id: 'main', label: `本卦 (${guaData.main.gua.name})`, element: guaData.main.gua.element, x: 300, y: 50 },
+        { id: 'inter', label: `互卦 (${guaData.inter.gua.name})`, element: guaData.inter.gua.element, x: 150, y: 300 },
+        { id: 'changed', label: `變卦 (${guaData.changed.gua.name})`, element: guaData.changed.gua.element, x: 450, y: 300 }
     ];
 
+    // 定義所有關係
     const relations = [
         { from: 'ti', to: 'yong' },
+        { from: 'ti', to: 'main' },
+        { from: 'yong', to: 'main' },
         { from: 'main', to: 'inter' },
         { from: 'main', to: 'changed' }
     ];
 
-    // Draw lines first
+    // 繪製所有線條
     relations.forEach(rel => {
         const fromNode = nodes.find(n => n.id === rel.from);
         const toNode = nodes.find(n => n.id === rel.to);
@@ -502,7 +506,7 @@ function drawCaseGraph(guaData) {
         svg.appendChild(line);
     });
 
-    // Draw nodes and text
+    // 繪製所有節點和文字
     nodes.forEach(node => {
         if (!node.element) return;
         const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
