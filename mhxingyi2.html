@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>梅花心易解卦系統 - 通用版</title>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #9b59b6;
+            --secondary-color: #8e44ad;
+            --background-color: #1a1a2e;
+            --card-color: #16213e;
+            --text-color: #e6e6e6;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --info-color: #3498db;
+            --mystic-purple: #6c5ce7;
+            --mystic-blue: #0984e3;
+            --mystic-dark: #0c2461;
+            --mystic-light: #a29bfe;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Microsoft JhengHei', '微軟正黑體', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: linear-gradient(135deg, var(--mystic-dark) 0%, var(--background-color) 100%);
+            padding: 20px;
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: rgba(22, 33, 62, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--mystic-purple);
+        }
+        
+        h1, h2, h3 {
+            color: var(--mystic-light);
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(166, 155, 254, 0.5);
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        h2 {
+            font-size: 1.8em;
+            color: var(--mystic-purple);
+            margin-bottom: 30px;
+        }
+        
+        .input-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            border: 2px solid var(--mystic-purple);
+            border-radius: 12px;
+            background: rgba(26, 26, 46, 0.7);
+            box-shadow: 0 0 15px rgba(107, 92, 231, 0.3);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: var(--mystic-light);
+            font-size: 1.1em;
+        }
+        
+        input[type="number"], textarea, select {
+            width: 100%;
+            padding: 18px;
+            border: 2px solid var(--mystic-purple);
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+        }
+        
+        input[type="number"]:focus, textarea:focus, select:focus {
+            border-color: var(--mystic-light);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(166, 155, 254, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+        
+        .number-inputs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, var(--mystic-purple) 0%, var(--mystic-blue) 100%);
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            width: auto;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button:before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+            background-size: 400%;
+            z-index: -1;
+            filter: blur(15px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            animation: glowing 20s linear infinite;
+        }
+        
+        button:hover:before {
+            opacity: 0.3;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(-1px);
+        }
+        
+        @keyframes glowing {
+            0% { background-position: 0 0; }
+            50% { background-position: 400% 0; }
+            100% { background-position: 0 0; }
+        }
+        
+        .random-btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            width: auto;
+            margin-left: 10px;
+            display: inline-block;
+        }
+        
+        .download-btn {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .import-export-btn {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            margin-top: 10px;
+        }
+        
+        .result-section {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .time-info {
+            background: rgba(26, 26, 46, 0.7);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            text-align: center;
+            border-left: 5px solid var(--mystic-purple);
+            font-size: 1.1em;
+            box-shadow: 0 0 10px rgba(107, 92, 231, 0.2);
+        }
+        
+        /* 修正：讓卦象並列 */
+        .traditional-gua {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .gua-group {
+            text-align: center;
+            padding: 6px;
+            border-radius: 7px;
+            background: rgba(26, 26, 46, 0.7);
+            box-shadow: 0 4px 5px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--mystic-purple);
+            transition: transform 0.3s ease;
+            width: auto;
+        }
+        
+        .gua-group:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(107, 92, 231, 0.3);
+        }
+        
+        .gua-group-title {
+            font-weight: bold;
+            color: var(--mystic-light);
+            margin-bottom: 12px;
+            font-size: 1.2em;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--mystic-purple);
+        }
+        
+        .gua-item {
+            margin: 12px 0;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(166, 155, 254, 0.3);
+        }
+        
+        .gua-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(107, 92, 231, 0.3);
+        }
+        
+        .gua-full-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 8px 0;
+            color: var(--mystic-light);
+            padding: 5px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+        
+        .shengke-container {
+            width: 100%;
+            margin: 40px 0;
+            padding: 25px;
+            background: rgba(26, 26, 46, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.2);
+            border: 1px solid var(--mystic-purple);
+            position: relative;
+            overflow: visible;
+        }
+        
+        .shengke-diagram {
+            width: 600px;
+            height: 500px;
+            position: relative;
+            margin: 0 auto;
+        }
+        
+        .gua-node {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 20;
+            text-align: center;
+            border: 3px solid transparent;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        
+        .gua-node:hover {
+            transform: scale(1.15);
+            z-index: 100;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5), 0 0 15px rgba(166, 155, 254, 0.5);
+        }
+        
+        .gua-node.ti {
+            border-color: gold;
+            box-shadow: 0 0 0 4px gold, 0 6px 20px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 4px gold, 0 6px 20px rgba(0,0,0,0.3); }
+            50% { box-shadow: 0 0 0 6px gold, 0 8px 25px rgba(0,0,0,0.4); }
+            100% { box-shadow: 0 0 0 4px gold, 0 6px 20px rgba(0,0,0,0.3); }
+        }
+        
+        .gua-symbol {
+            font-size: 24px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .gua-name {
+            font-size: 14px;
+            line-height: 1.3;
+            margin-bottom: 3px;
+        }
+        
+        .gua-status {
+            font-size: 14px;
+            margin-top: 5px;
+            opacity: 0.95;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+        }
+        
+        .shengke-line {
+            position: absolute;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .line-sheng {
+            stroke: var(--success-color);
+            marker-end: url(#arrowhead-sheng);
+        }
+        
+        .line-ke {
+            stroke: var(--danger-color);
+            marker-end: url(#arrowhead-ke);
+        }
+        
+        .line-bihe {
+            stroke: var(--warning-color);
+            stroke-dasharray: 6,6;
+        }
+        
+        .analysis-section {
+            margin-top: 40px;
+            display: none;
+        }
+        
+        .analysis-card {
+            margin-bottom: 25px;
+            padding: 25px;
+            border-radius: 12px;
+            background: rgba(26, 26, 46, 0.7);
+            border-left: 5px solid var(--mystic-purple);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .analysis-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(107, 92, 231, 0.2);
+        }
+        
+        .analysis-card h3 {
+            color: var(--mystic-light);
+            margin-bottom: 15px;
+            font-size: 1.4em;
+            border-bottom: 2px solid rgba(166, 155, 254, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        .luck-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .luck-good { 
+            background: linear-gradient(135deg, var(--success-color) 0%, #2ecc71 100%);
+        }
+        .luck-normal { 
+            background: linear-gradient(135deg, var(--info-color) 0%, #3498db 100%);
+        }
+        .luck-warning { 
+            background: linear-gradient(135deg, var(--warning-color) 0%, #f39c12 100%);
+        }
+        .luck-bad { 
+            background: linear-gradient(135deg, var(--danger-color) 0%, #e74c3c 100%);
+        }
+        
+        .diagram-title {
+            text-align: center;
+            margin: 25px 0;
+            color: var(--mystic-light);
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(166, 155, 254, 0.5);
+        }
+        
+        .diagram-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(26, 26, 46, 0.7);
+            border-radius: 12px;
+            border-left: 5px solid var(--mystic-purple);
+            box-shadow: 0 0 10px rgba(107, 92, 231, 0.2);
+        }
+        
+        .diagram-question {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--mystic-light);
+            margin-bottom: 8px;
+        }
+        
+        .diagram-subtitle {
+            font-size: 18px;
+            color: var(--mystic-purple);
+            font-weight: 600;
+        }
+        
+        .method-selector {
+            margin-bottom: 20px;
+        }
+        
+        .method-inputs {
+            display: none;
+            margin-bottom: 18px;
+        }
+        
+        .wangxiang-label {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            margin-left: 5px;
+            color: white;
+        }
+        
+        .wang { background-color: #e74c3c; }
+        .xiang { background-color: #f39c12; }
+        .xiu { background-color: #3498db; }
+        .qiu { background-color: #9b59b6; }
+        .si { background-color: #7f8c8d; }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .import-export-section {
+            margin-top: 20px;
+            padding: 20px;
+            border: 2px solid var(--mystic-purple);
+            border-radius: 12px;
+            background: rgba(26, 26, 46, 0.7);
+            box-shadow: 0 0 15px rgba(107, 92, 231, 0.2);
+        }
+        
+        .import-export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 300px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .traditional-gua {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .gua-group {
+                width: auto;
+            }
+            
+            .number-inputs {
+                grid-template-columns: 1fr;
+            }
+            
+            .shengke-diagram {
+                width: 100%;
+                height: 400px;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+            
+            h2 {
+                font-size: 1.5em;
+            }
+            
+            .input-section {
+                padding: 20px;
+            }
+            
+            .gua-node {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .gua-symbol {
+                font-size: 30px;
+            }
+            
+            .gua-name {
+                font-size: 20px;
+            }
+            
+            .gua-status {
+                font-size: 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .random-btn {
+                width: 100%;
+                margin-left: 0;
+            }
+            
+            .import-export-buttons {
+                flex-direction: column;
+            }
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2em;
+            color: var(--mystic-light);
+        }
+        
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 5s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    
+    <div class="container">
+        <h1>梅花心易解卦系統</h1>
+        <h2>五行生克分析版</h2>
+
+        
+        <div class="input-section">
+            <div class="input-group">
+                <label for="question">問題描述：</label>
+                <textarea id="question" placeholder="請輸入您要問的問題...">今天有何大事？</textarea>
+            </div>
+            
+            <!-- 新增JSON檔案上傳區域 -->
+            <div class="input-group">
+                <label for="explanations-file">解卦資料檔案（JSON）：</label>
+                <input type="file" id="explanations-file" accept=".json" style="display: none;">
+                <div class="button-group">
+                    <button id="load-json-btn">載入解卦資料</button>
+                    <span id="json-status" style="margin-left: 10px; color: #f39c12;">尚未載入解卦資料</span>
+                </div>
+            </div>
+            
+            <div class="input-group method-selector">
+                <label for="method">取卦方式：</label>
+                <select id="method">
+                    <option value="number">數字取卦</option>
+                    <option value="time">時間取卦</option>
+                    <option value="character">以字取卦</option>
+                </select>
+            </div>
+            
+            <div id="number-method" class="method-inputs">
+                <div class="number-inputs">
+                    <div class="input-group">
+                        <label for="number1">上卦：</label>
+                        <input type="number" id="number1" min="100" max="999" value="802">
+                    </div>
+                    <div class="input-group">
+                        <label for="number2">下卦：</label>
+                        <input type="number" id="number2" min="100" max="999" value="803">
+                    </div>
+                    <div class="input-group">
+                        <label for="number3">變爻：</label>
+                        <input type="number" id="number3" min="100" max="999" value="601">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="time-method" class="method-inputs" style="display: none;">
+                <div class="input-group">
+                    <label for="time-input">時間：</label>
+                    <input type="datetime-local" id="time-input">
+                </div>
+            </div>
+            
+            <div id="character-method" class="method-inputs" style="display: none;">
+                <div class="input-group">
+                    <label for="character-input">輸入漢字：</label>
+                    <input type="text" id="character-input" placeholder="輸入1-3個漢字">
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button id="calculate-btn">開始解卦</button>
+                <button id="random-btn" class="random-btn" style="display: none;">隨機取卦</button>
+            </div>
+            
+            <div class="import-export-section">
+                <label>數據管理：</label>
+                <div class="import-export-buttons">
+                    <button id="export-btn" class="import-export-btn">匯出數據</button>
+                    <button id="import-btn" class="import-export-btn">匯入數據</button>
+                    <input type="file" id="import-file" accept=".json" style="display: none;">
+                </div>
+            </div>
+            
+            <div class="loading" id="loading">計算中...</div>
+        </div>
+        
+        <div class="result-section" id="result-section">
+            <div id="time-info" class="time-info"></div>
+            
+            <div class="traditional-gua" id="traditional-gua"></div>
+            
+            <div class="analysis-section" id="analysis-section"></div>
+            
+            <div class="diagram-title" id="diagram-title"></div>
+            <div class="shengke-container" id="shengke-container">
+                <div class="diagram-header" id="diagram-header">
+                    <div class="diagram-question" id="diagram-question"></div>
+                    <div class="diagram-subtitle">五行生克圖(Copyright©2025張世杰)</div>
+                </div>
+                <div class="shengke-diagram" id="shengke-diagram">
+                    <svg id="lines-svg" width="600" height="500" style="position:absolute; top:0; left:0; pointer-events:none;">
+                        <defs>
+                            <marker id="arrowhead-sheng" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#27ae60"/>
+                            </marker>
+                            <marker id="arrowhead-ke" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#e74c3c"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+            <button id="download-btn" class="download-btn">下載五行生克圖</button>
+        </div>
+    </div>
+
+    <script>
+        // 八卦數據定義
+        const eightTrigrams = {
+            1: { name: "乾", wuXing: "金", symbol: "☰", color: "#e67e22", yaos: [1, 1, 1] },
+            2: { name: "兑", wuXing: "金", symbol: "☱", color: "#f39c12", yaos: [1, 1, 0] },
+            3: { name: "離", wuXing: "火", symbol: "☲", color: "#e74c3c", yaos: [1, 0, 1] },
+            4: { name: "震", wuXing: "木", symbol: "☳", color: "#27ae60", yaos: [1, 0, 0] },
+            5: { name: "巽", wuXing: "木", symbol: "☴", color: "#2ecc71", yaos: [0, 1, 1] },
+            6: { name: "坎", wuXing: "水", symbol: "☵", color: "#3498db", yaos: [0, 1, 0] },
+            7: { name: "艮", wuXing: "土", symbol: "☶", color: "#9b59b6", yaos: [0, 0, 1] },
+            8: { name: "坤", wuXing: "土", symbol: "☷", color: "#8e44ad", yaos: [0, 0, 0] }
+        };
+
+        // 64卦數據
+        const sixtyFourHexagrams = {
+            "11": "乾為天", "12": "天澤履", "13": "天火同人", "14": "天雷無妄", 
+            "15": "天風姤", "16": "天水訟", "17": "天山遯", "18": "天地否",
+            "21": "澤天夬", "22": "兌為澤", "23": "澤火革", "24": "澤雷隨", 
+            "25": "澤風大過", "26": "澤水困", "27": "澤山咸", "28": "澤地萃",
+            "31": "火天大有", "32": "火澤睽", "33": "離為火", "34": "火雷噬嗑", 
+            "35": "火風鼎", "36": "火水未濟", "37": "火山旅", "38": "火地晉",
+            "41": "雷天大壯", "42": "雷澤歸妹", "43": "雷火豐", "44": "震為雷", 
+            "45": "雷風恆", "46": "雷水解", "47": "雷山小過", "48": "雷地豫",
+            "51": "風天小畜", "52": "風澤中孚", "53": "風火家人", "54": "風雷益", 
+            "55": "巽為風", "56": "風水渙", "57": "風山漸", "58": "風地觀",
+            "61": "水天需", "62": "水澤節", "63": "水火既濟", "64": "水雷屯", 
+            "65": "水風井", "66": "坎為水", "67": "水山蹇", "68": "水地比",
+            "71": "山天大畜", "72": "山澤損", "73": "山火賁", "74": "山雷頤", 
+            "75": "山風蠱", "76": "山水蒙", "77": "艮為山", "78": "山地剝",
+            "81": "地天泰", "82": "地澤臨", "83": "地火明夷", "84": "地雷復", 
+            "85": "地風升", "86": "地水師", "87": "地山謙", "88": "坤為地"
+        };
+
+        // 五行生克關係
+        const shengKeRelations = {
+            "金": { ke: "木", sheng: "水", beiKe: "火", beiSheng: "土" },
+            "木": { ke: "土", sheng: "火", beiKe: "金", beiSheng: "水" },
+            "水": { ke: "火", sheng: "木", beiKe: "土", beiSheng: "金" },
+            "火": { ke: "金", sheng: "土", beiKe: "水", beiSheng: "木" },
+            "土": { ke: "水", sheng: "金", beiKe: "木", beiSheng: "火" }
+        };
+
+        // 旺相休囚死規則
+        const wangXiangRules = {
+            "spring": { "木": "旺", "火": "相", "水": "休", "金": "囚", "土": "死" },
+            "summer": { "火": "旺", "土": "相", "木": "休", "水": "囚", "金": "死" },
+            "autumn": { "金": "旺", "水": "相", "土": "休", "火": "囚", "木": "死" },
+            "winter": { "水": "旺", "木": "相", "金": "休", "土": "囚", "火": "死" },
+            "earth": { "土": "旺", "金": "相", "火": "休", "木": "囚", "水": "死" }
+        };
+
+        // 旺相休囚死力量係數
+        const wangXiangPower = {
+            "旺": 5, "相": 4, "休": 3, "囚": 2, "死": 1
+        };
+
+        // 旺相休囚死標籤類別
+        const wangXiangLabels = {
+            "旺": "wang", "相": "xiang", "休": "xiu", "囚": "qiu", "死": "si"
+        };
+
+        let currentData = null;
+        let currentSeason = "spring";
+        let currentTiYongInfo = null;
+        let currentQuestion = "";
+        let explanationsData = null; // 儲存載入的解卦資料
+
+        // 創建星空背景
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            starsContainer.innerHTML = '';
+            
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                const size = Math.random() * 3;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                
+                star.style.animationDelay = `${Math.random() * 5}s`;
+                
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // 獲取當前時間信息
+        function getLunarInfo() {
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            currentSeason = month <= 3 ? "spring" : month <= 6 ? "summer" : month <= 9 ? "autumn" : "winter";
+            
+            const seasonNames = {
+                "spring": "春季（木旺）", "summer": "夏季（火旺）", 
+                "autumn": "秋季（金旺）", "winter": "冬季（水旺）"
+            };
+            
+            return {
+                year: now.getFullYear(),
+                month: month,
+                day: now.getDate(),
+                hour: now.getHours(),
+                season: currentSeason,
+                seasonName: seasonNames[currentSeason]
+            };
+        }
+
+        // 根據五行獲取旺相狀態
+        function getWangXiangStatus(wuXing) {
+            return wangXiangRules[currentSeason][wuXing] || "休";
+        }
+
+        // 計算卦象
+        function calculateGua(number) {
+            let remainder = number % 8;
+            return remainder === 0 ? 8 : remainder;
+        }
+
+        // 計算动爻
+        function calculateDongYao(number) {
+            let remainder = number % 6;
+            return remainder === 0 ? 6 : remainder;
+        }
+
+        // 確定體用關係
+        function determineTiYong(benGua, dongYao) {
+            if (dongYao <= 3) {
+                return { 
+                    tiGua: benGua.shangGua, 
+                    yongGua: benGua.xiaGua, 
+                    yongPosition: "下卦",
+                    tiPosition: "上卦",
+                    dongYaoInXia: true,
+                    dongYaoPosition: dongYao - 1
+                };
+            } else {
+                return { 
+                    tiGua: benGua.xiaGua, 
+                    yongGua: benGua.shangGua, 
+                    yongPosition: "上卦",
+                    tiPosition: "下卦",
+                    dongYaoInXia: false,
+                    dongYaoPosition: dongYao - 4
+                };
+            }
+        }
+
+        // 正確計算互卦
+        function calculateHuGua(benShangGua, benXiaGua) {
+            const shangYaos = eightTrigrams[benShangGua].yaos;
+            const xiaYaos = eightTrigrams[benXiaGua].yaos;
+            
+            // 互卦：取二三四爻為下卦，三四五爻為上卦
+            const huXiaYaos = [xiaYaos[1], xiaYaos[2], shangYaos[0]];
+            const huShangYaos = [xiaYaos[2], shangYaos[0], shangYaos[1]];
+            
+            return {
+                shangGua: getGuaFromYaos(huShangYaos),
+                xiaGua: getGuaFromYaos(huXiaYaos)
+            };
+        }
+
+        // 正確計算變卦
+        function calculateBianGua(benShangGua, benXiaGua, dongYaoInXia, dongYaoPosition) {
+            let shangYaos = [...eightTrigrams[benShangGua].yaos];
+            let xiaYaos = [...eightTrigrams[benXiaGua].yaos];
+            
+            if (dongYaoInXia) {
+                xiaYaos[dongYaoPosition] = xiaYaos[dongYaoPosition] === 1 ? 0 : 1;
+            } else {
+                shangYaos[dongYaoPosition] = shangYaos[dongYaoPosition] === 1 ? 0 : 1;
+            }
+            
+            return {
+                shangGua: getGuaFromYaos(shangYaos),
+                xiaGua: getGuaFromYaos(xiaYaos)
+            };
+        }
+
+        // 根據爻数组獲取卦象
+        function getGuaFromYaos(yaos) {
+            for (const [key, value] of Object.entries(eightTrigrams)) {
+                if (JSON.stringify(value.yaos) === JSON.stringify(yaos)) {
+                    return parseInt(key);
+                }
+            }
+            return 1;
+        }
+
+        // 獲取64卦名
+        function getHexagramName(shangGua, xiaGua) {
+            const key = `${shangGua}${xiaGua}`;
+            return sixtyFourHexagrams[key] || "未知卦";
+        }
+
+        // 分析生克關係
+        function analyzeShengKe(tiWuXing, targetWuXing) {
+            if (tiWuXing === targetWuXing) return "biHe";
+            if (shengKeRelations[tiWuXing].ke === targetWuXing) return "ke";
+            if (shengKeRelations[tiWuXing].sheng === targetWuXing) return "sheng";
+            if (shengKeRelations[tiWuXing].beiKe === targetWuXing) return "beiKe";
+            if (shengKeRelations[tiWuXing].beiSheng === targetWuXing) return "beiSheng";
+            return "biHe";
+        }
+
+        // 創建傳統卦象顯示
+        function createTraditionalGuaDisplay(data, tiYongInfo) {
+            const benGuaName = getHexagramName(data.benShang.id, data.benXia.id);
+            const huGuaName = getHexagramName(data.huShang.id, data.huXia.id);
+            const bianGuaName = getHexagramName(data.bianShang.id, data.bianXia.id);
+            
+            const container = document.getElementById('traditional-gua');
+            container.innerHTML = `
+                <div class="gua-group">
+                    <div class="gua-group-title">本卦</div>
+                    <div class="gua-full-name">${benGuaName}</div>
+                    <div class="gua-item" style="background: ${data.benShang.color}; color: white;">
+                        <div class="gua-symbol">${data.benShang.symbol}</div>
+                        <div>${data.benShang.name}卦</div>
+                        <div>${data.benShang.wuXing}</div>
+                        <div>${tiYongInfo.tiPosition === "上卦" ? "體卦" : tiYongInfo.yongPosition === "上卦" ? "用卦" : ""}</div>
+                        <div class="wangxiang-label ${wangXiangLabels[data.benShang.status]}">${data.benShang.status}</div>
+                    </div>
+                    <div class="gua-item" style="background: ${data.benXia.color}; color: white;">
+                        <div class="gua-symbol">${data.benXia.symbol}</div>
+                        <div>${data.benXia.name}卦</div>
+                        <div>${data.benXia.wuXing}</div>
+                        <div>${tiYongInfo.tiPosition === "下卦" ? "體卦" : tiYongInfo.yongPosition === "下卦" ? "用卦" : ""}</div>
+                        <div class="wangxiang-label ${wangXiangLabels[data.benXia.status]}">${data.benXia.status}</div>
+                    </div>
+                </div>
+                
+                <div class="gua-group">
+                    <div class="gua-group-title">互卦</div>
+                    <div class="gua-full-name">${huGuaName}</div>
+                    <div class="gua-item" style="background: ${data.huShang.color}; color: white;">
+                        <div class="gua-symbol">${data.huShang.symbol}</div>
+                        <div>${data.huShang.name}卦</div>
+                        <div>${data.huShang.wuXing}</div>
+                        <div>互用卦</div>
+                        <div class="wangxiang-label ${wangXiangLabels[data.huShang.status]}">${data.huShang.status}</div>
+                    </div>
+                    <div class="gua-item" style="background: ${data.huXia.color}; color: white;">
+                        <div class="gua-symbol">${data.huXia.symbol}</div>
+                        <div>${data.huXia.name}卦</div>
+                        <div>${data.huXia.wuXing}</div>
+                        <div>互用卦</div>
+                        <div class="wangxiang-label ${wangXiangLabels[data.huXia.status]}">${data.huXia.status}</div>
+                    </div>
+                </div>
+                
+                <div class="gua-group">
+                    <div class="gua-group-title">變卦</div>
+                    <div class="gua-full-name">${bianGuaName}</div>
+                    <div class="gua-item" style="background: ${data.bianShang.color}; color: white;">
+                        <div class="gua-symbol">${data.bianShang.symbol}</div>
+                        <div>${data.bianShang.name}卦</div>
+                        <div>${data.bianShang.wuXing}</div>
+                        <div>變用卦</div>
+                        <div class="wangxiang-label ${wangXiangLabels[data.bianShang.status]}">${data.bianShang.status}</div>
+                    </div>
+                    <div class="gua-item" style="background: ${data.bianXia.color}; color: white;">
+                        <div class="gua-symbol">${data.bianXia.symbol}</div>
+                        <div>${data.bianXia.name}卦</div>
+                        <div>${data.bianXia.wuXing}</div>
+                        <div>變用卦</div>
+                        <div class="wangxiang-label ${wangXiangLabels[data.bianXia.status]}">${data.bianXia.status}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 繪製生克線條
+        function drawShengkeLine(svg, fromX, fromY, toX, toY, relation, status) {
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const radius = 45; // Adjusted to match node size (90px diameter)
+            
+            const adjustedFromX = fromX + dx * radius / distance;
+            const adjustedFromY = fromY + dy * radius / distance;
+            const adjustedToX = toX - dx * radius / distance;
+            const adjustedToY = toY - dy * radius / distance;
+            
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            const strokeWidth = (wangXiangPower[status] || 3) * 1.5; // Scale for visibility
+            line.setAttribute('stroke-width', strokeWidth);
+            
+            if (relation === 'sheng') {
+                line.setAttribute('x1', adjustedFromX);
+                line.setAttribute('y1', adjustedFromY);
+                line.setAttribute('x2', adjustedToX);
+                line.setAttribute('y2', adjustedToY);
+                line.setAttribute('class', 'line-sheng');
+                line.setAttribute('marker-end', 'url(#arrowhead-sheng)');
+            } else if (relation === 'ke') {
+                line.setAttribute('x1', adjustedFromX);
+                line.setAttribute('y1', adjustedFromY);
+                line.setAttribute('x2', adjustedToX);
+                line.setAttribute('y2', adjustedToY);
+                line.setAttribute('class', 'line-ke');
+                line.setAttribute('marker-end', 'url(#arrowhead-ke)');
+            } else if (relation === 'beiSheng') {
+                line.setAttribute('x1', adjustedToX);
+                line.setAttribute('y1', adjustedToY);
+                line.setAttribute('x2', adjustedFromX);
+                line.setAttribute('y2', adjustedFromY);
+                line.setAttribute('class', 'line-sheng');
+                line.setAttribute('marker-end', 'url(#arrowhead-sheng)');
+            } else if (relation === 'beiKe') {
+                line.setAttribute('x1', adjustedToX);
+                line.setAttribute('y1', adjustedToY);
+                line.setAttribute('x2', adjustedFromX);
+                line.setAttribute('y2', adjustedFromY);
+                line.setAttribute('class', 'line-ke');
+                line.setAttribute('marker-end', 'url(#arrowhead-ke)');
+            } else {
+                line.setAttribute('x1', adjustedFromX);
+                line.setAttribute('y1', adjustedFromY);
+                line.setAttribute('x2', adjustedToX);
+                line.setAttribute('y2', adjustedToY);
+                line.setAttribute('class', 'line-bihe');
+            }
+            
+            svg.appendChild(line);
+        }
+
+        // 生成五行生克圖（改為正五邊形佈局）
+        function createShengkeDiagram(data) {
+            const diagram = document.getElementById('shengke-diagram');
+            const svg = document.getElementById('lines-svg');
+            svg.innerHTML = `
+                <defs>
+                    <marker id="arrowhead-sheng" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#27ae60"/>
+                    </marker>
+                    <marker id="arrowhead-ke" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#e74c3c"/>
+                    </marker>
+                </defs>
+            `;
+            
+            // 五行節點（正五邊形佈局）
+            const elements = ['木', '火', '土', '金', '水'];
+            const centerX = 300; // SVG中心點
+            const centerY = 250;
+            const radius = 150; // 五邊形半徑
+            const nodes = elements.map((el, i) => {
+                const angle = (i * 2 * Math.PI / 5) - Math.PI / 2; // 從頂部開始順時針
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                return { id: el, label: el, wuXing: el, x, y, guaLabels: [] };
+            });
+
+            // 為每個五行節點添加相關卦
+            Object.keys(data).forEach(key => {
+                const guaData = data[key];
+                const wuXing = guaData.wuXing;
+                const node = nodes.find(n => n.wuXing === wuXing);
+                if (node) {
+                    let label = '';
+                    if (key === 'ti') label = `體卦 (${guaData.name})`;
+                    else if (key === 'benShang') label = `本卦上 (${guaData.name})`;
+                    else if (key === 'benXia') label = `本卦下 (${guaData.name})`;
+                    else if (key === 'huShang') label = `互卦上 (${guaData.name})`;
+                    else if (key === 'huXia') label = `互卦下 (${guaData.name})`;
+                    else if (key === 'bianShang') label = `變卦上 (${guaData.name})`;
+                    else if (key === 'bianXia') label = `變卦下 (${guaData.name})`;
+                    if (label) node.guaLabels.push({ text: label, status: guaData.status });
+                }
+            });
+
+            // 繪製五行節點
+            nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = `gua-node`;
+                nodeElement.id = node.id;
+                nodeElement.style.left = `${node.x - 45}px`; // 調整以中心對齊
+                nodeElement.style.top = `${node.y - 45}px`;  // 90px節點寬高
+                nodeElement.style.background = eightTrigrams[Object.keys(eightTrigrams).find(k => eightTrigrams[k].wuXing === node.wuXing)].color;
+                
+                // 顯示五行名稱和卦標籤
+                let innerHTML = `
+                    <div class="gua-symbol">${node.label}</div>
+                    <div class="gua-name">${node.wuXing}</div>
+                `;
+                node.guaLabels.forEach((label, index) => {
+                    innerHTML += `
+                        <div class="gua-name" style="font-size: 10px; margin-top: ${index * 12}px;">
+                            ${label.text}
+                            <span class="wangxiang-label ${wangXiangLabels[label.status]}">${label.status}</span>
+                        </div>
+                    `;
+                });
+                
+                nodeElement.innerHTML = innerHTML;
+                nodeElement.onclick = () => swapWithTiGua(node.id);
+                diagram.appendChild(nodeElement);
+            });
+
+            // 生關係
+            const shengRelations = [
+                { from: '木', to: '火' },
+                { from: '火', to: '土' },
+                { from: '土', to: '金' },
+                { from: '金', to: '水' },
+                { from: '水', to: '木' }
+            ];
+
+            // 剋關係
+            const keRelations = [
+                { from: '木', to: '土' },
+                { from: '火', to: '金' },
+                { from: '土', to: '水' },
+                { from: '金', to: '木' },
+                { from: '水', to: '火' }
+            ];
+
+            // 繪製生線條
+            shengRelations.forEach(rel => {
+                const fromNode = nodes.find(n => n.id === rel.from);
+                const toNode = nodes.find(n => n.id === rel.to);
+                if (!fromNode || !toNode) return;
+                const status = getWangXiangStatus(fromNode.wuXing);
+                drawShengkeLine(svg, fromNode.x, fromNode.y, toNode.x, toNode.y, 'sheng', status);
+            });
+
+            // 繪製剋線條
+            keRelations.forEach(rel => {
+                const fromNode = nodes.find(n => n.id === rel.from);
+                const toNode = nodes.find(n => n.id === rel.to);
+                if (!fromNode || !toNode) return;
+                const status = getWangXiangStatus(fromNode.wuXing);
+                drawShengkeLine(svg, fromNode.x, fromNode.y, toNode.x, toNode.y, 'ke', status);
+            });
+        }
+
+        // 卦象交換功能（需要調整以適應五行節點）
+        function swapWithTiGua(guaId) {
+            if (guaId === 'ti') return;
+            
+            // 由於現在是五行節點，我們需要重新映射交換邏輯
+            // 這裡假設不直接交換五行節點，而是重新計算圖表
+            updateDiagram();
+        }
+
+        // 更新生克圖
+        function updateDiagram() {
+            const diagram = document.getElementById('shengke-diagram');
+            diagram.querySelectorAll('.gua-node').forEach(node => node.remove());
+            createShengkeDiagram(currentData);
+        }
+
+        // 載入JSON解卦資料
+        function loadExplanationsData() {
+            const fileInput = document.getElementById('explanations-file');
+            fileInput.click();
+            
+            fileInput.onchange = function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        explanationsData = JSON.parse(e.target.result);
+                        document.getElementById('json-status').textContent = '已載入解卦資料';
+                        document.getElementById('json-status').style.color = '#27ae60';
+                        console.log('解卦資料載入成功');
+                    } catch (error) {
+                        console.error('載入解卦資料錯誤:', error);
+                        alert('載入解卦資料失敗，請檢查文件格式！');
+                        document.getElementById('json-status').textContent = '載入失敗';
+                        document.getElementById('json-status').style.color = '#e74c3c';
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+        }
+
+        // 匯出數據功能
+        function exportData() {
+            if (!currentData) {
+                alert('請先進行卜卦計算！');
+                return;
+            }
+            
+            const exportData = {
+                question: currentQuestion,
+                data: currentData,
+                tiYongInfo: currentTiYongInfo,
+                time: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `梅花心易解卦_${new Date().toLocaleDateString()}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        // 匯入數據功能
+        function importData() {
+            const fileInput = document.getElementById('import-file');
+            fileInput.click();
+            
+            fileInput.onchange = function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        
+                        // 設置問題
+                        document.getElementById('question').value = importedData.question;
+                        currentQuestion = importedData.question;
+                        
+                        // 設置數據
+                        currentData = importedData.data;
+                        currentTiYongInfo = importedData.tiYongInfo;
+                        
+                        // 顯示結果
+                        document.getElementById('result-section').style.display = 'block';
+                        document.getElementById('download-btn').style.display = 'block';
+                        
+                        const lunarInfo = getLunarInfo();
+                        document.getElementById('time-info').innerHTML = `
+                            起卦時間：${lunarInfo.year}年${lunarInfo.month}月${lunarInfo.day}日 ${lunarInfo.hour}時 | 
+                            季節：${lunarInfo.seasonName} | 
+                            數據來源：匯入數據 (${new Date(importedData.time).toLocaleString()})
+                        `;
+                        
+                        document.getElementById('diagram-title').textContent = `${currentQuestion}的五行生克圖`;
+                        document.getElementById('diagram-question').textContent = currentQuestion;
+                        
+                        createTraditionalGuaDisplay(currentData, currentTiYongInfo);
+                        createAnalysisContent(currentData, currentTiYongInfo);
+                        createShengkeDiagram(currentData);
+                        
+                    } catch (error) {
+                        console.error('匯入數據錯誤:', error);
+                        alert('匯入數據失敗，請檢查文件格式！');
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+        }
+
+        // 下載生克圖
+        function downloadDiagram() {
+            const container = document.getElementById('shengke-container');
+            
+            if (typeof html2canvas === 'undefined') {
+                alert('圖片生成庫尚未載入，請稍後再試！');
+                console.error('html2canvas 未載入');
+                return;
+            }
+            
+            container.style.overflow = 'visible';
+            html2canvas(container, {
+                scale: 2,
+                logging: false,
+                useCORS: true,
+                backgroundColor: '#16213e',
+                width: container.scrollWidth,
+                height: container.scrollHeight,
+                scrollX: 0,
+                scrollY: 0,
+                onclone: (clonedDoc) => {
+                    const clonedContainer = clonedDoc.getElementById('shengke-container');
+                    clonedContainer.style.overflow = 'visible';
+                    clonedContainer.style.position = 'relative';
+                }
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `${currentQuestion}-五行生克圖.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }).catch(error => {
+                console.error('圖片生成失敗:', error);
+                alert('圖片下載失敗，請重試！');
+            });
+        }
+
+        // 創建分析內容
+        function createAnalysisContent(data, tiYongInfo) {
+            const analysisSection = document.getElementById('analysis-section');
+            
+            const yongGuaKey = tiYongInfo.yongPosition === "上卦" ? "benShang" : "benXia";
+            const benGuaRelation = analyzeShengKe(data.ti.wuXing, data[yongGuaKey].wuXing);
+            
+            const huShangRelation = analyzeShengKe(data.ti.wuXing, data.huShang.wuXing);
+            const huXiaRelation = analyzeShengKe(data.ti.wuXing, data.huXia.wuXing);
+            
+            const bianShangRelation = analyzeShengKe(data.ti.wuXing, data.bianShang.wuXing);
+            const bianXiaRelation = analyzeShengKe(data.ti.wuXing, data.bianXia.wuXing);
+            
+            // 檢查是否已載入解卦資料
+            if (!explanationsData) {
+                analysisSection.innerHTML = `
+                    <div class="analysis-card">
+                        <h3>錯誤：未載入解卦資料</h3>
+                        <p>請先點擊"載入解卦資料"按鈕，上傳正確的JSON解卦資料檔案。</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 獲取本卦解釋
+            const benGuaName = getHexagramName(data.benShang.id, data.benXia.id);
+            const benGuaExplanation = explanationsData.hexagramExplanations[benGuaName] || "無相關解釋資料";
+            
+            // 獲取動爻解釋
+            const dongYao = calculateDongYao(parseInt(document.getElementById('number3').value));
+            const dongYaoGua = tiYongInfo.dongYaoInXia ? data.benXia.name : data.benShang.name;
+            const dongYaoKey = `${dongYaoGua}${dongYao}爻`;
+            const dongYaoExplanation = explanationsData.dongYaoExplanations[dongYaoKey] || "無相關動爻解釋資料";
+            
+            // 獲取變卦解釋
+            const bianGuaName = getHexagramName(data.bianShang.id, data.bianXia.id);
+            const bianGuaExplanation = explanationsData.hexagramExplanations[bianGuaName] || "無相關變卦解釋資料";
+            
+            analysisSection.innerHTML = `
+                <div class="analysis-card">
+                    <h3>一、起卦與定體用</h3>
+                    <p>體卦為<b>${data.ti.name}卦 (${data.ti.wuXing})</b>，代表問卦主體；用卦為<b>${data[yongGuaKey].name}卦 (${data[yongGuaKey].wuXing})</b>，代表對應的客體。</p>
+                    <p>體卦狀態：<span class="wangxiang-label ${wangXiangLabels[data.ti.status]}">${data.ti.status}</span>，${getWangXiangExplanation(data.ti.wuXing, data.ti.status)}</p>
+                </div>
+                
+                <div class="analysis-card">
+                    <h3>二：確立五行生克狀態</h3>
+                    <p><span class="luck-badge ${getLuckClass(benGuaRelation)}">${getRelationText(benGuaRelation)}</span>
+                    ${getRelationExplanationCorrected(benGuaRelation, data.ti.name, data.ti.wuXing, data[yongGuaKey].name, data[yongGuaKey].wuXing)}</p>
+                    <p>${getDetailedAnalysis(benGuaRelation, '本卦', data.ti.name, data[yongGuaKey].name)}</p>
+                </div>
+                
+                <div class="analysis-card">
+                    <h3>三、分析卦象與體用所代表之象徵</h3>
+                    <p>本卦${benGuaName}整體解釋：${benGuaExplanation}</p>
+                    <p>${getEventAnalysis(data.ti.name, data[yongGuaKey].name, benGuaRelation)}</p>
+                    <p>體卦${data.ti.name}卦象徵：${explanationsData.guaExplanations[data.ti.name] || "無相關解釋資料"}</p>
+                    <p>用卦${data[yongGuaKey].name}卦象徵：${explanationsData.guaExplanations[data[yongGuaKey].name] || "無相關解釋資料"}</p>
+                </div>
+                
+                <div class="analysis-card">
+                    <h3>四、分析所問事物發展過程（互卦分析）</h3>
+                    <p>動爻通常表示事件的轉折關鍵</p>
+                    <p>動爻（第${dongYao}爻）解釋：${dongYaoExplanation}</p>
+                    <p><span class="luck-badge ${getLuckClass(huShangRelation)}">上互卦</span>
+                    ${data.huShang.name}卦(${data.huShang.wuXing}) ${getRelationExplanationCorrected(huShangRelation, data.ti.name, data.ti.wuXing, data.huShang.name, data.huShang.wuXing)}，${getProcessAnalysis(huShangRelation, '上互卦', '外在環境')}</p>
+                    <p><span class="luck-badge ${getLuckClass(huXiaRelation)}">下互卦</span>
+                    ${data.huXia.name}卦(${data.huXia.wuXing}) ${getRelationExplanationCorrected(huXiaRelation, data.ti.name, data.ti.wuXing, data.huXia.name, data.huXia.wuXing)}，${getProcessAnalysis(huXiaRelation, '下互卦', '內在因素')}</p>
+                    <p>互卦象徵過程中可能出現：${explanationsData.guaExplanations[data.huShang.name] || "無相關解釋資料"}與${explanationsData.guaExplanations[data.huXia.name] || "無相關解釋資料"}的交互影響。</p>
+                </div>
+                
+                <div class="analysis-card">
+                    <h3>五、分析事件最終走向（變卦分析）</h3>
+                    <p>變卦${bianGuaName}整體解釋：${bianGuaExplanation}</p>
+                    ${data.bianShang.id !== data.benShang.id ? `
+                    <p><span class="luck-badge ${getLuckClass(bianShangRelation)}">變上卦（用變卦）</span>
+                    ${data.bianShang.name}卦(${data.bianShang.wuXing}) ${getRelationExplanationCorrected(bianShangRelation, data.ti.name, data.ti.wuXing, data.bianShang.name, data.bianShang.wuXing)}，${getResultAnalysis(bianShangRelation, '變上卦', '外部結果')}</p>
+                    ` : ''}
+                    ${data.bianXia.id !== data.benXia.id ? `
+                    <p><span class="luck-badge ${getLuckClass(bianXiaRelation)}">變下卦（用變卦）</span>
+                    ${data.bianXia.name}卦(${data.bianXia.wuXing}) ${getRelationExplanationCorrected(bianXiaRelation, data.ti.name, data.ti.wuXing, data.bianXia.name, data.bianXia.wuXing)}，${getResultAnalysis(bianXiaRelation, '變下卦', '內部結果')}</p>
+                    ` : ''}
+                </div>
+                
+                <div class="analysis-card">
+                    <h3>六、綜合解讀</h3>
+                    <p>體卦${data.ti.name}(${data.ti.wuXing})狀態<span class="wangxiang-label ${wangXiangLabels[data.ti.status]}">${data.ti.status}</span>，${getComprehensiveAnalysis(benGuaRelation, huShangRelation, huXiaRelation, bianShangRelation, bianXiaRelation)}</p>
+                    <p>${getFinalAdvice(benGuaRelation, bianShangRelation, bianXiaRelation)}</p>
+                </div>
+            `;
+            
+            // 顯示分析區域
+            analysisSection.style.display = 'block';
+        }
+
+        // 修正生克關係描述函數
+        function getRelationExplanationCorrected(relation, tiName, tiWuXing, yongName, yongWuXing) {
+            switch(relation) {
+                case 'sheng': return `體卦${tiName}(${tiWuXing})生用卦${yongName}(${yongWuXing})`;
+                case 'ke': return `體卦${tiName}(${tiWuXing})克用卦${yongName}(${yongWuXing})`;
+                case 'beiSheng': return `用卦${yongName}(${yongWuXing})生體卦${tiName}(${tiWuXing})`;
+                case 'beiKe': return `用卦${yongName}(${yongWuXing})克體卦${tiName}(${tiWuXing})`;
+                case 'biHe': return `體用比和，${tiName}(${tiWuXing})與${yongName}(${yongWuXing})五行相同`;
+                default: return '';
+            }
+        }
+
+        function getWangXiangExplanation(wuXing, status) {
+            const explanations = {
+                "旺": "能量最強，生克力最大",
+                "相": "能量次強，得到時令助力",
+                "休": "能量平穩，需要休息蓄力",
+                "囚": "能量受限，受時令制約",
+                "死": "能量最弱，難以發揮作用"
+            };
+            return `${wuXing}行在當前時令處於${status}狀態，${explanations[status]}`;
+        }
+
+        function getEventAnalysis(tiGua, yongGua, relation) {
+            if (relation === 'sheng') {
+                return `體卦${tiGua}生用卦${yongGua}，象徵您需要付出精力來應對${getGuaDomain(yongGua)}領域的事務。`;
+            } else if (relation === 'ke') {
+                return `體卦${tiGua}克用卦${yongGua}，象徵您有能力主導和掌控${getGuaDomain(yongGua)}領域的事務。`;
+            } else if (relation === 'beiSheng') {
+                return `用卦${yongGua}生體卦${tiGua}，象徵外在環境或事件對您有幫助作用，在${getGuaDomain(yongGua)}領域會得到支持。`;
+            } else if (relation === 'beiKe') {
+                return `用卦${yongGua}克體卦${tiGua}，象徵需要克服在${getGuaDomain(yongGua)}領域的挑戰和阻礙。`;
+            } else {
+                return `體用比和，象徵內外環境協調一致，在${getGuaDomain(yongGua)}領域事務順利。`;
+            }
+        }
+
+        function getGuaDomain(guaName) {
+            const domains = {
+                "乾": "事業/權威", "兑": "口才/溝通", "離": "文采/名聲", "震": "行動/開創",
+                "巽": "人際/滲透", "坎": "智慧/風險", "艮": "阻礙/靜止", "坤": "大眾/包容"
+            };
+            return domains[guaName] || "相關";
+        }
+
+        function getLuckClass(relation) {
+            switch(relation) {
+                case 'sheng': return 'luck-warning';
+                case 'beiSheng': return 'luck-good';
+                case 'ke': return 'luck-normal';
+                case 'beiKe': return 'luck-bad';
+                case 'biHe': return 'luck-good';
+                default: return 'luck-normal';
+            }
+        }
+
+        function getRelationText(relation) {
+            switch(relation) {
+                case 'sheng': return '平';
+                case 'beiSheng': return '吉';
+                case 'ke': return '中';
+                case 'beiKe': return '凶';
+                case 'biHe': return '吉';
+                default: return '中';
+            }
+        }
+
+        function getDetailedAnalysis(relation, guaType, tiName, yongName) {
+            switch(relation) {
+                case 'sheng': return `體卦${tiName}生用卦${yongName}，${guaType}關係需要付出，代表您需要投入精力來應對外在環境。`;
+                case 'ke': return `體卦${tiName}克用卦${yongName}，${guaType}關係主動，代表您有能力主導和掌控外在環境。`;
+                case 'beiSheng': return `用卦${yongName}生體卦${tiName}，${guaType}關係吉利，代表外在環境或事件對您有幫助作用。`;
+                case 'beiKe': return `用卦${yongName}克體卦${tiName}，${guaType}關係不利，代表外在環境對您構成挑戰和壓力。`;
+                case 'biHe': return `體用比和，${guaType}關係和諧，代表內外環境協調一致。`;
+                default: return '';
+            }
+        }
+
+        function getProcessAnalysis(relation, huGuaName, influenceType) {
+            switch(relation) {
+                case 'sheng': return `過程中的${influenceType}會消耗您的能量，需要合理分配精力。`;
+                case 'ke': return `過程中的${influenceType}需要您主動去管理和控制。`;
+                case 'beiSheng': return `對過程中的${influenceType}有積極的促進作用，會帶來幫助和支持。`;
+                case 'beiKe': return `對過程中的${influenceType}產生阻礙影響，需要特別注意和克服。`;
+                case 'biHe': return `過程中的${influenceType}與您和諧相處，相對平穩。`;
+                default: return '';
+            }
+        }
+
+        function getResultAnalysis(relation, bianGuaName, resultType) {
+            switch(relation) {
+                case 'sheng': return `${resultType}需要您付出相當的努力才能達成。`;
+                case 'ke': return `${resultType}需要您積極爭取和主導。`;
+                case 'beiSheng': return `對${resultType}有正面的影響，會帶來良好的結局。`;
+                case 'beiKe': return `對${resultType}產生不利影響，需要努力改善。`;
+                case 'biHe': return `${resultType}相對平穩和諧，沒有太大波動。`;
+                default: return '';
+            }
+        }
+
+        function getComprehensiveAnalysis(ben, huS, huX, bianS, bianX) {
+            const positiveCount = [ben, huS, huX, bianS, bianX].filter(r => 
+                r === 'beiSheng' || r === 'biHe').length;
+            
+            if (positiveCount >= 4) return '整體趨勢非常吉利，多方助力，事情容易成功。';
+            if (positiveCount >= 3) return '整體平順，雖有挑戰但仍可成功，需要適當努力。';
+            if (positiveCount >= 2) return '需要付出較多努力，結果尚可，要有耐心和毅力。';
+            return '面臨較多困難，需要謹慎應對，建議多做準備。';
+        }
+
+        function getFinalAdvice(benRelation, bianSRelation, bianXRelation) {
+    if (benRelation === 'beiKe' && (bianSRelation === 'beiSheng' || bianXRelation === 'beiSheng')) {
+        return '建議：雖然開始會有困難，但只要堅持努力，結果將趨向正面。專注於長期目標，適時尋求外援。';
+    } else if (benRelation === 'beiSheng' || benRelation === 'biHe') {
+        return '建議：目前形勢有利，宜把握時機積極行動，但需注意細節，避免過分自信。';
+    } else if (benRelation === 'ke' && (bianSRelation === 'beiKe' || bianXRelation === 'beiKe')) {
+        return '建議：當前主導力強，但最終結果可能面臨挑戰。謹慎決策，注意風險管理。';
+    } else if (benRelation === 'sheng' || benRelation === 'beiKe') {
+        return '建議：過程中有阻力，需付出更多努力。保持耐心，尋找突破機會。';
+    } else {
+        return '建議：形勢中庸，宜穩中求進。謹慎行事，根據實際情況靈活調整策略。';
+    }
+}
+
+// 主計算函數
+function calculate() {
+    const method = document.getElementById('method').value;
+    let shangGua, xiaGua, dongYao;
+
+    if (method === 'number') {
+        const number1 = parseInt(document.getElementById('number1').value);
+        const number2 = parseInt(document.getElementById('number2').value);
+        const number3 = parseInt(document.getElementById('number3').value);
+
+        if (isNaN(number1) || isNaN(number2) || isNaN(number3)) {
+            alert('請輸入有效的三位數字！');
+            return;
+        }
+
+        shangGua = calculateGua(number1);
+        xiaGua = calculateGua(number2);
+        dongYao = calculateDongYao(number3);
+    } else if (method === 'time') {
+        const timeInput = document.getElementById('time-input').value;
+        if (!timeInput) {
+            alert('請選擇時間！');
+            return;
+        }
+        const date = new Date(timeInput);
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const hour = date.getHours();
+
+        shangGua = calculateGua(year + month + day);
+        xiaGua = calculateGua(month + day + hour);
+        dongYao = calculateDongYao(year + month + day + hour);
+    } else if (method === 'character') {
+        const charInput = document.getElementById('character-input').value;
+        if (!charInput || charInput.length < 1 || charInput.length > 3) {
+            alert('請輸入1-3個漢字！');
+            return;
+        }
+
+        let totalStrokes = 0;
+        for (let char of charInput) {
+            totalStrokes += getStrokeCount(char);
+        }
+        shangGua = calculateGua(totalStrokes);
+        xiaGua = calculateGua(totalStrokes + charInput.length);
+        dongYao = calculateDongYao(totalStrokes + charInput.length * 2);
+    }
+
+    const tiYongInfo = determineTiYong({ shangGua, xiaGua }, dongYao);
+    const huGua = calculateHuGua(shangGua, xiaGua);
+    const bianGua = calculateBianGua(shangGua, xiaGua, tiYongInfo.dongYaoInXia, tiYongInfo.dongYaoPosition);
+
+    currentData = {
+        benShang: {
+            id: shangGua,
+            name: eightTrigrams[shangGua].name,
+            wuXing: eightTrigrams[shangGua].wuXing,
+            symbol: eightTrigrams[shangGua].symbol,
+            color: eightTrigrams[shangGua].color,
+            status: getWangXiangStatus(eightTrigrams[shangGua].wuXing)
+        },
+        benXia: {
+            id: xiaGua,
+            name: eightTrigrams[xiaGua].name,
+            wuXing: eightTrigrams[xiaGua].wuXing,
+            symbol: eightTrigrams[xiaGua].symbol,
+            color: eightTrigrams[xiaGua].color,
+            status: getWangXiangStatus(eightTrigrams[xiaGua].wuXing)
+        },
+        huShang: {
+            id: huGua.shangGua,
+            name: eightTrigrams[huGua.shangGua].name,
+            wuXing: eightTrigrams[huGua.shangGua].wuXing,
+            symbol: eightTrigrams[huGua.shangGua].symbol,
+            color: eightTrigrams[huGua.shangGua].color,
+            status: getWangXiangStatus(eightTrigrams[huGua.shangGua].wuXing)
+        },
+        huXia: {
+            id: huGua.xiaGua,
+            name: eightTrigrams[huGua.xiaGua].name,
+            wuXing: eightTrigrams[huGua.xiaGua].wuXing,
+            symbol: eightTrigrams[huGua.xiaGua].symbol,
+            color: eightTrigrams[huGua.xiaGua].color,
+            status: getWangXiangStatus(eightTrigrams[huGua.xiaGua].wuXing)
+        },
+        bianShang: {
+            id: bianGua.shangGua,
+            name: eightTrigrams[bianGua.shangGua].name,
+            wuXing: eightTrigrams[bianGua.shangGua].wuXing,
+            symbol: eightTrigrams[bianGua.shangGua].symbol,
+            color: eightTrigrams[bianGua.shangGua].color,
+            status: getWangXiangStatus(eightTrigrams[bianGua.shangGua].wuXing)
+        },
+        bianXia: {
+            id: bianGua.xiaGua,
+            name: eightTrigrams[bianGua.xiaGua].name,
+            wuXing: eightTrigrams[bianGua.xiaGua].wuXing,
+            symbol: eightTrigrams[bianGua.xiaGua].symbol,
+            color: eightTrigrams[bianGua.xiaGua].color,
+            status: getWangXiangStatus(eightTrigrams[bianGua.xiaGua].wuXing)
+        },
+        ti: {
+            id: tiYongInfo.tiGua,
+            name: eightTrigrams[tiYongInfo.tiGua].name,
+            wuXing: eightTrigrams[tiYongInfo.tiGua].wuXing,
+            symbol: eightTrigrams[tiYongInfo.tiGua].symbol,
+            color: eightTrigrams[tiYongInfo.tiGua].color,
+            status: getWangXiangStatus(eightTrigrams[tiYongInfo.tiGua].wuXing)
+        }
+    };
+
+    currentTiYongInfo = tiYongInfo;
+    currentQuestion = document.getElementById('question').value;
+
+    document.getElementById('result-section').style.display = 'block';
+    document.getElementById('download-btn').style.display = 'block';
+
+    const lunarInfo = getLunarInfo();
+    document.getElementById('time-info').innerHTML = `
+        起卦時間：${lunarInfo.year}年${lunarInfo.month}月${lunarInfo.day}日 ${lunarInfo.hour}時 | 
+        季節：${lunarInfo.seasonName}
+    `;
+
+    document.getElementById('diagram-title').textContent = `${currentQuestion}的五行生克圖`;
+    document.getElementById('diagram-question').textContent = currentQuestion;
+
+    createTraditionalGuaDisplay(currentData, currentTiYongInfo);
+    createAnalysisContent(currentData, currentTiYongInfo);
+    createShengkeDiagram(currentData);
+}
+
+// 隨機取卦
+function randomCalculate() {
+    document.getElementById('number1').value = Math.floor(Math.random() * 900) + 100;
+    document.getElementById('number2').value = Math.floor(Math.random() * 900) + 100;
+    document.getElementById('number3').value = Math.floor(Math.random() * 900) + 100;
+    calculate();
+}
+
+// 獲取漢字筆畫數
+function getStrokeCount(char) {
+    // 簡化版筆畫計算，實際應使用更完整的筆畫數據庫
+    const strokeData = {
+        '一': 1, '二': 2, '三': 3, '四': 4, '五': 4, '六': 4, '七': 2, '八': 2, '九': 2, '十': 2
+    };
+    return strokeData[char] || char.length * 10;
+}
+
+// 事件監聽器
+document.getElementById('calculate-btn').addEventListener('click', () => {
+    document.getElementById('loading').style.display = 'block';
+    setTimeout(() => {
+        calculate();
+        document.getElementById('loading').style.display = 'none';
+    }, 500);
+});
+
+document.getElementById('random-btn').addEventListener('click', randomCalculate);
+document.getElementById('download-btn').addEventListener('click', downloadDiagram);
+document.getElementById('load-json-btn').addEventListener('click', loadExplanationsData);
+document.getElementById('export-btn').addEventListener('click', exportData);
+document.getElementById('import-btn').addEventListener('click', importData);
+
+document.getElementById('method').addEventListener('change', function() {
+    document.getElementById('number-method').style.display = this.value === 'number' ? 'block' : 'none';
+    document.getElementById('time-method').style.display = this.value === 'time' ? 'block' : 'none';
+    document.getElementById('character-method').style.display = this.value === 'character' ? 'block' : 'none';
+    document.getElementById('random-btn').style.display = this.value === 'number' ? 'inline-block' : 'none';
+});
+
+// 初始化
+createStars();
+document.getElementById('method').value = 'number';
+document.getElementById('number-method').style.display = 'block';
+</script>
+</body>
+</html>
