@@ -179,7 +179,9 @@ function updateTimeDisplay() {
     const day = now.getDate();
     const hour = now.getHours();
     const display = document.getElementById('currentTimeDisplay');
-    display.textContent = `目前時間：${year}年${month}月${day}日，${hour}時`;
+    if (display) { // 修正: 檢查元素是否存在
+        display.textContent = `目前時間：${year}年${month}月${day}日，${hour}時`;
+    }
 }
 
 function startCalculation() {
@@ -397,7 +399,7 @@ function renderFiveElementGraph(lowerGuaNum, upperGuaNum) {
     svg.setAttribute('height', '500');
     svg.setAttribute('viewBox', '0 0 500 500');
 
-    const elementsGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    const elementsGroup = document.createElementNS("http://www.w3.0rg/2000/svg", "g");
     elementsGroup.setAttribute('id', 'elementsGroup');
     svg.appendChild(elementsGroup);
 
