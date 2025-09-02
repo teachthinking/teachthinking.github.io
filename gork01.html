@@ -69,7 +69,7 @@
     </div>
   </div>
 
-  <script>
+<script>
     console.log('Script loaded, castHexagram defined:', typeof castHexagram);
     const guaNames = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
     const guaImages = {
@@ -905,7 +905,7 @@
       return result;
     }
 
-    function analyzeFiveElements(mainGua, changedGua, movingYaos) {
+    function analyzeFiveElements(mainGua, changedGua) {
       const mainElement = fiveElements[mainGua.upperGua];
       const useElement = fiveElements[mainGua.lowerGua];
       const changedElement = fiveElements[changedGua.upperGua];
@@ -937,13 +937,6 @@
       } else if (fiveElementRelations[changedElement].overcomes === mainElement) {
         analysis += '變卦克體，後有阻力，宜審慎規劃，防患未然，當靜觀其變。<br>';
       }
-
-      const movingCount = movingYaos.filter(y => y.isMoving).length;
-      analysis += `<br>【動爻分析】：動爻數 ${movingCount}，動多則變速，動少則事緩。`;
-      if (movingCount === 0) analysis += '無動爻，事態靜穩，宜守常勿躁，循序而進。<br>';
-      else if (movingCount <= 2) analysis += '動爻適中，事有漸變，宜穩中求進，步步為營。<br>';
-      else analysis += '動爻眾多，事多波動，宜審時度勢，謹慎應對，以防突變。<br>';
-
       return analysis;
     }
 
@@ -993,8 +986,8 @@
         prediction += '變卦與體卦同屬，應期不明，宜觀當下之機，順勢而為。<br>';
       }
       if (movingCount === 0) prediction += '無動爻，事緩難速，宜耐心以待，靜觀其變。<br>';
-      else if (movingCount <= 2) prediction += `動爻 ${movingCount}，事變適中，應期或近數週至數月，宜穩中求進。<br>';
-      else prediction += `動爻 ${movingCount}，事變速疾，應期或近數日至數週，宜迅速應對。<br>';
+      else if (movingCount <= 2) prediction += `動爻 ${movingCount}，事變適中，應期或近數週至數月，宜穩中求進。<br>`;
+      else prediction += `動爻 ${movingCount}，事變速疾，應期或近數日至數週，宜迅速應對。<br>`;
       return prediction;
     }
 
@@ -1173,12 +1166,11 @@
         displayHexagram(mainGua.yao, mainGua.upperGua, mainGua.lowerGua, '本卦') +
         displayHexagram(changedGua.yao, changedGua.upperGua, changedGua.lowerGua, '變卦');
       
-      const guaCi = '<strong>【卦辭與爻辭】</strong><br>' +
-        getGuaCi(mainGua.upperGua, mainGua.lowerGua, mainGua.yao, questionType) +
-        getGuaCi(changedGua.upperGua, changedGua.lowerGua, changedGua.yao, questionType);
+      const guaCiContent = '<strong>【卦辭與爻辭】</strong><br>' +
+        getGuaCi(mainGua.upperGua, mainGua.lowerGua, changedGua.yao, questionType);
       
-      const fiveElements = '<strong>【五行與卦象詳解】</strong><br>' + 
-        analyzeFiveElements(mainGua, changedGua, changedGua.yao);
+      const fiveElementsContent = '<strong>【五行與卦象詳解】</strong><br>' + 
+        analyzeFiveElements(mainGua, changedGua);
       
       const { judgment, judgmentType } = getJudgment(
         fiveElements[mainGua.upperGua],
@@ -1192,8 +1184,8 @@
       const suggestion = getSuggestion(questionType, { judgmentType }, fiveElements[mainGua.upperGua], changedGua.yao);
       
       document.getElementById('hexagramDisplay').innerHTML = hexagramDisplay;
-      document.getElementById('guaCi').innerHTML = guaCi;
-      document.getElementById('fiveElements').innerHTML = fiveElements;
+      document.getElementById('guaCi').innerHTML = guaCiContent;
+      document.getElementById('fiveElements').innerHTML = fiveElementsContent;
       document.getElementById('judgment').innerHTML = judgment;
       document.getElementById('prediction').innerHTML = prediction;
       document.getElementById('suggestion').innerHTML = suggestion;
@@ -1201,8 +1193,8 @@
       document.getElementById('result').classList.remove('hidden');
       document.getElementById('history').classList.add('hidden');
       
-      saveHistory(question, questionType, hexagramDisplay, guaCi, fiveElements, judgment, prediction, suggestion);
+      saveHistory(question, questionType, hexagramDisplay, guaCiContent, fiveElementsContent, judgment, prediction, suggestion);
     }
-  </script>
+</script>
 </body>
 </html>
