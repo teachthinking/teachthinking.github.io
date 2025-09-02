@@ -9,10 +9,7 @@
   <style>
     body { font-family: 'Noto Serif TC', serif; background: linear-gradient(to bottom, #f5e8c7, #d9c2a6); }
     .scroll { 
-      /* 使用本地圖片 */
-     // background: url('./images/scroll-bg.jpg') center/cover, #f5e8c7; 
-      /* CDN 後備（若需使用請取消註解） */
-       background: url('https://images.unsplash.com/photo-1507842217343-583bb7278b01?q=80&w=600&auto=format&fit=crop') center/cover, #f5e8c7; 
+      background: url('./images/scroll-bg.jpg') center/cover, #f5e8c7; 
       padding: 2rem; border: 2px solid #8b4513; 
     }
     .gua { font-size: 1.5rem; line-height: 2.5rem; }
@@ -76,70 +73,7 @@
   </div>
 
   <script>
-    console.log('Script loaded, castHexagram defined:', typeof castHexagram);
     const guaNames = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
-  const guaImages = { /* ... as provided ... */ };
-  const fiveElements = ['金', '金', '火', '木', '木', '水', '土', '土'];
-  const yaoSymbols = ['—', '- -'];
-  const fiveElementRelations = { /* ... as provided ... */ };
-  const guaCiData = { /* ... full 64 hexagrams as provided ... */ };
-
-  // Other functions (generateHexagram, getManualHexagram, etc.)
-  function generateHexagram() { /* ... as provided ... */ }
-  function getManualHexagram() { /* ... as provided ... */ }
-  function getChangedHexagram(yao) { /* ... as provided ... */ }
-  function getGuaCi(upperGua, lowerGua, yao, questionType) { /* ... as provided ... */ }
-  function analyzeFiveElements(mainGua, changedGua, movingYaos) { /* ... as provided ... */ }
-  function getJudgment(mainElement, useElement, changedElement, movingYaos) { /* ... as provided ... */ }
-  function getPrediction(mainElement, changedElement, movingYaos) { /* ... as provided ... */ }
-  function getSuggestion(questionType, judgmentObj, mainElement, movingYaos) { /* ... as provided ... */ }
-
-  // Add castHexagram function
-  function castHexagram() {
-    // ... as shown above ...
-  }
-
-  // Event listeners
-  document.querySelectorAll('input[name="castMethod"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      document.getElementById('manualInput').classList.toggle('hidden', radio.value !== 'manual');
-    });
-  });
-
-  // Add history functions if not already present
-  function showHistory() {
-    const historyList = document.getElementById('historyList');
-    const history = JSON.parse(localStorage.getItem('hexagramHistory') || '[]');
-    historyList.innerHTML = history.length ? history.map((item, i) => `
-      <div class="history-item" onclick="displayHistoryItem(${i})">
-        ${item.date} - ${item.questionType}: ${item.question}
-      </div>
-    `).join('') : '無卜卦歷史';
-    document.getElementById('history').classList.remove('hidden');
-    document.getElementById('result').classList.add('hidden');
-  }
-
-  function displayHistoryItem(index) {
-    const history = JSON.parse(localStorage.getItem('hexagramHistory') || '[]');
-    const item = history[index];
-    if (item) {
-      document.getElementById('hexagramDisplay').innerHTML = item.hexagram;
-      document.getElementById('guaCi').innerHTML = item.guaCi;
-      document.getElementById('fiveElements').innerHTML = item.fiveElements;
-      document.getElementById('judgment').innerHTML = item.judgment;
-      document.getElementById('prediction').innerHTML = item.prediction;
-      document.getElementById('suggestion').innerHTML = item.suggestion;
-      document.getElementById('result').classList.remove('hidden');
-      document.getElementById('history').classList.add('hidden');
-    }
-  }
-
-  function clearHistory() {
-    localStorage.removeItem('hexagramHistory');
-    document.getElementById('historyList').innerHTML = '無卜卦歷史';
-  }
-
-  console.log('Script loaded, castHexagram defined:', typeof castHexagram);
     const guaImages = {
       '乾': '天，剛健中正，宜果斷進取，行健不息。',
       '兌': '澤，悅而通達，宜和睦交流，喜悅以成。',
@@ -159,7 +93,7 @@
       '火': { generates: '土', overcomes: '金', generatedBy: '木', overcomeBy: '水' },
       '土': { generates: '金', overcomes: '水', generatedBy: '火', overcomeBy: '木' }
     };
-const guaCiData = {
+    const guaCiData = {
       '乾上乾下': { name: '乾為天', ci: '元亨利貞，剛健中正，宜自強不息。', yaoCi: ['初九：潛龍勿用，宜潛藏蓄力。', '九二：見龍在田，宜顯露才華。', '九三：君子終日乾乾，宜勤勉不懈。', '九四：或躍在淵，宜審時進退。', '九五：飛龍在天，宜乘勢而為。', '上九：亢龍有悔，宜謙退防過。'] },
       '乾上坎下': { name: '天水訟', ci: '有孚窒惕，宜謹慎爭訟，守正以待。', yaoCi: ['初六：不永所事，宜小事謹慎。', '六二：不克訟，宜退避三舍。', '九三：食舊德，宜安守本分。', '六四：不克訟，宜復正安和。', '九五：訟元吉，宜公正處事。', '上九：或錫之鞶帶，宜謙退勿爭。'] },
       '震上坤下': { name: '雷地豫', ci: '利建侯行師，宜振奮順時，謀定而動。', yaoCi: ['初六：鳴豫凶，宜謹慎勿躁。', '六二：介於石，宜守正不移。', '六三：盱豫悔，宜審慎勿進。', '九四：由豫大有得，宜順勢而為。', '六五：貞疾，宜調養慎行。', '上六：冥豫，宜謙退防過。'] },
@@ -222,11 +156,6 @@ const guaCiData = {
       '坎上艮下': { name: '水山蹇', ci: '利西南，宜謹慎脫困，守正以待。', yaoCi: ['初六：往蹇來譽，宜謙退待時。', '六二：王臣蹇蹇，宜忠誠行事。', '九三：往蹇來反，宜謹慎回歸。', '六四：往蹇來連，宜謙和求援。', '九五：大蹇朋來，宜果斷脫困。', '上六：往蹇來碩，宜謙退守成。'] },
       '艮上艮下': { name: '艮為山', ci: '艮其背，宜靜止修身，謹慎以待。', yaoCi: ['初六：艮其趾，宜謹慎起步。', '六二：艮其腓，宜謹慎行事。', '九三：艮其限，宜謹防過勞。', '六四：艮其身，宜謙和自省。', '六五：艮其輔，宜謹慎言行。', '上九：敦艮吉，宜厚德守正。'] }
     };
-    document.querySelectorAll('input[name="castMethod"]').forEach(radio => {
-      radio.addEventListener('change', () => {
-        document.getElementById('manualInput').classList.toggle('hidden', radio.value !== 'manual');
-      });
-    });
 
     function validateElement(element) {
       return ['金', '木', '水', '火', '土'].includes(element);
