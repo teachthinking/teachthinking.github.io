@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>梅花心易卜卦</title>
+  <link href="./dist/output.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Serif TC', serif; background: linear-gradient(to bottom, #f5e8c7, #d9c2a6); }
+    .scroll { background: url('./images/scroll-bg.jpg') center/cover, #f5e8c7; padding: 2rem; border: 2px solid #8b4513; }
+    .gua { font-size: 1.5rem; line-height: 2.5rem; }
+    .text-ink { color: #2f2f2f; }
+    .text-vermilion { color: #a94438; }
+    .yao-input { width: 60px; margin-right: 10px; }
+    .history-item { cursor: pointer; padding: 0.5rem; border-bottom: 1px solid #d9c2a6; }
+    .history-item:hover { background: #f5e8c7; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center">
+  <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl scroll">
+    <h1 class="text-4xl font-bold text-center mb-6 text-ink">梅花心易卜卦</h1>
+    <div class="mb-6">
+      <label for="questionType" class="block text-lg font-medium mb-2 text-ink">請選問事類別：</label>
+      <select id="questionType" class="w-full p-2 border rounded-md mb-4">
+        <option value="事業">事業</option>
+        <option value="財運">財運</option>
+        <option value="感情">感情</option>
+        <option value="健康">健康</option>
+        <option value="學業">學業</option>
+        <option value="其他">其他</option>
+      </select>
+      <label for="question" class="block text-lg font-medium mb-2 text-ink">請述問事詳情（可略）：</label>
+      <input id="question" type="text" class="w-full p-2 border rounded-md mb-4" placeholder="如：事業進展何也？">
+      <label class="block text-lg font-medium mb-2 text-ink">起卦方式：</label>
+      <div class="flex mb-4">
+        <label class="mr-4"><input type="radio" name="castMethod" value="random" checked> 隨機卜卦</label>
+        <label><input type="radio" name="castMethod" value="manual"> 手動建卦</label>
+      </div>
+      <div id="manualInput" class="hidden mb-4">
+        <label class="block text-lg font-medium mb-2 text-ink">請輸入六爻（由下至上，0為陰「- -」，1為陽「—」）：</label>
+        <div class="flex flex-wrap">
+          <input type="text" class="yao-input p-2 border rounded-md" placeholder="爻6" maxlength="1">
+          <input type="text" class="yao-input p-2 border rounded-md" placeholder="爻5" maxlength="1">
+          <input type="text" class="yao-input p-2 border rounded-md" placeholder="爻4" maxlength="1">
+          <input type="text" class="yao-input p-2 border rounded-md" placeholder="爻3" maxlength="1">
+          <input type="text" class="yao-input p-2 border rounded-md" placeholder="爻2" maxlength="1">
+          <input type="text" class="yao-input p-2 border rounded-md" placeholder="爻1" maxlength="1">
+        </div>
+      </div>
+    </div>
+    <div class="flex space-x-4">
+      <button onclick="castHexagram()" class="w-1/3 bg-vermilion text-white p-2 rounded-md hover:bg-red-800">卜卦</button>
+      <button onclick="showHistory()" class="w-1/3 bg-gray-600 text-white p-2 rounded-md hover:bg-gray-700">查看歷史</button>
+      <button onclick="clearHistory()" class="w-1/3 bg-red-600 text-white p-2 rounded-md hover:bg-red-700">清除歷史</button>
+    </div>
+    <div id="result" class="mt-6 hidden">
+      <h2 class="text-2xl font-semibold mb-4 text-ink">卜卦結果</h2>
+      <div id="hexagramDisplay" class="mb-4 gua"></div>
+      <div id="guaCi" class="mb-4 text-ink"></div>
+      <div id="fiveElements" class="mb-4 text-ink"></div>
+      <div id="judgment" class="mb-4 text-ink"></div>
+      <div id="prediction" class="mb-4 text-ink"></div>
+      <div id="suggestion" class="mb-4 text-ink"></div>
+    </div>
+    <div id="history" class="mt-6 hidden">
+      <h2 class="text-2xl font-semibold mb-4 text-ink">卜卦歷史</h2>
+      <div id="historyList" class="mb-4"></div>
+    </div>
+  </div>
+
+  <script>
+    console.log('Script loaded, castHexagram defined:', typeof castHexagram);
+    const guaNames = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
+    const guaImages = {
+      '乾': '天，剛健中正，宜果斷進取，行健不息。',
+      '兌': '澤，悅而通達，宜和睦交流，喜悅以成。',
+      '離': '火，麗而依附，宜明察慎行，文明以麗。',
+      '震': '雷，動而奮發，宜振作有為，震驚百里。',
+      '巽': '風，順而入微，宜柔和漸進，隨風而入。',
+      '坎': '水，險而深邃，宜謹慎守正，履險如夷。',
+      '艮': '山，止而厚重，宜靜觀待機，止於至善。',
+      '坤': '地，順而廣博，宜包容謙卑，厚德載物。'
+    };
+    const fiveElements = ['金', '金', '火', '木', '木', '水', '土', '土'];
+    const yaoSymbols = ['—', '- -'];
+    const fiveElementRelations = {
+      '金': { generates: '水', overcomes: '木', generatedBy: '土', overcomeBy: '火' },
+      '木': { generates: '火', overcomes: '土', generatedBy: '水', overcomeBy: '金' },
+      '水': { generates: '木', overcomes: '火', generatedBy: '金', overcomeBy: '土' },
+      '火': { generates: '土', overcomes: '金', generatedBy: '木', overcomeBy: '水' },
+      '土': { generates: '金', overcomes: '水', generatedBy: '火', overcomeBy: '木' }
+    };
+    const guaCiData = {
+  '乾上乾下': {
+    name: '乾為天',
+    ci: '元亨利貞，剛健中正，宜自強不息。',
+    yaoCi: [
+      '初九：潛龍勿用，宜潛藏蓄力。',
+      '九二：見龍在田，宜顯露才華。',
+      '九三：君子終日乾乾，宜勤勉不懈。',
+      '九四：或躍在淵，宜審時進退。',
+      '九五：飛龍在天，宜乘勢而為。',
+      '上九：亢龍有悔，宜謙退防過。',
+    ],
+  },
+  '兌上兌下': {
+    name: '兌為澤',
+    ci: '亨利貞，宜和悅相處，待人以誠。',
+    yaoCi: [
+      '初九：和兌吉，宜和悅處事。',
+      '九二：孚兌吉，宜以信待人。',
+      '三九：來兌凶，宜防範不正之言。',
+      '九四：商兌未寧，宜謹慎言行。',
+      '九五：孚于剝，宜堅守正道。',
+      '上六：引兌，宜引導正向。',
+    ],
+  },
+  '離上離下': {
+    name: '離為火',
+    ci: '利貞，宜光明正大，依附賢者。',
+    yaoCi: [
+      '初九：履錯然，宜謹慎小心。',
+      '六二：黃離元吉，宜依附中正。',
+      '九三：日昃之離，宜知所進退。',
+      '九四：突如其來，宜急時應變。',
+      '六五：出涕沱若，宜警惕危險。',
+      '上九：王用出征，宜光明正大。',
+    ],
+  },
+  '震上震下': {
+    name: '震為雷',
+    ci: '亨，震來虩虩，宜警惕危險，保持警覺。',
+    yaoCi: [
+      '初九：震來虩虩，宜警惕自省。',
+      '六二：震來厲，宜謹慎防範。',
+      '六三：震蘇蘇，宜警惕自省。',
+      '九四：震遂泥，宜沉著應對。',
+      '六五：震往來厲，宜謹慎應對。',
+      '上六：震索索，宜謹慎自省。',
+    ],
+  },
+  '巽上巽下': {
+    name: '巽為風',
+    ci: '小亨，宜順勢而為，善於應變。',
+    yaoCi: [
+      '初六：進退，宜謹慎觀察。',
+      '九二：巽在床下，宜深思熟慮。',
+      '九三：頻巽，宜謹慎言行。',
+      '六四：悔亡，宜順勢而為。',
+      '九五：貞吉，宜堅守正道。',
+      '上九：巽在床下，宜謙遜自處。',
+    ],
+  },
+  '坎上坎下': {
+    name: '坎為水',
+    ci: '有孚，維心亨，宜心懷誠信，堅守正道。',
+    yaoCi: [
+      '初六：習坎，宜學習適應。',
+      '九二：坎有險，宜謹慎應對。',
+      '六三：來之坎，宜謹慎處事。',
+      '六四：維心，宜心懷誠信。',
+      '九五：坎不盈，宜謙虛謹慎。',
+      '上六：用坎，宜善用智慧。',
+    ],
+  },
+  '艮上艮下': {
+    name: '艮為山',
+    ci: '艮其止，宜適時而止，保持靜止。',
+    yaoCi: [
+      '初六：艮其趾，宜適時而止。',
+      '六二：艮其腓，宜堅守正道。',
+      '九三：艮其限，宜審慎處事。',
+      '六四：艮其身，宜自我約束。',
+      '六五：艮其輔，宜輔助賢者。',
+      '上九：艮其背，宜謙遜自處。',
+    ],
+  },
+  '坤上坤下': {
+    name: '坤為地',
+    ci: '元亨利貞，宜順承大地，厚德載物。',
+    yaoCi: [
+      '初六：履霜堅冰至，宜謹慎防患。',
+      '六二：直方大，宜正直寬容。',
+      '六三：含章可貞，宜內斂謹慎。',
+      '六四：括囊無咎，宜收斂行事。',
+      '六五：黃裳元吉，宜中庸謙和。',
+      '上六：龍戰于野，宜謙遜退讓。',
+    ],
+  },
+  '坤上震下': {
+    name: '地雷復',
+    ci: '亨，宜返回正道，重新出發。',
+    yaoCi: [
+      '初九：不遠復，宜及時改過。',
+      '六二：休復，宜順勢而為。',
+      '六三：頻復，宜再三思考。',
+      '六四：復其位，宜恢復正道。',
+      '六五：敦復，宜誠心改過。',
+      '上六：迷復，宜迷途知返。',
+    ],
+  },
+  '震上坤下': {
+    name: '雷地豫',
+    ci: '利建侯行師，宜振奮順時，謀定而動。',
+    yaoCi: [
+      '初六：鳴豫凶，宜謹慎勿躁。',
+      '六二：介於石，宜守正不移。',
+      '六三：盱豫悔，宜審慎勿進。',
+      '九四：由豫大有得，宜順勢而為。',
+      '六五：貞疾，宜調養慎行。',
+      '上六：冥豫，宜謙退防過。',
+    ],
+  },
+  '坤上坎下': {
+    name: '地水師',
+    ci: '貞丈人吉，無咎，宜師出有名，謹慎用兵。',
+    yaoCi: [
+      '初六：師出以律，宜軍紀嚴明。',
+      '九二：在師中，宜中正處事。',
+      '六三：師出以律，宜謹慎用兵。',
+      '六四：師出無功，宜謹慎處事。',
+      '六五：師出大有得，宜順勢而為。',
+      '上六：師出無功，宜謹慎處事。',
+    ],
+  },
+  '坎上坤下': {
+    name: '水地比',
+    ci: '利貞，宜親比賢者，堅守正道。',
+    yaoCi: [
+      '初六：有孚比之，宜以信相待。',
+      '六二：比之自內，宜內心誠懇。',
+      '六三：比之匪人，宜謹慎選擇。',
+      '六四：比之無咎，宜親比賢者。',
+      '九五：比之自外，宜外柔內剛。',
+      '上六：比之無咎，宜和睦相處。',
+    ],
+  },
+  '坤上艮下': {
+    name: '地山謙',
+    ci: '亨，君子有終，宜謙虛自處，終身受益。',
+    yaoCi: [
+      '初六：謙謙君子，宜謙遜自處。',
+      '六二：謙之，宜謙遜處事。',
+      '九三：勞謙，宜謙虛勞作。',
+      '六四：謙之，宜謙遜處事。',
+      '六五：謙之，宜謙遜處事。',
+      '上六：鳴謙，宜謙遜自處。',
+    ],
+  },
+  '艮上坤下': {
+    name: '山地剝',
+    ci: '不利有攸往，宜謹慎行事，防範剝落。',
+    yaoCi: [
+      '初六：剝床以足，宜謹慎防範。',
+      '六二：剝床以辨，宜謹慎處事。',
+      '六三：剝床以柄，宜謹慎行事。',
+      '六四：剝床以膚，宜謹慎應對。',
+      '六五：剝床以核，宜謹慎自處。',
+      '上九：碩果不食，宜堅守正道。',
+    ],
+  },
+  '坤上兌下': {
+    name: '地澤臨',
+    ci: '元亨利貞，宜居高臨下，親民愛民。',
+    yaoCi: [
+      '初九：臨之以武，宜以德服人。',
+      '六二：臨之以柔，宜以柔克剛。',
+      '六三：臨之以正，宜以正處事。',
+      '六四：臨之以道，宜以道治理。',
+      '六五：臨之以和，宜和睦相處。',
+      '上六：臨之以靜，宜靜心修身。',
+    ],
+  },
+  '兌上坤下': {
+    name: '澤地萃',
+    ci: '亨，王假有廟，宜聚集人才，共謀大業。',
+    yaoCi: [
+      '初六：萃之，宜聚集人才。',
+      '六二：萃之，宜聚集賢者。',
+      '六三：萃之，宜聚集賢者。',
+      '九四：萃之，宜聚集人才。',
+      '九五：萃之，宜聚集賢者。',
+      '上六：萃之，宜聚集賢者。',
+    ],
+  },
+  '坤上離下': {
+    name: '地火明夷',
+    ci: '利艱貞，宜光明內斂，堅守正道。',
+    yaoCi: [
+      '初九：明夷于飛，宜光明內斂。',
+      '六二：明夷于地，宜謹慎處事。',
+      '九三：明夷于人，宜謹慎言行。',
+      '六四：明夷于日，宜光明正大。',
+      '六五：明夷于月，宜謹慎處事。',
+      '上六：明夷于星，宜光明正大。',
+    ],
+  },
+  '離上坤下': {
+    name: '火地晉',
+    ci: '康侯用錫馬蕃庶，宜前進發展，光明正大。',
+    yaoCi: [
+      '初九：晉如，宜前進發展。',
+      '六二：晉如，宜前進發展。',
+      '六三：晉如，宜前進發展。',
+      '九四：晉如，宜前進發展。',
+      '六五：晉如，宜前進發展。',
+      '上六：晉如，宜前進發展。',
+    ],
+  },
+  '坤上巽下': {
+    name: '地風升',
+    ci: '亨，宜上升發展，步步高升。',
+    yaoCi: [
+      '初六：升之，宜上升發展。',
+      '六二：升之，宜上升發展。',
+      '六三：升之，宜上升發展。',
+      '九四：升之，宜上升發展。',
+      '九五：升之，宜上升發展。',
+      '上六：升之，宜上升發展。',
+    ],
+  },
+  '巽上坤下': {
+    name: '風地觀',
+    ci: '盥而不薦，有孚顒若，宜觀察時勢，以誠信處事。',
+    yaoCi: [
+      '初六：觀之，宜觀察時勢。',
+      '六二：觀之，宜觀察時勢。',
+      '六三：觀之，宜觀察時勢。',
+      '六四：觀之，宜觀察時勢。',
+      '六五：觀之，宜觀察時勢。',
+      '上九：觀之，宜觀察時勢。',
+    ],
+  },
+  '乾上坎下': {
+    name: '天水訟',
+    ci: '有孚窒惕，宜謹慎爭訟，守正以待。',
+    yaoCi: [
+      '初六：不永所事，宜小事謹慎。',
+      '六二：不克訟，宜退避三舍。',
+      '九三：食舊德，宜安守本分。',
+      '六四：不克訟，宜復正安和。',
+      '九五：訟元吉，宜公正處事。',
+      '上九：或錫之鞶帶，宜謙退勿爭。',
+    ],
+  },
+  '坎上乾下': {
+    name: '水天需',
+    ci: '有孚，光亨，貞吉，宜等待時機，堅守正道。',
+    yaoCi: [
+      '初九：需于郊，宜等待時機。',
+      '九二：需于沙，宜謹慎處事。',
+      '九三：需于泥，宜謹慎行事。',
+      '六四：需于血，宜謹慎應對。',
+      '九五：需于酒食，宜等待時機。',
+      '上六：需于水，宜等待時機。',
+    ],
+  },
+  '乾上艮下': {
+    name: '天山遯',
+    ci: '亨，小利貞，宜退隱自處，堅守正道。',
+    yaoCi: [
+      '初六：遯于山，宜退隱自處。',
+      '六二：遯于林，宜退隱自處。',
+      '九三：遯于野，宜退隱自處。',
+      '九四：遯于人，宜退隱自處。',
+      '九五：遯于朝，宜退隱自處。',
+      '上九：遯于天，宜退隱自處。',
+    ],
+  },
+  '艮上乾下': {
+    name: '山天大畜',
+    ci: '利貞，宜畜養賢才，積蓄力量。',
+    yaoCi: [
+      '初九：大畜于山，宜畜養賢才。',
+      '九二：大畜于田，宜畜養賢才。',
+      '九三：大畜于林，宜畜養賢才。',
+      '六四：大畜于人，宜畜養賢才。',
+      '六五：大畜于朝，宜畜養賢才。',
+      '上九：大畜于天，宜畜養賢才。',
+    ],
+  },
+  '乾上震下': {
+    name: '天雷無妄',
+    ci: '元亨利貞，宜心無雜念，堅守正道。',
+    yaoCi: [
+      '初九：無妄之疾，宜心無雜念。',
+      '六二：無妄之疾，宜心無雜念。',
+      '六三：無妄之災，宜心無雜念。',
+      '六四：無妄之悔，宜心無雜念。',
+      '九五：無妄之咎，宜心無雜念。',
+      '上六：無妄之福，宜心無雜念。',
+    ],
+  },
+  '震上乾下': {
+    name: '雷天大壯',
+    ci: '利貞，宜壯大聲勢，堅守正道。',
+    yaoCi: [
+      '初九：大壯于趾，宜壯大聲勢。',
+      '九二：大壯于腓，宜壯大聲勢。',
+      '九三：大壯于股，宜壯大聲勢。',
+      '六四：大壯于人，宜壯大聲勢。',
+      '六五：大壯于朝，宜壯大聲勢。',
+      '上六：大壯于天，宜壯大聲勢。',
+    ],
+  },
+  '乾上兌下': {
+    name: '天澤履',
+    ci: '履虎尾，宜小心謹慎，步步為營。',
+    yaoCi: [
+      '初九：履霜，宜小心謹慎。',
+      '九二：履之，宜小心謹慎。',
+      '九三：履之，宜小心謹慎。',
+      '九四：履之，宜小心謹慎。',
+      '九五：履之，宜小心謹慎。',
+      '上九：履之，宜小心謹慎。',
+    ],
+  },
+  '兌上乾下': {
+    name: '澤天夬',
+    ci: '揚于王庭，宜果斷決策，排除萬難。',
+    yaoCi: [
+      '初九：夬之，宜果斷決策。',
+      '九二：夬之，宜果斷決策。',
+      '六三：夬之，宜果斷決策。',
+      '九四：夬之，宜果斷決策。',
+      '九五：夬之，宜果斷決策。',
+      '上九：夬之，宜果斷決策。',
+    ],
+  },
+  '乾上離下': {
+    name: '天火同人',
+    ci: '同人于野，宜與人和睦相處，廣結善緣。',
+    yaoCi: [
+      '初九：同人于門，宜與人和睦相處。',
+      '六二：同人于鄉，宜與人和睦相處。',
+      '九三：同人于野，宜與人和睦相處。',
+      '九四：同人于朝，宜與人和睦相處。',
+      '九五：同人于天，宜與人和睦相處。',
+      '上九：同人于野，宜與人和睦相處。',
+    ],
+  },
+  '離上乾下': {
+    name: '火天大有',
+    ci: '元亨，宜大有所得，光明正大。',
+    yaoCi: [
+      '初九：大有于朝，宜大有所得。',
+      '九二：大有于人，宜大有所得。',
+      '九三：大有于野，宜大有所得。',
+      '六四：大有于天，宜大有所得。',
+      '六五：大有于人，宜大有所得。',
+      '上九：大有于朝，宜大有所得。',
+    ],
+  },
+  '乾上巽下': {
+    name: '天風姤',
+    ci: '女壯，勿用取女，宜謹慎交友，避免不當關係。',
+    yaoCi: [
+      '初六：姤于家，宜謹慎交友。',
+      '九二：姤于野，宜謹慎交友。',
+      '九三：姤于人，宜謹慎交友。',
+      '九四：姤于朝，宜謹慎交友。',
+      '九五：姤于天，宜謹慎交友。',
+      '上九：姤于野，宜謹慎交友。',
+    ],
+  },
+  '巽上乾下': {
+    name: '風天小畜',
+    ci: '亨，宜積小成大，畜養力量。',
+    yaoCi: [
+      '初九：小畜于田，宜積小成大。',
+      '九二：小畜于林，宜積小成大。',
+      '六三：小畜于人，宜積小成大。',
+      '九四：小畜于朝，宜積小成大。',
+      '九五：小畜于天，宜積小成大。',
+      '上六：小畜于野，宜積小成大。',
+    ],
+  },
+  '震上坎下': {
+    name: '雷水解',
+    ci: '利貞，宜解除困境，恢復正道。',
+    yaoCi: [
+      '初九：解之，宜解除困境。',
+      '六二：解之，宜解除困境。',
+      '九三：解之，宜解除困境。',
+      '九四：解之，宜解除困境。',
+      '六五：解之，宜解除困境。',
+      '上六：解之，宜解除困境。',
+    ],
+  },
+  '坎上震下': {
+    name: '水雷屯',
+    ci: '元亨利貞，宜開創事業，堅守正道。',
+    yaoCi: [
+      '初九：屯之，宜開創事業。',
+      '六二：屯之，宜開創事業。',
+      '六三：屯之，宜開創事業。',
+      '六四：屯之，宜開創事業。',
+      '九五：屯之，宜開創事業。',
+      '上六：屯之，宜開創事業。',
+    ],
+  },
+  '震上艮下': {
+    name: '雷山小過',
+    ci: '亨，利貞，宜小有過失，堅守正道。',
+    yaoCi: [
+      '初九：小過于趾，宜小有過失。',
+      '六二：小過于腓，宜小有過失。',
+      '六三：小過于股，宜小有過失。',
+      '六四：小過于人，宜小有過失。',
+      '九五：小過于朝，宜小有過失。',
+      '上六：小過于天，宜小有過失。',
+    ],
+  },
+  '艮上震下': {
+    name: '山雷頤',
+    ci: '貞吉，宜修養頤養，保持身心健康。',
+    yaoCi: [
+      '初九：頤之，宜修養頤養。',
+      '六二：頤之，宜修養頤養。',
+      '六三：頤之，宜修養頤養。',
+      '九四：頤之，宜修養頤養。',
+      '六五：頤之，宜修養頤養。',
+      '上九：頤之，宜修養頤養。',
+    ],
+  },
+  '震上兌下': {
+    name: '雷澤歸妹',
+    ci: '征凶，無攸利，宜謹慎行動，避免不當關係。',
+    yaoCi: [
+      '初九：歸妹之，宜謹慎行動。',
+      '六二：歸妹之，宜謹慎行動。',
+      '九三：歸妹之，宜謹慎行動。',
+      '九四：歸妹之，宜謹慎行動。',
+      '六五：歸妹之，宜謹慎行動。',
+      '上六：歸妹之，宜謹慎行動。',
+    ],
+  },
+  '兌上震下': {
+    name: '澤雷隨',
+    ci: '元亨利貞，無咎，宜隨順時勢，無咎無悔。',
+    yaoCi: [
+      '初九：隨之，宜隨順時勢。',
+      '六二：隨之，宜隨順時勢。',
+      '六三：隨之，宜隨順時勢。',
+      '九四：隨之，宜隨順時勢。',
+      '九五：隨之，宜隨順時勢。',
+      '上六：隨之，宜隨順時勢。',
+    ],
+  },
+  '震上離下': {
+    name: '雷火豐',
+    ci: '亨，宜豐收富足，光明正大。',
+    yaoCi: [
+      '初九：豐之，宜豐收富足。',
+      '六二：豐之，宜豐收富足。',
+      '六三：豐之，宜豐收富足。',
+      '九四：豐之，宜豐收富足。',
+      '六五：豐之，宜豐收富足。',
+      '上六：豐之，宜豐收富足。',
+    ],
+  },
+  '離上震下': {
+    name: '火雷噬嗑',
+    ci: '亨，利貞，宜排除阻礙，堅守正道。',
+    yaoCi: [
+      '初九：噬嗑之，宜排除阻礙。',
+      '六二：噬嗑之，宜排除阻礙。',
+      '六三：噬嗑之，宜排除阻礙。',
+      '九四：噬嗑之，宜排除阻礙。',
+      '九五：噬嗑之，宜排除阻礙。',
+      '上六：噬嗑之，宜排除阻礙。',
+    ],
+  },
+  '震上巽下': {
+    name: '雷風恆',
+    ci: '亨，利貞，宜持之以恆，堅守正道。',
+    yaoCi: [
+      '初九：恆之，宜持之以恆。',
+      '六二：恆之，宜持之以恆。',
+      '六三：恆之，宜持之以恆。',
+      '九四：恆之，宜持之以恆。',
+      '九五：恆之，宜持之以恆。',
+      '上六：恆之，宜持之以恆。',
+    ],
+  },
+  '巽上震下': {
+    name: '風雷益',
+    ci: '利有攸往，利涉大川，宜增益補缺，順利發展。',
+    yaoCi: [
+      '初九：益之，宜增益補缺。',
+      '六二：益之，宜增益補缺。',
+      '六三：益之，宜增益補缺。',
+      '六四：益之，宜增益補缺。',
+      '九五：益之，宜增益補缺。',
+      '上九：益之，宜增益補缺。',
+    ],
+  },
+  '坎上艮下': {
+    name: '水山蹇',
+    ci: '利貞，宜艱難險阻，堅守正道。',
+    yaoCi: [
+      '初九：蹇之，宜艱難險阻。',
+      '六二：蹇之，宜艱難險阻。',
+      '六三：蹇之，宜艱難險阻。',
+      '六四：蹇之，宜艱難險阻。',
+      '六五：蹇之，宜艱難險阻。',
+      '上六：蹇之，宜艱難險阻。',
+    ],
+  },
+  '艮上坎下': {
+    name: '山水蒙',
+    ci: '亨，宜啟蒙教化，開導愚昧。',
+    yaoCi: [
+      '初九：蒙之，宜啟蒙教化。',
+      '六二：蒙之，宜啟蒙教化。',
+      '六三：蒙之，宜啟蒙教化。',
+      '六四：蒙之，宜啟蒙教化。',
+      '六五：蒙之，宜啟蒙教化。',
+      '上九：蒙之，宜啟蒙教化。',
+    ],
+  },
+  '坎上兌下': {
+    name: '水澤節',
+    ci: '亨，利貞，宜節制有度，堅守正道。',
+    yaoCi: [
+      '初九：節之，宜節制有度。',
+      '六二：節之，宜節制有度。',
+      '九三：節之，宜節制有度。',
+      '六四：節之，宜節制有度。',
+      '九五：節之，宜節制有度。',
+      '上六：節之，宜節制有度。',
+    ],
+  },
+  '兌上坎下': {
+    name: '澤水困',
+    ci: '亨，利貞，宜困境中求突破，堅守正道。',
+    yaoCi: [
+      '初九：困之，宜困境中求突破。',
+      '六二：困之，宜困境中求突破。',
+      '九三：困之，宜困境中求突破。',
+      '九四：困之，宜困境中求突破。',
+      '九五：困之，宜困境中求突破。',
+      '上六：困之，宜困境中求突破。',
+    ],
+  },
+  '坎上離下': {
+    name: '水火既濟',
+    ci: '亨，小利貞，宜事成之後，謹慎自守。',
+    yaoCi: [
+      '初九：既濟之，宜事成之後。',
+      '六二：既濟之，宜事成之後。',
+      '九三：既濟之，宜事成之後。',
+      '九四：既濟之，宜事成之後。',
+      '九五：既濟之，宜事成之後。',
+      '上六：既濟之，宜事成之後。',
+    ],
+  },
+  '離上坎下': {
+    name: '火水未濟',
+    ci: '亨，小利貞，宜事未成，努力奮進。',
+    yaoCi: [
+      '初九：未濟之，宜事未成。',
+      '六二：未濟之，宜事未成。',
+      '六三：未濟之，宜事未成。',
+      '九四：未濟之，宜事未成。',
+      '九五：未濟之，宜事未成。',
+      '上九：未濟之，宜事未成。',
+    ],
+  },
+  '坎上巽下': {
+    name: '水風井',
+    ci: '亨，宜汲取智慧，滋養萬物。',
+    yaoCi: [
+      '初九：井之，宜汲取智慧。',
+      '九二：井之，宜汲取智慧。',
+      '九三：井之，宜汲取智慧。',
+      '六四：井之，宜汲取智慧。',
+      '九五：井之，宜汲取智慧。',
+      '上六：井之，宜汲取智慧。',
+    ],
+  },
+  '巽上坎下': {
+    name: '風水渙',
+    ci: '亨，利涉大川，宜渙散困難，順利發展。',
+    yaoCi: [
+      '初九：渙之，宜渙散困難。',
+      '六二：渙之，宜渙散困難。',
+      '九三：渙之，宜渙散困難。',
+      '九四：渙之，宜渙散困難。',
+      '九五：渙之，宜渙散困難。',
+      '上六：渙之，宜渙散困難。',
+    ],
+  },
+  '艮上兌下': {
+    name: '山澤損',
+    ci: '亨，利貞，宜損己利人，堅守正道。',
+    yaoCi: [
+      '初九：損之，宜損己利人。',
+      '六二：損之，宜損己利人。',
+      '六三：損之，宜損己利人。',
+      '九四：損之，宜損己利人。',
+      '九五：損之，宜損己利人。',
+      '上九：損之，宜損己利人。',
+    ],
+  },
+  '兌上艮下': {
+    name: '澤山咸',
+    ci: '亨，利貞，宜感應相通，堅守正道。',
+    yaoCi: [
+      '初九：咸之，宜感應相通。',
+      '六二：咸之，宜感應相通。',
+      '六三：咸之，宜感應相通。',
+      '六四：咸之，宜感應相通。',
+      '九五：咸之，宜感應相通。',
+      '上六：咸之，宜感應相通。',
+    ],
+  },
+  '艮上離下': {
+    name: '山火賁',
+    ci: '亨，小利貞，宜文飾外表，光明正大。',
+    yaoCi: [
+      '初九：賁之，宜文飾外表。',
+      '六二：賁之，宜文飾外表。',
+      '六三：賁之，宜文飾外表。',
+      '六四：賁之，宜文飾外表。',
+      '九五：賁之，宜文飾外表。',
+      '上九：賁之，宜文飾外表。',
+    ],
+  },
+  '離上艮下': {
+    name: '火山旅',
+    ci: '亨，利貞，宜旅途平安，堅守正道。',
+    yaoCi: [
+      '初九：旅之，宜旅途平安。',
+      '六二：旅之，宜旅途平安。',
+      '九三：旅之，宜旅途平安。',
+      '九四：旅之，宜旅途平安。',
+      '六五：旅之，宜旅途平安。',
+      '上九：旅之，宜旅途平安。',
+    ],
+  },
+  '艮上巽下': {
+    name: '山風蠱',
+    ci: '亨，利貞，宜除舊布新，堅守正道。',
+    yaoCi: [
+      '初九：蠱之，宜除舊布新。',
+      '六二：蠱之，宜除舊布新。',
+      '九三：蠱之，宜除舊布新。',
+      '六四：蠱之，宜除舊布新。',
+      '六五：蠱之，宜除舊布新。',
+      '上九：蠱之，宜除舊布新。',
+    ],
+  },
+  '巽上艮下': {
+    name: '風山漸',
+    ci: '亨，利貞，宜循序漸進，堅守正道。',
+    yaoCi: [
+      '初九：漸之，宜循序漸進。',
+      '六二：漸之，宜循序漸進。',
+      '六三：漸之，宜循序漸進。',
+      '六四：漸之，宜循序漸進。',
+      '九五：漸之，宜循序漸進。',
+      '上九：漸之，宜循序漸進。',
+    ],
+  },
+  '兌上離下': {
+    name: '澤火革',
+    ci: '亨，利貞，宜改革創新，堅守正道。',
+    yaoCi: [
+      '初九：革之，宜改革創新。',
+      '六二：革之，宜改革創新。',
+      '九三：革之，宜改革創新。',
+      '六四：革之，宜改革創新。',
+      '九五：革之，宜改革創新。',
+      '上六：革之，宜改革創新。',
+    ],
+  },
+  '離上兌下': {
+    name: '火澤睽',
+    ci: '亨，利貞，宜背道而馳，堅守正道。',
+    yaoCi: [
+      '初九：睽之，宜背道而馳。',
+      '六二：睽之，宜背道而馳。',
+      '九三：睽之，宜背道而馳。',
+      '六四：睽之，宜背道而馳。',
+      '九五：睽之，宜背道而馳。',
+      '上六：睽之，宜背道而馳。',
+    ],
+  },
+  '兌上巽下': {
+    name: '澤風大過',
+    ci: '利貞，宜大有過失，堅守正道。',
+    yaoCi: [
+      '初九：大過之，宜大有過失。',
+      '九二：大過之，宜大有過失。',
+      '六三：大過之，宜大有過失。',
+      '九四：大過之，宜大有過失。',
+      '九五：大過之，宜大有過失。',
+      '上九：大過之，宜大有過失。',
+    ],
+  },
+  '巽上兌下': {
+    name: '風澤中孚',
+    ci: '利貞，宜誠信為本，堅守正道。',
+    yaoCi: [
+      '初九：中孚之，宜誠信為本。',
+      '九二：中孚之，宜誠信為本。',
+      '九三：中孚之，宜誠信為本。',
+      '九四：中孚之，宜誠信為本。',
+      '九五：中孚之，宜誠信為本。',
+      '上九：中孚之，宜誠信為本。',
+    ],
+  },
+  '兌上震下': {
+    name: '澤雷隨',
+    ci: '元亨利貞，無咎，宜隨順時勢，無咎無悔。',
+    yaoCi: [
+      '初九：隨之，宜隨順時勢。',
+      '六二：隨之，宜隨順時勢。',
+      '六三：隨之，宜隨順時勢。',
+      '九四：隨之，宜隨順時勢。',
+      '九五：隨之，宜隨順時勢。',
+      '上六：隨之，宜隨順時勢。',
+    ],
+  },
+};
+
+    document.querySelectorAll('input[name="castMethod"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        document.getElementById('manualInput').classList.toggle('hidden', radio.value !== 'manual');
+      });
+    });
+
+    function validateElement(element) {
+      return ['金', '木', '水', '火', '土'].includes(element);
+    }
+
+    function getRandomYao() {
+      return Math.floor(Math.random() * 2);
+    }
+
+    function generateHexagram() {
+      const yao = Array(6).fill().map(() => getRandomYao());
+      const upper = yao.slice(3, 6).reverse();
+      const lower = yao.slice(0, 3).reverse();
+      const upperGua = parseInt(upper.join(''), 2) % 8;
+      const lowerGua = parseInt(lower.join(''), 2) % 8;
+      if (upperGua < 0 || upperGua > 7 || lowerGua < 0 || lowerGua > 7) {
+        throw new Error('生成卦象失敗：無效卦索引');
+      }
+      return { yao: yao.map(y => ({ value: y, isMoving: false })), upperGua, lowerGua };
+    }
+
+    function getManualHexagram() {
+      const inputs = document.querySelectorAll('.yao-input');
+      const yao = Array.from(inputs).reverse().map((input, i) => {
+        const val = input.value.trim();
+        if (val === '' || (val !== '0' && val !== '1')) {
+          alert(`請於爻${6-i}輸入0（陰爻）或1（陽爻），不得為空或無效。`);
+          throw new Error('無效爻輸入');
+        }
+        return { value: parseInt(val), isMoving: false };
+      });
+      const upper = yao.slice(3, 6).reverse().map(y => y.value);
+      const lower = yao.slice(0, 3).reverse().map(y => y.value);
+      const upperGua = parseInt(upper.join(''), 2) % 8;
+      const lowerGua = parseInt(lower.join(''), 2) % 8;
+      if (upperGua < 0 || upperGua > 7 || lowerGua < 0 || lowerGua > 7) {
+        throw new Error('手動建卦失敗：無效卦索引');
+      }
+      return { yao, upperGua, lowerGua };
+    }
+
+    function getChangedHexagram(yao) {
+      const movingCount = Math.floor(Math.random() * 4);
+      const indices = Array.from({ length: 6 }, (_, i) => i).sort(() => Math.random() - 0.5).slice(0, movingCount);
+      const changedYao = yao.map((y, i) => ({
+        value: indices.includes(i) ? 1 - y.value : y.value,
+        isMoving: indices.includes(i)
+      }));
+      const upper = changedYao.slice(3, 6).reverse().map(y => y.value);
+      const lower = changedYao.slice(0, 3).reverse().map(y => y.value);
+      const upperGua = parseInt(upper.join(''), 2) % 8;
+      const lowerGua = parseInt(lower.join(''), 2) % 8;
+      if (upperGua < 0 || upperGua > 7 || lowerGua < 0 || lowerGua > 7) {
+        throw new Error('變卦生成失敗：無效卦索引');
+      }
+      return { yao: changedYao, upperGua, lowerGua };
+    }
+
+    function getGuaCi(upperGua, lowerGua, yao, questionType) {
+      const guaKey = `${guaNames[upperGua]}上${guaNames[lowerGua]}下`;
+      const guaData = guaCiData[guaKey] || { name: '未知卦', ci: '無卦辭，宜依五行與動爻分析。', yaoCi: [] };
+      let result = `【卦辭】${guaData.name}：${guaData.ci}<br>`;
+      const movingYaos = yao.filter(y => y.isMoving);
+      if (movingYaos.length > 0) {
+        result += '【動爻辭】：<br>';
+        movingYaos.forEach((y, i) => {
+          const yaoIndex = yao.findIndex(ya => ya === y);
+          const yaoCi = guaData.yaoCi[yaoIndex] || '無特定爻辭，宜依卦象推斷。';
+          result += `爻${6-yaoIndex}：${yaoCi} （${questionType}宜參考此意，謹慎行事）<br>`;
+        });
+      }
+      return result;
+    }
+
+    function analyzeFiveElements(mainGua, changedGua, movingYaos) {
+      const mainElement = fiveElements[mainGua.upperGua];
+      const useElement = fiveElements[mainGua.lowerGua];
+      const changedElement = fiveElements[changedGua.upperGua];
+      if (!validateElement(mainElement) || !validateElement(useElement) || !validateElement(changedElement)) {
+        return '【錯誤】五行分析失敗：無效五行元素，請重新卜卦。';
+      }
+      let analysis = `體卦：${guaNames[mainGua.upperGua]}，五行屬${mainElement}，意為${guaImages[guaNames[mainGua.upperGua]]}<br>`;
+      analysis += `用卦：${guaNames[mainGua.lowerGua]}，五行屬${useElement}，意為${guaImages[guaNames[mainGua.lowerGua]]}<br>`;
+      analysis += `變卦：${guaNames[changedGua.upperGua]}，五行屬${changedElement}，意為${guaImages[guaNames[changedGua.upperGua]]}<br><br>`;
+      
+      analysis += '【五行生克】：<br>';
+      if (mainElement === useElement) {
+        analysis += '體用比和，氣機相合，事態平穩，宜守正循序，徐圖進展。當下氣運平衡，宜穩中求進，勿急躁。<br>';
+      } else if (fiveElementRelations[mainElement].generates === useElement) {
+        analysis += '體生用，元氣外洩，事多費力，宜謹慎籌謀，量力而行。當下耗力較多，宜蓄力待發。<br>';
+      } else if (fiveElementRelations[mainElement].overcomes === useElement) {
+        analysis += '體克用，主強客弱，事多順遂，宜乘勢而進，果斷行事。當下局勢有利，宜把握時機。<br>';
+      } else if (fiveElementRelations[useElement].generates === mainElement) {
+        analysis += '用生體，外得助力，事有貴人，宜積極進取，順勢而為。當下外援強盛，宜廣結善緣。<br>';
+      } else if (fiveElementRelations[useElement].overcomes === mainElement) {
+        analysis += '用克體，局勢受抑，阻力重重，宜退守觀變，慎防不利。當下宜低調謹慎，防範突變。<br>';
+      }
+
+      analysis += '<br>【變卦動向】：<br>';
+      if (changedElement === mainElement) {
+        analysis += '變卦同體，事態穩定，後續變化甚微，宜持正待機，穩步前行。<br>';
+      } else if (fiveElementRelations[mainElement].overcomes === changedElement) {
+        analysis += '體克變卦，後勢漸強，宜乘時而動，未來可期，當謀定而後動。<br>';
+      } else if (fiveElementRelations[changedElement].overcomes === mainElement) {
+        analysis += '變卦克體，後有阻力，宜審慎規劃，防患未然，當靜觀其變。<br>';
+      }
+
+      const movingCount = movingYaos.filter(y => y.isMoving).length;
+      analysis += `<br>【動爻分析】：動爻數 ${movingCount}，動多則變速，動少則事緩。`;
+      if (movingCount === 0) analysis += '無動爻，事態靜穩，宜守常勿躁，循序而進。<br>';
+      else if (movingCount <= 2) analysis += '動爻適中，事有漸變，宜穩中求進，步步為營。<br>';
+      else analysis += '動爻眾多，事多波動，宜審時度勢，謹慎應對，以防突變。<br>';
+
+      return analysis;
+    }
+
+    function getJudgment(mainElement, useElement, changedElement, movingYaos) {
+      if (!validateElement(mainElement) || !validateElement(useElement) || !validateElement(changedElement)) {
+        return { judgment: '【錯誤】吉凶判斷失敗：無效五行元素，請重新卜卦。', judgmentType: '' };
+      }
+      const movingCount = movingYaos.filter(y => y.isMoving).length;
+      let judgment = '【吉凶判斷】：<br>';
+      let judgmentType = '';
+      if (fiveElementRelations[mainElement].overcomes === useElement || fiveElementRelations[useElement].generates === mainElement) {
+        judgmentType = '吉';
+        judgment += '吉：天時地利，事多順遂，宜積極進取，乘勢而為，當獲佳果。';
+        if (movingCount > 2) judgment += '然動爻多，宜防過盛而衰，謹慎行事，勿驕勿躁。<br>';
+        else judgment += '動靜適宜，後勢可期，宜果斷行之，乘運而進。<br>';
+      } else if (fiveElementRelations[useElement].overcomes === mainElement) {
+        judgmentType = '凶';
+        judgment += '凶：局勢不利，阻力叢生，宜退守觀變，勿強求進，以免損折。';
+        if (movingCount > 2) judgment += '動爻紛雜，事多波折，尤需謹慎，宜靜待時機。<br>';
+        else judgment += '動爻尚少，宜靜待時機，徐圖後進，防範未然。<br>';
+      } else {
+        judgmentType = '平';
+        judgment += '平：氣機平衡，無大起落，宜穩中求進，循序漸進，持之以恆。';
+        if (movingCount > 2) judgment += '動爻稍多，宜防細節疏漏，謹慎為上，穩步前行。<br>';
+        else judgment += '動靜和諧，宜持中守正，穩步而行，後必有成。<br>';
+      }
+      return { judgment, judgmentType };
+    }
+
+    function getPrediction(mainElement, changedElement, movingYaos) {
+      if (!validateElement(mainElement) || !validateElement(changedElement)) {
+        return '【錯誤】應期預測失敗：無效五行元素，請重新卜卦。';
+      }
+      const seasons = {
+        '木': '春季（正月至三月）',
+        '火': '夏季（四月至六月）',
+        '土': '季末（三、六、九、十二月）',
+        '金': '秋季（七月至九月）',
+        '水': '冬季（十月至十二月）'
+      };
+      const movingCount = movingYaos.filter(y => y.isMoving).length;
+      let prediction = '【應期預測】：<br>';
+      prediction += `體卦五行 ${mainElement}，對應 ${seasons[mainElement]}，事宜於此時萌芽或顯進，宜關注時機。<br>`;
+      if (changedElement !== mainElement) {
+        prediction += `變卦五行 ${changedElement}，對應 ${seasons[changedElement]}，結果或轉折或於此時顯現，宜早做準備。<br>`;
+      } else {
+        prediction += '變卦與體卦同屬，應期不明，宜觀當下之機，順勢而為。<br>';
+      }
+      if (movingCount === 0) prediction += '無動爻，事緩難速，宜耐心以待，靜觀其變。<br>';
+      else if (movingCount <= 2) prediction += `動爻 ${movingCount}，事變適中，應期或近數週至數月，宜穩中求進。<br>';
+      else prediction += `動爻 ${movingCount}，事變速疾，應期或近數日至數週，宜迅速應對。<br>';
+      return prediction;
+    }
+
+    function getSuggestion(questionType, judgmentObj, mainElement, movingYaos) {
+      const { judgmentType } = judgmentObj;
+      if (!judgmentType || !validateElement(mainElement)) {
+        return '<strong>【錯誤】</strong><br>無法生成抉擇建議，請檢查輸入或重新卜卦。';
+      }
+      const movingCount = movingYaos.filter(y => y.isMoving).length;
+      const suggestions = {
+        '事業': {
+          '吉': `事業亨通，氣運昌盛，宜乘時拓展，結交貴人，謀定而動，當獲成功。動爻數 ${movingCount}，${movingCount > 2 ? '宜防過速求成，穩中求進' : '宜果斷進取，乘勢而為'}。<br>` +
+                '【行動策略】：<br>- 短期：積極開拓新局，尋求合作機緣，推進當前項目。<br>- 長期：制定長遠計劃，提升專業技能，穩固事業根基。<br>' +
+                '【趨吉指引】：廣結善緣，與同道共謀，尋求貴人相助，當可事半功倍。<br>' +
+                '【避凶之道】：勿驕傲自滿，慎防細節疏漏，謹慎評估風險，勿急於擴張。',
+          '凶': `事業受阻，天時不合，宜退守本業，審慎謀劃，待機而動，方可化險。動爻數 ${movingCount}，${movingCount > 2 ? '波折頻生，尤需謹慎' : '宜靜待時機，徐圖後進'}。<br>` +
+                '【行動策略】：<br>- 短期：鞏固現有資源，專注當前任務，勿開新局。<br>- 長期：提升內功，積蓄力量，尋求穩定發展機會。<br>' +
+                '【趨吉指引】：潛心修業，與同僚和睦相處，待時機成熟再進。<br>' +
+                '【避凶之道】：防範小人與競爭，謹慎簽約或承諾，勿冒進求成。',
+          '平': `事業平順，無大波瀾，宜穩中求進，精進技藝，積蓄力量，後必有成。動爻數 ${movingCount}，${movingCount > 2 ? '宜防疏漏，細心行事' : '宜循序漸進，穩步前行'}。<br>` +
+                '【行動策略】：<br>- 短期：維持現狀，專注細節，穩步推進項目。<br>- 長期：提升專業技能，制定穩健計劃，積小勝為大勝。<br>' +
+                '【趨吉指引】：與同僚和睦相處，細心規劃，尋求穩定進展。<br>' +
+                '【避凶之道】：勿急功近利，慎防細節失誤，保持耐心。'
+        },
+        '財運': {
+          '吉': `財源廣進，利在四方，宜審時投資，量力而行，當得厚利。動爻數 ${movingCount}，${movingCount > 2 ? '宜防貪多，謹慎理財' : '宜乘勢投資，果斷行事'}。<br>` +
+                '【行動策略】：<br>- 短期：尋求穩健投資機會，拓展財源。<br>- 長期：合理分配資金，制定理財計劃。<br>' +
+                '【趨吉指引】：與信賴之人合作，審慎評估市場，利在長遠。<br>' +
+                '【避凶之道】：勿貪高利冒險，慎防詐騙或投機損失。',
+          '凶': `財運不暢，宜守財勿散，慎防破財之虞，宜節用慎投，待時而動。動爻數 ${movingCount}，${movingCount > 2 ? '波折頻繁，尤需謹慎' : '宜靜守財源，待機而行'}。<br>` +
+                '【行動策略】：<br>- 短期：減少非必要開支，審查財務狀況。<br>- 長期：穩固現有財源，尋求穩定收益。<br>' +
+                '【趨吉指引】：細查賬目，穩健理財，積少成多。<br>' +
+                '【避凶之道】：勿信高利誘惑，慎防借貸或詐騙。',
+          '平': `財運平穩，進出相抵，宜穩健理財，細水長流，後得安穩之利。動爻數 ${movingCount}，${movingCount > 2 ? '宜防衝動，穩健為上' : '宜循序漸進，穩步理財'}。<br>` +
+                '【行動策略】：<br>- 短期：維持收支平衡，尋求小額投資。<br>- 長期：制定長期理財計劃，積少成多。<br>' +
+                '【趨吉指引】：穩健理財，細心規劃，利在積累。<br>' +
+                '【避凶之道】：勿衝動消費，慎防小額損失累積。'
+        },
+        '感情': {
+          '吉': `情緣和合，鸞鳳和鳴，宜真誠相待，共謀未來，當得美滿之果。動爻數 ${movingCount}，${movingCount > 2 ? '宜防過急，穩中求進' : '宜積極溝通，增進情誼'}。<br>` +
+                '【行動策略】：<br>- 短期：坦誠交流，增進彼此信任。<br>- 長期：共同規劃未來，參與彼此生活。<br>' +
+                '【趨吉指引】：用心經營感情，參與共同活動，促進和諧。<br>' +
+                '【避凶之道】：勿因小事爭執，慎防誤解或第三者干擾。',
+          '凶': `情路坎坷，易生齟齬，宜冷靜自省，勿急進逼，靜待機緣為上。動爻數 ${movingCount}，${movingCount > 2 ? '波折頻生，宜靜觀其變' : '宜平和溝通，徐圖後進'}。<br>` +
+                '【行動策略】：<br>- 短期：冷靜處理爭執，給予彼此空間。<br>- 長期：重新審視關係，尋求穩定基礎。<br>' +
+                '【趨吉指引】：真誠溝通，尋求外部調解，緩解矛盾。<br>' +
+                '【避凶之道】：勿情緒化爭吵，慎防衝動分手。',
+          '平': `感情平順，無大起伏，宜細心經營，溫情相待，當得長久之歡。動爻數 ${movingCount}，${movingCount > 2 ? '宜防疏忽，細心相處' : '宜穩中求進，溫情以待'}。<br>` +
+                '【行動策略】：<br>- 短期：增進日常互動，細心關懷。<br>- 長期：穩固感情基礎，細水長流。<br>' +
+                '【趨吉指引】：用心相處，參與彼此生活，增進默契。<br>' +
+                '【避凶之道】：勿冷漠疏忽，慎防小誤會積累。'
+        },
+        '健康': {
+          '吉': `氣血充盈，身心康泰，宜規律作息，適度運動，當保長壽之福。動爻數 ${movingCount}，${movingCount > 2 ? '宜防過勞，調養為上' : '宜積極養生，保持康泰'}。<br>` +
+                '【行動策略】：<br>- 短期：保持均衡飲食，規律運動。<br>- 長期：注重身心調養，定期體檢。<br>' +
+                '【趨吉指引】：養成健康習慣，保持心情愉悅，適度運動。<br>' +
+                '【避凶之道】：勿過勞過食，慎防情志不穩影響健康。',
+          '凶': `氣機不調，病厄潛伏，宜速求醫診，調養身心，慎防小疾成患。動爻數 ${movingCount}，${movingCount > 2 ? '病厄易發，尤需速查' : '宜靜養調理，徐圖康復'}。<br>` +
+                '【行動策略】：<br>- 短期：及早檢查身體，調整飲食作息。<br>- 長期：注重養生，尋求專業醫囑。<br>' +
+                '【趨吉指引】：靜心調養，遵循醫囑，保持規律生活。<br>' +
+                '【避凶之道】：勿忽視症狀，慎防過勞或壓力過大。',
+          '平': `健康平穩，無大病厄，宜持之以恆，養生有道，當得安康之身。動爻數 ${movingCount}，${movingCount > 2 ? '宜防小疾，細心養生' : '宜穩健養生，循序漸進'}。<br>` +
+                '【行動策略】：<br>- 短期：維持健康生活方式，均衡飲食。<br>- 長期：定期檢查，注重養生習慣。<br>' +
+                '【趨吉指引】：注重日常養生，適度運動，保持身心平衡。<br>' +
+                '【避凶之道】：勿縱欲無度，慎防小病累積。'
+        },
+        '學業': {
+          '吉': `學海無涯，進展順遂，宜專心致志，勤勉不懈，當獲佳績之榮。動爻數 ${movingCount}，${movingCount > 2 ? '宜防分心，專注為上' : '宜乘勢進取，勤學不輟'}。<br>` +
+                '【行動策略】：<br>- 短期：制定學習計劃，專注當下目標。<br>- 長期：尋求良師指導，穩固知識基礎。<br>' +
+                '【趨吉指引】：勤勉用功，與同學交流，鞏固基礎知識。<br>' +
+                '【避凶之道】：勿驕傲自滿，慎防分心或懈怠。',
+          '凶': `學業艱難，進展緩慢，宜調整心志，重整方法，靜心以待進展。動爻數 ${movingCount}，${movingCount > 2 ? '波折頻生，宜靜心學習' : '宜穩固基礎，徐圖進展'}。<br>` +
+                '【行動策略】：<br>- 短期：重新審視學習方法，尋求幫助。<br>- 長期：穩固基礎，循序漸進學習。<br>' +
+                '【趨吉指引】：專注基礎，尋求老師或同學指導。<br>' +
+                '【避凶之道】：勿心浮氣躁，慎防半途而廢。',
+          '平': `學業平順，進展有序，宜按部就班，持之以恆，後必有成。動爻數 ${movingCount}，${movingCount > 2 ? '宜防疏漏，專注學習' : '宜循序漸進，穩步前行'}。<br>` +
+                '【行動策略】：<br>- 短期：維持學習節奏，穩固基礎。<br>- 長期：逐步提升，制定長期計劃。<br>' +
+                '【趨吉指引】：按計劃學習，與同學互助，積累知識。<br>' +
+                '【避凶之道】：勿三心二意，慎防急於求成。'
+        },
+        '其他': {
+          '吉': `凡事順遂，氣運昌隆，宜果斷而行，乘勢進取，當有所得。動爻數 ${movingCount}，${movingCount > 2 ? '宜防過急，穩中求進' : '宜積極行動，乘運而行'}。<br>` +
+                '【行動策略】：<br>- 短期：把握當下時機，果斷行動。<br>- 長期：制定清晰計劃，穩步推進。<br>' +
+                '【趨吉指引】：順勢而為，積極拓展，結交有益之人。<br>' +
+                '【避凶之道】：勿猶豫不決，慎防細節疏漏或衝動行事。',
+          '凶': `事多阻礙，氣運不暢，宜退守觀變，謹慎謴劃，待機而動。動爻數 ${movingCount}，${movingCount > 2 ? '波折頻生，尤需謹慎' : '宜靜待時機，徐圖後進'}。<br>` +
+                '【行動策略】：<br>- 短期：低調行事，穩固基礎。<br>- 長期：審慎觀察，積蓄力量。<br>' +
+                '【趨吉指引】：審慎觀察，待機而動，穩中求進。<br>' +
+                '【避凶之道】：勿強求進展，慎防突發變故。',
+          '平': `事態平穩，無大起伏，宜循序而進，持中守正，後有所成。動爻數 ${movingCount}，${movingCount > 2 ? '宜防疏忽，細心行事' : '宜穩中求進，循序漸進'}。<br>` +
+                '【行動策略】：<br>- 短期：按部就班，穩步推進。<br>- 長期：細心規劃，積小勝為大勝。<br>' +
+                '【趨吉指引】：持之以恆，穩中求進，細心行事。<br>' +
+                '【避凶之道】：勿急功近利，慎防疏忽大意。'
+        }
+      };
+      return `<strong>【抉擇建議（${questionType}）】</strong><br>${suggestions[questionType]?.[judgmentType] || '無效問題類型或吉凶判斷，請重新卜卦。'}`;
+    }
+
+    function displayHexagram(yao, upperGua, lowerGua, title) {
+      if (upperGua < 0 || upperGua > 7 || lowerGua < 0 || lowerGua > 7) {
+        return `【錯誤】${title}顯示失敗：無效卦索引，請重新卜卦。`;
+      }
+      let display = `<strong>${title}</strong>：<br>`;
+      for (let i = 5; i >= 0; i--) {
+        const isMoving = yao[i].isMoving ? '（動爻）' : '';
+        display += `${yao[i].value === 0 ? yaoSymbols[0] : yaoSymbols[1]} ${isMoving}<br>`;
+      }
+      display += `卦名：${guaNames[upperGua]}（上）${guaNames[lowerGua]}（下）<br>`;
+      display += `意象：${guaImages[guaNames[upperGua]]}，與${guaImages[guaNames[lowerGua]]}相合。<br>`;
+      return display;
+    }
+
+    function saveHistory(question, questionType, hexagramDisplay, guaCi, fiveElements, judgment, prediction, suggestion) {
+      const history = JSON.parse(localStorage.getItem('hexagramHistory') || '[]');
+      const timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+      history.push({ timestamp, question, questionType, hexagramDisplay, guaCi, fiveElements, judgment, prediction, suggestion });
+      localStorage.setItem('hexagramHistory', JSON.stringify(history));
+    }
+
+    function showHistory() {
+      const history = JSON.parse(localStorage.getItem('hexagramHistory') || '[]');
+      const historyList = document.getElementById('historyList');
+      historyList.innerHTML = '';
+      if (history.length === 0) {
+        historyList.innerHTML = '尚無卜卦歷史。';
+      } else {
+        history.forEach((item, index) => {
+          const div = document.createElement('div');
+          div.className = 'history-item';
+          div.innerHTML = `<strong>${item.timestamp}</strong>：${item.question}（${item.questionType}）`;
+          div.onclick = () => {
+            document.getElementById('result').classList.remove('hidden');
+            document.getElementById('history').classList.add('hidden');
+            document.getElementById('hexagramDisplay').innerHTML = item.hexagramDisplay;
+            document.getElementById('guaCi').innerHTML = item.guaCi;
+            document.getElementById('fiveElements').innerHTML = item.fiveElements;
+            document.getElementById('judgment').innerHTML = item.judgment;
+            document.getElementById('prediction').innerHTML = item.prediction;
+            document.getElementById('suggestion').innerHTML = item.suggestion;
+          };
+          historyList.appendChild(div);
+        });
+      }
+      document.getElementById('result').classList.add('hidden');
+      document.getElementById('history').classList.remove('hidden');
+    }
+
+    function clearHistory() {
+      localStorage.removeItem('hexagramHistory');
+      document.getElementById('historyList').innerHTML = '尚無卜卦歷史。';
+      document.getElementById('result').classList.add('hidden');
+      document.getElementById('history').classList.remove('hidden');
+    }
+
+    function castHexagram() {
+      const questionType = document.getElementById('questionType').value;
+      const question = document.getElementById('question').value || `關於${questionType}之事`;
+      const castMethod = document.querySelector('input[name="castMethod"]:checked').value;
+      let mainGua, changedGua;
+      try {
+        mainGua = castMethod === 'random' ? generateHexagram() : getManualHexagram();
+        changedGua = getChangedHexagram(mainGua.yao);
+      } catch (e) {
+        document.getElementById('result').classList.remove('hidden');
+        document.getElementById('hexagramDisplay').innerHTML = `<strong>錯誤</strong>：${e.message}`;
+        document.getElementById('guaCi').innerHTML = '';
+        document.getElementById('fiveElements').innerHTML = '';
+        document.getElementById('judgment').innerHTML = '';
+        document.getElementById('prediction').innerHTML = '';
+        document.getElementById('suggestion').innerHTML = '';
+        document.getElementById('history').classList.add('hidden');
+        return;
+      }
+      
+      const hexagramDisplay = `<strong>問：${question}</strong><br>` +
+        displayHexagram(mainGua.yao, mainGua.upperGua, mainGua.lowerGua, '本卦') +
+        displayHexagram(changedGua.yao, changedGua.upperGua, changedGua.lowerGua, '變卦');
+      
+      const guaCi = '<strong>【卦辭與爻辭】</strong><br>' +
+        getGuaCi(mainGua.upperGua, mainGua.lowerGua, mainGua.yao, questionType) +
+        getGuaCi(changedGua.upperGua, changedGua.lowerGua, changedGua.yao, questionType);
+      
+      const fiveElements = '<strong>【五行與卦象詳解】</strong><br>' + 
+        analyzeFiveElements(mainGua, changedGua, changedGua.yao);
+      
+      const { judgment, judgmentType } = getJudgment(
+        fiveElements[mainGua.upperGua],
+        fiveElements[mainGua.lowerGua],
+        fiveElements[changedGua.upperGua],
+        changedGua.yao
+      );
+      
+      const prediction = getPrediction(fiveElements[mainGua.upperGua], fiveElements[changedGua.upperGua], changedGua.yao);
+      
+      const suggestion = getSuggestion(questionType, { judgmentType }, fiveElements[mainGua.upperGua], changedGua.yao);
+      
+      document.getElementById('hexagramDisplay').innerHTML = hexagramDisplay;
+      document.getElementById('guaCi').innerHTML = guaCi;
+      document.getElementById('fiveElements').innerHTML = fiveElements;
+      document.getElementById('judgment').innerHTML = judgment;
+      document.getElementById('prediction').innerHTML = prediction;
+      document.getElementById('suggestion').innerHTML = suggestion;
+      
+      document.getElementById('result').classList.remove('hidden');
+      document.getElementById('history').classList.add('hidden');
+      
+      saveHistory(question, questionType, hexagramDisplay, guaCi, fiveElements, judgment, prediction, suggestion);
+    }
+  </script>
+</body>
+</html>
