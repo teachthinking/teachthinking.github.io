@@ -483,60 +483,74 @@ const guaCiData = {
       document.getElementById('history').classList.remove('hidden');
     }
 
-    function castHexagram() {
-      const questionType = document.getElementById('questionType').value;
-      const question = document.getElementById('question').value || `關於${questionType}之事`;
-      const castMethod = document.querySelector('input[name="castMethod"]:checked').value;
-      let mainGua, changedGua;
-      try {
-        mainGua = castMethod === 'random' ? generateHexagram() : getManualHexagram();
-        changedGua = getChangedHexagram(mainGua.yao);
-      } catch (e) {
-        document.getElementById('result').classList.remove('hidden');
-        document.getElementById('hexagramDisplay').innerHTML = `<strong>錯誤</strong>：${e.message}`;
-        document.getElementById('guaCi').innerHTML = '';
-        document.getElementById('fiveElements').innerHTML = '';
-        document.getElementById('judgment').innerHTML = '';
-        document.getElementById('prediction').innerHTML = '';
-        document.getElementById('suggestion').innerHTML = '';
-        document.getElementById('history').classList.add('hidden');
-        return;
-      }
-      
-      const hexagramDisplay = `<strong>問：${question}</strong><br>` +
-        displayHexagram(mainGua.yao, mainGua.upperGua, mainGua.lowerGua, '本卦') +
-        displayHexagram(changedGua.yao, changedGua.upperGua, changedGua.lowerGua, '變卦');
-      
-      const guaCi = '<strong>【卦辭與爻辭】</strong><br>' +
-        getGuaCi(mainGua.upperGua, mainGua.lowerGua, mainGua.yao, questionType) +
-        getGuaCi(changedGua.upperGua, changedGua.lowerGua, changedGua.yao, questionType);
-      
-      const fiveElements = '<strong>【五行與卦象詳解】</strong><br>' + 
-        analyzeFiveElements(mainGua, changedGua, changedGua.yao);
-      
-      const { judgment, judgmentType } = getJudgment(
-        fiveElements[mainGua.upperGua],
-        fiveElements[mainGua.lowerGua],
-        fiveElements[changedGua.upperGua],
-        changedGua.yao
-      );
-      
-      const prediction = getPrediction(fiveElements[mainGua.upperGua], fiveElements[changedGua.upperGua], changedGua.yao);
-      
-      const suggestion = getSuggestion(questionType, { judgmentType }, fiveElements[mainGua.upperGua], changedGua.yao);
-      
-      document.getElementById('hexagramDisplay').innerHTML = hexagramDisplay;
-      document.getElementById('guaCi').innerHTML = guaCi;
-      document.getElementById('fiveElements').innerHTML = fiveElements;
-      document.getElementById('judgment').innerHTML = judgment;
-      document.getElementById('prediction').innerHTML = prediction;
-      document.getElementById('suggestion').innerHTML = suggestion;
-      
-      document.getElementById('result').classList.remove('hidden');
-      document.getElementById('history').classList.add('hidden');
-      
-      saveHistory(question, questionType, hexagramDisplay, guaCi, fiveElements, judgment, prediction, suggestion);
+function castHexagram() {
+  try {
+    const questionType = document.getElementById('questionType').value;
+    const question = document.getElementById('question').value.trim() || '未詳述問事';
+    const castMethod = document.querySelector('input[name="castMethod"]:checked').value;
+    
+    // Generate or retrieve hexagram
+    let mainGua, changedGua;
+    if (castMethod === 'random') {
+      mainGua = generateHexagram();
+      changedGua = getChangedHexagram(mainGua.yao);
+    } else {
+      mainGua = getManualHexagram();
+      changedGua = getChangedHexagram(mainGua.yao);
     }
+
+    // Get main and changed gua elements
+    const mainElement = fiveElements[mainGua.upperGua];
+    const useElement = fiveElements[mainGua.lowerGua];
+    const changedElement = fiveElements[changedGua.upperGua];
+
+    // Generate display content
+    const hexagramDisplay = mainGua.yao.map((y, i) => {
+      const symbol = yaoSymbols[y.value];
+      const moving = y.isMoving ? ' (動爻)' : '';
+      return `爻${6-i}：${symbol}${moving}`;
+    }).reverse().join('<br>');
+
+    const guaCi = getGuaCi(mainGua.upperGua, mainGua.lowerGua, mainGua.yao, questionType);
+    const fiveElementsAnalysis = analyzeFiveElements(mainGua, changedGua, mainGua.yao);
+    const { judgment, judgmentType } = getJudgment(mainElement, useElement, changedElement, mainGua.yao);
+    const prediction = getPrediction(mainElement, changedElement, mainGua.yao);
+    const suggestion = getSuggestion(questionType, { judgmentType }, mainElement, mainGua.yao);
+
+    // Update result display
+    document.getElementById('hexagramDisplay').innerHTML = hexagramDisplay;
+    document.getElementById('guaCi').innerHTML = guaCi;
+    document.getElementById('fiveElements').innerHTML = fiveElementsAnalysis;
+    document.getElementById('judgment').innerHTML = judgment;
+    document.getElementById('prediction').innerHTML = prediction;
+    document.getElementById('suggestion').innerHTML = suggestion;
+    document.getElementById('result').classList.remove('hidden');
+    document.getElementById('history').classList.add('hidden');
+
+    // Store result in history
+    const history = JSON.parse(localStorage.getItem('hexagramHistory') || '[]');
+    history.unshift({
+      date: new Date().toLocaleString('zh-TW'),
+      questionType,
+      question,
+      hexagram: hexagramDisplay,
+      guaCi,
+      fiveElements: fiveElementsAnalysis,
+      judgment,
+      prediction,
+      suggestion
+    });
+    localStorage.setItem('hexagramHistory', JSON.stringify(history));
+
+    // Clear manual inputs if used
+    if (castMethod === 'manual') {
+      document.querySelectorAll('.yao-input').forEach(input => input.value = '');
+    }
+  } catch (error) {
+    console.error('卜卦錯誤:', error);
+    alert('卜卦失敗：' + error.message);
+  }
+}
   </script>
 </body>
 </html>
