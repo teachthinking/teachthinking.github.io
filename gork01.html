@@ -78,6 +78,68 @@
   <script>
     console.log('Script loaded, castHexagram defined:', typeof castHexagram);
     const guaNames = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
+  const guaImages = { /* ... as provided ... */ };
+  const fiveElements = ['金', '金', '火', '木', '木', '水', '土', '土'];
+  const yaoSymbols = ['—', '- -'];
+  const fiveElementRelations = { /* ... as provided ... */ };
+  const guaCiData = { /* ... full 64 hexagrams as provided ... */ };
+
+  // Other functions (generateHexagram, getManualHexagram, etc.)
+  function generateHexagram() { /* ... as provided ... */ }
+  function getManualHexagram() { /* ... as provided ... */ }
+  function getChangedHexagram(yao) { /* ... as provided ... */ }
+  function getGuaCi(upperGua, lowerGua, yao, questionType) { /* ... as provided ... */ }
+  function analyzeFiveElements(mainGua, changedGua, movingYaos) { /* ... as provided ... */ }
+  function getJudgment(mainElement, useElement, changedElement, movingYaos) { /* ... as provided ... */ }
+  function getPrediction(mainElement, changedElement, movingYaos) { /* ... as provided ... */ }
+  function getSuggestion(questionType, judgmentObj, mainElement, movingYaos) { /* ... as provided ... */ }
+
+  // Add castHexagram function
+  function castHexagram() {
+    // ... as shown above ...
+  }
+
+  // Event listeners
+  document.querySelectorAll('input[name="castMethod"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.getElementById('manualInput').classList.toggle('hidden', radio.value !== 'manual');
+    });
+  });
+
+  // Add history functions if not already present
+  function showHistory() {
+    const historyList = document.getElementById('historyList');
+    const history = JSON.parse(localStorage.getItem('hexagramHistory') || '[]');
+    historyList.innerHTML = history.length ? history.map((item, i) => `
+      <div class="history-item" onclick="displayHistoryItem(${i})">
+        ${item.date} - ${item.questionType}: ${item.question}
+      </div>
+    `).join('') : '無卜卦歷史';
+    document.getElementById('history').classList.remove('hidden');
+    document.getElementById('result').classList.add('hidden');
+  }
+
+  function displayHistoryItem(index) {
+    const history = JSON.parse(localStorage.getItem('hexagramHistory') || '[]');
+    const item = history[index];
+    if (item) {
+      document.getElementById('hexagramDisplay').innerHTML = item.hexagram;
+      document.getElementById('guaCi').innerHTML = item.guaCi;
+      document.getElementById('fiveElements').innerHTML = item.fiveElements;
+      document.getElementById('judgment').innerHTML = item.judgment;
+      document.getElementById('prediction').innerHTML = item.prediction;
+      document.getElementById('suggestion').innerHTML = item.suggestion;
+      document.getElementById('result').classList.remove('hidden');
+      document.getElementById('history').classList.add('hidden');
+    }
+  }
+
+  function clearHistory() {
+    localStorage.removeItem('hexagramHistory');
+    document.getElementById('historyList').innerHTML = '無卜卦歷史';
+  }
+
+  console.log('Script loaded, castHexagram defined:', typeof castHexagram);
     const guaImages = {
       '乾': '天，剛健中正，宜果斷進取，行健不息。',
       '兌': '澤，悅而通達，宜和睦交流，喜悅以成。',
@@ -489,7 +551,6 @@ function castHexagram() {
     const question = document.getElementById('question').value.trim() || '未詳述問事';
     const castMethod = document.querySelector('input[name="castMethod"]:checked').value;
     
-    // Generate or retrieve hexagram
     let mainGua, changedGua;
     if (castMethod === 'random') {
       mainGua = generateHexagram();
@@ -499,12 +560,10 @@ function castHexagram() {
       changedGua = getChangedHexagram(mainGua.yao);
     }
 
-    // Get main and changed gua elements
     const mainElement = fiveElements[mainGua.upperGua];
     const useElement = fiveElements[mainGua.lowerGua];
     const changedElement = fiveElements[changedGua.upperGua];
 
-    // Generate display content
     const hexagramDisplay = mainGua.yao.map((y, i) => {
       const symbol = yaoSymbols[y.value];
       const moving = y.isMoving ? ' (動爻)' : '';
@@ -517,7 +576,6 @@ function castHexagram() {
     const prediction = getPrediction(mainElement, changedElement, mainGua.yao);
     const suggestion = getSuggestion(questionType, { judgmentType }, mainElement, mainGua.yao);
 
-    // Update result display
     document.getElementById('hexagramDisplay').innerHTML = hexagramDisplay;
     document.getElementById('guaCi').innerHTML = guaCi;
     document.getElementById('fiveElements').innerHTML = fiveElementsAnalysis;
@@ -527,7 +585,6 @@ function castHexagram() {
     document.getElementById('result').classList.remove('hidden');
     document.getElementById('history').classList.add('hidden');
 
-    // Store result in history
     const history = JSON.parse(localStorage.getItem('hexagramHistory') || '[]');
     history.unshift({
       date: new Date().toLocaleString('zh-TW'),
@@ -542,7 +599,6 @@ function castHexagram() {
     });
     localStorage.setItem('hexagramHistory', JSON.stringify(history));
 
-    // Clear manual inputs if used
     if (castMethod === 'manual') {
       document.querySelectorAll('.yao-input').forEach(input => input.value = '');
     }
