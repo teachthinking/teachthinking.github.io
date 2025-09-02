@@ -173,8 +173,7 @@
     梅花心易卜卦系統 · 傳承千年智慧 · 僅供參考
   </footer>
 <script>
-  // Data structures
-  const guaNames = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
+ const guaNames = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
   const guaImages = {
     '乾': '天，剛健中正，宜果斷進取，行健不息。',
     '兌': '澤，悅而通達，宜和睦交流，喜悅以成。',
@@ -193,6 +192,13 @@
     '水': { generates: '木', overcomes: '火', generatedBy: '金', overcomeBy: '土' },
     '火': { generates: '土', overcomes: '金', generatedBy: '木', overcomeBy: '水' },
     '土': { generates: '金', overcomes: '水', generatedBy: '火', overcomeBy: '木' }
+  };
+  const seasons = {
+    '木': '春季（正月至三月）',
+    '火': '夏季（四月至六月）',
+    '土': '季末（三、六、九、十二月）',
+    '金': '秋季（七月至九月）',
+    '水': '冬季（十月至十二月）'
   };
   const guaCiData = {
     '乾上乾下': { name: '乾為天', ci: '元亨利貞，剛健中正，宜自強不息。', yaoCi: ['初九：潛龍勿用，宜潛藏蓄力。', '九二：見龍在田，宜顯露才華。', '九三：君子終日乾乾，宜勤勉不懈。', '九四：或躍在淵，宜審時進退。', '九五：飛龍在天，宜乘勢而為。', '上九：亢龍有悔，宜謙退防過。'] },
@@ -257,8 +263,7 @@
     '坎上艮下': { name: '水山蹇', ci: '利西南，宜謹慎脫困，守正以待。', yaoCi: ['初六：往蹇來譽，宜謙退待時。', '六二：王臣蹇蹇，宜忠誠行事。', '九三：往蹇來反，宜謹慎回歸。', '六四：往蹇來連，宜謙和求援。', '九五：大蹇朋來，宜果斷脫困。', '上六：往蹇來碩，宜謙退守成。'] },
     '艮上艮下': { name: '艮為山', ci: '艮其背，宜靜止修身，謹慎以待。', yaoCi: ['初六：艮其趾，宜謹慎起步。', '六二：艮其腓，宜謹慎行事。', '九三：艮其限，宜謹防過勞。', '六四：艮其身，宜謙和自省。', '六五：艮其輔，宜謹慎言行。', '上九：敦艮吉，宜厚德守正。'] }
   };
-
-  // Validation function
+// Validation function
   function validateElement(element) {
     return ['金', '木', '水', '火', '土'].includes(element);
   }
@@ -438,7 +443,7 @@
   function getSuggestion(questionType, judgmentObj, mainElement, movingYaos) {
     const { judgmentType } = judgmentObj;
     if (!judgmentType || !validateElement(mainElement)) {
-      return '【錯誤】無法生成抉擇建議，請檢查輸入或重新卜卦。';
+      return '<strong>【錯誤】</strong><br>無法生成抉擇建議，請檢查輸入或重新卜卦。';
     }
     const movingCount = movingYaos.filter(y => y.isMoving).length;
     const suggestions = {
@@ -456,30 +461,79 @@
               '【趨吉指引】：與同僚和睦相處，細心規劃，尋求穩定進展。<br>' +
               '【避凶之道】：勿急功近利，慎防細節失誤，保持耐心。'
       },
-      // Other question types (財運, 感情, 健康, 學業, 其他) omitted for brevity; include as in previous response
+      '財運': {
+        '吉': `財源廣進，利在四方，宜審時投資，量力而行，當得厚利。動爻數 ${movingCount}，${movingCount > 2 ? '宜防貪多，謹慎理財' : '宜乘勢投資，果斷行事'}。<br>` +
+              '【行動策略】：<br>- 短期：尋求穩健投資機會，拓展財源。<br>- 長期：合理分配資金，制定理財計劃。<br>' +
+              '【趨吉指引】：與信賴之人合作，審慎評估市場，利在長遠。<br>' +
+              '【避凶之道】：勿貪高利冒險，慎防詐騙或投機損失。',
+        '凶': `財運不暢，宜守財勿散，慎防破財之虞，宜節用慎投，待時而動。動爻數 ${movingCount}，${movingCount > 2 ? '波折頻繁，尤需謹慎' : '宜靜守財源，待機而行'}。<br>` +
+              '【行動策略】：<br>- 短期：減少非必要開支，審查財務狀況。<br>- 長期：穩固現有財源，尋求穩定收益。<br>' +
+              '【趨吉指引】：細查賬目，穩健理財，積少成多。<br>' +
+              '【避凶之道】：勿信高利誘惑，慎防借貸或詐騙。',
+        '平': `財運平穩，進出相抵，宜穩健理財，細水長流，後得安穩之利。動爻數 ${movingCount}，${movingCount > 2 ? '宜防衝動，穩健為上' : '宜循序漸進，穩步理財'}。<br>` +
+              '【行動策略】：<br>- 短期：維持收支平衡，尋求小額投資。<br>- 長期：制定長期理財計劃，積少成多。<br>' +
+              '【趨吉指引】：穩健理財，細心規劃，利在積累。<br>' +
+              '【避凶之道】：勿衝動消費，慎防小額損失累積。'
+      },
+      '感情': {
+        '吉': `情緣和合，鸞鳳和鳴，宜真誠相待，共謀未來，當得美滿之果。動爻數 ${movingCount}，${movingCount > 2 ? '宜防過急，穩中求進' : '宜積極溝通，增進情誼'}。<br>` +
+              '【行動策略】：<br>- 短期：坦誠交流，增進彼此信任。<br>- 長期：共同規劃未來，參與彼此生活。<br>' +
+              '【趨吉指引】：用心經營感情，參與共同活動，促進和諧。<br>' +
+              '【避凶之道】：勿因小事爭執，慎防誤解或第三者干擾。',
+        '凶': `情路坎坷，易生齟齬，宜冷靜自省，勿急進逼，靜待機緣為上。動爻數 ${movingCount}，${movingCount > 2 ? '波折頻生，宜靜觀其變' : '宜平和溝通，徐圖後進'}。<br>` +
+              '【行動策略】：<br>- 短期：冷靜處理爭執，給予彼此空間。<br>- 長期：重新審視關係，尋求穩定基礎。<br>' +
+              '【趨吉指引】：真誠溝通，尋求外部調解，緩解矛盾。<br>' +
+              '【避凶之道】：勿情緒化爭吵，慎防衝動分手。',
+        '平': `感情平順，無大起伏，宜細心經營，溫情相待，當得長久之歡。動爻數 ${movingCount}，${movingCount > 2 ? '宜防疏忽，細心相處' : '宜穩中求進，溫情以待'}。<br>` +
+              '【行動策略】：<br>- 短期：增進日常互動，細心關懷。<br>- 長期：穩固感情基礎，細水長流。<br>' +
+              '【趨吉指引】：用心相處，參與彼此生活，增進默契。<br>' +
+              '【避凶之道】：勿冷漠疏忽，慎防小誤會積累。'
+      },
+      '健康': {
+        '吉': `氣血充盈，身心康泰，宜規律作息，適度運動，當保長壽之福。動爻數 ${movingCount}，${movingCount > 2 ? '宜防過勞，調養為上' : '宜積極養生，保持康泰'}。<br>` +
+              '【行動策略】：<br>- 短期：保持均衡飲食，規律運動。<br>- 長期：注重身心調養，定期體檢。<br>' +
+              '【趨吉指引】：養成健康習慣，保持心情愉悅，適度運動。<br>' +
+              '【避凶之道】：勿過勞過食，慎防情志不穩影響健康。',
+        '凶': `氣機不調，病厄潛伏，宜速求醫診，調養身心，慎防小疾成患。動爻數 ${movingCount}，${movingCount > 2 ? '病厄易發，尤需速查' : '宜靜養調理，徐圖康復'}。<br>` +
+              '【行動策略】：<br>- 短期：及早檢查身體，調整飲食作息。<br>- 長期：注重養生，尋求專業醫囑。<br>' +
+              '【趨吉指引】：靜心調養，遵循醫囑，保持規律生活。<br>' +
+              '【避凶之道】：勿忽視症狀，慎防過勞或壓力過大。',
+        '平': `健康平穩，無大病厄，宜持之以恆，養生有道，當得安康之身。動爻數 ${movingCount}，${movingCount > 2 ? '宜防小疾，細心養生' : '宜穩健養生，循序漸進'}。<br>` +
+              '【行動策略】：<br>- 短期：維持健康生活方式，均衡飲食。<br>- 長期：定期檢查，注重養生習慣。<br>' +
+              '【趨吉指引】：注重日常養生，適度運動，保持身心平衡。<br>' +
+              '【避凶之道】：勿縱欲無度，慎防小病累積。'
+      },
+      '學業': {
+        '吉': `學海無涯，進展順遂，宜專心致志，勤勉不懈，當獲佳績之榮。動爻數 ${movingCount}，${movingCount > 2 ? '宜防分心，專注為上' : '宜乘勢進取，勤學不輟'}。<br>` +
+              '【行動策略】：<br>- 短期：制定學習計劃，專注當下目標。<br>- 長期：尋求良師指導，穩固知識基礎。<br>' +
+              '【趨吉指引】：勤勉用功，與同學交流，鞏固基礎知識。<br>' +
+              '【避凶之道】：勿驕傲自滿，慎防分心或懈怠。',
+        '凶': `學業艱難，進展緩慢，宜調整心志，重整方法，靜心以待進展。動爻數 ${movingCount}，${movingCount > 2 ? '波折頻生，宜靜心學習' : '宜穩固基礎，徐圖進展'}。<br>` +
+              '【行動策略】：<br>- 短期：重新審視學習方法，尋求幫助。<br>- 長期：穩固基礎，循序漸進學習。<br>' +
+              '【趨吉指引】：專注基礎，尋求老師或同學指導。<br>' +
+              '【避凶之道】：勿心浮氣躁，慎防半途而廢。',
+        '平': `學業平順，進展有序，宜按部就班，持之以恆，後必有成。動爻數 ${movingCount}，${movingCount > 2 ? '宜防疏漏，專注學習' : '宜循序漸進，穩步前行'}。<br>` +
+              '【行動策略】：<br>- 短期：維持學習節奏，穩固基礎。<br>- 長期：逐步提升，制定長期計劃。<br>' +
+              '【趨吉指引】：按計劃學習，與同學互助，積累知識。<br>' +
+              '【避凶之道】：勿三心二意，慎防急於求成。'
+      },
+      '其他': {
+        '吉': `凡事順遂，氣運昌隆，宜果斷而行，乘勢進取，當有所得。動爻數 ${movingCount}，${movingCount > 2 ? '宜防過急，穩中求進' : '宜積極行動，乘運而行'}。<br>` +
+              '【行動策略】：<br>- 短期：把握當下時機，果斷行動。<br>- 長期：制定清晰計劃，穩步推進。<br>' +
+              '【趨吉指引】：順勢而為，積極拓展，結交有益之人。<br>' +
+              '【避凶之道】：勿猶豫不決，慎防細節疏漏或衝動行事。',
+        '凶': `凡事不順，阻力叢生，宜退守觀變，謹慎謀劃，待機而動。動爻數 ${movingCount}，${movingCount > 2 ? '波折頻生，尤需謹慎' : '宜靜待時機，徐圖後進'}。<br>` +
+              '【行動策略】：<br>- 短期：審慎評估現狀，穩固當前資源。<br>- 長期：積蓄力量，尋求穩定機會。<br>' +
+              '【趨吉指引】：靜心觀察，與信賴之人商議，待時而動。<br>' +
+              '【避凶之道】：勿強求進展，慎防衝動或誤判。',
+        '平': `凡事平穩，無大起落，宜穩中求進，循序漸進，持之以恆。動爻數 ${movingCount}，${movingCount > 2 ? '宜防疏漏，細心行事' : '宜循序漸進，穩步前行'}。<br>` +
+              '【行動策略】：<br>- 短期：維持現狀，專注細節推進。<br>- 長期：制定穩健計劃，積小勝為大勝。<br>' +
+              '【趨吉指引】：按部就班，細心規劃，與同道共謀。<br>' +
+              '【避凶之道】：勿急功近利，慎防細節失誤。'
+      }
     };
     return suggestions[questionType][judgmentType] || suggestions['其他']['平'];
   }
-
-  // Seasonal status function
-  function getSeasonalStatus(element, date = new Date()) {
-    const month = date.getMonth() + 1;
-    if (element === '木' && [1, 2, 3].includes(month)) return '旺';
-    if (element === '火' && [4, 5, 6].includes(month)) return '旺';
-    if (element === '金' && [7, 8, 9].includes(month)) return '旺';
-    if (element === '水' && [10, 11, 12].includes(month)) return '旺';
-    if (element === '土' && [3, 6, 9, 12].includes(month)) return '旺';
-    if (fiveElementRelations[element].generatedBy === '木' && [1, 2, 3].includes(month)) return '相';
-    if (fiveElementRelations[element].generatedBy === '火' && [4, 5, 6].includes(month)) return '相';
-    if (fiveElementRelations[element].generatedBy === '金' && [7, 8, 9].includes(month)) return '相';
-    if (fiveElementRelations[element].generatedBy === '水' && [10, 11, 12].includes(month)) return '相';
-    if (fiveElementRelations[element].generates === '木' && [1, 2, 3].includes(month)) return '休';
-    if (fiveElementRelations[element].generates === '火' && [4, 5, 6].includes(month)) return '休';
-    if (fiveElementRelations[element].generates === '金' && [7, 8, 9].includes(month)) return '休';
-    if (fiveElementRelations[element].generates === '水' && [10, 11, 12].includes(month)) return '休';
-    return '囚';
-  }
-
   // Main casting function (continued from specified line)
   function castHexagram() {
     try {
