@@ -4,114 +4,200 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>梅花心易｜五行定吉凶（五面向分析 Demo）</title>
+  <title>梅花心易｜五行定吉凶（五面向分析）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .tab-active { @apply border-b-2 border-slate-900 text-slate-900; }
+    .hexagram-lines { font-family: monospace; white-space: pre; }
+    .explanation { display: none; }
+    .explanation.active { display: block; }
   </style>
 </head>
 <body class="bg-gradient-to-b from-white to-slate-50 text-slate-800 min-h-screen">
   <div class="max-w-5xl mx-auto p-6 md:p-10 space-y-6">
     <header class="flex items-center justify-between">
-      <h1 class="text-2xl md:text-3xl font-bold tracking-tight">梅花心易｜五行定吉凶（五面向分析 Demo）</h1>
+      <h1 class="text-2xl md:text-3xl font-bold tracking-tight">梅花心易｜五行定吉凶</h1>
       <button id="resetBtn" class="px-3 py-2 text-sm rounded-xl border shadow-sm hover:bg-slate-50">重置示例</button>
-    </header><!-- 輸入區 -->
-<section class="bg-white rounded-2xl shadow-sm border p-5">
-  <h2 class="font-semibold mb-4">輸入區</h2>
-  <div class="grid md:grid-cols-3 gap-4">
-    <div>
-      <label class="text-sm font-medium">下卦（內卦）</label>
-      <select id="lowerSelect" class="mt-1 w-full border rounded-xl p-2">
-      </select>
-    </div>
-    <div>
-      <label class="text-sm font-medium">上卦（外卦）</label>
-      <select id="upperSelect" class="mt-1 w-full border rounded-xl p-2">
-      </select>
-    </div>
-    <div>
-      <label class="text-sm font-medium">動爻（1~6，自下而上）</label>
-      <input id="movingInput" type="number" min="1" max="6" step="1" class="mt-1 w-full border rounded-xl p-2" value="1" />
-    </div>
-  </div>
-</section>
+    </header>
+    <!-- 輸入區 -->
+    <section class="bg-white rounded-2xl shadow-sm border p-5">
+      <h2 class="font-semibold mb-4">輸入區</h2>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label class="text-sm font-medium">取卦方式</label>
+          <select id="methodSelect" class="mt-1 w-full border rounded-xl p-2">
+            <option value="manual">手動輸入</option>
+            <option value="number">數字取卜</option>
+            <option value="time">時間取卦</option>
+          </select>
+        </div>
+        <div id="manualInput" class="grid md:grid-cols-3 gap-4 col-span-3">
+          <div>
+            <label class="text-sm font-medium">下卦（內卦）</label>
+            <select id="lowerSelect" class="mt-1 w-full border rounded-xl p-2">
+            </select>
+          </div>
+          <div>
+            <label class="text-sm font-medium">上卦（外卦）</label>
+            <select id="upperSelect" class="mt-1 w-full border rounded-xl p-2">
+            </select>
+          </div>
+          <div>
+            <label class="text-sm font-medium">動爻（1~6，自下而上）</label>
+            <input id="movingInput" type="number" min="1" max="6" step="1" class="mt-1 w-full border rounded-xl p-2" value="1" />
+          </div>
+        </div>
+        <div id="numberInput" class="hidden col-span-3">
+          <label class="text-sm font-medium">輸入數字（例如：123）</label>
+          <input id="numberValue" type="number" class="mt-1 w-full border rounded-xl p-2" />
+          <p class="text-xs text-slate-500 mt-1">使用輸入數字除8取餘得下卦，上卦用數字+1除8，動爻用數字除6餘1-6。</p>
+        </div>
+        <div id="timeInput" class="hidden col-span-3">
+          <label class="text-sm font-medium">選擇日期時間</label>
+          <input id="datetimeValue" type="datetime-local" class="mt-1 w-full border rounded-xl p-2" />
+          <p class="text-xs text-slate-500 mt-1">年+月+日除8得下卦，時除8得上卦，總和除6得動爻（+1確保1-6）。</p>
+        </div>
+      </div>
+    </section>
 
-<!-- 推算結果 -->
-<section class="bg-white rounded-2xl shadow-sm border p-5">
-  <h2 class="font-semibold mb-4">推算結果</h2>
-  <div class="grid md:grid-cols-3 gap-4 text-sm" id="resultCards">
-    <div>
-      <div class="font-medium">本卦</div>
-      <div id="baseLower"></div>
-      <div id="baseUpper"></div>
-    </div>
-    <div>
-      <div class="font-medium">互卦</div>
-      <div id="mutualLower"></div>
-      <div id="mutualUpper"></div>
-    </div>
-    <div>
-      <div class="font-medium">變卦</div>
-      <div id="changedLower"></div>
-      <div id="changedUpper"></div>
-    </div>
-  </div>
-</section>
+    <!-- 推算結果 -->
+    <section class="bg-white rounded-2xl shadow-sm border p-5">
+      <h2 class="font-semibold mb-4">推算結果</h2>
+      <div class="grid md:grid-cols-3 gap-4 text-sm" id="resultCards">
+        <div>
+          <div class="font-medium">本卦</div>
+          <div id="baseName"></div>
+          <div id="baseHexagram" class="hexagram-lines"></div>
+          <div id="baseDictum"></div>
+          <div id="baseLower"></div>
+          <div id="baseUpper"></div>
+          <div id="baseRelation"></div>
+          <div id="movingDictum"></div>
+        </div>
+        <div>
+          <div class="font-medium">互卦</div>
+          <div id="mutualName"></div>
+          <div id="mutualHexagram" class="hexagram-lines"></div>
+          <div id="mutualDictum"></div>
+          <div id="mutualLower"></div>
+          <div id="mutualUpper"></div>
+          <div id="mutualRelation"></div>
+        </div>
+        <div>
+          <div class="font-medium">變卦</div>
+          <div id="changedName"></div>
+          <div id="changedHexagram" class="hexagram-lines"></div>
+          <div id="changedDictum"></div>
+          <div id="changedLower"></div>
+          <div id="changedUpper"></div>
+          <div id="changedRelation"></div>
+        </div>
+      </div>
+    </section>
 
-<!-- 分頁 -->
-<section class="bg-white rounded-2xl shadow-sm border p-5">
-  <div class="flex gap-4 border-b pb-2 text-sm">
-    <button class="tab-btn tab-active" data-tab="human">人</button>
-    <button class="tab-btn" data-tab="event">事</button>
-    <button class="tab-btn" data-tab="time">時</button>
-    <button class="tab-btn" data-tab="place">地</button>
-    <button class="tab-btn" data-tab="object">物</button>
-  </div>
-  <div class="pt-4 text-sm leading-7">
-    <div id="tab-human" class="tab-pane"></div>
-    <div id="tab-event" class="tab-pane hidden">
-      <h3 class="font-medium">「事」的判讀框架（待填入）</h3>
-      <p>可依五行生克強弱推事勢：本卦（用對體）主當下形勢；互卦主過程與中間人物；變卦主趨勢與結果。可加入「六親、用忌、旺相休囚」等權重。</p>
-    </div>
-    <div id="tab-time" class="tab-pane hidden">
-      <h3 class="font-medium">「時」的判讀框架（待填入）</h3>
-      <p>以季節與納甲等方法權重：春木旺、夏火旺、秋金旺、冬水旺、四季末土旺；互卦與變卦生扶剋泄可作時間窗口判斷。</p>
-    </div>
-    <div id="tab-place" class="tab-pane hidden">
-      <h3 class="font-medium">「地」的判讀框架（待填入）</h3>
-      <p>以卦象方位地理：兌為西澤、離為南火熱、艮為東北山、巽為東南風木……據此推測方位與環境屬性。</p>
-    </div>
-    <div id="tab-object" class="tab-pane hidden">
-      <h3 class="font-medium">「物」的判讀框架（待填入）</h3>
-      <p>離主光明/電器/文書，兌主金屬/口舌，巽主木製/可彎曲，艮主石土/止物……可改為 JSON 表並加上權重配對。</p>
-    </div>
-  </div>
-</section>
+    <!-- 五行生克圖 -->
+    <section class="bg-white rounded-2xl shadow-sm border p-5">
+      <h2 class="font-semibold mb-4">五行生克圖</h2>
+      <canvas id="fiveElementsChart" width="500" height="500" class="mx-auto"></canvas>
+    </section>
 
-<footer class="text-xs text-slate-500 text-center pt-2">© <span id="year"></span> 梅花心易前端示範 — 可自由改作商業/教學用途。</footer>
+    <!-- 五行旺相休囚死分析 -->
+    <section class="bg-white rounded-2xl shadow-sm border p-5">
+      <h2 class="font-semibold mb-4">五行旺相休囚死分析</h2>
+      <div id="elementsStatus" class="text-sm"></div>
+    </section>
 
-  </div>  <script>
+    <!-- 分頁 -->
+    <section class="bg-white rounded-2xl shadow-sm border p-5">
+      <div class="flex gap-4 border-b pb-2 text-sm">
+        <button class="tab-btn tab-active" data-tab="human">人</button>
+        <button class="tab-btn" data-tab="event">事</button>
+        <button class="tab-btn" data-tab="time">時</button>
+        <button class="tab-btn" data-tab="place">地</button>
+        <button class="tab-btn" data-tab="object">物</button>
+      </div>
+      <div class="pt-4 text-sm leading-7">
+        <div id="tab-human" class="tab-pane"></div>
+        <div id="tab-event" class="tab-pane hidden"></div>
+        <div id="tab-time" class="tab-pane hidden"></div>
+        <div id="tab-place" class="tab-pane hidden"></div>
+        <div id="tab-object" class="tab-pane hidden"></div>
+      </div>
+    </section>
+
+    <footer class="text-xs text-slate-500 text-center pt-2">© <span id="year"></span> 梅花心易前端示範 — 可自由改作商業/教學用途。</footer>
+
+  </div>
+  <script>
     const TRIGRAMS = [
-      { key: "乾", bin: [1,1,1], element: "金", person: "父、長者、領導", body: "首、骨、肺經上部", symbol: "天" },
-      { key: "兌", bin: [0,1,1], element: "金", person: "少女、悅口之人", body: "口、肺、咽喉", symbol: "澤" },
-      { key: "離", bin: [1,0,1], element: "火", person: "中女、文明之人", body: "目、心、血分", symbol: "火" },
-      { key: "震", bin: [0,0,1], element: "木", person: "長男、驚動者", body: "足、肝膽", symbol: "雷" },
-      { key: "巽", bin: [1,1,0], element: "木", person: "長女、商賈、流通者", body: "股、大腿、筋", symbol: "風" },
-      { key: "坎", bin: [0,1,0], element: "水", person: "中男、行旅、險難者", body: "腎、耳、血", symbol: "水" },
-      { key: "艮", bin: [1,0,0], element: "土", person: "少男、門戶、止守者", body: "背、手、鼻", symbol: "山" },
-      { key: "坤", bin: [0,0,0], element: "土", person: "母、眾、承載者", body: "腹、脾、肌肉", symbol: "地" },
+      { key: "乾", bin: [1,1,1], element: "金", symbol: "☰", color: "#FFD700" },
+      { key: "兌", bin: [0,1,1], element: "金", symbol: "☱", color: "#FFD700" },
+      { key: "離", bin: [1,0,1], element: "火", symbol: "☲", color: "#FF0000" },
+      { key: "震", bin: [0,0,1], element: "木", symbol: "☳", color: "#008000" },
+      { key: "巽", bin: [1,1,0], element: "木", symbol: "☴", color: "#008000" },
+      { key: "坎", bin: [0,1,0], element: "水", symbol: "☵", color: "#0000FF" },
+      { key: "艮", bin: [1,0,0], element: "土", symbol: "☶", color: "#A52A2A" },
+      { key: "坤", bin: [0,0,0], element: "土", symbol: "☷", color: "#A52A2A" },
     ];
 
-    const ELEMENTS = {
-      木: { generates: "火", overcomes: "土", generatedBy: "水", overcomeBy: "金" },
-      火: { generates: "土", overcomes: "金", generatedBy: "木", overcomeBy: "水" },
-      土: { generates: "金", overcomes: "水", generatedBy: "火", overcomeBy: "木" },
-      金: { generates: "水", overcomes: "木", generatedBy: "土", overcomeBy: "火" },
-      水: { generates: "木", overcomes: "火", generatedBy: "金", overcomeBy: "土" },
+    const HEXAGRAMS = {
+      "乾乾": { name: "乾", dictum: "元亨利貞。", yaos: ["初九：潛龍勿用。", "九二：見龍在田，利見大人。", "九三：君子終日乾乾，夕惕若厲，无咎。", "九四：或躍在淵，无咎。", "九五：飛龍在天，利見大人。", "上九：亢龍有悔。"] },
+      "坤坤": { name: "坤", dictum: "元亨。利牝馬之貞。君子有攸往，先迷後得主，利西南得朋，東北喪朋。安貞吉。", yaos: ["初六：履霜，堅冰至。", "六二：直方大，不習无不利。", "六三：含章可貞，或從王事，无成有終。", "六四：括囊，无咎无譽。", "六五：黃裳元吉。", "上六：龍戰于野，其血玄黃。"] },
+      // ... (以下省略其他62卦的資料，為完整需添加所有六十四卦的name, dictum, yaos陣列。這裡假設已完整定義，實際需補齊標準易經資料)
+      "兌離": { name: "夬", dictum: "揚于王庭，孚號有厲。告自邑，不利即戎，利有攸往。", yaos: ["九二：惕號，莫夜有戎，勿恤。", /*等*/] }, // 示例，需完整
+      // 注意：鍵為"上卦下卦"，如"兌離"為上兌下離
     };
 
-    const $ = (sel)=>document.querySelector(sel);
-    const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
+    const ELEMENTS = {
+      木: { generates: "火", overcomes: "土", generatedBy: "水", overcomeBy: "金", color: "#008000", position: { x: 400, y: 250 } },
+      火: { generates: "土", overcomes: "金", generatedBy: "木", overcomeBy: "水", color: "#FF0000", position: { x: 250, y: 100 } },
+      土: { generates: "金", overcomes: "水", generatedBy: "火", overcomeBy: "木", color: "#A52A2A", position: { x: 250, y: 250 } },
+      金: { generates: "水", overcomes: "木", generatedBy: "土", overcomeBy: "火", color: "#FFD700", position: { x: 100, y: 250 } },
+      水: { generates: "木", overcomes: "火", generatedBy: "金", overcomeBy: "土", color: "#0000FF", position: { x: 250, y: 400 } },
+    };
+
+    const INTERPRETATIONS = {
+      human: {
+        乾: { desc: "父、長者、領導", impact: "影響：權威、決斷力強。", auspicious: "吉：得貴人助。", inauspicious: "凶：過剛易折。" },
+        兌: { desc: "少女、悅口之人", impact: "影響：溝通順暢。", auspicious: "吉：喜悅和睦。", inauspicious: "凶：口舌是非。" },
+        // ... 其他卦的資料結構，類似，為每個八卦定義desc, impact, auspicious, inauspicious
+      },
+      event: {
+        乾: { desc: "事勢剛健", impact: "影響：快速推進。", auspicious: "吉：利於開創。", inauspicious: "凶：過急生變。" },
+        // ... 
+      },
+      time: {
+        乾: { desc: "秋冬之時", impact: "影響：時機成熟。", auspicious: "吉：利於收成。", inauspicious: "凶：寒冷阻礙。" },
+        // ...
+      },
+      place: {
+        乾: { desc: "西北、天上", impact: "影響：高遠廣闊。", auspicious: "吉：利西北行。", inauspicious: "凶：高處不勝寒。" },
+        // ...
+      },
+      object: {
+        乾: { desc: "金屬、圓形物", impact: "影響：堅硬耐用。", auspicious: "吉：利於工具。", inauspicious: "凶：易生銹。" },
+        // ... 完整定義所有八卦在五面向的解釋
+      }
+    };
+
+    const SEASONS_ELEMENTS = {
+      spring: {旺: "木", 相: "火", 休: "土", 囚: "金", 死: "水"},
+      summer: {旺: "火", 相: "土", 休: "金", 囚: "水", 死: "木"},
+      autumn: {旺: "金", 相: "水", 休: "木", 囚: "火", 死: "土"},
+      winter: {旺: "水", 相: "木", 休: "火", 囚: "土", 死: "金"},
+      lateSummer: {旺: "土", 相: "金", 休: "水", 囚: "木", 死: "火"},
+    };
+
+    const RELATION_AUSPICIOUS = {
+      '生': { desc: "吉", detail: "用生體，大吉。" },
+      '克': { desc: "凶", detail: "用克體，大凶。" },
+      '被生': { desc: "吉", detail: "體生用，耗力但可。" },
+      '被克': { desc: "凶", detail: "體克用，洩氣不佳。" },
+      '平': { desc: "中", detail: "相平，視其他。" },
+    };
+
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
     function optionHtml(t) { return `<option value="${t.key}">${t.key}（${t.symbol}／${t.element}）</option>`; }
 
@@ -124,37 +210,76 @@
       upperSel.value = '兌';
     }
 
-    function buildHexagram(lowerKey, upperKey){
-      const lower = TRIGRAMS.find(t=>t.key===lowerKey);
-      const upper = TRIGRAMS.find(t=>t.key===upperKey);
-      const lines = [...lower.bin, ...upper.bin];
-      return { lines, lower, upper };
+    function getTrigramByRemainder(rem) {
+      return TRIGRAMS[(rem || 8) - 1]; // 餘1乾,2兌,...8坤
     }
 
-    function flipAt(lines, index1to6){
+    function getInputData() {
+      const method = $('#methodSelect').value;
+      let lower, upper, moving;
+      if (method === 'manual') {
+        lower = TRIGRAMS.find(t => t.key === $('#lowerSelect').value);
+        upper = TRIGRAMS.find(t => t.key === $('#upperSelect').value);
+        moving = parseInt($('#movingInput').value || '1', 10);
+      } else if (method === 'number') {
+        const num = parseInt($('#numberValue').value || '1', 10);
+        lower = getTrigramByRemainder((num % 8));
+        upper = getTrigramByRemainder(((num + 1) % 8));
+        moving = ((num % 6) + 1);
+      } else if (method === 'time') {
+        const dt = new Date($('#datetimeValue').value || new Date());
+        const y = dt.getFullYear() % 100; // 簡化
+        const m = dt.getMonth() + 1;
+        const d = dt.getDate();
+        const h = dt.getHours();
+        const sum = y + m + d;
+        lower = getTrigramByRemainder(sum % 8);
+        upper = getTrigramByRemainder(h % 8);
+        moving = ((sum + h) % 6) + 1;
+      }
+      moving = Math.max(1, Math.min(6, moving));
+      return { lowerKey: lower.key, upperKey: upper.key, movingLine: moving };
+    }
+
+    function buildHexagram(lowerKey, upperKey) {
+      const lower = TRIGRAMS.find(t => t.key === lowerKey);
+      const upper = TRIGRAMS.find(t => t.key === upperKey);
+      const lines = [...lower.bin, ...upper.bin];
+      const hexKey = upperKey + lowerKey;
+      const hex = HEXAGRAMS[hexKey] || { name: "未知", dictum: "", yaos: [] };
+      return { lines, lower, upper, name: hex.name, dictum: hex.dictum, yaos: hex.yaos };
+    }
+
+    function flipAt(lines, index1to6) {
       const idx = index1to6 - 1;
       const next = lines.slice();
       next[idx] = next[idx] ? 0 : 1;
       return next;
     }
 
-    function linesToTrigram(lines3){
-      return TRIGRAMS.find(t=> t.bin.every((b,i)=>b===lines3[i]));
+    function linesToTrigram(lines3) {
+      return TRIGRAMS.find(t => t.bin.every((b, i) => b === lines3[i]));
     }
 
-    function hexFromLines(lines){
-      const lower = linesToTrigram(lines.slice(0,3));
-      const upper = linesToTrigram(lines.slice(3,6));
-      return { lines, lower, upper };
+    function hexFromLines(lines) {
+      const lower = linesToTrigram(lines.slice(0, 3));
+      const upper = linesToTrigram(lines.slice(3, 6));
+      const hexKey = upper.key + lower.key;
+      const hex = HEXAGRAMS[hexKey] || { name: "未知", dictum: "", yaos: [] };
+      return { lines, lower, upper, name: hex.name, dictum: hex.dictum, yaos: hex.yaos };
     }
 
-    function mutualHexagram(lines){
-      const lowerMutual = lines.slice(1,4); // 2,3,4
-      const upperMutual = lines.slice(2,5); // 3,4,5
-      return { lower: linesToTrigram(lowerMutual), upper: linesToTrigram(upperMutual), lines: [...lowerMutual, ...upperMutual] };
+    function mutualHexagram(lines) {
+      const lowerMutual = lines.slice(1, 4);
+      const upperMutual = lines.slice(2, 5);
+      const lower = linesToTrigram(lowerMutual);
+      const upper = linesToTrigram(upperMutual);
+      const hexKey = upper.key + lower.key;
+      const hex = HEXAGRAMS[hexKey] || { name: "未知", dictum: "", yaos: [] };
+      return { lines: [...lowerMutual, ...upperMutual], lower, upper, name: hex.name, dictum: hex.dictum, yaos: hex.yaos };
     }
 
-    function relation(fromElem, toElem){
+    function relation(fromElem, toElem) {
       if (ELEMENTS[fromElem].generates === toElem) return '生';
       if (ELEMENTS[fromElem].overcomes === toElem) return '克';
       if (ELEMENTS[fromElem].generatedBy === toElem) return '被生';
@@ -162,100 +287,268 @@
       return '平';
     }
 
-    function prettyRelation(fromElem, toElem){
+    function prettyRelation(fromElem, toElem) {
       const r = relation(fromElem, toElem);
-      if (r==='生') return `${fromElem}生${toElem}`;
-      if (r==='克') return `${fromElem}克${toElem}`;
-      if (r==='被生') return `${fromElem}受${toElem}所生`;
-      if (r==='被克') return `${fromElem}受${toElem}所克`;
+      if (r === '生') return `${fromElem}生${toElem}`;
+      if (r === '克') return `${fromElem}克${toElem}`;
+      if (r === '被生') return `${fromElem}受${toElem}所生`;
+      if (r === '被克') return `${fromElem}受${toElem}所克`;
       return `${fromElem}與${toElem}相平`;
     }
 
-    function renderSummary(base, mutual, changed){
-      $('#baseLower').textContent   = `下：${base.lower.key}（${base.lower.symbol}／${base.lower.element}）`;
-      $('#baseUpper').textContent   = `上：${base.upper.key}（${base.upper.symbol}／${base.upper.element}）`;
+    function getRelationAuspicious(r) {
+      return RELATION_AUSPICIOUS[r] || { desc: "中", detail: "無特殊吉凶。" };
+    }
+
+    function getSeasonFromDate(dt = new Date()) {
+      const m = dt.getMonth() + 1;
+      if (m >= 3 && m <= 5) return 'spring';
+      if (m >= 6 && m <= 8) return 'summer';
+      if (m >= 9 && m <= 11) return 'autumn';
+      return 'winter'; // 12,1,2 winter
+      // lateSummer 可以手動或特定日期
+    }
+
+    function getElementStatus(element, season) {
+      const statuses = SEASONS_ELEMENTS[season];
+      for (let status in statuses) {
+        if (statuses[status] === element) return status;
+      }
+      return '未知';
+    }
+
+    function getLineThickness(status) {
+      switch (status) {
+        case '旺': return 5;
+        case '相': return 4;
+        case '休': return 3;
+        case '囚': return 2;
+        case '死': return 1;
+        default: return 1;
+      }
+    }
+
+    function drawFiveElementsChart(ctx, base, mutual, changed, movingLine, season) {
+      ctx.clearRect(0, 0, 500, 500);
+      const center = { x: 250, y: 250 };
+      const radius = 200;
+
+      // 畫五行圓圈
+      ['木', '火', '土', '金', '水'].forEach(el => {
+        const pos = ELEMENTS[el].position;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 30, 0, 2 * Math.PI);
+        ctx.fillStyle = ELEMENTS[el].color;
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "16px Arial";
+        ctx.fillText(el, pos.x - 8, pos.y + 5);
+      });
+
+      // 收集相關卦與五行
+      const elementsMap = {};
+      const isLowerMoving = movingLine <= 3;
+      const baseUse = isLowerMoving ? base.lower : base.upper;
+      const baseBody = isLowerMoving ? base.upper : base.lower;
+      const changedUse = changed.lower; // 假設變卦用下卦，體上卦，可調整
+      const changedBody = changed.upper;
+      elementsMap[baseUse.element] = (elementsMap[baseUse.element] || []) + `[用卦${baseUse.symbol}${baseUse.key}]${getElementStatus(baseUse.element, season)} `;
+      elementsMap[baseBody.element] = (elementsMap[baseBody.element] || []) + `[體卦${baseBody.symbol}${baseBody.key}]${getElementStatus(baseBody.element, season)} `;
+      elementsMap[mutual.upper.element] = (elementsMap[mutual.upper.element] || []) + `[互上${mutual.upper.symbol}${mutual.upper.key}]${getElementStatus(mutual.upper.element, season)} `;
+      elementsMap[mutual.lower.element] = (elementsMap[mutual.lower.element] || []) + `[互下${mutual.lower.symbol}${mutual.lower.key}]${getElementStatus(mutual.lower.element, season)} `;
+      elementsMap[changedUse.element] = (elementsMap[changedUse.element] || []) + `[用變${changedUse.symbol}${changedUse.key}]${getElementStatus(changedUse.element, season)} `;
+
+      // 填上文字
+      for (let el in elementsMap) {
+        const pos = ELEMENTS[el].position;
+        ctx.fillStyle = "#000000";
+        ctx.font = "12px Arial";
+        ctx.fillText(elementsMap[el], pos.x - 50, pos.y + 50);
+      }
+
+      // 畫生克箭頭，只對出現的五行
+      const appeared = Object.keys(elementsMap);
+      appeared.forEach(from => {
+        const toGen = ELEMENTS[from].generates;
+        const toOvc = ELEMENTS[from].overcomes;
+        if (appeared.includes(toGen)) {
+          drawArrow(ctx, ELEMENTS[from].position, ELEMENTS[toGen].position, getLineThickness(getElementStatus(from, season)), 'green'); // 生綠箭頭
+        }
+        if (appeared.includes(toOvc)) {
+          drawArrow(ctx, ELEMENTS[from].position, ELEMENTS[toOvc].position, getLineThickness(getElementStatus(from, season)), 'red'); // 克紅箭頭
+        }
+      });
+
+      // 未出現的五行不畫線
+    }
+
+    function drawArrow(ctx, from, to, thickness, color) {
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = thickness;
+      ctx.stroke();
+      // 箭頭頭
+      const angle = Math.atan2(to.y - from.y, to.x - from.x);
+      ctx.beginPath();
+      ctx.moveTo(to.x, to.y);
+      ctx.lineTo(to.x - 10 * Math.cos(angle - Math.PI / 6), to.y - 10 * Math.sin(angle - Math.PI / 6));
+      ctx.moveTo(to.x, to.y);
+      ctx.lineTo(to.x - 10 * Math.cos(angle + Math.PI / 6), to.y - 10 * Math.sin(angle + Math.PI / 6));
+      ctx.stroke();
+    }
+
+    function renderHexagramLines(lines, elem) {
+      let text = '';
+      for (let i = 5; i >= 0; i--) {
+        text += lines[i] ? '─────' : '── ──' + '\n';
+      }
+      elem.textContent = text;
+    }
+
+    function renderSummary(base, mutual, changed, movingLine, season) {
+      const isLowerMoving = movingLine <= 3;
+      const baseUse = isLowerMoving ? base.lower : base.upper;
+      const baseBody = isLowerMoving ? base.upper : base.lower;
+      const baseRel = relation(baseUse.element, baseBody.element);
+      const baseAus = getRelationAuspicious(baseRel);
+      const mutualRel = relation(mutual.upper.element, mutual.lower.element); // 假設上用下體
+      const mutualAus = getRelationAuspicious(mutualRel);
+      const changedUse = changed.lower; // 變卦用下
+      const changedBody = changed.upper; // 體上
+      const changedRel = relation(changedUse.element, changedBody.element);
+      const changedAus = getRelationAuspicious(changedRel);
+
+      $('#baseName').textContent = `卦名：${base.name}`;
+      renderHexagramLines(base.lines, $('#baseHexagram'));
+      $('#baseDictum').textContent = `卦辭：${base.dictum}`;
+      $('#baseLower').textContent = `下：${base.lower.key}（${base.lower.symbol}／${base.lower.element}）`;
+      $('#baseUpper').textContent = `上：${base.upper.key}（${base.upper.symbol}／${base.upper.element}）`;
+      $('#baseRelation').innerHTML = `生克：${prettyRelation(baseUse.element, baseBody.element)} （${baseAus.desc}：${baseAus.detail}）`;
+
+      $('#mutualName').textContent = `卦名：${mutual.name}`;
+      renderHexagramLines(mutual.lines, $('#mutualHexagram'));
+      $('#mutualDictum').textContent = `卦辭：${mutual.dictum}`;
       $('#mutualLower').textContent = `下：${mutual.lower.key}（${mutual.lower.symbol}／${mutual.lower.element}）`;
       $('#mutualUpper').textContent = `上：${mutual.upper.key}（${mutual.upper.symbol}／${mutual.upper.element}）`;
-      $('#changedLower').textContent= `下：${changed.lower.key}（${changed.lower.symbol}／${changed.lower.element}）`;
-      $('#changedUpper').textContent= `上：${changed.upper.key}（${changed.upper.symbol}／${changed.upper.element}）`;
+      $('#mutualRelation').innerHTML = `生克：${prettyRelation(mutual.upper.element, mutual.lower.element)} （${mutualAus.desc}：${mutualAus.detail}）`;
+
+      $('#changedName').textContent = `卦名：${changed.name}`;
+      renderHexagramLines(changed.lines, $('#changedHexagram'));
+      $('#changedDictum').textContent = `卦辭：${changed.dictum}`;
+      $('#changedLower').textContent = `下：${changed.lower.key}（${changed.lower.symbol}／${changed.lower.element}）`;
+      $('#changedUpper').textContent = `上：${changed.upper.key}（${changed.upper.symbol}／${changed.upper.element}）`;
+      $('#changedRelation').innerHTML = `生克：${prettyRelation(changedUse.element, changedBody.element)} （${changedAus.desc}：${changedAus.detail}）`;
+
+      $('#movingDictum').textContent = `變爻辭：${base.yaos[movingLine - 1] || '無'}`;
+
+      // 五行狀態
+      let statusText = '';
+      ['木', '火', '土', '金', '水'].forEach(el => {
+        statusText += `${el}：${getElementStatus(el, season)}<br>`;
+      });
+      $('#elementsStatus').innerHTML = statusText;
     }
 
-    function renderHuman(base, mutual, changed, movingLine){
-      const isLowerMoving = movingLine >=1 && movingLine <=3;
-      const mover = isLowerMoving ? base.lower : base.upper;
-      const body  = isLowerMoving ? base.upper : base.lower;
+    function renderTabContent(tabName, base, mutual, changed, movingLine) {
+      const isLowerMoving = movingLine <= 3;
+      const baseUse = isLowerMoving ? base.lower : base.upper;
+      const baseBody = isLowerMoving ? base.upper : base.lower;
+      const mutualUse = mutual.upper;
+      const mutualBody = mutual.lower;
+      const changedUse = changed.lower;
+      const changedBody = changed.upper;
 
-      const step1 = prettyRelation(mover.element, body.element);
-      const step2 = prettyRelation(mutual.upper.element, mutual.lower.element);
-      const step3 = prettyRelation(changed.lower.element, changed.upper.element);
+      const content = [];
+      content.push(`<h3 class="font-medium">「${tabName.toUpperCase()}」的判讀</h3>`);
+      content.push(`<p>點擊卦象查看詳細解釋：</p>`);
+      content.push(`<ul class="list-disc pl-5 space-y-1">`);
+      [baseBody, baseUse, mutualBody, mutualUse, changedBody, changedUse].forEach(trigram => {
+        const interp = INTERPRETATIONS[tabName][trigram.key] || { desc: "", impact: "", auspicious: "", inauspicious: "" };
+        content.push(`<li><button class="explain-btn" data-key="${trigram.key}">${trigram.key}（${trigram.symbol}）</button></li>`);
+      });
+      content.push(`</ul>`);
+      content.push(`<div class="explanation mt-4"></div>`);
 
-      const whoByTrigram = { 乾: '老父/長者/領導', 兌: '少女/悅口之人', 離: '中女/文化人士', 震: '長男/急躁者', 巽: '長女/商旅者', 坎: '中男/行旅者', 艮: '少男/小輩', 坤: '母/眾人/承載者' };
-      const bodyPartByTrigram = { 乾: '首部', 兌: '口與肺系', 離: '目與心血', 震: '足', 巽: '股（大腿）', 坎: '腎耳血', 艮: '背手鼻', 坤: '腹脾肌' };
+      const tabElem = $('#tab-' + tabName);
+      tabElem.innerHTML = content.join('');
 
-      const lines = [];
-      lines.push(`<div><b>一、分析本卦、變卦、互卦之五行生克</b></div>`);
-      lines.push(`<ul class="list-disc pl-5 mt-1 space-y-1">
-        <li><b>本卦：</b>${isLowerMoving? '下' : '上'}${mover.key}${mover.element}為動卦，${isLowerMoving? '上' : '下'}${body.key}${body.element}為體卦，${step1}。</li>
-        <li><b>變卦：</b>下${changed.lower.key}${changed.lower.element}，上${changed.upper.key}${changed.upper.element}，${step3}。</li>
-        <li><b>互卦：</b>下${mutual.lower.key}${mutual.lower.element}，上${mutual.upper.key}${mutual.upper.element}，${step2}。</li>
-      </ul>`);
-
-      lines.push(`<div class="mt-3"><b>二、判斷（以人物身體象為切入）</b></div>`);
-      const item1 = (mover.element==='火' && body.key==='兌')
-        ? '以人象言，兌為少女，而火克金，易有受傷之象。'
-        : `以人象言，${body.key}象為「${whoByTrigram[body.key]}」。`;
-      lines.push(`<ol class="list-decimal pl-5 mt-1 space-y-1">
-        <li>先看本卦：體卦為 ${body.key}${body.element}（${whoByTrigram[body.key]}），${item1}</li>
-        <li>再看互卦：上互 ${mutual.upper.key}${mutual.upper.element} 對 下互 ${mutual.lower.key}${mutual.lower.element} 為「${relation(mutual.upper.element, mutual.lower.element)}」；${mutual.lower.key==='巽' ? '巽主股，推其部位在股（腿）。' : `身體部位參考：${mutual.lower.key}主「${bodyPartByTrigram[mutual.lower.key]}」。`}</li>
-        <li>後看變卦：下變 ${changed.lower.key}${changed.lower.element} 對 上變 ${changed.upper.key}${changed.upper.element} 為「${relation(changed.lower.element, changed.upper.element)}」，${relation(changed.lower.element, changed.upper.element)==='生' ? '得生扶，象不至於極凶。' : '視生克強弱斟酌吉凶。'}</li>
-      </ol>`);
-
-      $('#tab-human').innerHTML = lines.join('\n');
+      $$('.explain-btn', tabElem).forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.dataset.key;
+          const interp = INTERPRETATIONS[tabName][key];
+          const exp = $('.explanation', tabElem);
+          exp.innerHTML = `<p><b>描述：</b>${interp.desc}</p><p><b>影響：</b>${interp.impact}</p><p><b>吉：</b>${interp.auspicious}</p><p><b>凶：</b>${interp.inauspicious}</p>`;
+          exp.classList.add('active');
+        });
+      });
     }
 
-    function computeAndRender(){
-      const lowerKey = $('#lowerSelect').value;
-      const upperKey = $('#upperSelect').value;
-      const movingLine = Math.max(1, Math.min(6, parseInt($('#movingInput').value || '1', 10)));
-
+    function computeAndRender() {
+      const { lowerKey, upperKey, movingLine } = getInputData();
       const base = buildHexagram(lowerKey, upperKey);
       const changed = hexFromLines(flipAt(base.lines, movingLine));
       const mutual = mutualHexagram(base.lines);
+      const dt = new Date($('#datetimeValue').value || new Date()); // 用時間輸入或當前
+      const season = getSeasonFromDate(dt);
 
-      renderSummary(base, mutual, changed);
-      renderHuman(base, mutual, changed, movingLine);
+      renderSummary(base, mutual, changed, movingLine, season);
+
+      const ctx = $('#fiveElementsChart').getContext('2d');
+      drawFiveElementsChart(ctx, base, mutual, changed, movingLine, season);
+
+      ['human', 'event', 'time', 'place', 'object'].forEach(tab => {
+        renderTabContent(tab, base, mutual, changed, movingLine);
+      });
     }
 
-    function bindEvents(){
+    function toggleInputs() {
+      const method = $('#methodSelect').value;
+      $('#manualInput').classList.toggle('hidden', method !== 'manual');
+      $('#numberInput').classList.toggle('hidden', method !== 'number');
+      $('#timeInput').classList.toggle('hidden', method !== 'time');
+    }
+
+    function bindEvents() {
+      $('#methodSelect').addEventListener('change', () => { toggleInputs(); computeAndRender(); });
       $('#lowerSelect').addEventListener('change', computeAndRender);
       $('#upperSelect').addEventListener('change', computeAndRender);
       $('#movingInput').addEventListener('input', computeAndRender);
-      $('#resetBtn').addEventListener('click', ()=>{
+      $('#numberValue').addEventListener('input', computeAndRender);
+      $('#datetimeValue').addEventListener('input', computeAndRender);
+      $('#resetBtn').addEventListener('click', () => {
+        $('#methodSelect').value = 'manual';
+        toggleInputs();
         $('#lowerSelect').value = '離';
         $('#upperSelect').value = '兌';
         $('#movingInput').value = 1;
+        $('#numberValue').value = '';
+        $('#datetimeValue').value = '';
         activateTab('human');
         computeAndRender();
       });
 
-      $$('.tab-btn').forEach(btn=>{
-        btn.addEventListener('click', ()=> activateTab(btn.dataset.tab));
+      $$('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => activateTab(btn.dataset.tab));
       });
     }
 
-    function activateTab(name){
-      $$('.tab-btn').forEach(b=> b.classList.toggle('tab-active', b.dataset.tab===name));
-      $$('.tab-pane').forEach(p=> p.classList.add('hidden'));
-      $('#tab-'+name).classList.remove('hidden');
+    function activateTab(name) {
+      $$('.tab-btn').forEach(b => b.classList.toggle('tab-active', b.dataset.tab === name));
+      $$('.tab-pane').forEach(p => p.classList.toggle('hidden', p.id !== 'tab-' + name));
     }
 
     // init
-    document.addEventListener('DOMContentLoaded', ()=>{
+    document.addEventListener('DOMContentLoaded', () => {
       initSelectors();
+      toggleInputs();
       bindEvents();
       activateTab('human');
       computeAndRender();
-      document.getElementById('year').textContent = new Date().getFullYear();
+      $('#year').textContent = new Date().getFullYear();
     });
-  </script></body>
+  </script>
+</body>
 </html>
