@@ -547,6 +547,7 @@ const guaCiData = {
 
 function castHexagram() {
   try {
+    document.querySelector('button[onclick="castHexagram()"]').addEventListener('click', castHexagram);
     const questionType = document.getElementById('questionType').value;
     const question = document.getElementById('question').value.trim() || '未詳述問事';
     const castMethod = document.querySelector('input[name="castMethod"]:checked').value;
