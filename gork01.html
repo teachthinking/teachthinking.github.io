@@ -173,7 +173,7 @@
     梅花心易卜卦系統 · 傳承千年智慧 · 僅供參考
   </footer>
 <script>
- const guaNames = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
+  const guaNames = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
   const guaImages = {
     '乾': '天，剛健中正，宜果斷進取，行健不息。',
     '兌': '澤，悅而通達，宜和睦交流，喜悅以成。',
@@ -247,9 +247,9 @@
     '坎上巽下': { name: '水風井', ci: '改邑不改井，宜修德養民，謹慎行事。', yaoCi: ['初六：井泥不食，宜謹慎起步。', '九二：井谷射鮒，宜謹慎行事。', '九三：井渫不食，宜積極修繕。', '六四：井甃無咎，宜穩健行事。', '九五：井冽寒泉，宜清明行事。', '上六：井收勿幕，宜謙和守成。'] },
     '艮上巽下': { name: '山風蠱', ci: '元亨，宜革除積弊，謹慎行事。', yaoCi: ['初六：干父之蠱，宜謹慎起步。', '九二：干母之蠱，宜柔和改進。', '九三：干父之蠱，宜果斷行事。', '六四：裕父之蠱，宜謙和行事。', '六五：干父之蠱，宜繼承改進。', '上九：不事王侯，宜謙退守志。'] },
     '坤上巽下': { name: '地風升', ci: '元亨，宜循序漸進，謹慎升進。', yaoCi: ['初六：允升大吉，宜謙和進取。', '九二：孚乃利用禴，宜真誠行事。', '九三：升虛邑，宜果斷進取。', '六四：王用亨于岐山，宜謙順行事。', '六五：貞吉升階，宜穩健上升。', '上六：冥升，宜謙退防過。'] },
-    '乾上坎下': { name: '天水訟', ci: '有孚窒惕，宜謹慎爭訟，守正以待。', yaoCi: ['初六：不永所事，宜小事謹慎。', '六二：不克訟，宜退避三舍。', '九三：食舊德，宜安守本分。', '六四：不克訟，宜復正安和。', '九五：訟元吉，宜公正處事。', '上九：或錫之鞶帶，宜謙退勿爭。'] },
+    '乾上坎下': { name: '天水訟', ci: '有孚窒惕，宜謹慎爭訟，守正以待。', yaoCi: ['初六：不永所事，宜小事謹慎。', '六二：不克訟，宜退避三舍。', '九三：食舊德，宜安守本分。', '六四：不克訟，宜復正安和。', '九五：訟元吉，宜公正處事。', '上六：或錫之鞶帶，宜謙退勿爭。'] },
     '兌上坎下': { name: '澤水困', ci: '亨，宜守正待援，謹慎脫困。', yaoCi: ['初六：臀困於株木，宜謹慎待時。', '九二：困於酒食，宜謹慎持正。', '六三：困於石，宜謹防險阻。', '九四：來徐徐，宜謙和求援。', '九五：劓刖，宜果斷脫困。', '上六：困於葛藟，宜謙退待時。'] },
-    '離上坎下': { name: '火水未濟', ci: '亨小，宜謹慎待機，徐圖進展。', yaoCi: ['初六：濡其尾，宜謹慎起步。', '九二：曳其輪，宜穩健前行。', '六三：未濟征凶，宜謹慎待時。', '九四：貞吉悔亡，宜堅守正道。', '六五：貞吉無悔，宜光明行事。', '上九：有孚於飲酒，宜謙和守成。'] },
+    '離上坎下': { name: '火水未濟', ci: '亨小，宜謹慎待機，徐圖進展。', yaoCi: ['初六：濡其尾，宜謹慎起步。', '九二：曳其輪，宜穩健前行。', '六三：未濟征凶，宜謹慎待時。', '六四：貞吉悔亡，宜堅守正道。', '六五：貞吉無悔，宜光明行事。', '上九：有孚於飲酒，宜謙和守成。'] },
     '震上坎下': { name: '雷水解', ci: '利西南，宜解除困境，謹慎行事。', yaoCi: ['初六：無咎，宜謹慎起步。', '九二：田獲三狐，宜果斷行事。', '六三：負且乘，宜謹防小人。', '六四：解而拇，宜謙和脫困。', '九五：君子維有解，宜果斷行事。', '上六：公用射隼，宜果斷除弊。'] },
     '巽上坎下': { name: '風水渙', ci: '亨，宜散聚得時，謹慎行事。', yaoCi: ['初六：用拯馬壯，宜謙和求援。', '九二：渙奔其機，宜果斷行事。', '六三：渙其躬，宜謙退自省。', '六四：渙其群，宜團結共事。', '九五：渙汗其大號，宜光明行事。', '上九：渙其血，宜謙退防過。'] },
     '坎上坎下': { name: '坎為水', ci: '有孚維心亨，宜謹慎履險，守正以行。', yaoCi: ['初六：習坎入坎，宜謹慎脫困。', '九二：坎有險，宜謹慎求進。', '六三：來之坎坎，宜靜待時機。', '六四：樽酒簋貳，宜謙和行事。', '九五：坎不盈，宜穩健前行。', '上六：系用徽纆，宜謙退防過。'] },
@@ -263,67 +263,126 @@
     '坎上艮下': { name: '水山蹇', ci: '利西南，宜謹慎脫困，守正以待。', yaoCi: ['初六：往蹇來譽，宜謙退待時。', '六二：王臣蹇蹇，宜忠誠行事。', '九三：往蹇來反，宜謹慎回歸。', '六四：往蹇來連，宜謙和求援。', '九五：大蹇朋來，宜果斷脫困。', '上六：往蹇來碩，宜謙退守成。'] },
     '艮上艮下': { name: '艮為山', ci: '艮其背，宜靜止修身，謹慎以待。', yaoCi: ['初六：艮其趾，宜謹慎起步。', '六二：艮其腓，宜謹慎行事。', '九三：艮其限，宜謹防過勞。', '六四：艮其身，宜謙和自省。', '六五：艮其輔，宜謹慎言行。', '上九：敦艮吉，宜厚德守正。'] }
   };
-// Validation function
+
+  // Helper functions
   function validateElement(element) {
     return ['金', '木', '水', '火', '土'].includes(element);
   }
 
-  // Random yao generator
-  function getRandomYao() {
-    return Math.floor(Math.random() * 2);
+  function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
+  }
+
+  // Generate hexagram from date or number
+  function generateHexagramFromInput(input) {
+    const numbers = input.split(' ').map(n => parseInt(n)).filter(n => !isNaN(n) && n >= 1 && n <= 100);
+    if (numbers.length !== 3) {
+      throw new Error('請輸入三個有效的數字，範圍為1-100');
+    }
+
+    const upperGua = (numbers[0] % 8) || 8;
+    const lowerGua = (numbers[1] % 8) || 8;
+    const movingYaoIndex = (numbers[2] % 6) || 6;
+    
+    const yao = Array(6).fill().map((_, i) => ({
+      value: (i + 1) <= 3 ? (lowerGua % 2) : (upperGua % 2),
+      isMoving: (i + 1) === movingYaoIndex
+    }));
+    
+    return {
+        yao: yao.reverse(),
+        upperGua: upperGua - 1,
+        lowerGua: lowerGua - 1
+    };
   }
 
   // Generate random hexagram
-  function generateHexagram() {
+  function generateRandomHexagram() {
     const yao = Array(6).fill().map(() => ({
-      value: getRandomYao(),
-      isMoving: Math.random() < 0.3 // 30% chance for moving line
+      value: getRandomInt(2),
+      isMoving: false
     }));
-    const upper = yao.slice(3, 6).reverse().map(y => y.value);
-    const lower = yao.slice(0, 3).reverse().map(y => y.value);
-    const upperGua = parseInt(upper.join(''), 2) % 8;
-    const lowerGua = parseInt(lower.join(''), 2) % 8;
-    if (upperGua < 0 || upperGua > 7 || lowerGua < 0 || lowerGua > 7) {
-      throw new Error('生成卦象失敗：無效卦索引');
-    }
-    return { yao, upperGua, lowerGua };
-  }
+    const movingIndex = getRandomInt(6);
+    yao[movingIndex].isMoving = true;
+    
+    const upper = yao.slice(3, 6).map(y => y.value).join('');
+    const lower = yao.slice(0, 3).map(y => y.value).join('');
 
-  // Generate hexagram from manual input
-  function getManualHexagram() {
-    const inputs = document.querySelectorAll('.yao-input');
-    const yao = Array.from(inputs).reverse().map((input, i) => {
-      const val = input.value.trim();
-      if (val === '' || (val !== '0' && val !== '1')) {
-        alert(`請於爻${6-i}輸入0（陰爻）或1（陽爻），不得為空或無效。`);
-        throw new Error('無效爻輸入');
-      }
-      return { value: parseInt(val), isMoving: Math.random() < 0.3 };
-    });
-    const upper = yao.slice(3, 6).reverse().map(y => y.value);
-    const lower = yao.slice(0, 3).reverse().map(y => y.value);
-    const upperGua = parseInt(upper.join(''), 2) % 8;
-    const lowerGua = parseInt(lower.join(''), 2) % 8;
-    if (upperGua < 0 || upperGua > 7 || lowerGua < 0 || lowerGua > 7) {
-      throw new Error('手動建卦失敗：無效卦索引');
-    }
-    return { yao, upperGua, lowerGua };
+    return {
+      yao: yao.reverse(),
+      upperGua: parseInt(upper, 2),
+      lowerGua: parseInt(lower, 2)
+    };
   }
-
+  
   // Generate changed hexagram
   function getChangedHexagram(yao) {
     const changedYao = yao.map(y => ({
       value: y.isMoving ? 1 - y.value : y.value,
       isMoving: y.isMoving
     }));
-    const upper = changedYao.slice(3, 6).reverse().map(y => y.value);
-    const lower = changedYao.slice(0, 3).reverse().map(y => y.value);
-    const upperGua = parseInt(upper.join(''), 2) % 8;
-    const lowerGua = parseInt(lower.join(''), 2) % 8;
-    if (upperGua < 0 || upperGua > 7 || lowerGua < 0 || lowerGua > 7) {
-      throw new Error('變卦生成失敗：無效卦索引');
+    const upper = changedYao.slice(0, 3).map(y => y.value).join('');
+    const lower = changedYao.slice(3, 6).map(y => y.value).join('');
+    return {
+      yao: changedYao,
+      upperGua: parseInt(lower, 2),
+      lowerGua: parseInt(upper, 2)
+    };
+  }
+  
+  // Get mutual hexagram
+  function getMutualHexagram(yao) {
+    const innerYao = yao.slice(1, 5).reverse().map(y => y.value);
+    const upper = innerYao.slice(1, 4).join('');
+    const lower = innerYao.slice(0, 3).join('');
+    const upperGua = parseInt(upper, 2);
+    const lowerGua = parseInt(lower, 2);
+    const mutualYao = Array(6).fill().map((_, i) => ({
+      value: i >= 3 ? innerYao[i - 1] : innerYao[i],
+      isMoving: false
+    }));
+    return { yao: mutualYao, upperGua, lowerGua };
+  }
+  
+  // Render hexagram graphics
+  function renderHexagram(yao, elementId) {
+    const container = document.getElementById(elementId);
+    container.innerHTML = '';
+    for (let i = 5; i >= 0; i--) {
+      const yaoLine = document.createElement('div');
+      yaoLine.className = 'hexagram-line';
+      if (yao[i].value === 1) { // Yang line
+        yaoLine.classList.add('yang-line');
+      } else { // Yin line
+        yaoLine.classList.add('yin-line');
+      }
+      if (yao[i].isMoving) {
+        const dot = document.createElement('span');
+        dot.className = 'moving-dot';
+        yaoLine.appendChild(dot);
+      }
+      container.appendChild(yaoLine);
     }
-    return { yao: changedYao, upperGua, lowerGua };
+  }
+
+  // Get seasonal status
+  function getSeasonalStatus(element) {
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    let currentSeasonElement;
+
+    if (month >= 2 && month <= 4) currentSeasonElement = '木'; // Spring
+    else if (month >= 5 && month <= 7) currentSeasonElement = '火'; // Summer
+    else if (month >= 8 && month <= 10) currentSeasonElement = '金'; // Autumn
+    else currentSeasonElement = '水'; // Winter
+
+    if (element === currentSeasonElement) return '旺（強盛）';
+    if (fiveElementRelations[element].generates === currentSeasonElement) return '相（次強）';
+    if (fiveElementRelations[currentSeasonElement].overcomes === element) return '休（衰弱）';
+    if (fiveElementRelations[currentSeasonElement].generates === element) return '囚（受制）';
+    if (fiveElementRelations[element].overcomes === currentSeasonElement) return '死（最弱）';
+
+    return '平';
   }
 
   // Get gua ci (hexagram interpretation)
@@ -337,14 +396,14 @@
       movingYaos.forEach((y, i) => {
         const yaoIndex = yao.findIndex(ya => ya === y);
         const yaoCi = guaData.yaoCi[yaoIndex] || '無特定爻辭，宜依卦象推斷。';
-        result += `爻${6-yaoIndex}：${yaoCi} （${questionType}宜參考此意，謹慎行事）<br>`;
+        result += `爻${6 - yaoIndex}：${yaoCi} （${questionType}宜參考此意，謹慎行事）<br>`;
       });
     }
     return result;
   }
 
   // Five elements analysis
-  function analyzeFiveElements(mainGua, changedGua, movingYaos) {
+  function analyzeFiveElements(mainGua, changedGua) {
     const mainElement = fiveElements[mainGua.upperGua];
     const useElement = fiveElements[mainGua.lowerGua];
     const changedElement = fiveElements[changedGua.upperGua];
@@ -376,39 +435,25 @@
     } else if (fiveElementRelations[changedElement].overcomes === mainElement) {
       analysis += '變卦克體，後有阻力，宜審慎規劃，防患未然，當靜觀其變。<br>';
     }
-
-    const movingCount = movingYaos.filter(y => y.isMoving).length;
-    analysis += `<br>【動爻分析】：動爻數 ${movingCount}，動多則變速，動少則事緩。`;
-    if (movingCount === 0) analysis += '無動爻，事態靜穩，宜守常勿躁，循序而進。<br>';
-    else if (movingCount <= 2) analysis += '動爻適中，事有漸變，宜穩中求進，步步為營。<br>';
-    else analysis += '動爻眾多，事多波動，宜審時度勢，謹慎應對，以防突變。<br>';
-
     return analysis;
   }
-
+  
   // Judgment function
-  function getJudgment(mainElement, useElement, changedElement, movingYaos) {
-    if (!validateElement(mainElement) || !validateElement(useElement) || !validateElement(changedElement)) {
+  function getJudgment(mainElement, useElement) {
+    if (!validateElement(mainElement) || !validateElement(useElement)) {
       return { judgment: '【錯誤】吉凶判斷失敗：無效五行元素，請重新卜卦。', judgmentType: '' };
     }
-    const movingCount = movingYaos.filter(y => y.isMoving).length;
     let judgment = '【吉凶判斷】：<br>';
     let judgmentType = '';
     if (fiveElementRelations[mainElement].overcomes === useElement || fiveElementRelations[useElement].generates === mainElement) {
       judgmentType = '吉';
       judgment += '吉：天時地利，事多順遂，宜積極進取，乘勢而為，當獲佳果。';
-      if (movingCount > 2) judgment += '然動爻多，宜防過盛而衰，謹慎行事，勿驕勿躁。<br>';
-      else judgment += '動靜適宜，後勢可期，宜果斷行之，乘運而進。<br>';
     } else if (fiveElementRelations[useElement].overcomes === mainElement) {
       judgmentType = '凶';
       judgment += '凶：局勢不利，阻力叢生，宜退守觀變，勿強求進，以免損折。';
-      if (movingCount > 2) judgment += '動爻紛雜，事多波折，尤需謹慎，宜靜待時機。<br>';
-      else judgment += '動爻尚少，宜靜待時機，徐圖後進，防範未然。<br>';
     } else {
       judgmentType = '平';
       judgment += '平：氣機平衡，無大起落，宜穩中求進，循序漸進，持之以恆。';
-      if (movingCount > 2) judgment += '動爻稍多，宜防細節疏漏，謹慎為上，穩步前行。<br>';
-      else judgment += '動靜和諧，宜持中守正，穩步而行，後必有成。<br>';
     }
     return { judgment, judgmentType };
   }
@@ -418,13 +463,6 @@
     if (!validateElement(mainElement) || !validateElement(changedElement)) {
       return '【錯誤】應期預測失敗：無效五行元素，請重新卜卦。';
     }
-    const seasons = {
-      '木': '春季（正月至三月）',
-      '火': '夏季（四月至六月）',
-      '土': '季末（三、六、九、十二月）',
-      '金': '秋季（七月至九月）',
-      '水': '冬季（十月至十二月）'
-    };
     const movingCount = movingYaos.filter(y => y.isMoving).length;
     let prediction = '【應期預測】：<br>';
     prediction += `體卦五行 ${mainElement}，對應 ${seasons[mainElement]}，事宜於此時萌芽或顯進，宜關注時機。<br>`;
@@ -435,7 +473,7 @@
     }
     if (movingCount === 0) prediction += '無動爻，事緩難速，宜耐心以待，靜觀其變。<br>';
     else if (movingCount <= 2) prediction += `動爻數 ${movingCount}，事變適中，應期或近數週至數月，宜穩中求進。<br>`;
-    else prediction += `動爻數 ${movingCount}，事變速疾，應期或近數日至數週，宜迅速應對。<br>';
+    else prediction += `動爻數 ${movingCount}，事變速疾，應期或近數日至數週，宜迅速應對。<br>`;
     return prediction;
   }
 
@@ -534,39 +572,42 @@
     };
     return suggestions[questionType][judgmentType] || suggestions['其他']['平'];
   }
-  // Main casting function (continued from specified line)
+
+  // Main casting function
   function castHexagram() {
     try {
       const questionType = document.getElementById('questionType').value;
       const question = document.getElementById('question').value.trim() || '未詳述問事';
-      const castMethod = document.querySelector('input[name="castMethod"]:checked').value;
+      const castMethod = document.getElementById('castMethod').value;
       
       let mainGua, changedGua, mutualGua;
+
       if (castMethod === 'random') {
-        mainGua = generateHexagram();
+        mainGua = generateRandomHexagram();
+      } else if (castMethod === 'date') {
+        const dateInput = document.getElementById('castDate');
+        if (!dateInput.value) {
+          throw new Error('請選擇一個日期');
+        }
+        const date = new Date(dateInput.value);
+        const numbers = `${date.getFullYear() % 100} ${date.getMonth() + 1} ${date.getDate()}`;
+        mainGua = generateHexagramFromInput(numbers);
+      } else if (castMethod === 'number') {
+        const numberInput = document.getElementById('numberInput');
+        if (!numberInput.value) {
+          throw new Error('請輸入三個數字');
+        }
+        mainGua = generateHexagramFromInput(numberInput.value);
       } else {
-        mainGua = getManualHexagram();
+        throw new Error('請選擇一個有效的起卦方式');
       }
+
       changedGua = getChangedHexagram(mainGua.yao);
       mutualGua = getMutualHexagram(mainGua.yao);
 
       const mainElement = fiveElements[mainGua.upperGua];
       const useElement = fiveElements[mainGua.lowerGua];
       const changedElement = fiveElements[changedGua.upperGua];
-
-      const hexagramDisplay = mainGua.yao.map((y, i) => {
-        const symbol = yaoSymbols[y.value];
-        const moving = y.isMoving ? ' (動爻)' : '';
-        return `爻${6-i}：${symbol}${moving}`;
-      }).reverse().join('<br>');
-
-      const guaCi = getGuaCi(mainGua.upperGua, mainGua.lowerGua, mainGua.yao, questionType);
-      const fiveElementsAnalysis = analyzeFiveElements(mainGua, changedGua, mainGua.yao);
-      const { judgment, judgmentType } = getJudgment(mainElement, useElement, changedElement, mainGua.yao);
-      const prediction = getPrediction(mainElement, changedElement, mainGua.yao);
-      const suggestion = getSuggestion(questionType, { judgmentType }, mainElement, mainGua.yao);
-
-      document.getElementById('hexagramDisplay').innerHTML = hexagramDisplay;
 
       // Render graphical hexagrams
       renderHexagram(mainGua.yao, 'mainHexagram');
@@ -579,32 +620,23 @@
       document.getElementById('changedGuaName').textContent = `${guaNames[changedGua.upperGua]}上${guaNames[changedGua.lowerGua]}下`;
 
       // Update analysis sections
-      document.getElementById('guaCi').innerHTML = guaCi;
-      document.getElementById('fiveElements').innerHTML = fiveElementsAnalysis;
-      document.getElementById('judgment').innerHTML = judgment;
-      document.getElementById('prediction').innerHTML = prediction;
-      document.getElementById('suggestion').innerHTML = suggestion;
-
-      // Seasonal analysis
-      const seasonalAnalysis = `【旺相休囚死分析】：<br>本卦五行 ${mainElement}，當前狀態：${getSeasonalStatus(mainElement)}<br>` +
+      document.getElementById('guaCi').innerHTML = getGuaCi(mainGua.upperGua, mainGua.lowerGua, mainGua.yao, questionType);
+      document.getElementById('fiveElements').innerHTML = analyzeFiveElements(mainGua, changedGua);
+      document.getElementById('seasonalAnalysis').innerHTML = `【旺相休囚死分析】：<br>本卦五行 ${mainElement}，當前狀態：${getSeasonalStatus(mainElement)}<br>` +
                               `用卦五行 ${useElement}，當前狀態：${getSeasonalStatus(useElement)}<br>` +
                               `變卦五行 ${changedElement}，當前狀態：${getSeasonalStatus(changedElement)}`;
-      document.getElementById('seasonalAnalysis').innerHTML = seasonalAnalysis;
-
-      // Moving yao analysis
-      const movingYaoAnalysis = `【動爻分析】：<br>動爻數 ${mainGua.yao.filter(y => y.isMoving).length}，${mainGua.yao.filter(y => y.isMoving).length > 2 ? '事變速疾，宜迅速應對' : '事變適中，宜穩中求進'}.`;
-      document.getElementById('movingYao').innerHTML = movingYaoAnalysis;
-
-      // Gua combination
-      const guaCombination = `【卦象組合】：<br>本卦：${guaNames[mainGua.upperGua]}上${guaNames[mainGua.lowerGua]}下，意為${guaImages[guaNames[mainGua.upperGua]]}<br>` +
+      const movingCount = mainGua.yao.filter(y => y.isMoving).length;
+      document.getElementById('movingYao').innerHTML = `【動爻分析】：動爻數 ${movingCount}，${movingCount > 2 ? '事變速疾，宜迅速應對' : '事變適中，宜穩中求進'}.`;
+      document.getElementById('guaCombination').innerHTML = `【卦象組合】：<br>本卦：${guaNames[mainGua.upperGua]}上${guaNames[mainGua.lowerGua]}下，意為${guaImages[guaNames[mainGua.upperGua]]}<br>` +
                             `互卦：${guaNames[mutualGua.upperGua]}上${guaNames[mutualGua.lowerGua]}下，意為${guaImages[guaNames[mutualGua.upperGua]]}<br>` +
                             `變卦：${guaNames[changedGua.upperGua]}上${guaNames[changedGua.lowerGua]}下，意為${guaImages[guaNames[changedGua.upperGua]]}`;
-      document.getElementById('guaCombination').innerHTML = guaCombination;
-
-      // Application
       document.getElementById('application').innerHTML = `【應事範圍】：<br>${questionType}相關事項，宜參考卦象與動爻，謹慎行事。`;
+      document.getElementById('suggestion').innerHTML = getSuggestion(questionType, getJudgment(mainElement, useElement), mainElement, mainGua.yao);
+      document.getElementById('prediction').innerHTML = getPrediction(mainElement, changedElement, mainGua.yao);
+
 
       // Update five elements table
+      const { judgmentType } = getJudgment(mainElement, useElement);
       const tableBody = document.getElementById('fiveElementTable');
       tableBody.innerHTML = `
         <tr>
@@ -631,21 +663,19 @@
         mainGua: `${guaNames[mainGua.upperGua]}上${guaNames[mainGua.lowerGua]}下`,
         mutualGua: `${guaNames[mutualGua.upperGua]}上${guaNames[mutualGua.lowerGua]}下`,
         changedGua: `${guaNames[changedGua.upperGua]}上${guaNames[changedGua.lowerGua]}下`,
-        hexagramDisplay,
-        guaCi,
-        fiveElements: fiveElementsAnalysis,
-        judgment,
-        prediction,
-        suggestion,
-        seasonalAnalysis,
-        movingYao: movingYaoAnalysis,
-        guaCombination,
-        application: `【應事範圍】：${questionType}相關事項`
+        guaCi: document.getElementById('guaCi').innerHTML,
+        fiveElements: document.getElementById('fiveElements').innerHTML,
+        judgment: getJudgment(mainElement, useElement).judgment,
+        prediction: document.getElementById('prediction').innerHTML,
+        suggestion: document.getElementById('suggestion').innerHTML,
+        seasonalAnalysis: document.getElementById('seasonalAnalysis').innerHTML,
+        movingYao: document.getElementById('movingYao').innerHTML,
+        guaCombination: document.getElementById('guaCombination').innerHTML,
+        application: document.getElementById('application').innerHTML,
+        hexagrams: { main: mainGua.yao, mutual: mutualGua.yao, changed: changedGua.yao }
       });
       localStorage.setItem('hexagramHistory', JSON.stringify(history));
 
-      // Clear input fields
-      document.querySelectorAll('.yao-input').forEach(input => input.value = '');
     } catch (error) {
       console.error('卜卦錯誤:', error);
       alert('卜卦失敗：' + error.message);
@@ -669,19 +699,21 @@
     const history = JSON.parse(localStorage.getItem('hexagramHistory') || '[]');
     const item = history[index];
     if (item) {
-      document.getElementById('hexagramDisplay').innerHTML = item.hexagramDisplay;
+      renderHexagram(item.hexagrams.main, 'mainHexagram');
+      renderHexagram(item.hexagrams.mutual, 'mutualHexagram');
+      renderHexagram(item.hexagrams.changed, 'changedHexagram');
       document.getElementById('mainGuaName').textContent = item.mainGua;
       document.getElementById('mutualGuaName').textContent = item.mutualGua;
       document.getElementById('changedGuaName').textContent = item.changedGua;
       document.getElementById('guaCi').innerHTML = item.guaCi;
       document.getElementById('fiveElements').innerHTML = item.fiveElements;
-      document.getElementById('judgment').innerHTML = item.judgment;
-      document.getElementById('prediction').innerHTML = item.prediction;
-      document.getElementById('suggestion').innerHTML = item.suggestion;
       document.getElementById('seasonalAnalysis').innerHTML = item.seasonalAnalysis;
       document.getElementById('movingYao').innerHTML = item.movingYao;
       document.getElementById('guaCombination').innerHTML = item.guaCombination;
       document.getElementById('application').innerHTML = item.application;
+      document.getElementById('suggestion').innerHTML = item.suggestion;
+      document.getElementById('prediction').innerHTML = item.prediction;
+
       document.getElementById('result').classList.remove('hidden');
       document.getElementById('history').classList.add('hidden');
     }
@@ -692,14 +724,17 @@
     document.getElementById('historyList').innerHTML = '無卜卦歷史';
   }
 
-  // Event listener for cast method toggle
-  document.querySelectorAll('input[name="castMethod"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      document.getElementById('manualInput').classList.toggle('hidden', radio.value !== 'manual');
-    });
+  // Event listeners for input changes
+  document.getElementById('castMethod').addEventListener('change', (event) => {
+    const method = event.target.value;
+    document.getElementById('dateInput').classList.add('hidden');
+    document.getElementById('numberInput').classList.add('hidden');
+    if (method === 'date') {
+      document.getElementById('dateInput').classList.remove('hidden');
+    } else if (method === 'number') {
+      document.getElementById('numberInput').classList.remove('hidden');
+    }
   });
-
-  console.log('Script loaded, castHexagram defined:', typeof castHexagram);
-  </script>
+</script>
 </body>
 </html>
