@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>智慧回收箱管理系統</title>
+  <title>西勢國小智慧回收箱管理系統</title>
   
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,25 +15,102 @@
     #status { font-weight: bold; }
     #messages { border: 1px solid #ddd; padding: 15px; height: 120px; overflow: auto; background: #fafafa; margin-top: 10px; border-radius: 4px; }
     #chart-container { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-
     .status-box { padding: 10px; background: #f0f2f5; border-radius: 4px; text-align: center; }
     #status-overview { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+    
+    .chart-container-flex {
+        display: flex;
+        justify-content: space-around;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    .chart-box {
+        flex: 1;
+        min-width: 300px;
+        background: #fff;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .chart-box canvas { max-height: 350px; }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-
-    /* Button Colors */
+    .location-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .location-card {
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: background-color 0.3s;
+    }
+    .location-card a {
+      text-decoration: none;
+      color: #333;
+      display: block;
+    }
+    
+    /* 按鈕顏色 */
     #connect-btn { background-color: #007bff; }
     #pub-btn { background-color: #28a745; }
     #start-btn { background-color: #17a2b8; }
     #stop-btn { background-color: #dc3545; }
+    #notify-btn { background-color: #f44336; }
     button:hover { filter: brightness(1.1); }
+    
+    /* 彈出視窗 */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 600px;
+        border-radius: 8px;
+        position: relative;
+    }
+    .close-btn {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+    .close-btn:hover, .close-btn:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    #notificationText {
+        width: 100%;
+        height: 150px;
+        margin-top: 10px;
+        resize: vertical;
+        border: 1px solid #ddd;
+        padding: 10px;
+    }
+    #copyBtn {
+        background-color: #007bff;
+        margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>智慧回收箱管理系統</h2>
+    <h2>西勢國小智慧回收箱管理系統</h2>
     
     <div>
       <label>Broker URL:</label>
@@ -44,9 +121,9 @@
     
     <div style="margin-top: 10px;">
       <label>滿箱警告閾值:</label>
-      <input id="fullThreshold" type="number" value="3" min="1">
+      <input id="fullThreshold" type="number" value="4" min="1">
       <label style="margin-left: 20px;">異常警告閾值:</label>
-      <input id="errorThreshold" type="number" value="1" min="1">
+      <input id="errorThreshold" type="number" value="4" min="1">
     </div>
 
     <hr style="margin: 20px 0;">
@@ -61,25 +138,24 @@
     </div>
     
     <h3>即時滿箱狀態</h3>
-    <div id="chart-container">
-      <canvas id="myChart"></canvas>
+    <div class="chart-container-flex">
+      <div class="chart-box">
+        <canvas id="barChart"></canvas>
+      </div>
+      <div class="chart-box">
+        <canvas id="pieChart"></canvas>
+      </div>
     </div>
     
     <hr style="margin: 20px 0;">
 
     <h3>回收箱位置資訊與地圖連結</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>編號</th>
-          <th>名稱與位置</th>
-          <th>經緯度</th>
-          <th>地圖連結</th>
-        </tr>
-      </thead>
-      <tbody id="locationTableBody">
-        </tbody>
-    </table>
+    <div class="location-grid" id="locationGrid">
+      </div>
+    <div style="text-align: center; margin-top: 20px;">
+      <a id="allLocationsLink" href="#" target="_blank">〔全部位置標示〕</a>
+      <button id="notify-btn" onclick="showNotificationModal()">〔通知維護人員〕</button>
+    </div>
     
     <hr style="margin: 20px 0;">
 
@@ -99,10 +175,20 @@
       <div id="messages"></div>
     </div>
   </div>
+  
+  <div id="notificationModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeNotificationModal()">×</span>
+      <h3>滿箱與異常回收箱列表</h3>
+      <textarea id="notificationText" readonly></textarea>
+      <button id="copyBtn" onclick="copyNotificationText()">全選複製</button>
+    </div>
+  </div>
 
   <script>
     let client;
-    let chart;
+    let barChart;
+    let pieChart;
     let simInterval = null;
     
     const colors = ["#4CAF50", "#FFC107", "#FF9800", "#F44336", "#9C27B0"];
@@ -113,12 +199,22 @@
     const topics = Array.from({ length: topicCount }, (_, i) => `SSSES/BOX${i + 1}/S`);
     
     const chartData = {
-      labels: boxLabels,
-      datasets: [{
-        label: '滿箱狀態',
-        data: Array(topicCount).fill(0),
-        backgroundColor: Array(topicCount).fill(colors[0])
-      }]
+      bar: {
+        labels: boxLabels,
+        datasets: [{
+          label: '滿箱狀態',
+          data: Array(topicCount).fill(0),
+          backgroundColor: Array(topicCount).fill(colors[0])
+        }]
+      },
+      pie: {
+          labels: statusNames,
+          datasets: [{
+              label: '狀態佔比',
+              data: [15, 0, 0, 0, 0],
+              backgroundColor: colors
+          }]
+      }
     };
     
     const boxLocations = [
@@ -140,7 +236,7 @@
     ];
 
     let lastWarningTime = { full: 0, error: 0 };
-    const warningInterval = 10000; // 10秒
+    const warningInterval = 10000;
 
     function setStatus(text, color) {
       const el = document.getElementById("status");
@@ -158,38 +254,65 @@
       }
     }
     
-    function initChart() {
-      if (chart) chart.destroy();
-      const ctx = document.getElementById("myChart").getContext("2d");
-      chart = new Chart(ctx, {
+    function initCharts() {
+      if (barChart) barChart.destroy();
+      const barCtx = document.getElementById("barChart").getContext("2d");
+      barChart = new Chart(barCtx, {
         type: 'bar',
-        data: chartData,
+        data: chartData.bar,
         options: {
-          responsive: true,
-          maintainAspectRatio: false, // 允許寬度自由拉伸
-          scales: {
-            y: { beginAtZero: true, max: 4, ticks: { stepSize: 1, callback: function(value) { return statusNames[value] || value; } } },
-            x: { stacked: true }
-          },
+          responsive: true, maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true, max: 4, ticks: { stepSize: 1, callback: function(value) { return statusNames[value] || value; } } } },
           plugins: { legend: { display: false } }
         }
       });
+
+      if (pieChart) pieChart.destroy();
+      const pieCtx = document.getElementById("pieChart").getContext("2d");
+      pieChart = new Chart(pieCtx, {
+          type: 'pie',
+          data: chartData.pie,
+          options: {
+              responsive: true, maintainAspectRatio: false,
+              plugins: { 
+                  legend: { position: 'bottom' },
+                  datalabels: {
+                      formatter: (value, ctx) => {
+                          let label = ctx.chart.data.labels[ctx.dataIndex];
+                          return `${label}\n(${value})`;
+                      },
+                      color: '#000',
+                      font: {
+                          weight: 'bold'
+                      }
+                  }
+              }
+          }
+      });
     }
 
-    function generateLocationTable() {
-      const tableBody = document.getElementById("locationTableBody");
-      tableBody.innerHTML = '';
+    function generateLocationGrid() {
+      const grid = document.getElementById("locationGrid");
+      grid.innerHTML = '';
       boxLocations.forEach((location, index) => {
-        const mapsUrl = `https://maps.google.com/?cid=861827955758315132&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQ${location.lat},${location.lng}`;
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${location.name}</td>
-          <td>${location.lat}, ${location.lng}</td>
-          <td><a href="${mapsUrl}" target="_blank">地圖連結</a></td>
+        const mapsUrl = `https://maps.google.com/?cid=861827955758315132&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQ$${location.lat},${location.lng}`;
+        const card = document.createElement('div');
+        card.className = 'location-card';
+        card.style.backgroundColor = colors[chartData.bar.datasets[0].data[index]];
+        card.innerHTML = `
+          <a href="${mapsUrl}" target="_blank">
+            <p style="font-weight: bold; margin-bottom: 5px; color: white;">回收箱 ${index + 1}</p>
+            <p style="font-size: 0.9em; line-height: 1.4; color: white;">${location.name}</p>
+          </a>
         `;
-        tableBody.appendChild(row);
+        grid.appendChild(card);
       });
+    }
+
+    function generateAllLocationsLink() {
+      const link = document.getElementById("allLocationsLink");
+      const coords = boxLocations.map(loc => `${loc.lat},${loc.lng}`).join(';');
+      link.href = `https://maps.google.com/?cid=861827955758315132&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQ${coords}`;
     }
 
     function connect() {
@@ -235,16 +358,19 @@
       
       const index = topics.indexOf(topic);
       if (index > -1) {
-        chartData.datasets[0].data[index] = value;
-        chartData.datasets[0].backgroundColor[index] = colors[value];
-        chart.update();
+        chartData.bar.datasets[0].data[index] = value;
+        chartData.bar.datasets[0].backgroundColor[index] = colors[value];
+        barChart.update();
+        
+        updatePieChart();
+        generateLocationGrid();
         updateStatusOverview();
       }
     }
 
     function updateStatusOverview() {
         const counts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
-        chartData.datasets[0].data.forEach(value => {
+        chartData.bar.datasets[0].data.forEach(value => {
             counts[value]++;
         });
 
@@ -255,6 +381,15 @@
         document.getElementById("count-4").textContent = counts[4];
 
         checkWarnings(counts);
+    }
+
+    function updatePieChart() {
+        const counts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
+        chartData.bar.datasets[0].data.forEach(value => {
+            counts[value]++;
+        });
+        chartData.pie.datasets[0].data = [counts[0], counts[1], counts[2], counts[3], counts[4]];
+        pieChart.update();
     }
     
     function checkWarnings(counts) {
@@ -288,6 +423,48 @@
             lastWarningTime.error = 0;
         }
     }
+    
+    function showNotificationModal() {
+        const fullBins = [];
+        const errorBins = [];
+        chartData.bar.datasets[0].data.forEach((status, index) => {
+            const location = boxLocations[index];
+            if (status === 3) {
+                fullBins.push(`- 回收箱 ${index + 1} (滿箱): ${location.name}`);
+            } else if (status === 4) {
+                errorBins.push(`- 回收箱 ${index + 1} (異常): ${location.name}`);
+            }
+        });
+        
+        let notificationText = "維護通知：\n\n";
+        notificationText += "【已滿箱列表】\n";
+        if (fullBins.length > 0) {
+            notificationText += fullBins.join('\n') + '\n\n';
+        } else {
+            notificationText += "無\n\n";
+        }
+
+        notificationText += "【異常列表】\n";
+        if (errorBins.length > 0) {
+            notificationText += errorBins.join('\n');
+        } else {
+            notificationText += "無";
+        }
+        
+        document.getElementById("notificationText").value = notificationText;
+        document.getElementById("notificationModal").style.display = "block";
+    }
+
+    function closeNotificationModal() {
+        document.getElementById("notificationModal").style.display = "none";
+    }
+
+    function copyNotificationText() {
+        const textToCopy = document.getElementById("notificationText");
+        textToCopy.select();
+        document.execCommand("copy");
+        alert("已複製到剪貼簿！");
+    }
 
     function startSimulation() {
       if (simInterval) return;
@@ -310,8 +487,9 @@
     }
     
     window.onload = function() {
-        initChart();
-        generateLocationTable();
+        initCharts();
+        generateLocationGrid();
+        generateAllLocationsLink();
         updateStatusOverview();
     };
   </script>
