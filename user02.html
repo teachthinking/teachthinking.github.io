@@ -16,11 +16,11 @@
       --secondary-color: #6c757d;
       --background-light: #f8f9fa;
       --text-dark: #343a40;
-      --status-green: #4CAF50; /* 空箱 */
-      --status-orange: #FFC107; /* 三/七分滿 */
-      --status-red: #F44336;   /* 滿箱 */
-      --status-purple: #9C27B0; /* 異常 */
-      --link-color: #28a745; /* 連結顏色 */
+      --status-green: #4CAF50;    /* 空箱 */
+      --status-orange: #FFC107;   /* 三分滿/七分滿 */
+      --status-red: #F44336;      /* 全滿 */
+      --status-purple: #9C27B0;   /* 異常 */
+      --link-color: #28a745;
     }
     
     body { font-family: 'Arial', 'Microsoft JhengHei', sans-serif; margin: 0; padding: 0; background-color: var(--background-light); color: var(--text-dark); }
@@ -33,28 +33,17 @@
     .content-container { padding: 20px 0; }
     #map { height: 70vh; width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     
-    .status-badge { display: inline-block; padding: 5px 10px; border-radius: 20px; color: white; font-weight: bold; font-size: 0.9em; }
-    .status-0 { background-color: var(--status-green); }
-    .status-1, .status-2 { background-color: var(--status-orange); }
-    .status-3 { background-color: var(--status-red); }
-    .status-4 { background-color: var(--status-purple); }
-    
-    .location-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 15px;
-      margin-top: 20px;
-    }
     .location-card {
       padding: 15px;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       text-align: center;
+      margin-top: 15px;
       transition: background-color 0.3s;
     }
     .location-card a {
       text-decoration: none;
-      color: #333;
+      color: white;
       display: block;
     }
     
@@ -69,11 +58,9 @@
     .info-section p, .info-section ul { line-height: 1.6; }
     .info-section img { max-width: 100%; height: auto; margin-top: 15px; border-radius: 8px; }
     
-    /* 彈出視窗 */
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
-    .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border-radius: 10px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; }
-    .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-    .close-btn:hover { color: black; }
+    .status-legend { display: flex; justify-content: space-around; flex-wrap: wrap; margin-top: 15px; }
+    .legend-item { display: flex; align-items: center; margin: 5px; }
+    .legend-color { width: 20px; height: 20px; border-radius: 50%; margin-right: 8px; border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.3); }
     
     .hidden { display: none; }
   </style>
@@ -95,11 +82,18 @@
       <h3>回收箱位置與狀態</h3>
       <div id="map"></div>
       
+      <div class="status-legend">
+        <div class="legend-item"><div class="legend-color" style="background-color: var(--status-green);"></div>空箱</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: var(--status-orange);"></div>三分滿/七分滿</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: var(--status-red);"></div>全滿</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: var(--status-purple);"></div>異常</div>
+      </div>
+
       <div style="text-align: center; margin: 20px 0;">
         <button class="action-btn" onclick="openAllLocations()">〔全部位置標示〕</button>
       </div>
 
-      <div class="location-grid" id="locationGrid"></div>
+      <div id="locationGrid"></div>
     </div>
 
     <div id="recycle-guide" class="hidden info-section content-container">
@@ -129,18 +123,9 @@
       <p>當點數系統正式上線時，您只需掃描回收箱上的 QR Code，即可輕鬆累積點數。</p>
     </div>
   </div>
-
-  <div id="binDetailsModal" class="modal">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeModal('binDetailsModal')">&times;</span>
-      <h3 id="modalBinTitle"></h3>
-      <p><strong>地址：</strong><span id="modalBinAddress"></span></p>
-      <p><strong>目前狀態：</strong><span id="modalBinStatus"></span></p>
-    </div>
-  </div>
   
   <script>
-    // 回收箱的經緯度與名稱資料，初始狀態為範例數據
+    // 回收箱的經緯度與名稱資料
     const boxLocations = [
       { id: 1, name: '沿海路四段 559 號（全家南環店旁）', lat: 24.0507, lng: 120.4195, status: 0 },
       { id: 2, name: '沿海路五段 363 號（全聯沿海店旁）', lat: 24.0495, lng: 120.4090, status: 1 },
@@ -161,10 +146,10 @@
     
     // 狀態對應的名稱和顏色
     const statusInfo = {
-      0: { name: '空箱（可回收）', color: 'var(--status-green)' },
+      0: { name: '空箱', color: 'var(--status-green)' },
       1: { name: '三分滿', color: 'var(--status-orange)' },
       2: { name: '七分滿', color: 'var(--status-orange)' },
-      3: { name: '已滿箱', color: 'var(--status-red)' },
+      3: { name: '全滿', color: 'var(--status-red)' },
       4: { name: '異常', color: 'var(--status-purple)' }
     };
 
@@ -175,7 +160,7 @@
     function initMap() {
       map = L.map('map').setView([24.05, 120.43], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
       
       boxLocations.forEach(bin => {
@@ -192,42 +177,26 @@
 
       const marker = L.marker([bin.lat, bin.lng], { icon: customIcon }).addTo(map);
       
-      marker.on('click', function() {
-        showBinDetails(bin);
-      });
+      marker.bindPopup(`<b>回收箱 ${bin.id}</b><br>${bin.name}<br>狀態: ${statusInfo[bin.status].name}`);
 
       markers[bin.id] = marker;
     }
     
-    // 顯示回收箱詳細資訊
-    function showBinDetails(bin) {
-      document.getElementById('modalBinTitle').textContent = `回收箱 ${bin.id}`;
-      document.getElementById('modalBinAddress').textContent = bin.name;
-      document.getElementById('modalBinStatus').textContent = statusInfo[bin.status].name;
-      document.getElementById('modalBinStatus').style.color = statusInfo[bin.status].color;
-      
-      document.getElementById('binDetailsModal').style.display = 'block';
-    }
-
-    // 關閉彈出視窗
-    function closeModal(modalId) {
-      document.getElementById(modalId).style.display = 'none';
-    }
-
     // 渲染列表
     function renderLocationGrid() {
       const grid = document.getElementById("locationGrid");
       grid.innerHTML = '';
       boxLocations.forEach(bin => {
         const status = bin.status;
-        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${bin.lat},${bin.lng}`;
+        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${bin.lat},${bin.lng}`;
         const card = document.createElement('div');
         card.className = 'location-card';
         card.style.backgroundColor = statusInfo[status].color;
         card.innerHTML = `
-          <a href="${mapsUrl}" target="_blank">
+          <a href="${googleMapsUrl}" target="_blank">
             <p class="bin-id">回收箱 ${bin.id}</p>
             <p class="bin-name">${bin.name}</p>
+            <p>${statusInfo[status].name}</p>
           </a>
         `;
         grid.appendChild(card);
@@ -236,8 +205,8 @@
     
     // 開啟所有位置的 Google 地圖
     function openAllLocations() {
-      const locations = boxLocations.map(bin => `${bin.lat},${bin.lng}`).join('|');
-      const url = `https://www.google.com/maps/search/?api=1&query=${locations}`;
+      const locations = boxLocations.map(bin => `${bin.lat},${bin.lng}`).join('/');
+      const url = `https://www.google.com/maps/dir/${locations}`;
       window.open(url, '_blank');
     }
 
@@ -306,13 +275,6 @@
       initMap();
       renderLocationGrid();
       connectMqtt();
-      
-      // 確保在任何地方點擊彈出視窗以外的區域都能關閉視窗
-      window.onclick = function(event) {
-        if (event.target == document.getElementById('binDetailsModal')) {
-          closeModal('binDetailsModal');
-        }
-      }
     };
   </script>
 </body>
