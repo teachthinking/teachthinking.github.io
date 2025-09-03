@@ -47,11 +47,11 @@
     }
     .location-card a {
       text-decoration: none;
-      color: white;
       display: block;
+      color: #343a40; /* 確保文字在任何背景色下都可見 */
     }
     
-    .location-card p { margin: 0; color: white; }
+    .location-card p { margin: 0; }
     .location-card .bin-id { font-weight: bold; margin-bottom: 5px; }
     .location-card .bin-name { font-size: 0.9em; line-height: 1.4; }
     
@@ -60,7 +60,6 @@
     
     .info-section h3 { color: var(--primary-color); border-left: 4px solid var(--primary-color); padding-left: 10px; }
     .info-section p, .info-section ul { line-height: 1.6; }
-    .info-section img { max-width: 100%; height: auto; margin-top: 15px; border-radius: 8px; }
     
     .status-legend { display: flex; justify-content: space-around; flex-wrap: wrap; margin-top: 15px; }
     .legend-item { display: flex; align-items: center; margin: 5px; }
@@ -129,7 +128,7 @@
   </div>
   
   <script>
-    // 從管理者程式碼中提取的回收箱位置資訊
+    // 回收箱的經緯度與名稱資料
     const boxLocations = [
       { id: 1, name: '沿海路四段 559 號（全家南環店旁）', lat: 24.0507, lng: 120.4195, status: 0 },
       { id: 2, name: '沿海路五段 363 號（全聯沿海店旁）', lat: 24.0495, lng: 120.4090, status: 0 },
@@ -210,7 +209,7 @@
     
     // 開啟所有位置的 Google 地圖
     function openAllLocations() {
-      const locations = boxLocations.map(bin => `${bin.lat},${bin.lng}`).join('/');
+      const locations = boxLocations.map(bin => `${bin.lat},${bin.lng}`).join('|');
       const url = `https://www.google.com/maps/search/?api=1&query=${locations}`;
       window.open(url, '_blank');
     }
