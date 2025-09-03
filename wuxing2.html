@@ -557,31 +557,30 @@
                 xia: findTrigramByYao(huXiaYao)
             };
         }
-
-        // 計算變卦
-        function calculateBianGua(benGua, movingYao) {
-            // 獲取本卦的六爻
-            const xiaYao = [...trigrams[benGua.xia].yao]; // 下卦三爻（複製）
-            const shangYao = [...trigrams[benGua.shang].yao]; // 上卦三爻（複製）
-            
-            // 六爻排列：初爻(0)、二爻(1)、三爻(2)、四爻(3)、五爻(4)、上爻(5)
-            const sixYao = [...xiaYao, ...shangYao];
-            
-            // 變爻（從1開始計數，對應數組索引要減1）
-            const yaoIndex = movingYao -1;
-            
-            // 陰陽互變
-            sixYao[yaoIndex] = sixYao[yaoIndex] === 1 ? 0 : 1;
-           
-            // 分為下卦和上卦
-            const bianXiaYao = sixYao.slice(0, 2); // 初爻、二爻、三爻
-            const bianShangYao = sixYao.slice(3, 5); // 四爻、五爻、上爻
-            
-            return {
-                shang: findTrigramByYao(bianShangYao),
-                xia: findTrigramByYao(bianXiaYao)
-            };
-        }
+    // 計算變卦（正確算法）
+    function calculateBianGua(benGua, movingYao) {
+        // 獲取本卦的六爻
+        const xiaYao = [...trigrams[benGua.xia].yao]; // 下卦三爻（複製）
+        const shangYao = [...trigrams[benGua.shang].yao]; // 上卦三爻（複製）
+        
+        // 六爻排列：初爻(0)、二爻(1)、三爻(2)、四爻(3)、五爻(4)、上爻(5)
+        const sixYao = [...xiaYao, ...shangYao];
+        
+        // 變爻（從1開始計數，對應數組索引要減1）
+        const yaoIndex = movingYao - 1;
+        
+        // 陰陽互變
+        sixYao[yaoIndex] = sixYao[yaoIndex] === 1 ? 0 : 1;
+        
+        // 分為下卦和上卦
+        const bianXiaYao = sixYao.slice(0, 3); // 初爻、二爻、三爻
+        const bianShangYao = sixYao.slice(3, 6); // 四爻、五爻、上爻
+        
+        return {
+            shang: findTrigramByYao(bianShangYao),
+            xia: findTrigramByYao(bianXiaYao)
+        };
+    }
 
         // 計算五行生克關係
         function calculateRelation(gua) {
