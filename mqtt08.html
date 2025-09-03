@@ -1,14 +1,12 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>西勢國小智慧回收箱管理系統</title>
+  <title>智慧回收箱管理系統</title>
   
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINf0+xT8j3w+fsC83hH5LgWeY2hL6T2M+w=" crossorigin="" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-2sO9S3yU+s5Q6m6Z+d02x6n5W7J/aY9C2u45n8hH+T5=" crossorigin=""></script>
   
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f7f9; color: #333; }
@@ -18,11 +16,14 @@
     button { padding: 10px 15px; margin: 5px; border: none; border-radius: 4px; color: white; cursor: pointer; transition: background-color 0.3s; }
     #status { font-weight: bold; }
     #messages { border: 1px solid #ddd; padding: 15px; height: 120px; overflow: auto; background: #fafafa; margin-top: 10px; border-radius: 4px; }
-    #chart-container, #map-container { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    #map { height: 500px; width: 100%; border-radius: 8px; }
+    #chart-container { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
     .status-box { padding: 10px; background: #f0f2f5; border-radius: 4px; text-align: center; }
     #status-overview { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
 
     /* Button Colors */
     #connect-btn { background-color: #007bff; }
@@ -34,7 +35,7 @@
 </head>
 <body>
   <div class="container">
-    <h2>西勢國小智慧回收箱管理系統</h2>
+    <h2>智慧回收箱管理系統</h2>
     
     <div>
       <label>Broker URL:</label>
@@ -70,10 +71,19 @@
       </div>
       
       <div>
-        <h3>地圖位置與狀態</h3>
-        <div id="map-container">
-          <div id="map"></div>
-        </div>
+        <h3>回收箱位置資訊</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>編號</th>
+              <th>名稱與位置</th>
+              <th>經緯度</th>
+              <th>地圖</th>
+            </tr>
+          </thead>
+          <tbody id="locationTableBody">
+            </tbody>
+        </table>
       </div>
     </div>
     
@@ -100,10 +110,10 @@
     let client;
     let chart;
     let simInterval = null;
-    let map;
-    const markers = [];
-
-    const colors = ["#4CAF50", "#FFC107", "#FF9800", "#F44336", "#9C27B0"]; // 綠, 黃, 橙, 紅, 紫
+    
+    const colors = ["#4CAF50", "#FFC107", "#FF9800", "#F44336", "#9C27B0"];
+    const statusNames = ["空箱", "三分滿", "七分滿", "滿箱", "異常"];
+    
     const topicCount = 15;
     const boxLabels = Array.from({ length: topicCount }, (_, i) => `回收箱 ${i + 1}`);
     const topics = Array.from({ length: topicCount }, (_, i) => `SSSES/BOX${i + 1}/S`);
@@ -134,9 +144,9 @@
       { name: '彰水路二段 1 號（福懋加油站南邊）', lat: 24.0375, lng: 120.4205 },
       { name: '南環路/福三路三段路口（7-11 福興旺福門市）', lat: 24.0525, lng: 120.4160 }
     ];
-    
-    // 狀態數值與名稱對應
-    const statusNames = ["空箱", "三分滿", "七分滿", "滿箱", "異常"];
+
+    let lastWarningTime = { full: 0, error: 0 };
+    const warningInterval = 10000; // 10秒
 
     function setStatus(text, color) {
       const el = document.getElementById("status");
@@ -171,55 +181,20 @@
       });
     }
 
-    function initMap() {
-        const fuxingLocation = { lat: 24.05, lng: 120.43 };
-        map = L.map('map').setView([fuxingLocation.lat, fuxingLocation.lng], 13);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        boxLocations.forEach((location, index) => {
-            const status = chartData.datasets[0].data[index];
-            const statusName = statusNames[status];
-            const markerColor = colors[status];
-            
-            const markerIcon = L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div style="background-color:${markerColor}; width:12px; height:12px; border-radius:50%; border:2px solid white;"></div>`,
-                iconSize: [16, 16],
-                iconAnchor: [8, 8],
-                popupAnchor: [0, -8]
-            });
-            
-            const marker = L.marker([location.lat, location.lng], { icon: markerIcon }).addTo(map)
-                .bindPopup(`<b>${location.name}</b><br>狀態: ${statusName}`);
-            
-            markers.push({
-                marker: marker,
-                icon: markerIcon
-            });
-        });
-    }
-
-    function updateMapMarkers() {
-        markers.forEach((item, index) => {
-            const status = chartData.datasets[0].data[index];
-            const statusName = statusNames[status];
-            const markerColor = colors[status];
-            
-            // 由於 Leaflet 的圖標屬性不能直接更新，我們需要重建它
-            const newIcon = L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div style="background-color:${markerColor}; width:12px; height:12px; border-radius:50%; border:2px solid white;"></div>`,
-                iconSize: [16, 16],
-                iconAnchor: [8, 8],
-                popupAnchor: [0, -8]
-            });
-
-            item.marker.setIcon(newIcon);
-            item.marker.setPopupContent(`<b>${boxLocations[index].name}</b><br>狀態: ${statusName}`);
-        });
+    function generateLocationTable() {
+      const tableBody = document.getElementById("locationTableBody");
+      tableBody.innerHTML = '';
+      boxLocations.forEach((location, index) => {
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${location.name}</td>
+          <td>${location.lat}, ${location.lng}</td>
+          <td><a href="${mapsUrl}" target="_blank">地圖連結</a></td>
+        `;
+        tableBody.appendChild(row);
+      });
     }
 
     function connect() {
@@ -268,7 +243,6 @@
         chartData.datasets[0].data[index] = value;
         chartData.datasets[0].backgroundColor[index] = colors[value];
         chart.update();
-        updateMapMarkers(); // 更新地圖標記
         updateStatusOverview();
       }
     }
@@ -291,21 +265,32 @@
     function checkWarnings(counts) {
         const fullThreshold = parseInt(document.getElementById("fullThreshold").value);
         const errorThreshold = parseInt(document.getElementById("errorThreshold").value);
+        const now = Date.now();
 
         if (counts[3] >= fullThreshold) {
-            alert(`🔔 警告: 已滿箱數量 (${counts[3]}) 超過閾值 (${fullThreshold})！`);
-            if (client && client.connected) {
-                client.publish("SSSES/BOX/F", counts[3].toString());
-                log(`🔔 已發佈滿箱警告訊息: ${counts[3]}`);
+            if (now - lastWarningTime.full > warningInterval) {
+                alert(`🔔 警告: 已滿箱數量 (${counts[3]}) 超過閾值 (${fullThreshold})！`);
+                if (client && client.connected) {
+                    client.publish("SSSES/BOX/F", counts[3].toString());
+                    log(`🔔 已發佈滿箱警告訊息: ${counts[3]}`);
+                }
+                lastWarningTime.full = now;
             }
+        } else {
+            lastWarningTime.full = 0;
         }
 
         if (counts[4] >= errorThreshold) {
-            alert(`🚨 警告: 異常數量 (${counts[4]}) 超過閾值 (${errorThreshold})！`);
-            if (client && client.connected) {
-                client.publish("SSSES/BOX/E", counts[4].toString());
-                log(`🚨 已發佈異常警告訊息: ${counts[4]}`);
+            if (now - lastWarningTime.error > warningInterval) {
+                alert(`🚨 警告: 異常數量 (${counts[4]}) 超過閾值 (${errorThreshold})！`);
+                if (client && client.connected) {
+                    client.publish("SSSES/BOX/E", counts[4].toString());
+                    log(`🚨 已發佈異常警告訊息: ${counts[4]}`);
+                }
+                lastWarningTime.error = now;
             }
+        } else {
+            lastWarningTime.error = 0;
         }
     }
 
@@ -331,7 +316,7 @@
     
     window.onload = function() {
         initChart();
-        initMap();
+        generateLocationTable();
         updateStatusOverview();
     };
   </script>
