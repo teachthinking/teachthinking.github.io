@@ -2,67 +2,85 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>MQTT Web 即時圖表 Demo</title>
+  <title>MQTT 智慧回收箱監控儀表板</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f7f9; }
-    .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    h2, h3 { color: #333; }
-    button { padding: 8px 12px; margin: 5px; border: none; border-radius: 4px; color: white; cursor: pointer; }
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f7f9; color: #333; }
+    .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    h2, h3 { color: #2c3e50; }
+    button { padding: 10px 15px; margin: 5px; border: none; border-radius: 4px; color: white; cursor: pointer; transition: background-color 0.3s; }
     #status { font-weight: bold; }
-    #messages { border: 1px solid #ddd; padding: 10px; height: 120px; overflow: auto; background: #fafafa; margin-top: 10px; }
-    canvas { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    #messages { border: 1px solid #ddd; padding: 15px; height: 120px; overflow: auto; background: #fafafa; margin-top: 10px; border-radius: 4px; }
+    #chart-container { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    /* Button Colors */
     #connect-btn { background-color: #007bff; }
     #pub-btn { background-color: #28a745; }
     #start-btn { background-color: #17a2b8; }
     #stop-btn { background-color: #dc3545; }
+    button:hover { filter: brightness(1.1); }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>MQTT Web 即時感測器圖表</h2>
-    
+    <h2>MQTT 智慧回收箱監控儀表板</h2>
+
     <div>
       <label>Broker URL:</label>
-      <input id="brokerUrl" value="ws://broker.emqx.io:8084/mqtt" size="40">
+      <input id="brokerUrl" value="wss://broker.mqttgo.io:8084/mqtt" size="45">
       <button id="connect-btn" onclick="connect()">連線</button>
     </div>
 
-    <div>
+    <div style="margin-top: 10px;">
       <strong>連線狀態:</strong> 
       <span id="status" style="color:red;">🔴 未連線</span>
     </div>
-    <br>
+
+    <hr style="margin: 20px 0;">
 
     <div>
+      <h3>發佈測試訊息</h3>
       <label>發佈主題:</label>
-      <input id="pubTopic" value="web/sensor/temp">
-      <label>訊息:</label>
-      <input id="pubMsg" value="25">
+      <input id="pubTopic" value="HTJH/BOX1/S">
+      <label>滿箱狀態 (0-3):</label>
+      <input id="pubMsg" type="number" value="2" min="0" max="3">
       <button id="pub-btn" onclick="publish()">發佈</button>
     </div>
 
     <div>
+      <h3>模擬數據</h3>
       <button id="start-btn" onclick="startSimulation()">▶ 開始模擬感測數據</button>
       <button id="stop-btn" onclick="stopSimulation()">⏹ 停止模擬</button>
     </div>
 
+    <hr style="margin: 20px 0;">
+
     <h3>訊息紀錄</h3>
     <div id="messages"></div>
 
-    <h3>即時數據圖表</h3>
-    <canvas id="myChart" width="600" height="300"></canvas>
+    <h3>即時滿箱狀態</h3>
+    <div id="chart-container">
+      <canvas id="myChart" width="600" height="300"></canvas>
+    </div>
   </div>
 
   <script>
     let client;
     let chart;
-    let chartData = { labels: [], datasets: [] };
-    const colors = ["#007bff", "#dc3545", "#28a745", "#ffc107", "#6f42c1", "#e83e8c"];
-    let topicMap = {};
-    let colorIndex = 0;
     let simInterval = null;
+    const colors = ["#4CAF50", "#FFC107", "#FF9800", "#F44336"]; // 綠, 黃, 橙, 紅
+
+    const boxLabels = ['回收箱 1', '回收箱 2', '回收箱 3'];
+    const topics = ['HTJH/BOX1/S', 'HTJH/BOX2/S', 'HTJH/BOX3/S'];
+    const chartData = {
+      labels: boxLabels,
+      datasets: [{
+        label: '滿箱狀態',
+        data: [0, 0, 0], // 初始值
+        backgroundColor: [colors[0], colors[0], colors[0]]
+      }]
+    };
 
     function setStatus(text, color) {
       const el = document.getElementById("status");
@@ -74,36 +92,51 @@
       const messagesDiv = document.getElementById("messages");
       const p = document.createElement("p");
       p.textContent = message;
-      messagesDiv.appendChild(p);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight; // 自動滾動
+      messagesDiv.prepend(p); // 新訊息顯示在最上方
+      if (messagesDiv.children.length > 5) {
+        messagesDiv.removeChild(messagesDiv.lastChild);
+      }
     }
-
+    
+    // 初始化圖表
     function initChart() {
       if (chart) {
         chart.destroy();
       }
       const ctx = document.getElementById("myChart").getContext("2d");
       chart = new Chart(ctx, {
-        type: "line",
+        type: 'bar',
         data: chartData,
         options: {
           responsive: true,
           scales: {
-            y: { beginAtZero: true },
-            x: {
-              title: {
-                display: true,
-                text: '時間'
+            y: {
+              beginAtZero: true,
+              max: 3,
+              ticks: {
+                stepSize: 1,
+                callback: function(value) {
+                  const labels = ['空箱 (0)', '三分滿 (1)', '七分滿 (2)', '滿箱 (3)'];
+                  return labels[value];
+                }
+              }
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `滿箱狀態: ${context.raw}`;
+                }
               }
             }
           }
         }
       });
     }
-    
-    // 初始化圖表
-    initChart();
 
+    // 連線到 MQTT Broker
     function connect() {
       if (client && client.connected) {
         log("⚠️ 已連線，請勿重複連線。");
@@ -111,34 +144,23 @@
       }
 
       const url = document.getElementById("brokerUrl").value.trim();
-      if (!url) {
-        alert("請輸入 Broker URL");
-        return;
-      }
+      if (!url) { alert("請輸入 Broker URL"); return; }
 
       setStatus("🟡 連線中...", "orange");
-
+      
       const clientId = `web-client-${Math.random().toString(16).substr(2, 8)}`;
       client = mqtt.connect(url, { clientId: clientId });
 
       client.on("connect", () => {
         setStatus("🟢 已連線", "green");
         log(`✅ 已連線到 ${url}`);
-        
-        // 訂閱主題，EMQX 測試用的公開主題，請不要發布敏感資訊
-        const topics = ["web/sensor/temp", "web/sensor/humidity"];
         topics.forEach(topic => {
           client.subscribe(topic, (err) => {
-            if (err) {
-              log(`❌ 訂閱失敗: ${topic}`);
-            } else {
-              log(`📡 已訂閱主題: ${topic}`);
-            }
+            if (!err) { log(`📡 已訂閱主題: ${topic}`); }
           });
         });
       });
 
-      client.on("reconnect", () => setStatus("🟡 嘗試重新連線...", "orange"));
       client.on("close", () => setStatus("🔴 已斷線", "red"));
       client.on("error", (err) => {
         setStatus("🔴 錯誤", "red");
@@ -153,6 +175,7 @@
       });
     }
 
+    // 發佈訊息
     function publish() {
       if (!client || !client.connected) {
         alert("尚未連線");
@@ -160,65 +183,42 @@
       }
       const topic = document.getElementById("pubTopic").value.trim();
       const msg = document.getElementById("pubMsg").value.trim();
-      if (!topic) {
-        alert("請輸入主題");
+      if (!topic || msg === "") {
+        alert("請輸入主題和訊息");
         return;
       }
       client.publish(topic, msg);
       log(`🚀 已發佈到 [${topic}]: ${msg}`);
     }
 
+    // 更新長條圖
     function updateChart(topic, msg) {
-      const value = parseFloat(msg);
-      if (!isNaN(value)) {
-        if (!topicMap[topic]) {
-          topicMap[topic] = colors[colorIndex % colors.length];
-          colorIndex++;
-          chartData.datasets.push({
-            label: topic,
-            data: [],
-            borderColor: topicMap[topic],
-            backgroundColor: topicMap[topic] + '40', // 增加透明度
-            tension: 0.1,
-            fill: false
-          });
-        }
-
-        const now = new Date().toLocaleTimeString();
-        chartData.labels.push(now);
-
-        chartData.datasets.forEach(dataset => {
-          if (dataset.label === topic) {
-            dataset.data.push(value);
-          } else {
-            // 對於其他主題，保持最後一個數據點
-            dataset.data.push(dataset.data[dataset.data.length - 1] || null);
-          }
-        });
-
-        const maxPoints = 20;
-        if (chartData.labels.length > maxPoints) {
-          chartData.labels.shift();
-          chartData.datasets.forEach(dataset => {
-            dataset.data.shift();
-          });
-        }
+      const value = parseInt(msg);
+      if (isNaN(value) || value < 0 || value > 3) {
+        log(`⚠ 無效的數值: ${msg}，忽略更新。`);
+        return;
+      }
+      
+      const index = topics.indexOf(topic);
+      if (index > -1) {
+        chartData.datasets[0].data[index] = value;
+        chartData.datasets[0].backgroundColor[index] = colors[value];
         chart.update();
       }
     }
 
+    // 啟動模擬
     function startSimulation() {
       if (simInterval) return;
       log("▶ 開始模擬數據發佈...");
-      const topics = ["web/sensor/temp", "web/sensor/humidity"];
       simInterval = setInterval(() => {
-        const temp = (Math.random() * 10 + 20).toFixed(1);
-        const humidity = (Math.random() * 20 + 50).toFixed(1);
-        client.publish(topics[0], temp.toString());
-        client.publish(topics[1], humidity.toString());
-      }, 2000);
+        const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+        const randomValue = Math.floor(Math.random() * 4); // 0, 1, 2, 3
+        client.publish(randomTopic, randomValue.toString());
+      }, 2000); // 每 2 秒發布一次
     }
 
+    // 停止模擬
     function stopSimulation() {
       if (simInterval) {
         clearInterval(simInterval);
@@ -226,6 +226,9 @@
         log("⏹ 停止模擬。");
       }
     }
+    
+    // 網頁載入後自動初始化圖表
+    window.onload = initChart;
   </script>
 </body>
 </html>
