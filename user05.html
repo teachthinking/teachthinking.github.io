@@ -2,35 +2,22 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>西勢國小智慧回收箱</title>
-  
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ7o4A9o1s9lE0p8CsaV1+UZn5+9e4L0=" crossorigin=""/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-2009230537020092305370200923053702009230537020092305370200923053702" crossorigin=""></script>
+  <title>西勢國小智慧回收箱管理系統</title>
   
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-
+  
   <style>
-    :root {
-      --primary-color: #007bff;
-      --secondary-color: #6c757d;
-      --background-light: #f8f9fa;
-      --text-dark: #343a40;
-      --status-green: #4CAF50;    /* 空箱 */
-      --status-orange: #FFC107;   /* 三分滿/七分滿 */
-      --status-red: #F44336;      /* 全滿 */
-      --status-purple: #9C27B0;   /* 異常 */
-    }
-    
-    body { font-family: 'Arial', 'Microsoft JhengHei', sans-serif; margin: 0; padding: 0; background-color: var(--background-light); color: var(--text-dark); }
-    .header { background-color: var(--primary-color); color: white; padding: 15px; text-align: center; }
-    
-    .container { max-width: 1200px; margin: auto; padding: 25px; }
-    #map { height: 70vh; width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f7f9; color: #333; }
+    .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    h2, h3 { color: #2c3e50; }
+    button { padding: 10px 15px; margin: 5px; border: none; border-radius: 4px; color: white; cursor: pointer; transition: background-color 0.3s; }
+    #status { font-weight: bold; }
+    .status-box { padding: 10px; background: #f0f2f5; border-radius: 4px; text-align: center; font-weight: bold; color: white; transition: background-color 0.3s; }
+    #status-overview { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
     
     .location-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(5, 1fr);
       gap: 15px;
       margin-top: 20px;
     }
@@ -43,178 +30,177 @@
     }
     .location-card a {
       text-decoration: none;
+      color: #333;
       display: block;
-      color: var(--text-dark); /* 確保文字在任何背景色下都可見 */
     }
     
-    .location-card p { margin: 0; }
-    .location-card .bin-id { font-weight: bold; margin-bottom: 5px; }
-    .location-card .bin-name { font-size: 0.9em; line-height: 1.4; }
-    
-    .action-btn { background-color: var(--primary-color); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
-    .action-btn:hover { background-color: #0056b3; }
-    
-    .status-legend { display: flex; justify-content: space-around; flex-wrap: wrap; margin-top: 15px; }
-    .legend-item { display: flex; align-items: center; margin: 5px; }
-    .legend-color { width: 20px; height: 20px; border-radius: 50%; margin-right: 8px; border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.3); }
-    
+    /* 按鈕顏色 */
+    #connect-btn { background-color: #007bff; }
+    .action-btn { background-color: #f44336; }
+    button:hover { filter: brightness(1.1); }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>西勢國小智慧回收箱</h1>
-  </div>
-
   <div class="container">
-    <h3>回收箱位置與狀態</h3>
-    <div id="map"></div>
+    <h2>西勢國小智慧回收箱管理系統</h2>
     
-    <div class="status-legend">
-      <div class="legend-item"><div class="legend-color" style="background-color: var(--status-green);"></div>空箱</div>
-      <div class="legend-item"><div class="legend-color" style="background-color: var(--status-orange);"></div>三分滿/七分滿</div>
-      <div class="legend-item"><div class="legend-color" style="background-color: var(--status-red);"></div>全滿</div>
-      <div class="legend-item"><div class="legend-color" style="background-color: var(--status-purple);"></div>異常</div>
+    <div>
+      <label>Broker URL:</label>
+      <input id="brokerUrl" value="wss://broker.mqttgo.io:8084/mqtt" size="45">
+      <button id="connect-btn" onclick="connect()">連線</button>
+      <span style="margin-left: 20px;"><strong>連線狀態:</strong> <span id="status" style="color:red;">🔴 未連線</span></span>
     </div>
+    
+    <hr style="margin: 20px 0;">
 
-    <div style="text-align: center; margin: 20px 0;">
+    <h3>回收箱狀態總覽</h3>
+    <div id="status-overview">
+      <div id="status-0" class="status-box">空箱 (0): <span id="count-0">0</span></div>
+      <div id="status-1" class="status-box">三分滿 (1): <span id="count-1">0</span></div>
+      <div id="status-2" class="status-box">七分滿 (2): <span id="count-2">0</span></div>
+      <div id="status-3" class="status-box">滿箱 (3): <span id="count-3">0</span></div>
+      <div id="status-4" class="status-box">異常 (4): <span id="count-4">0</span></div>
+    </div>
+    
+    <hr style="margin: 20px 0;">
+
+    <h3>回收箱位置資訊與地圖連結</h3>
+    <div class="location-grid" id="locationGrid">
+    </div>
+    <div style="text-align: center; margin-top: 20px;">
       <button class="action-btn" onclick="openAllLocations()">〔全部位置標示〕</button>
     </div>
-
-    <div id="locationGrid"></div>
   </div>
-  
+
   <script>
-    // 從管理者程式碼中提取的回收箱位置資訊
-    const boxLocations = [
-      { id: 1, name: '沿海路四段 559 號（全家南環店旁）', lat: 24.0507, lng: 120.4195, status: 0 },
-      { id: 2, name: '沿海路五段 363 號（全聯沿海店旁）', lat: 24.0495, lng: 120.4090, status: 0 },
-      { id: 3, name: '彰鹿路七段 245 號（福興分駐所旁）', lat: 24.0565, lng: 120.4415, status: 0 },
-      { id: 4, name: '彰鹿路七段 255 號（寶成旁）', lat: 24.0569, lng: 120.4423, status: 0 },
-      { id: 5, name: '彰鹿路七段 16 號（締寶傢具旁）', lat: 24.0505, lng: 120.4342, status: 0 },
-      { id: 6, name: '彰鹿路六段 506 號（嘉里大榮旁）', lat: 24.0458, lng: 120.4268, status: 0 },
-      { id: 7, name: '彰鹿路六段 392 號（英發企業旁）', lat: 24.0475, lng: 120.4300, status: 0 },
-      { id: 8, name: '番花路一段 853 號（外中派出所前）', lat: 24.0715, lng: 120.4158, status: 0 },
-      { id: 9, name: '番花路二段 867 號（萊爾富福星店前）', lat: 24.0780, lng: 120.4085, status: 0 },
-      { id: 10, name: '員鹿路一段 266 號（福安宮斜對面）', lat: 24.0585, lng: 120.4505, status: 0 },
-      { id: 11, name: '員鹿路二段 88 號（全聯員鹿店旁）', lat: 24.0622, lng: 120.4550, status: 0 },
-      { id: 12, name: '員鹿路二段 184 號（福興郵局對面）', lat: 24.0640, lng: 120.4580, status: 0 },
-      { id: 13, name: '彰水路 22 號（快速道路旁）', lat: 24.0415, lng: 120.4225, status: 0 },
-      { id: 14, name: '彰水路二段 1 號（福懋加油站南邊）', lat: 24.0375, lng: 120.4205, status: 0 },
-      { id: 15, name: '南環路/福三路三段路口（7-11 福興旺福門市）', lat: 24.0525, lng: 120.4160, status: 0 }
-    ];
+    let client;
     
-    // 狀態對應的名稱和顏色
-    const statusInfo = {
-      0: { name: '空箱', color: 'var(--status-green)' },
-      1: { name: '三分滿', color: 'var(--status-orange)' },
-      2: { name: '七分滿', color: 'var(--status-orange)' },
-      3: { name: '全滿', color: 'var(--status-red)' },
-      4: { name: '異常', color: 'var(--status-purple)' }
+    const colors = ["#4CAF50", "#FFC107", "#FF9800", "#F44336", "#9C27B0"];
+    const statusNames = ["空箱", "三分滿", "七分滿", "滿箱", "異常"];
+    
+    const topicCount = 15;
+    const boxLabels = Array.from({ length: topicCount }, (_, i) => `回收箱 ${i + 1}`);
+    const topics = Array.from({ length: topicCount }, (_, i) => `SSSES/BOX${i + 1}/S`);
+    
+    const chartData = {
+      bar: {
+        labels: boxLabels,
+        datasets: [{
+          label: '滿箱狀態',
+          data: Array(topicCount).fill(0),
+          backgroundColor: Array(topicCount).fill(colors[0])
+        }]
+      }
     };
-
-    let map;
-    const markers = {};
-    const topics = Array.from({ length: boxLocations.length }, (_, i) => `SSSES/BOX${i + 1}/S`);
-
-    // 初始化地圖
-    function initMap() {
-      map = L.map('map').setView([24.05, 120.43], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(map);
-      
-      boxLocations.forEach(bin => {
-        addMarker(bin);
-      });
-    }
     
-    // 在地圖上新增標記點
-    function addMarker(bin) {
-      const binColor = statusInfo[bin.status].color;
-      
-      const iconHtml = `<div style="background-color: ${binColor}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.4);"></div>`;
-      const customIcon = L.divIcon({ className: 'custom-div-icon', html: iconHtml });
+    const boxLocations = [
+      { name: '沿海路四段 559 號（全家南環店旁）', lat: 24.0507, lng: 120.4195 },
+      { name: '沿海路五段 363 號（全聯沿海店旁）', lat: 24.0495, lng: 120.4090 },
+      { name: '彰鹿路七段 245 號（福興分駐所旁）', lat: 24.0565, lng: 120.4415 },
+      { name: '彰鹿路七段 255 號（寶成旁）', lat: 24.0569, lng: 120.4423 },
+      { name: '彰鹿路七段 16 號（締寶傢具旁）', lat: 24.0505, lng: 120.4342 },
+      { name: '彰鹿路六段 506 號（嘉里大榮旁）', lat: 24.0458, lng: 120.4268 },
+      { name: '彰鹿路六段 392 號（英發企業旁）', lat: 24.0475, lng: 120.4300 },
+      { name: '番花路一段 853 號（外中派出所前）', lat: 24.0715, lng: 120.4158 },
+      { name: '番花路二段 867 號（萊爾富福星店前）', lat: 24.0780, lng: 120.4085 },
+      { name: '員鹿路一段 266 號（福安宮斜對面）', lat: 24.0585, lng: 120.4505 },
+      { name: '員鹿路二段 88 號（全聯員鹿店旁）', lat: 24.0622, lng: 120.4550 },
+      { name: '員鹿路二段 184 號（福興郵局對面）', lat: 24.0640, lng: 120.4580 },
+      { name: '彰水路 22 號（快速道路旁）', lat: 24.0415, lng: 120.4225 },
+      { name: '彰水路二段 1 號（福懋加油站南邊）', lat: 24.0375, lng: 120.4205 },
+      { name: '南環路/福三路三段路口（7-11 福興旺福門市）', lat: 24.0525, lng: 120.4160 }
+    ];
 
-      const marker = L.marker([bin.lat, bin.lng], { icon: customIcon }).addTo(map);
-      
-      marker.bindPopup(`<b>回收箱 ${bin.id}</b><br>${bin.name}<br>狀態: ${statusInfo[bin.status].name}`);
-
-      markers[bin.id] = marker;
+    function setStatus(text, color) {
+      const el = document.getElementById("status");
+      el.textContent = text;
+      el.style.color = color;
     }
-    
-    // 渲染列表
-    function renderLocationGrid() {
+
+    function generateLocationGrid() {
       const grid = document.getElementById("locationGrid");
       grid.innerHTML = '';
-      boxLocations.forEach(bin => {
-        const status = bin.status;
-        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${bin.lat},${bin.lng}`;
+      boxLocations.forEach((location, index) => {
+        const mapsUrl = `https://maps.google.com/?cid=861827955758315132&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQ$${location.lat},${location.lng}`;
         const card = document.createElement('div');
         card.className = 'location-card';
-        card.style.backgroundColor = statusInfo[status].color;
+        card.style.backgroundColor = colors[chartData.bar.datasets[0].data[index]];
         card.innerHTML = `
-          <a href="${googleMapsUrl}" target="_blank">
-            <p class="bin-id">回收箱 ${bin.id}</p>
-            <p class="bin-name">${bin.name}</p>
-            <p>${statusInfo[status].name}</p>
+          <a href="${mapsUrl}" target="_blank">
+            <p style="font-weight: bold; margin-bottom: 5px; color: white;">回收箱 ${index + 1}</p>
+            <p style="font-size: 0.9em; line-height: 1.4; color: white;">${location.name}</p>
           </a>
         `;
         grid.appendChild(card);
       });
     }
-    
-    // 開啟所有位置的 Google 地圖
+
     function openAllLocations() {
-      const locations = boxLocations.map(bin => `${bin.lat},${bin.lng}`).join('|');
-      const url = `https://www.google.com/maps/search/?api=1&query=${locations}`;
-      window.open(url, '_blank');
+        const url = 'https://maps.app.goo.gl/otJ4dphrjJwzrpaQ8';
+        window.open(url, '_blank');
     }
 
-    // MQTT 連線與數據更新
-    let client;
-    function connectMqtt() {
-      const brokerUrl = "wss://broker.mqttgo.io:8084/mqtt";
+    function connect() {
+      if (client && client.connected) { alert("⚠️ 已連線，請勿重複連線。"); return; }
+      const url = document.getElementById("brokerUrl").value.trim();
+      if (!url) { alert("請輸入 Broker URL"); return; }
+      setStatus("🟡 連線中...", "orange");
       const clientId = `web-client-${Math.random().toString(16).substr(2, 8)}`;
-      client = mqtt.connect(brokerUrl, { clientId: clientId });
+      client = mqtt.connect(url, { clientId: clientId });
 
       client.on("connect", () => {
-        console.log("✅ 已連線到 MQTT Broker");
-        topics.forEach(topic => { client.subscribe(topic); });
+        setStatus("🟢 已連線", "green");
+        topics.forEach(topic => { client.subscribe(topic, (err) => { if (!err) { console.log(`📡 已訂閱主題: ${topic}`); } }); });
       });
-      
+
+      client.on("close", () => setStatus("🔴 已斷線", "red"));
+      client.on("error", (err) => {
+        setStatus("🔴 錯誤", "red");
+        console.log("❌ 連線錯誤: " + err.message);
+        client.end();
+      });
+
       client.on("message", (topic, message) => {
         const msg = message.toString();
-        const parts = topic.split('/');
-        const boxId = parseInt(parts[1].replace('BOX', ''));
-        const newStatus = parseInt(msg);
-        
-        updateBinStatus(boxId, newStatus);
+        updateData(topic, msg);
       });
     }
-    
-    function updateBinStatus(boxId, newStatus) {
-      const bin = boxLocations.find(b => b.id === boxId);
-      if (bin) {
-        bin.status = newStatus;
-        
-        // 更新地圖標記顏色
-        if (markers[boxId]) {
-          const newColor = statusInfo[newStatus].color;
-          const newIconHtml = `<div style="background-color: ${newColor}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.4);"></div>`;
-          const newIcon = L.divIcon({ className: 'custom-div-icon', html: newIconHtml });
-          markers[boxId].setIcon(newIcon);
-        }
-        
-        // 更新列表
-        renderLocationGrid();
+
+    function updateData(topic, msg) {
+      const value = parseInt(msg);
+      if (isNaN(value) || value < 0 || value > 4) { console.log(`⚠ 無效的數值: ${msg}，忽略更新。`); return; }
+      
+      const index = topics.indexOf(topic);
+      if (index > -1) {
+        chartData.bar.datasets[0].data[index] = value;
+        chartData.bar.datasets[0].backgroundColor[index] = colors[value];
+        generateLocationGrid();
+        updateStatusOverview();
       }
     }
 
-    // 頁面載入時執行
+    function updateStatusOverview() {
+        const counts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
+        chartData.bar.datasets[0].data.forEach(value => {
+            counts[value]++;
+        });
+
+        document.getElementById("count-0").textContent = counts[0];
+        document.getElementById("count-1").textContent = counts[1];
+        document.getElementById("count-2").textContent = counts[2];
+        document.getElementById("count-3").textContent = counts[3];
+        document.getElementById("count-4").textContent = counts[4];
+
+        document.getElementById("status-0").style.backgroundColor = colors[0];
+        document.getElementById("status-1").style.backgroundColor = colors[1];
+        document.getElementById("status-2").style.backgroundColor = colors[2];
+        document.getElementById("status-3").style.backgroundColor = colors[3];
+        document.getElementById("status-4").style.backgroundColor = colors[4];
+    }
+
     window.onload = function() {
-      initMap();
-      renderLocationGrid();
-      connectMqtt();
+        generateLocationGrid();
+        updateStatusOverview();
     };
   </script>
 </body>
