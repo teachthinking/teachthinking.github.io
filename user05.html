@@ -24,12 +24,8 @@
     
     body { font-family: 'Arial', 'Microsoft JhengHei', sans-serif; margin: 0; padding: 0; background-color: var(--background-light); color: var(--text-dark); }
     .header { background-color: var(--primary-color); color: white; padding: 15px; text-align: center; }
-    .nav-bar { display: flex; justify-content: space-around; background-color: white; border-bottom: 1px solid #dee2e6; }
-    .nav-btn { flex-grow: 1; padding: 15px 0; border: none; background: none; font-size: 16px; cursor: pointer; color: var(--secondary-color); transition: color 0.3s; border-bottom: 3px solid transparent; }
-    .nav-btn.active { color: var(--primary-color); font-weight: bold; border-bottom: 3px solid var(--primary-color); }
     
     .container { max-width: 1200px; margin: auto; padding: 25px; }
-    .content-container { padding: 20px 0; }
     #map { height: 70vh; width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     
     .location-grid {
@@ -48,7 +44,7 @@
     .location-card a {
       text-decoration: none;
       display: block;
-      color: #343a40; /* 確保文字在任何背景色下都可見 */
+      color: var(--text-dark); /* 確保文字在任何背景色下都可見 */
     }
     
     .location-card p { margin: 0; }
@@ -58,14 +54,10 @@
     .action-btn { background-color: var(--primary-color); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
     .action-btn:hover { background-color: #0056b3; }
     
-    .info-section h3 { color: var(--primary-color); border-left: 4px solid var(--primary-color); padding-left: 10px; }
-    .info-section p, .info-section ul { line-height: 1.6; }
-    
     .status-legend { display: flex; justify-content: space-around; flex-wrap: wrap; margin-top: 15px; }
     .legend-item { display: flex; align-items: center; margin: 5px; }
     .legend-color { width: 20px; height: 20px; border-radius: 50%; margin-right: 8px; border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.3); }
     
-    .hidden { display: none; }
   </style>
 </head>
 <body>
@@ -73,62 +65,26 @@
     <h1>西勢國小智慧回收箱</h1>
   </div>
 
-  <div class="nav-bar">
-    <button class="nav-btn active" onclick="showSection('home-page')">首頁</button>
-    <button class="nav-btn" onclick="showSection('recycle-guide')">回收指南</button>
-    <button class="nav-btn" onclick="showSection('schedule')">回收車時間</button>
-    <button class="nav-btn" onclick="showSection('my-points')">我的點數</button>
-  </div>
-
   <div class="container">
-    <div id="home-page" class="content-container">
-      <h3>回收箱位置與狀態</h3>
-      <div id="map"></div>
-      
-      <div class="status-legend">
-        <div class="legend-item"><div class="legend-color" style="background-color: var(--status-green);"></div>空箱</div>
-        <div class="legend-item"><div class="legend-color" style="background-color: var(--status-orange);"></div>三分滿/七分滿</div>
-        <div class="legend-item"><div class="legend-color" style="background-color: var(--status-red);"></div>全滿</div>
-        <div class="legend-item"><div class="legend-color" style="background-color: var(--status-purple);"></div>異常</div>
-      </div>
-
-      <div style="text-align: center; margin: 20px 0;">
-        <button class="action-btn" onclick="openAllLocations()">〔全部位置標示〕</button>
-      </div>
-
-      <div id="locationGrid"></div>
-    </div>
-
-    <div id="recycle-guide" class="hidden info-section content-container">
-      <h3>可回收衣物種類</h3>
-      <p>請將乾淨、完整的舊衣物投入回收箱，這些衣物將會被重新利用或回收製成其他產品。</p>
-      <ul>
-        <li>**可回收:** 外套、襯衫、褲子、裙子、毛衣、包包、帽子、鞋子。</li>
-        <li>**不可回收:** 內衣褲、襪子、棉被、枕頭、地毯、窗簾、布娃娃、鞋類、毛絨玩具。</li>
-      </ul>
-      <p>請確保衣物已清洗乾淨並裝袋，以保持回收箱內的整潔。</p>
-    </div>
+    <h3>回收箱位置與狀態</h3>
+    <div id="map"></div>
     
-    <div id="schedule" class="hidden info-section content-container">
-      <h3>彰化縣福興鄉回收車時間</h3>
-      <p>以下為部分地點的回收車時間參考，請以當地環保局公告為準。</p>
-      <ul>
-        <li>**福興國中**：每週一、三、五，晚間 8:00 - 8:30</li>
-        <li>**彰鹿路七段**：每週二、四，晚間 7:30 - 8:00</li>
-        <li>**沿海路五段**：每週一、三，晚間 7:00 - 7:30</li>
-      </ul>
-      <p>您也可以前往福興鄉公所網站查詢更詳細的回收路線與時間表。</p>
+    <div class="status-legend">
+      <div class="legend-item"><div class="legend-color" style="background-color: var(--status-green);"></div>空箱</div>
+      <div class="legend-item"><div class="legend-color" style="background-color: var(--status-orange);"></div>三分滿/七分滿</div>
+      <div class="legend-item"><div class="legend-color" style="background-color: var(--status-red);"></div>全滿</div>
+      <div class="legend-item"><div class="legend-color" style="background-color: var(--status-purple);"></div>異常</div>
     </div>
-    
-    <div id="my-points" class="hidden info-section content-container">
-      <h3>我的環保點數</h3>
-      <p>點數系統正在開發中，未來您可透過回收衣物累積點數，並兌換環保商品或合作商家的優惠券。</p>
-      <p>當點數系統正式上線時，您只需掃描回收箱上的 QR Code，即可輕鬆累積點數。</p>
+
+    <div style="text-align: center; margin: 20px 0;">
+      <button class="action-btn" onclick="openAllLocations()">〔全部位置標示〕</button>
     </div>
+
+    <div id="locationGrid"></div>
   </div>
   
   <script>
-    // 回收箱的經緯度與名稱資料
+    // 從管理者程式碼中提取的回收箱位置資訊
     const boxLocations = [
       { id: 1, name: '沿海路四段 559 號（全家南環店旁）', lat: 24.0507, lng: 120.4195, status: 0 },
       { id: 2, name: '沿海路五段 363 號（全聯沿海店旁）', lat: 24.0495, lng: 120.4090, status: 0 },
@@ -214,35 +170,15 @@
       window.open(url, '_blank');
     }
 
-    // 切換顯示區塊
-    function showSection(sectionId) {
-      document.querySelectorAll('.content-container').forEach(section => {
-        section.classList.add('hidden');
-      });
-      document.getElementById(sectionId).classList.remove('hidden');
-
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      document.querySelector(`.nav-btn[onclick="showSection('${sectionId}')"]`).classList.add('active');
-      
-      // 如果切換回首頁，重新調整地圖大小
-      if (sectionId === 'home-page' && map) {
-        setTimeout(() => { map.invalidateSize(); }, 300);
-      }
-    }
-    
     // MQTT 連線與數據更新
     let client;
     function connectMqtt() {
-      // 從管理者程式碼中提取的 Broker URL
       const brokerUrl = "wss://broker.mqttgo.io:8084/mqtt";
       const clientId = `web-client-${Math.random().toString(16).substr(2, 8)}`;
       client = mqtt.connect(brokerUrl, { clientId: clientId });
 
       client.on("connect", () => {
         console.log("✅ 已連線到 MQTT Broker");
-        // 訂閱所有回收箱的主題
         topics.forEach(topic => { client.subscribe(topic); });
       });
       
