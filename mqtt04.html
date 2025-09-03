@@ -53,7 +53,7 @@
 
     // 🚀 自動連線到 mqttgo.io
     function connect() {
-      const url = "ws://mqttgo.io:8000/mqtt";
+      const url = "ws://broker.emqx.io:8083/mqtt";
       setStatus("🟡 連線中...", "orange");
       client = mqtt.connect(url);
 
