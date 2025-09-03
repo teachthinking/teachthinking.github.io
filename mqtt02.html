@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>MQTT Web 多感測器圖表 + 發佈 + 模擬</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h2>MQTT 多感測器即時圖表</h2>
+
+  <!-- Broker 設定 -->
+  <div>
+    <label>Broker 位址 (WebSocket):</label>
+    <input id="brokerUrl" value="ws://localhost:8083/mqtt" size="40">
+    <button onclick="connect()">連線</button>
+  </div>
+
+  <!-- 訂閱 -->
+  <div>
+    <label>訂閱主題 (多個用逗號分隔):</label>
+    <input id="subTopic" value="sensor/temp,sensor/humidity">
+    <button onclick="subscribe()">訂閱</button>
+  </div>
+
+  <!-- 發佈 -->
+  <div>
+    <label>發佈主題:</label>
+    <input id="pubTopic" value="sensor/temp">
+    <label>訊息:</label>
+    <input id="pubMsg" value="25">
+    <button onclick="publish()">發佈</button>
+  </div>
+
+  <!-- 自動模擬 -->
+  <div>
+    <button onclick="startSimulation()">▶ 開始模擬感測數據</button>
+    <button onclick="stopSimulation()">⏹ 停止模擬</button>
+  </div>
+
+  <h3>訊息紀錄</h3>
+  <div id="messages" style="border:1px solid #ccc; padding:10px; height:120px; overflow:auto;"></div>
+
+  <h3>即時數據圖表</h3>
+  <canvas id="myChart" width="600" height="300"></canvas>
+
+  <script>
+    let client;
+    let chart;
+    let data = {
+      labels: [], // 時間軸
+      datasets: []
+    };
+
+    const colors = ["blue", "red", "green", "orange", "purple", "brown"];
+    let topicMap = {}; // 主題對應 dataset
+    let simInterval = null; // 模擬計時器
+
+    function connect() {
+      const url = document.getElementById("brokerUrl").value;
+      client = mqtt.connect(url);
+
+      client.on("connect", () => {
+        log("✅ 已連線到 " + url);
+      });
+
+      client.on("message", (topic, message) => {
+        const msg = message.toString();
+        log(`📩 收到來自 [${topic}] 的訊息: ${msg}`);
+        updateChart(topic, msg);
+      });
+
+      client.on("error", (err) => {
+        log("❌ 連線錯誤: " + err);
+      });
+
+      // 初始化圖表
+      const ctx = document.getElementById("myChart").getContext("2d");
+      chart = new Chart(ctx, {
+        type: "line",
+        data: data,
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    function subscribe() {
+      const topics = document.getElementById("subTopic").value.split(",");
+      topics.forEach(topic => {
+        topic = topic.trim();
+        if (topic) {
+          client.subscribe(topic, (err) => {
+            if (!err) log("📡 已訂閱主題: " + topic);
+          });
+        }
+      });
+    }
+
+    function publish() {
+      const topic = document.getElementById("pubTopic").value;
+      const msg = document.getElementById("pubMsg").value;
+      client.publish(topic, msg);
+      log(`🚀 已發佈到 [${topic}]: ${msg}`);
+      updateChart(topic, msg); // 同時更新圖表（模擬即時回饋）
+    }
+
+    function updateChart(topic, msg) {
+      const value = parseFloat(msg);
+      if (!isNaN(value)) {
+        const now = new Date().toLocaleTimeString();
+
+        if (data.labels.length === 0 || data.labels[data.labels.length - 1] !== now) {
+          data.labels.push(now);
+          if (data.labels.length > 20) data.labels.shift();
+        }
+
+        if (!topicMap[topic]) {
+          const color = colors[data.datasets.length % colors.length];
+          topicMap[topic] = {
+            label: topic,
+            data: [],
+            borderColor: color,
+            fill: false,
+            tension: 0.1
+          };
+          data.datasets.push(topicMap[topic]);
+        }
+
+        topicMap[topic].data.push(value);
+        if (topicMap[topic].data.length > 20) {
+          topicMap[topic].data.shift();
+        }
+
+        chart.update();
+      }
+    }
+
+    function log(msg) {
+      const box = document.getElementById("messages");
+      box.innerHTML += msg + "<br>";
+      box.scrollTop = box.scrollHeight;
+    }
+
+    // ⏱ 模擬數據發佈
+    function startSimulation() {
+      if (simInterval) return; // 避免重複啟動
+      log("▶ 開始模擬感測數據...");
+      simInterval = setInterval(() => {
+        const temp = (20 + Math.random() * 10).toFixed(2); // 溫度 20~30
+        const humidity = (40 + Math.random() * 20).toFixed(2); // 濕度 40~60
+        client.publish("sensor/temp", temp);
+        client.publish("sensor/humidity", humidity);
+        log(`🔄 模擬發佈 -> sensor/temp: ${temp}, sensor/humidity: ${humidity}`);
+        updateChart("sensor/temp", temp);
+        updateChart("sensor/humidity", humidity);
+      }, 1000);
+    }
+
+    function stopSimulation() {
+      if (simInterval) {
+        clearInterval(simInterval);
+        simInterval = null;
+        log("⏹ 已停止模擬數據");
+      }
+    }
+  </script>
+</body>
+</html>
