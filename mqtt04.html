@@ -2,14 +2,14 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>MQTTGo Web 即時圖表 Demo</title>
+  <title>EMQX MQTT Web 即時圖表 Demo</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h2>MQTTGo Web 即時感測器圖表</h2>
+  <h2>EMQX MQTT Web 即時感測器圖表</h2>
 
-  <!-- 狀態顯示 -->
+  <!-- 連線狀態 -->
   <div>
     <strong>連線狀態:</strong> 
     <span id="status" style="font-weight:bold; color:red;">🔴 未連線</span>
@@ -51,15 +51,17 @@
       el.style.color = color;
     }
 
-    // 🚀 自動連線到 mqttgo.io
+    // 🚀 連線到 EMQX 公開 WebSocket Broker
     function connect() {
       const url = "ws://broker.emqx.io:8083/mqtt";
       setStatus("🟡 連線中...", "orange");
+
       client = mqtt.connect(url);
 
       client.on("connect", () => {
         setStatus("🟢 已連線", "green");
         log("✅ 已連線到 " + url);
+
         // 自動訂閱溫度 & 濕度
         ["sensor/temp", "sensor/humidity"].forEach(topic => {
           client.subscribe(topic, () => log("📡 已訂閱主題: " + topic));
@@ -95,7 +97,7 @@
       const msg = document.getElementById("pubMsg").value;
       client.publish(topic, msg);
       log(`🚀 已發佈到 [${topic}]: ${msg}`);
-      updateChart(topic, msg); // 同時更新圖表
+      updateChart(topic, msg);
     }
 
     function updateChart(topic, msg) {
@@ -106,11 +108,13 @@
           data.labels.push(now);
           if (data.labels.length > 20) data.labels.shift();
         }
+
         if (!topicMap[topic]) {
           const color = colors[data.datasets.length % colors.length];
           topicMap[topic] = { label: topic, data: [], borderColor: color, fill: false, tension: 0.1 };
           data.datasets.push(topicMap[topic]);
         }
+
         topicMap[topic].data.push(value);
         if (topicMap[topic].data.length > 20) topicMap[topic].data.shift();
         chart.update();
@@ -123,7 +127,7 @@
       box.scrollTop = box.scrollHeight;
     }
 
-    // ⏱ 模擬數據發佈
+    // ⏱ 模擬數據
     function startSimulation() {
       if (simInterval) return;
       log("▶ 開始模擬感測數據...");
