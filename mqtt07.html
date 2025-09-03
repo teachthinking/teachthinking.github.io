@@ -2,9 +2,14 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>智慧回收箱管理系統</title>
+  <title>西勢國小智慧回收箱管理系統</title>
+  
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINf0+xT8j3w+fsC83hH5LgWeY2hL6T2M+w=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-2sO9S3yU+s5Q6m6Z+d02x6n5W7J/aY9C2u45n8hH+T5=" crossorigin=""></script>
+  
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f7f9; color: #333; }
     .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -13,14 +18,11 @@
     button { padding: 10px 15px; margin: 5px; border: none; border-radius: 4px; color: white; cursor: pointer; transition: background-color 0.3s; }
     #status { font-weight: bold; }
     #messages { border: 1px solid #ddd; padding: 15px; height: 120px; overflow: auto; background: #fafafa; margin-top: 10px; border-radius: 4px; }
-    #chart-container { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    #chart-container, #map-container { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    #map { height: 500px; width: 100%; border-radius: 8px; }
 
     .status-box { padding: 10px; background: #f0f2f5; border-radius: 4px; text-align: center; }
     #status-overview { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
-
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
 
     /* Button Colors */
     #connect-btn { background-color: #007bff; }
@@ -32,7 +34,7 @@
 </head>
 <body>
   <div class="container">
-    <h2>智慧回收箱管理系統</h2>
+    <h2>西勢國小智慧回收箱管理系統</h2>
     
     <div>
       <label>Broker URL:</label>
@@ -68,19 +70,10 @@
       </div>
       
       <div>
-        <h3>回收箱位置資訊</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>編號</th>
-              <th>名稱</th>
-              <th>緯度</th>
-              <th>經度</th>
-            </tr>
-          </thead>
-          <tbody id="locationTableBody">
-            </tbody>
-        </table>
+        <h3>地圖位置與狀態</h3>
+        <div id="map-container">
+          <div id="map"></div>
+        </div>
       </div>
     </div>
     
@@ -107,6 +100,8 @@
     let client;
     let chart;
     let simInterval = null;
+    let map;
+    const markers = [];
 
     const colors = ["#4CAF50", "#FFC107", "#FF9800", "#F44336", "#9C27B0"]; // 綠, 黃, 橙, 紅, 紫
     const topicCount = 15;
@@ -139,6 +134,9 @@
       { name: '彰水路二段 1 號（福懋加油站南邊）', lat: 24.0375, lng: 120.4205 },
       { name: '南環路/福三路三段路口（7-11 福興旺福門市）', lat: 24.0525, lng: 120.4160 }
     ];
+    
+    // 狀態數值與名稱對應
+    const statusNames = ["空箱", "三分滿", "七分滿", "滿箱", "異常"];
 
     function setStatus(text, color) {
       const el = document.getElementById("status");
@@ -165,7 +163,7 @@
         options: {
           responsive: true,
           scales: {
-            y: { beginAtZero: true, max: 4, ticks: { stepSize: 1, callback: function(value) { return ["空箱", "三分滿", "七分滿", "滿箱", "異常"][value] || value; } } },
+            y: { beginAtZero: true, max: 4, ticks: { stepSize: 1, callback: function(value) { return statusNames[value] || value; } } },
             x: { stacked: true }
           },
           plugins: { legend: { display: false } }
@@ -173,19 +171,55 @@
       });
     }
 
-    function generateLocationTable() {
-      const tableBody = document.getElementById("locationTableBody");
-      tableBody.innerHTML = '';
-      boxLocations.forEach((location, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${location.name}</td>
-          <td>${location.lat}</td>
-          <td>${location.lng}</td>
-        `;
-        tableBody.appendChild(row);
-      });
+    function initMap() {
+        const fuxingLocation = { lat: 24.05, lng: 120.43 };
+        map = L.map('map').setView([fuxingLocation.lat, fuxingLocation.lng], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        boxLocations.forEach((location, index) => {
+            const status = chartData.datasets[0].data[index];
+            const statusName = statusNames[status];
+            const markerColor = colors[status];
+            
+            const markerIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background-color:${markerColor}; width:12px; height:12px; border-radius:50%; border:2px solid white;"></div>`,
+                iconSize: [16, 16],
+                iconAnchor: [8, 8],
+                popupAnchor: [0, -8]
+            });
+            
+            const marker = L.marker([location.lat, location.lng], { icon: markerIcon }).addTo(map)
+                .bindPopup(`<b>${location.name}</b><br>狀態: ${statusName}`);
+            
+            markers.push({
+                marker: marker,
+                icon: markerIcon
+            });
+        });
+    }
+
+    function updateMapMarkers() {
+        markers.forEach((item, index) => {
+            const status = chartData.datasets[0].data[index];
+            const statusName = statusNames[status];
+            const markerColor = colors[status];
+            
+            // 由於 Leaflet 的圖標屬性不能直接更新，我們需要重建它
+            const newIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background-color:${markerColor}; width:12px; height:12px; border-radius:50%; border:2px solid white;"></div>`,
+                iconSize: [16, 16],
+                iconAnchor: [8, 8],
+                popupAnchor: [0, -8]
+            });
+
+            item.marker.setIcon(newIcon);
+            item.marker.setPopupContent(`<b>${boxLocations[index].name}</b><br>狀態: ${statusName}`);
+        });
     }
 
     function connect() {
@@ -234,6 +268,7 @@
         chartData.datasets[0].data[index] = value;
         chartData.datasets[0].backgroundColor[index] = colors[value];
         chart.update();
+        updateMapMarkers(); // 更新地圖標記
         updateStatusOverview();
       }
     }
@@ -296,7 +331,7 @@
     
     window.onload = function() {
         initChart();
-        generateLocationTable();
+        initMap();
         updateStatusOverview();
     };
   </script>
