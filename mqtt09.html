@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>智慧回收箱管理系統</title>
+  
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f7f9; color: #333; }
+    .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    h2, h3 { color: #2c3e50; }
+    button { padding: 10px 15px; margin: 5px; border: none; border-radius: 4px; color: white; cursor: pointer; transition: background-color 0.3s; }
+    #status { font-weight: bold; }
+    #messages { border: 1px solid #ddd; padding: 15px; height: 120px; overflow: auto; background: #fafafa; margin-top: 10px; border-radius: 4px; }
+    #chart-container { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+
+    .status-box { padding: 10px; background: #f0f2f5; border-radius: 4px; text-align: center; }
+    #status-overview { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+
+    /* Button Colors */
+    #connect-btn { background-color: #007bff; }
+    #pub-btn { background-color: #28a745; }
+    #start-btn { background-color: #17a2b8; }
+    #stop-btn { background-color: #dc3545; }
+    button:hover { filter: brightness(1.1); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>智慧回收箱管理系統</h2>
+    
+    <div>
+      <label>Broker URL:</label>
+      <input id="brokerUrl" value="wss://broker.mqttgo.io:8084/mqtt" size="45">
+      <button id="connect-btn" onclick="connect()">連線</button>
+      <span style="margin-left: 20px;"><strong>連線狀態:</strong> <span id="status" style="color:red;">🔴 未連線</span></span>
+    </div>
+    
+    <div style="margin-top: 10px;">
+      <label>滿箱警告閾值:</label>
+      <input id="fullThreshold" type="number" value="3" min="1">
+      <label style="margin-left: 20px;">異常警告閾值:</label>
+      <input id="errorThreshold" type="number" value="1" min="1">
+    </div>
+
+    <hr style="margin: 20px 0;">
+
+    <h3>回收箱狀態總覽</h3>
+    <div id="status-overview">
+      <div class="status-box">空箱 (0): <span id="count-0">0</span></div>
+      <div class="status-box">三分滿 (1): <span id="count-1">0</span></div>
+      <div class="status-box">七分滿 (2): <span id="count-2">0</span></div>
+      <div class="status-box">已滿箱 (3): <span id="count-3">0</span></div>
+      <div class="status-box">異常 (4): <span id="count-4">0</span></div>
+    </div>
+    
+    <h3>即時滿箱狀態</h3>
+    <div id="chart-container">
+      <canvas id="myChart"></canvas>
+    </div>
+    
+    <hr style="margin: 20px 0;">
+
+    <h3>回收箱位置資訊與地圖連結</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>編號</th>
+          <th>名稱與位置</th>
+          <th>經緯度</th>
+          <th>地圖連結</th>
+        </tr>
+      </thead>
+      <tbody id="locationTableBody">
+        </tbody>
+    </table>
+    
+    <hr style="margin: 20px 0;">
+
+    <h3>模擬與測試</h3>
+    <div>
+      <label>發佈主題:</label>
+      <input id="pubTopic" value="SSSES/BOX1/S">
+      <label>滿箱狀態 (0-4):</label>
+      <input id="pubMsg" type="number" value="3" min="0" max="4">
+      <button id="pub-btn" onclick="publish()">發佈</button>
+      <button id="start-btn" onclick="startSimulation()">▶ 開始模擬</button>
+      <button id="stop-btn" onclick="stopSimulation()">⏹ 停止模擬</button>
+    </div>
+
+    <div style="margin-top: 20px;">
+      <h3>訊息紀錄</h3>
+      <div id="messages"></div>
+    </div>
+  </div>
+
+  <script>
+    let client;
+    let chart;
+    let simInterval = null;
+    
+    const colors = ["#4CAF50", "#FFC107", "#FF9800", "#F44336", "#9C27B0"];
+    const statusNames = ["空箱", "三分滿", "七分滿", "滿箱", "異常"];
+    
+    const topicCount = 15;
+    const boxLabels = Array.from({ length: topicCount }, (_, i) => `回收箱 ${i + 1}`);
+    const topics = Array.from({ length: topicCount }, (_, i) => `SSSES/BOX${i + 1}/S`);
+    
+    const chartData = {
+      labels: boxLabels,
+      datasets: [{
+        label: '滿箱狀態',
+        data: Array(topicCount).fill(0),
+        backgroundColor: Array(topicCount).fill(colors[0])
+      }]
+    };
+    
+    const boxLocations = [
+      { name: '沿海路四段 559 號（全家南環店旁）', lat: 24.0507, lng: 120.4195 },
+      { name: '沿海路五段 363 號（全聯沿海店旁）', lat: 24.0495, lng: 120.4090 },
+      { name: '彰鹿路七段 245 號（福興分駐所旁）', lat: 24.0565, lng: 120.4415 },
+      { name: '彰鹿路七段 255 號（寶成旁）', lat: 24.0569, lng: 120.4423 },
+      { name: '彰鹿路七段 16 號（締寶傢具旁）', lat: 24.0505, lng: 120.4342 },
+      { name: '彰鹿路六段 506 號（嘉里大榮旁）', lat: 24.0458, lng: 120.4268 },
+      { name: '彰鹿路六段 392 號（英發企業旁）', lat: 24.0475, lng: 120.4300 },
+      { name: '番花路一段 853 號（外中派出所前）', lat: 24.0715, lng: 120.4158 },
+      { name: '番花路二段 867 號（萊爾富福星店前）', lat: 24.0780, lng: 120.4085 },
+      { name: '員鹿路一段 266 號（福安宮斜對面）', lat: 24.0585, lng: 120.4505 },
+      { name: '員鹿路二段 88 號（全聯員鹿店旁）', lat: 24.0622, lng: 120.4550 },
+      { name: '員鹿路二段 184 號（福興郵局對面）', lat: 24.0640, lng: 120.4580 },
+      { name: '彰水路 22 號（快速道路旁）', lat: 24.0415, lng: 120.4225 },
+      { name: '彰水路二段 1 號（福懋加油站南邊）', lat: 24.0375, lng: 120.4205 },
+      { name: '南環路/福三路三段路口（7-11 福興旺福門市）', lat: 24.0525, lng: 120.4160 }
+    ];
+
+    let lastWarningTime = { full: 0, error: 0 };
+    const warningInterval = 10000; // 10秒
+
+    function setStatus(text, color) {
+      const el = document.getElementById("status");
+      el.textContent = text;
+      el.style.color = color;
+    }
+
+    function log(message) {
+      const messagesDiv = document.getElementById("messages");
+      const p = document.createElement("p");
+      p.textContent = message;
+      messagesDiv.prepend(p);
+      if (messagesDiv.children.length > 5) {
+        messagesDiv.removeChild(messagesDiv.lastChild);
+      }
+    }
+    
+    function initChart() {
+      if (chart) chart.destroy();
+      const ctx = document.getElementById("myChart").getContext("2d");
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false, // 允許寬度自由拉伸
+          scales: {
+            y: { beginAtZero: true, max: 4, ticks: { stepSize: 1, callback: function(value) { return statusNames[value] || value; } } },
+            x: { stacked: true }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    function generateLocationTable() {
+      const tableBody = document.getElementById("locationTableBody");
+      tableBody.innerHTML = '';
+      boxLocations.forEach((location, index) => {
+        const mapsUrl = `https://maps.google.com/?cid=861827955758315132&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQ${location.lat},${location.lng}`;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${location.name}</td>
+          <td>${location.lat}, ${location.lng}</td>
+          <td><a href="${mapsUrl}" target="_blank">地圖連結</a></td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function connect() {
+      if (client && client.connected) { log("⚠️ 已連線，請勿重複連線。"); return; }
+      const url = document.getElementById("brokerUrl").value.trim();
+      if (!url) { alert("請輸入 Broker URL"); return; }
+      setStatus("🟡 連線中...", "orange");
+      const clientId = `web-client-${Math.random().toString(16).substr(2, 8)}`;
+      client = mqtt.connect(url, { clientId: clientId });
+
+      client.on("connect", () => {
+        setStatus("🟢 已連線", "green");
+        log(`✅ 已連線到 ${url}`);
+        topics.forEach(topic => { client.subscribe(topic, (err) => { if (!err) { log(`📡 已訂閱主題: ${topic}`); } }); });
+      });
+
+      client.on("close", () => setStatus("🔴 已斷線", "red"));
+      client.on("error", (err) => {
+        setStatus("🔴 錯誤", "red");
+        log("❌ 連線錯誤: " + err.message);
+        client.end();
+      });
+
+      client.on("message", (topic, message) => {
+        const msg = message.toString();
+        log(`📩 收到來自 [${topic}] 的訊息: ${msg}`);
+        updateData(topic, msg);
+      });
+    }
+
+    function publish() {
+      if (!client || !client.connected) { alert("尚未連線"); return; }
+      const topic = document.getElementById("pubTopic").value.trim();
+      const msg = document.getElementById("pubMsg").value.trim();
+      if (!topic || msg === "") { alert("請輸入主題和訊息"); return; }
+      client.publish(topic, msg);
+      log(`🚀 已發佈到 [${topic}]: ${msg}`);
+    }
+
+    function updateData(topic, msg) {
+      const value = parseInt(msg);
+      if (isNaN(value) || value < 0 || value > 4) { log(`⚠ 無效的數值: ${msg}，忽略更新。`); return; }
+      
+      const index = topics.indexOf(topic);
+      if (index > -1) {
+        chartData.datasets[0].data[index] = value;
+        chartData.datasets[0].backgroundColor[index] = colors[value];
+        chart.update();
+        updateStatusOverview();
+      }
+    }
+
+    function updateStatusOverview() {
+        const counts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
+        chartData.datasets[0].data.forEach(value => {
+            counts[value]++;
+        });
+
+        document.getElementById("count-0").textContent = counts[0];
+        document.getElementById("count-1").textContent = counts[1];
+        document.getElementById("count-2").textContent = counts[2];
+        document.getElementById("count-3").textContent = counts[3];
+        document.getElementById("count-4").textContent = counts[4];
+
+        checkWarnings(counts);
+    }
+    
+    function checkWarnings(counts) {
+        const fullThreshold = parseInt(document.getElementById("fullThreshold").value);
+        const errorThreshold = parseInt(document.getElementById("errorThreshold").value);
+        const now = Date.now();
+
+        if (counts[3] >= fullThreshold) {
+            if (now - lastWarningTime.full > warningInterval) {
+                alert(`🔔 警告: 已滿箱數量 (${counts[3]}) 超過閾值 (${fullThreshold})！`);
+                if (client && client.connected) {
+                    client.publish("SSSES/BOX/F", counts[3].toString());
+                    log(`🔔 已發佈滿箱警告訊息: ${counts[3]}`);
+                }
+                lastWarningTime.full = now;
+            }
+        } else {
+            lastWarningTime.full = 0;
+        }
+
+        if (counts[4] >= errorThreshold) {
+            if (now - lastWarningTime.error > warningInterval) {
+                alert(`🚨 警告: 異常數量 (${counts[4]}) 超過閾值 (${errorThreshold})！`);
+                if (client && client.connected) {
+                    client.publish("SSSES/BOX/E", counts[4].toString());
+                    log(`🚨 已發佈異常警告訊息: ${counts[4]}`);
+                }
+                lastWarningTime.error = now;
+            }
+        } else {
+            lastWarningTime.error = 0;
+        }
+    }
+
+    function startSimulation() {
+      if (simInterval) return;
+      log("▶ 開始模擬數據發佈...");
+      simInterval = setInterval(() => {
+        const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+        const randomValue = Math.floor(Math.random() * 5);
+        if (client && client.connected) {
+            client.publish(randomTopic, randomValue.toString());
+        }
+      }, 1500);
+    }
+
+    function stopSimulation() {
+      if (simInterval) {
+        clearInterval(simInterval);
+        simInterval = null;
+        log("⏹ 停止模擬。");
+      }
+    }
+    
+    window.onload = function() {
+        initChart();
+        generateLocationTable();
+        updateStatusOverview();
+    };
+  </script>
+</body>
+</html>
