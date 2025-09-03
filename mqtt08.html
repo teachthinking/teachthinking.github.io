@@ -2,10 +2,11 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>智慧回收箱管理系統</title>
+  <title>西勢國小智慧回收箱管理系統</title>
   
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f7f9; color: #333; }
@@ -15,10 +16,9 @@
     #status { font-weight: bold; }
     #messages { border: 1px solid #ddd; padding: 15px; height: 120px; overflow: auto; background: #fafafa; margin-top: 10px; border-radius: 4px; }
     #chart-container { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    .status-box { padding: 10px; background: #f0f2f5; border-radius: 4px; text-align: center; }
+    .status-box { padding: 10px; background: #f0f2f5; border-radius: 4px; text-align: center; font-weight: bold; color: white; transition: background-color 0.3s; }
     #status-overview { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
     
-    /* 容器設定為flexbox */
     .chart-container-flex {
         display: flex;
         justify-content: space-around;
@@ -27,7 +27,7 @@
     }
     .chart-box {
         flex: 1;
-        min-width: 300px; /* 確保在小螢幕上不會擠壓太小 */
+        min-width: 300px;
         background: #fff;
         padding: 10px;
         border-radius: 8px;
@@ -59,7 +59,7 @@
     #pub-btn { background-color: #28a745; }
     #start-btn { background-color: #17a2b8; }
     #stop-btn { background-color: #dc3545; }
-    #notify-btn { background-color: #f44336; }
+    .action-btn { background-color: #f44336; }
     button:hover { filter: brightness(1.1); }
     
     /* 彈出視窗 */
@@ -111,7 +111,7 @@
 </head>
 <body>
   <div class="container">
-    <h2>智慧回收箱管理系統</h2>
+    <h2>西勢國小智慧回收箱管理系統</h2>
     
     <div>
       <label>Broker URL:</label>
@@ -122,20 +122,20 @@
     
     <div style="margin-top: 10px;">
       <label>滿箱警告閾值:</label>
-      <input id="fullThreshold" type="number" value="3" min="1">
+      <input id="fullThreshold" type="number" value="4" min="1">
       <label style="margin-left: 20px;">異常警告閾值:</label>
-      <input id="errorThreshold" type="number" value="1" min="1">
+      <input id="errorThreshold" type="number" value="4" min="1">
     </div>
 
     <hr style="margin: 20px 0;">
 
     <h3>回收箱狀態總覽</h3>
     <div id="status-overview">
-      <div class="status-box">空箱 (0): <span id="count-0">0</span></div>
-      <div class="status-box">三分滿 (1): <span id="count-1">0</span></div>
-      <div class="status-box">七分滿 (2): <span id="count-2">0</span></div>
-      <div class="status-box">已滿箱 (3): <span id="count-3">0</span></div>
-      <div class="status-box">異常 (4): <span id="count-4">0</span></div>
+      <div id="status-0" class="status-box">空箱 (0): <span id="count-0">0</span></div>
+      <div id="status-1" class="status-box">三分滿 (1): <span id="count-1">0</span></div>
+      <div id="status-2" class="status-box">七分滿 (2): <span id="count-2">0</span></div>
+      <div id="status-3" class="status-box">已滿箱 (3): <span id="count-3">0</span></div>
+      <div id="status-4" class="status-box">異常 (4): <span id="count-4">0</span></div>
     </div>
     
     <h3>即時滿箱狀態</h3>
@@ -154,7 +154,7 @@
     <div class="location-grid" id="locationGrid">
       </div>
     <div style="text-align: center; margin-top: 20px;">
-      <a id="allLocationsLink" href="#" target="_blank">〔全部位置標示〕</a>
+      <button class="action-btn" onclick="openAllLocations()">〔全部位置標示〕</button>
       <button id="notify-btn" onclick="showNotificationModal()">〔通知維護人員〕</button>
     </div>
     
@@ -179,7 +179,7 @@
   
   <div id="notificationModal" class="modal">
     <div class="modal-content">
-      <span class="close-btn" onclick="closeNotificationModal()">&times;</span>
+      <span class="close-btn" onclick="closeNotificationModal()">×</span>
       <h3>滿箱與異常回收箱列表</h3>
       <textarea id="notificationText" readonly></textarea>
       <button id="copyBtn" onclick="copyNotificationText()">全選複製</button>
@@ -256,6 +256,7 @@
     }
     
     function initCharts() {
+      Chart.register(ChartDataLabels);
       if (barChart) barChart.destroy();
       const barCtx = document.getElementById("barChart").getContext("2d");
       barChart = new Chart(barCtx, {
@@ -275,7 +276,19 @@
           data: chartData.pie,
           options: {
               responsive: true, maintainAspectRatio: false,
-              plugins: { legend: { position: 'bottom' } }
+              plugins: { 
+                  legend: { position: 'bottom' },
+                  datalabels: {
+                      formatter: (value, ctx) => {
+                          let label = ctx.chart.data.labels[ctx.dataIndex];
+                          return `${label}\n(${value})`;
+                      },
+                      color: '#000',
+                      font: {
+                          weight: 'bold'
+                      }
+                  }
+              }
           }
       });
     }
@@ -298,10 +311,9 @@
       });
     }
 
-    function generateAllLocationsLink() {
-      const link = document.getElementById("allLocationsLink");
-      const coords = boxLocations.map(loc => `${loc.lat},${loc.lng}`).join(';');
-      link.href = `https://maps.google.com/?cid=861827955758315132&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQ$${coords}`;
+    function openAllLocations() {
+        const url = 'https://maps.app.goo.gl/otJ4dphrjJwzrpaQ8';
+        window.open(url, '_blank');
     }
 
     function connect() {
@@ -368,6 +380,12 @@
         document.getElementById("count-2").textContent = counts[2];
         document.getElementById("count-3").textContent = counts[3];
         document.getElementById("count-4").textContent = counts[4];
+
+        document.getElementById("status-0").style.backgroundColor = colors[0];
+        document.getElementById("status-1").style.backgroundColor = colors[1];
+        document.getElementById("status-2").style.backgroundColor = colors[2];
+        document.getElementById("status-3").style.backgroundColor = colors[3];
+        document.getElementById("status-4").style.backgroundColor = colors[4];
 
         checkWarnings(counts);
     }
@@ -478,7 +496,6 @@
     window.onload = function() {
         initCharts();
         generateLocationGrid();
-        generateAllLocationsLink();
         updateStatusOverview();
     };
   </script>
