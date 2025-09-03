@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>MQTT 智慧回收箱監控儀表板</title>
+  <title>西勢國小智慧回收箱監控儀表板</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -42,7 +42,7 @@
     <div>
       <h3>發佈測試訊息</h3>
       <label>發佈主題:</label>
-      <input id="pubTopic" value="HTJH/BOX1/S">
+      <input id="pubTopic" value="SSSES/BOX1/S">
       <label>滿箱狀態 (0-3):</label>
       <input id="pubMsg" type="number" value="2" min="0" max="3">
       <button id="pub-btn" onclick="publish()">發佈</button>
@@ -72,7 +72,7 @@
     const colors = ["#4CAF50", "#FFC107", "#FF9800", "#F44336"]; // 綠, 黃, 橙, 紅
 
     const boxLabels = ['回收箱 1', '回收箱 2', '回收箱 3'];
-    const topics = ['HTJH/BOX1/S', 'HTJH/BOX2/S', 'HTJH/BOX3/S'];
+    const topics = ['SSSES/BOX1/S', 'SSSES/BOX2/S', 'SSSES/BOX3/S'];
     const chartData = {
       labels: boxLabels,
       datasets: [{
