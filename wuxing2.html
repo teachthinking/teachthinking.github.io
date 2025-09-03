@@ -572,7 +572,7 @@
             
             // 陰陽互變
             sixYao[yaoIndex] = sixYao[yaoIndex] === 1 ? 0 : 1;
-            
+            sixYao[yaoIndex] = sixYao[yaoIndex] === 0 ? 1 : 0;
             // 分為下卦和上卦
             const bianXiaYao = sixYao.slice(0, 2); // 初爻、二爻、三爻
             const bianShangYao = sixYao.slice(3, 5); // 四爻、五爻、上爻
