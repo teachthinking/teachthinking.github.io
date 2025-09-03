@@ -9,6 +9,13 @@
 <body>
   <h2>MQTTGo Web 即時感測器圖表</h2>
 
+  <!-- 狀態顯示 -->
+  <div>
+    <strong>連線狀態:</strong> 
+    <span id="status" style="font-weight:bold; color:red;">🔴 未連線</span>
+  </div>
+  <br>
+
   <!-- 發佈 -->
   <div>
     <label>發佈主題:</label>
@@ -38,12 +45,20 @@
     let topicMap = {};
     let simInterval = null;
 
+    function setStatus(text, color) {
+      const el = document.getElementById("status");
+      el.textContent = text;
+      el.style.color = color;
+    }
+
     // 🚀 自動連線到 mqttgo.io
     function connect() {
       const url = "ws://mqttgo.io:8000/mqtt";
+      setStatus("🟡 連線中...", "orange");
       client = mqtt.connect(url);
 
       client.on("connect", () => {
+        setStatus("🟢 已連線", "green");
         log("✅ 已連線到 " + url);
         // 自動訂閱溫度 & 濕度
         ["sensor/temp", "sensor/humidity"].forEach(topic => {
@@ -51,13 +66,20 @@
         });
       });
 
+      client.on("reconnect", () => setStatus("🟡 嘗試重新連線...", "orange"));
+
+      client.on("close", () => setStatus("🔴 已斷線", "red"));
+
+      client.on("error", (err) => {
+        setStatus("🔴 錯誤", "red");
+        log("❌ 連線錯誤: " + err);
+      });
+
       client.on("message", (topic, message) => {
         const msg = message.toString();
         log(`📩 收到來自 [${topic}] 的訊息: ${msg}`);
         updateChart(topic, msg);
       });
-
-      client.on("error", (err) => log("❌ 連線錯誤: " + err));
 
       // 初始化圖表
       const ctx = document.getElementById("myChart").getContext("2d");
