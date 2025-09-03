@@ -20,7 +20,6 @@
       --status-orange: #FFC107;   /* 三分滿/七分滿 */
       --status-red: #F44336;      /* 全滿 */
       --status-purple: #9C27B0;   /* 異常 */
-      --link-color: #28a745;
     }
     
     body { font-family: 'Arial', 'Microsoft JhengHei', sans-serif; margin: 0; padding: 0; background-color: var(--background-light); color: var(--text-dark); }
@@ -33,12 +32,17 @@
     .content-container { padding: 20px 0; }
     #map { height: 70vh; width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     
+    .location-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
     .location-card {
       padding: 15px;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       text-align: center;
-      margin-top: 15px;
       transition: background-color 0.3s;
     }
     .location-card a {
@@ -125,23 +129,23 @@
   </div>
   
   <script>
-    // 回收箱的經緯度與名稱資料
+    // 從管理者程式碼中提取的回收箱位置資訊
     const boxLocations = [
       { id: 1, name: '沿海路四段 559 號（全家南環店旁）', lat: 24.0507, lng: 120.4195, status: 0 },
-      { id: 2, name: '沿海路五段 363 號（全聯沿海店旁）', lat: 24.0495, lng: 120.4090, status: 1 },
+      { id: 2, name: '沿海路五段 363 號（全聯沿海店旁）', lat: 24.0495, lng: 120.4090, status: 0 },
       { id: 3, name: '彰鹿路七段 245 號（福興分駐所旁）', lat: 24.0565, lng: 120.4415, status: 0 },
-      { id: 4, name: '彰鹿路七段 255 號（寶成旁）', lat: 24.0569, lng: 120.4423, status: 2 },
+      { id: 4, name: '彰鹿路七段 255 號（寶成旁）', lat: 24.0569, lng: 120.4423, status: 0 },
       { id: 5, name: '彰鹿路七段 16 號（締寶傢具旁）', lat: 24.0505, lng: 120.4342, status: 0 },
-      { id: 6, name: '彰鹿路六段 506 號（嘉里大榮旁）', lat: 24.0458, lng: 120.4268, status: 3 },
+      { id: 6, name: '彰鹿路六段 506 號（嘉里大榮旁）', lat: 24.0458, lng: 120.4268, status: 0 },
       { id: 7, name: '彰鹿路六段 392 號（英發企業旁）', lat: 24.0475, lng: 120.4300, status: 0 },
-      { id: 8, name: '番花路一段 853 號（外中派出所前）', lat: 24.0715, lng: 120.4158, status: 1 },
+      { id: 8, name: '番花路一段 853 號（外中派出所前）', lat: 24.0715, lng: 120.4158, status: 0 },
       { id: 9, name: '番花路二段 867 號（萊爾富福星店前）', lat: 24.0780, lng: 120.4085, status: 0 },
-      { id: 10, name: '員鹿路一段 266 號（福安宮斜對面）', lat: 24.0585, lng: 120.4505, status: 4 },
+      { id: 10, name: '員鹿路一段 266 號（福安宮斜對面）', lat: 24.0585, lng: 120.4505, status: 0 },
       { id: 11, name: '員鹿路二段 88 號（全聯員鹿店旁）', lat: 24.0622, lng: 120.4550, status: 0 },
       { id: 12, name: '員鹿路二段 184 號（福興郵局對面）', lat: 24.0640, lng: 120.4580, status: 0 },
-      { id: 13, name: '彰水路 22 號（快速道路旁）', lat: 24.0415, lng: 120.4225, status: 2 },
+      { id: 13, name: '彰水路 22 號（快速道路旁）', lat: 24.0415, lng: 120.4225, status: 0 },
       { id: 14, name: '彰水路二段 1 號（福懋加油站南邊）', lat: 24.0375, lng: 120.4205, status: 0 },
-      { id: 15, name: '南環路/福三路三段路口（7-11 福興旺福門市）', lat: 24.0525, lng: 120.4160, status: 1 }
+      { id: 15, name: '南環路/福三路三段路口（7-11 福興旺福門市）', lat: 24.0525, lng: 120.4160, status: 0 }
     ];
     
     // 狀態對應的名稱和顏色
@@ -155,7 +159,8 @@
 
     let map;
     const markers = {};
-    
+    const topics = Array.from({ length: boxLocations.length }, (_, i) => `SSSES/BOX${i + 1}/S`);
+
     // 初始化地圖
     function initMap() {
       map = L.map('map').setView([24.05, 120.43], 13);
@@ -206,7 +211,7 @@
     // 開啟所有位置的 Google 地圖
     function openAllLocations() {
       const locations = boxLocations.map(bin => `${bin.lat},${bin.lng}`).join('/');
-      const url = `https://www.google.com/maps/dir/${locations}`;
+      const url = `https://www.google.com/maps/search/?api=1&query=${locations}`;
       window.open(url, '_blank');
     }
 
@@ -231,15 +236,15 @@
     // MQTT 連線與數據更新
     let client;
     function connectMqtt() {
+      // 從管理者程式碼中提取的 Broker URL
       const brokerUrl = "wss://broker.mqttgo.io:8084/mqtt";
       const clientId = `web-client-${Math.random().toString(16).substr(2, 8)}`;
       client = mqtt.connect(brokerUrl, { clientId: clientId });
 
       client.on("connect", () => {
         console.log("✅ 已連線到 MQTT Broker");
-        boxLocations.forEach(bin => {
-          client.subscribe(`SSSES/BOX${bin.id}/S`);
-        });
+        // 訂閱所有回收箱的主題
+        topics.forEach(topic => { client.subscribe(topic); });
       });
       
       client.on("message", (topic, message) => {
@@ -257,7 +262,7 @@
       if (bin) {
         bin.status = newStatus;
         
-        // 更新地圖標記
+        // 更新地圖標記顏色
         if (markers[boxId]) {
           const newColor = statusInfo[newStatus].color;
           const newIconHtml = `<div style="background-color: ${newColor}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.4);"></div>`;
