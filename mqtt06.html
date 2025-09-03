@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>西勢國小智慧回收箱管理系統</title>
+  <title>智慧回收箱管理系統</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -14,10 +14,13 @@
     #status { font-weight: bold; }
     #messages { border: 1px solid #ddd; padding: 15px; height: 120px; overflow: auto; background: #fafafa; margin-top: 10px; border-radius: 4px; }
     #chart-container { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    #map { height: 500px; width: 100%; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
     .status-box { padding: 10px; background: #f0f2f5; border-radius: 4px; text-align: center; }
     #status-overview { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
 
     /* Button Colors */
     #connect-btn { background-color: #007bff; }
@@ -29,7 +32,7 @@
 </head>
 <body>
   <div class="container">
-    <h2>西勢國小智慧回收箱管理系統</h2>
+    <h2>智慧回收箱管理系統</h2>
     
     <div>
       <label>Broker URL:</label>
@@ -65,8 +68,19 @@
       </div>
       
       <div>
-        <h3>地圖位置與狀態</h3>
-        <div id="map"></div>
+        <h3>回收箱位置資訊</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>編號</th>
+              <th>名稱</th>
+              <th>緯度</th>
+              <th>經度</th>
+            </tr>
+          </thead>
+          <tbody id="locationTableBody">
+            </tbody>
+        </table>
       </div>
     </div>
     
@@ -93,11 +107,9 @@
     let client;
     let chart;
     let simInterval = null;
-    let map;
-    const markers = [];
 
     const colors = ["#4CAF50", "#FFC107", "#FF9800", "#F44336", "#9C27B0"]; // 綠, 黃, 橙, 紅, 紫
-    const topicCount = 10;
+    const topicCount = 15;
     const boxLabels = Array.from({ length: topicCount }, (_, i) => `回收箱 ${i + 1}`);
     const topics = Array.from({ length: topicCount }, (_, i) => `SSSES/BOX${i + 1}/S`);
     
@@ -105,24 +117,27 @@
       labels: boxLabels,
       datasets: [{
         label: '滿箱狀態',
-        data: Array(topicCount).fill(0), // 初始值
+        data: Array(topicCount).fill(0),
         backgroundColor: Array(topicCount).fill(colors[0])
       }]
     };
     
-    // 彰化縣福興鄉的經緯度中心點
-    const fuxingLocation = { lat: 24.0326, lng: 120.4042 };
     const boxLocations = [
-        { lat: 24.035, lng: 120.400, label: '回收箱 1' },
-        { lat: 24.030, lng: 120.408, label: '回收箱 2' },
-        { lat: 24.025, lng: 120.405, label: '回收箱 3' },
-        { lat: 24.028, lng: 120.412, label: '回收箱 4' },
-        { lat: 24.033, lng: 120.415, label: '回收箱 5' },
-        { lat: 24.038, lng: 120.409, label: '回收箱 6' },
-        { lat: 24.036, lng: 120.404, label: '回收箱 7' },
-        { lat: 24.031, lng: 120.401, label: '回收箱 8' },
-        { lat: 24.029, lng: 120.407, label: '回收箱 9' },
-        { lat: 24.034, lng: 120.411, label: '回收箱 10' }
+      { name: '沿海路四段 559 號（全家南環店旁）', lat: 24.0507, lng: 120.4195 },
+      { name: '沿海路五段 363 號（全聯沿海店旁）', lat: 24.0495, lng: 120.4090 },
+      { name: '彰鹿路七段 245 號（福興分駐所旁）', lat: 24.0565, lng: 120.4415 },
+      { name: '彰鹿路七段 255 號（寶成旁）', lat: 24.0569, lng: 120.4423 },
+      { name: '彰鹿路七段 16 號（締寶傢具旁）', lat: 24.0505, lng: 120.4342 },
+      { name: '彰鹿路六段 506 號（嘉里大榮旁）', lat: 24.0458, lng: 120.4268 },
+      { name: '彰鹿路六段 392 號（英發企業旁）', lat: 24.0475, lng: 120.4300 },
+      { name: '番花路一段 853 號（外中派出所前）', lat: 24.0715, lng: 120.4158 },
+      { name: '番花路二段 867 號（萊爾富福星店前）', lat: 24.0780, lng: 120.4085 },
+      { name: '員鹿路一段 266 號（福安宮斜對面）', lat: 24.0585, lng: 120.4505 },
+      { name: '員鹿路二段 88 號（全聯員鹿店旁）', lat: 24.0622, lng: 120.4550 },
+      { name: '員鹿路二段 184 號（福興郵局對面）', lat: 24.0640, lng: 120.4580 },
+      { name: '彰水路 22 號（快速道路旁）', lat: 24.0415, lng: 120.4225 },
+      { name: '彰水路二段 1 號（福懋加油站南邊）', lat: 24.0375, lng: 120.4205 },
+      { name: '南環路/福三路三段路口（7-11 福興旺福門市）', lat: 24.0525, lng: 120.4160 }
     ];
 
     function setStatus(text, color) {
@@ -141,7 +156,6 @@
       }
     }
     
-    // 初始化圖表
     function initChart() {
       if (chart) chart.destroy();
       const ctx = document.getElementById("myChart").getContext("2d");
@@ -159,46 +173,21 @@
       });
     }
 
-    // 初始化地圖
-    function initMap() {
-        const mapOptions = {
-            zoom: 13,
-            center: fuxingLocation,
-            mapId: 'DEMO_MAP_ID' // 如果有，請替換
-        };
-        map = new google.maps.Map(document.getElementById("map"), mapOptions);
-        
-        boxLocations.forEach((location, index) => {
-            const marker = new google.maps.Marker({
-                position: location,
-                map: map,
-                title: location.label
-            });
-            markers.push(marker);
-
-            const infowindow = new google.maps.InfoWindow({
-                content: `<h3>${location.label}</h3><p>狀態: 未知</p>`
-            });
-
-            marker.addListener("click", () => {
-                infowindow.open(map, marker);
-            });
-        });
+    function generateLocationTable() {
+      const tableBody = document.getElementById("locationTableBody");
+      tableBody.innerHTML = '';
+      boxLocations.forEach((location, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${location.name}</td>
+          <td>${location.lat}</td>
+          <td>${location.lng}</td>
+        `;
+        tableBody.appendChild(row);
+      });
     }
 
-    // 更新地圖標記資訊
-    function updateMapMarker(index, value) {
-        const marker = markers[index];
-        const statusText = ["空箱", "三分滿", "七分滿", "滿箱", "異常"][value];
-        const infowindow = new google.maps.InfoWindow({
-            content: `<h3>${marker.getTitle()}</h3><p>狀態: ${statusText}</p>`
-        });
-        marker.addListener("click", () => {
-            infowindow.open(map, marker);
-        });
-    }
-
-    // 連線到 MQTT Broker
     function connect() {
       if (client && client.connected) { log("⚠️ 已連線，請勿重複連線。"); return; }
       const url = document.getElementById("brokerUrl").value.trim();
@@ -227,7 +216,6 @@
       });
     }
 
-    // 發佈訊息
     function publish() {
       if (!client || !client.connected) { alert("尚未連線"); return; }
       const topic = document.getElementById("pubTopic").value.trim();
@@ -237,7 +225,6 @@
       log(`🚀 已發佈到 [${topic}]: ${msg}`);
     }
 
-    // 更新圖表與總覽
     function updateData(topic, msg) {
       const value = parseInt(msg);
       if (isNaN(value) || value < 0 || value > 4) { log(`⚠ 無效的數值: ${msg}，忽略更新。`); return; }
@@ -247,12 +234,10 @@
         chartData.datasets[0].data[index] = value;
         chartData.datasets[0].backgroundColor[index] = colors[value];
         chart.update();
-        updateMapMarker(index, value);
         updateStatusOverview();
       }
     }
 
-    // 更新狀態總覽並檢查警告
     function updateStatusOverview() {
         const counts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
         chartData.datasets[0].data.forEach(value => {
@@ -268,34 +253,39 @@
         checkWarnings(counts);
     }
     
-    // 檢查警告並發布通知
     function checkWarnings(counts) {
         const fullThreshold = parseInt(document.getElementById("fullThreshold").value);
         const errorThreshold = parseInt(document.getElementById("errorThreshold").value);
 
         if (counts[3] >= fullThreshold) {
-            log(`🔔 警告: 已滿箱數量 (${counts[3]}) 超過閾值 (${fullThreshold})！`);
-            client.publish("SSSES/BOX/F", counts[3].toString());
+            alert(`🔔 警告: 已滿箱數量 (${counts[3]}) 超過閾值 (${fullThreshold})！`);
+            if (client && client.connected) {
+                client.publish("SSSES/BOX/F", counts[3].toString());
+                log(`🔔 已發佈滿箱警告訊息: ${counts[3]}`);
+            }
         }
 
         if (counts[4] >= errorThreshold) {
-            log(`🚨 警告: 異常數量 (${counts[4]}) 超過閾值 (${errorThreshold})！`);
-            client.publish("SSSES/BOX/E", counts[4].toString());
+            alert(`🚨 警告: 異常數量 (${counts[4]}) 超過閾值 (${errorThreshold})！`);
+            if (client && client.connected) {
+                client.publish("SSSES/BOX/E", counts[4].toString());
+                log(`🚨 已發佈異常警告訊息: ${counts[4]}`);
+            }
         }
     }
 
-    // 啟動模擬
     function startSimulation() {
       if (simInterval) return;
       log("▶ 開始模擬數據發佈...");
       simInterval = setInterval(() => {
         const randomTopic = topics[Math.floor(Math.random() * topics.length)];
-        const randomValue = Math.floor(Math.random() * 5); // 0, 1, 2, 3, 4
-        client.publish(randomTopic, randomValue.toString());
-      }, 1500); // 每 1.5 秒發布一次
+        const randomValue = Math.floor(Math.random() * 5);
+        if (client && client.connected) {
+            client.publish(randomTopic, randomValue.toString());
+        }
+      }, 1500);
     }
 
-    // 停止模擬
     function stopSimulation() {
       if (simInterval) {
         clearInterval(simInterval);
@@ -304,16 +294,11 @@
       }
     }
     
-    // 網頁載入後自動初始化圖表與地圖
     window.onload = function() {
         initChart();
-        // 載入 Google Maps API，並在載入後初始化地圖
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap`;
-        script.async = true;
-        document.head.appendChild(script);
+        generateLocationTable();
+        updateStatusOverview();
     };
-
   </script>
 </body>
 </html>
