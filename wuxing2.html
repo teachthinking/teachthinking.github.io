@@ -568,11 +568,11 @@
             const sixYao = [...xiaYao, ...shangYao];
             
             // 變爻（從1開始計數，對應數組索引要減1）
-            const yaoIndex = movingYao +1;
+            const yaoIndex = movingYao -1;
             
             // 陰陽互變
             sixYao[yaoIndex] = sixYao[yaoIndex] === 1 ? 0 : 1;
-            sixYao[yaoIndex] = sixYao[yaoIndex] === 0 ? 1 : 0;
+           
             // 分為下卦和上卦
             const bianXiaYao = sixYao.slice(0, 2); // 初爻、二爻、三爻
             const bianShangYao = sixYao.slice(3, 5); // 四爻、五爻、上爻
