@@ -17,9 +17,10 @@
       --background-light: #f8f9fa;
       --text-dark: #343a40;
       --status-green: #4CAF50; /* 空箱 */
-      --status-orange: #FF9800; /* 七分滿 */
+      --status-orange: #FFC107; /* 三/七分滿 */
       --status-red: #F44336;   /* 滿箱 */
       --status-purple: #9C27B0; /* 異常 */
+      --link-color: #28a745; /* 連結顏色 */
     }
     
     body { font-family: 'Arial', 'Microsoft JhengHei', sans-serif; margin: 0; padding: 0; background-color: var(--background-light); color: var(--text-dark); }
@@ -28,7 +29,8 @@
     .nav-btn { flex-grow: 1; padding: 15px 0; border: none; background: none; font-size: 16px; cursor: pointer; color: var(--secondary-color); transition: color 0.3s; border-bottom: 3px solid transparent; }
     .nav-btn.active { color: var(--primary-color); font-weight: bold; border-bottom: 3px solid var(--primary-color); }
     
-    .content-container { padding: 20px; }
+    .container { max-width: 1200px; margin: auto; padding: 25px; }
+    .content-container { padding: 20px 0; }
     #map { height: 70vh; width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     
     .status-badge { display: inline-block; padding: 5px 10px; border-radius: 20px; color: white; font-weight: bold; font-size: 0.9em; }
@@ -37,9 +39,31 @@
     .status-3 { background-color: var(--status-red); }
     .status-4 { background-color: var(--status-purple); }
     
-    .bin-list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; margin-bottom: 10px; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .bin-name { font-weight: bold; font-size: 1.1em; }
-    .bin-address { font-size: 0.9em; color: var(--secondary-color); }
+    .location-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .location-card {
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: background-color 0.3s;
+    }
+    .location-card a {
+      text-decoration: none;
+      color: #333;
+      display: block;
+    }
+    
+    .location-card p { margin: 0; color: white; }
+    .location-card .bin-id { font-weight: bold; margin-bottom: 5px; }
+    .location-card .bin-name { font-size: 0.9em; line-height: 1.4; }
+    
+    .action-btn { background-color: var(--primary-color); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
+    .action-btn:hover { background-color: #0056b3; }
     
     .info-section h3 { color: var(--primary-color); border-left: 4px solid var(--primary-color); padding-left: 10px; }
     .info-section p, .info-section ul { line-height: 1.6; }
@@ -60,23 +84,25 @@
   </div>
 
   <div class="nav-bar">
-    <button class="nav-btn active" onclick="showSection('map-view')">地圖檢視</button>
-    <button class="nav-btn" onclick="showSection('list-view')">列表檢視</button>
+    <button class="nav-btn active" onclick="showSection('home-page')">首頁</button>
     <button class="nav-btn" onclick="showSection('recycle-guide')">回收指南</button>
     <button class="nav-btn" onclick="showSection('schedule')">回收車時間</button>
     <button class="nav-btn" onclick="showSection('my-points')">我的點數</button>
   </div>
 
-  <div class="content-container">
-    <div id="map-view">
+  <div class="container">
+    <div id="home-page" class="content-container">
+      <h3>回收箱位置與狀態</h3>
       <div id="map"></div>
+      
+      <div style="text-align: center; margin: 20px 0;">
+        <button class="action-btn" onclick="openAllLocations()">〔全部位置標示〕</button>
+      </div>
+
+      <div class="location-grid" id="locationGrid"></div>
     </div>
 
-    <div id="list-view" class="hidden">
-      <div id="bin-list"></div>
-    </div>
-    
-    <div id="recycle-guide" class="hidden info-section">
+    <div id="recycle-guide" class="hidden info-section content-container">
       <h3>可回收衣物種類</h3>
       <p>請將乾淨、完整的舊衣物投入回收箱，這些衣物將會被重新利用或回收製成其他產品。</p>
       <ul>
@@ -86,7 +112,7 @@
       <p>請確保衣物已清洗乾淨並裝袋，以保持回收箱內的整潔。</p>
     </div>
     
-    <div id="schedule" class="hidden info-section">
+    <div id="schedule" class="hidden info-section content-container">
       <h3>彰化縣福興鄉回收車時間</h3>
       <p>以下為部分地點的回收車時間參考，請以當地環保局公告為準。</p>
       <ul>
@@ -97,7 +123,7 @@
       <p>您也可以前往福興鄉公所網站查詢更詳細的回收路線與時間表。</p>
     </div>
     
-    <div id="my-points" class="hidden info-section">
+    <div id="my-points" class="hidden info-section content-container">
       <h3>我的環保點數</h3>
       <p>點數系統正在開發中，未來您可透過回收衣物累積點數，並兌換環保商品或合作商家的優惠券。</p>
       <p>當點數系統正式上線時，您只需掃描回收箱上的 QR Code，即可輕鬆累積點數。</p>
@@ -114,7 +140,7 @@
   </div>
   
   <script>
-    // 回收箱的經緯度與名稱資料
+    // 回收箱的經緯度與名稱資料，初始狀態為範例數據
     const boxLocations = [
       { id: 1, name: '沿海路四段 559 號（全家南環店旁）', lat: 24.0507, lng: 120.4195, status: 0 },
       { id: 2, name: '沿海路五段 363 號（全聯沿海店旁）', lat: 24.0495, lng: 120.4090, status: 1 },
@@ -144,11 +170,10 @@
 
     let map;
     const markers = {};
-    let activeSection = 'map-view';
     
     // 初始化地圖
     function initMap() {
-      map = L.map('map').setView([24.05, 120.43], 13); // 以彰化縣福興鄉為中心
+      map = L.map('map').setView([24.05, 120.43], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
@@ -160,8 +185,7 @@
     
     // 在地圖上新增標記點
     function addMarker(bin) {
-      const status = bin.status;
-      const binColor = statusInfo[status].color;
+      const binColor = statusInfo[bin.status].color;
       
       const iconHtml = `<div style="background-color: ${binColor}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.4);"></div>`;
       const customIcon = L.divIcon({ className: 'custom-div-icon', html: iconHtml });
@@ -189,29 +213,37 @@
     function closeModal(modalId) {
       document.getElementById(modalId).style.display = 'none';
     }
-    
-    // 渲染列表檢視
-    function renderBinList() {
-      const listContainer = document.getElementById('bin-list');
-      listContainer.innerHTML = '';
+
+    // 渲染列表
+    function renderLocationGrid() {
+      const grid = document.getElementById("locationGrid");
+      grid.innerHTML = '';
       boxLocations.forEach(bin => {
-        const binItem = document.createElement('div');
-        binItem.className = 'bin-list-item';
-        binItem.innerHTML = `
-          <div>
-            <div class="bin-name">回收箱 ${bin.id}</div>
-            <div class="bin-address">${bin.name}</div>
-          </div>
-          <div class="status-badge status-${bin.status}">${statusInfo[bin.status].name}</div>
+        const status = bin.status;
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${bin.lat},${bin.lng}`;
+        const card = document.createElement('div');
+        card.className = 'location-card';
+        card.style.backgroundColor = statusInfo[status].color;
+        card.innerHTML = `
+          <a href="${mapsUrl}" target="_blank">
+            <p class="bin-id">回收箱 ${bin.id}</p>
+            <p class="bin-name">${bin.name}</p>
+          </a>
         `;
-        binItem.addEventListener('click', () => showBinDetails(bin));
-        listContainer.appendChild(binItem);
+        grid.appendChild(card);
       });
+    }
+    
+    // 開啟所有位置的 Google 地圖
+    function openAllLocations() {
+      const locations = boxLocations.map(bin => `${bin.lat},${bin.lng}`).join('|');
+      const url = `https://www.google.com/maps/search/?api=1&query=${locations}`;
+      window.open(url, '_blank');
     }
 
     // 切換顯示區塊
     function showSection(sectionId) {
-      document.querySelectorAll('.content-container > div').forEach(section => {
+      document.querySelectorAll('.content-container').forEach(section => {
         section.classList.add('hidden');
       });
       document.getElementById(sectionId).classList.remove('hidden');
@@ -221,8 +253,8 @@
       });
       document.querySelector(`.nav-btn[onclick="showSection('${sectionId}')"]`).classList.add('active');
       
-      // 如果切換回地圖，重新調整地圖大小
-      if (sectionId === 'map-view' && map) {
+      // 如果切換回首頁，重新調整地圖大小
+      if (sectionId === 'home-page' && map) {
         setTimeout(() => { map.invalidateSize(); }, 300);
       }
     }
@@ -252,9 +284,9 @@
     }
     
     function updateBinStatus(boxId, newStatus) {
-      const binIndex = boxLocations.findIndex(bin => bin.id === boxId);
-      if (binIndex > -1) {
-        boxLocations[binIndex].status = newStatus;
+      const bin = boxLocations.find(b => b.id === boxId);
+      if (bin) {
+        bin.status = newStatus;
         
         // 更新地圖標記
         if (markers[boxId]) {
@@ -265,16 +297,14 @@
         }
         
         // 更新列表
-        if (!document.getElementById('list-view').classList.contains('hidden')) {
-            renderBinList();
-        }
+        renderLocationGrid();
       }
     }
 
     // 頁面載入時執行
     window.onload = function() {
       initMap();
-      renderBinList();
+      renderLocationGrid();
       connectMqtt();
       
       // 確保在任何地方點擊彈出視窗以外的區域都能關閉視窗
