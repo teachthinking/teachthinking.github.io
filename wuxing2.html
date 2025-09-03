@@ -506,16 +506,16 @@
         "BH,BH,BH": "初始平和，過程平穩，最終平穩。整體大吉。\n\n初平中平，末歸平靜\n四時和順，八節安康\n陰陽調和，萬物生長\n福壽雙全，吉祥如意"
         };
 
- // 八卦對應數字和爻象（從下到上）
+// 八卦對應數字和爻象（從下到上）
     const trigrams = {
-        1: {"name": "乾", "element": "金", "yao": [1, 1, 1]},
-        2: {"name": "兌", "element": "金", "yao": [0, 1, 1]},
-        3: {"name": "離", "element": "火", "yao": [1, 0, 1]},
-        4: {"name": "震", "element": "木", "yao": [0, 0, 1]},
-        5: {"name": "巽", "element": "木", "yao": [1, 1, 0]},
-        6: {"name": "坎", "element": "水", "yao": [0, 1, 0]},
-        7: {"name": "艮", "element": "土", "yao": [1, 0, 0]},
-        8: {"name": "坤", "element": "土", "yao": [0, 0, 0]}
+        1: {"name": "乾", "element": "金", "yao": [1, 1, 1]}, // 陽陽陽
+        2: {"name": "兌", "element": "金", "yao": [1, 1, 0]}, // 陽陽陰
+        3: {"name": "離", "element": "火", "yao": [1, 0, 1]}, // 陽陰陽
+        4: {"name": "震", "element": "木", "yao": [0, 0, 1]}, // 陰陰陽
+        5: {"name": "巽", "element": "木", "yao": [0, 1, 1]}, // 陰陽陽
+        6: {"name": "坎", "element": "水", "yao": [0, 1, 0]}, // 陰陽陰
+        7: {"name": "艮", "element": "土", "yao": [1, 0, 0]}, // 陽陰陰
+        8: {"name": "坤", "element": "土", "yao": [0, 0, 0]}  // 陰陰陰
     };
 
     // 五行生克關係
@@ -540,13 +540,16 @@
     // 計算互卦（正確算法）
     function calculateHuGua(benGua) {
         // 獲取本卦的六爻（下卦三爻 + 上卦三爻）
-        const xiaYao = trigrams[benGua.xia].yao; // 下卦三爻
-        const shangYao = trigrams[benGua.shang].yao; // 上卦三爻
-        const sixYao = [...xiaYao, ...shangYao]; // 六爻（從初爻到上爻）
+        const xiaYao = [...trigrams[benGua.xia].yao]; // 下卦三爻（從下到上）
+        const shangYao = [...trigrams[benGua.shang].yao]; // 上卦三爻（從下到上）
         
-        // 互卦的下卦：本卦的二、三、四爻
+        // 六爻排列：初爻(0)、二爻(1)、三爻(2)、四爻(3)、五爻(4)、上爻(5)
+        const sixYao = [...xiaYao, ...shangYao];
+        
+        // 互卦的下卦：本卦的二爻(1)、三爻(2)、四爻(3)
         const huXiaYao = [sixYao[1], sixYao[2], sixYao[3]];
-        // 互卦的上卦：本卦的三、四、五爻
+        
+        // 互卦的上卦：本卦的三爻(2)、四爻(3)、五爻(4)
         const huShangYao = [sixYao[2], sixYao[3], sixYao[4]];
         
         return {
@@ -560,16 +563,19 @@
         // 獲取本卦的六爻
         const xiaYao = [...trigrams[benGua.xia].yao]; // 下卦三爻（複製）
         const shangYao = [...trigrams[benGua.shang].yao]; // 上卦三爻（複製）
-        const sixYao = [...xiaYao, ...shangYao]; // 六爻（從初爻到上爻）
+        
+        // 六爻排列：初爻(0)、二爻(1)、三爻(2)、四爻(3)、五爻(4)、上爻(5)
+        const sixYao = [...xiaYao, ...shangYao];
         
         // 變爻（從1開始計數，對應數組索引要減1）
         const yaoIndex = movingYao - 1;
+        
         // 陰陽互變
         sixYao[yaoIndex] = sixYao[yaoIndex] === 1 ? 0 : 1;
         
         // 分為下卦和上卦
-        const bianXiaYao = sixYao.slice(0, 3);
-        const bianShangYao = sixYao.slice(3, 6);
+        const bianXiaYao = sixYao.slice(0, 3); // 初爻、二爻、三爻
+        const bianShangYao = sixYao.slice(3, 6); // 四爻、五爻、上爻
         
         return {
             shang: findTrigramByYao(bianShangYao),
@@ -596,7 +602,6 @@
         
         return "BH"; // 默認比和
     }
-
         document.addEventListener('DOMContentLoaded', function() {
             const calculateBtn = document.getElementById('calculate-btn');
             const randomBtn = document.getElementById('random-btn');
