@@ -341,7 +341,7 @@
                     
                     <div class="input-group">
                         <label for="hour">時辰（0-23）：</label>
-                        <input type="number" id="hour" min="0" max="23" value="22">
+                        <input type="number" id="hour" min="0" max="23" value="23">
                     </div>
                     
                     <button id="use-current-time">使用當前時間</button>
@@ -409,7 +409,7 @@
     </footer>
 
     <script>
-const interpretations = {
+        const interpretations = {
     "WS,WS,WS": "初始吉利，過程中得到幫助，最終結果吉利。整體大吉。\n\n乾坤和合福運開，\n貴人相助路途寬，\n順天應人成大業，\n吉星高照夢圓滿",
     "WS,WS,WK": "初始吉利，過程中得到幫助，最終結果凶險。整體小吉。\n\n初陽普照福運生，\n貴人相助路途平，\n末遇風波需謹慎，\n守正持中化險情",
     "WS,WS,SS": "初始吉利，過程中得到幫助，最終付出多收穫少。整體小吉。\n\n春風送暖百花香，\n貴人相助事業昌，\n勞多收少天道定，\n積善修德福綿長",
@@ -703,12 +703,24 @@ const interpretations = {
             history.forEach((record, index) => {
                 const item = document.createElement('div');
                 item.className = 'history-item';
-                item.textContent = `${record.date}: 本卦 ${record.benGua}, 互卦 ${record.huGua}, 變卦 ${record.bianGua}, 動爻 ${record.movingYao}`;
+                item.textContent = `${record.date}: 本卦 ${record.benGua} (${record.benGuaName}), 互卦 ${record.huGua} (${record.huGuaName}), 變卦 ${record.bianGua} (${record.bianGuaName}), 動爻 ${record.movingYao}`;
                 historyDiv.appendChild(item);
             });
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        async function loadGuaData() {
+            try {
+                const response = await fetch('hexagrams_data.json');
+                if (!response.ok) throw new Error('無法載入卦辭資料');
+                return await response.json();
+            } catch (error) {
+                console.error('載入卦辭失敗:', error);
+                return {};
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            const guaData = await loadGuaData();
             const calculateBtn = document.getElementById('calculate-btn');
             const randomBtn = document.getElementById('random-btn');
             const useCurrentTimeBtn = document.getElementById('use-current-time');
@@ -744,7 +756,7 @@ const interpretations = {
             calculateBtn.addEventListener('click', calculateDivination);
             randomBtn.addEventListener('click', generateRandomNumbers);
             
-            function calculateDivination() {
+            async function calculateDivination() {
                 const activeTab = document.querySelector('.method-tab.active').id;
                 let shangGua, xiaGua, movingYao, year, month, day;
                 
@@ -820,17 +832,25 @@ const interpretations = {
                     
                     const combinationKey = `${benRelation.key},${huRelation.key},${bianRelation.key}`;
                     
+                    const benGuaKey = `${benGua.shang},${benGua.xia}`;
+                    const huGuaKey = `${huGua.shang},${huGua.xia}`;
+                    const bianGuaKey = `${bianGua.shang},${bianGua.xia}`;
+                    
                     combinationDiv.textContent = `五行生克分析: ${benRelation.display}, ${huRelation.display}, ${bianRelation.display}`;
-                    interpretationDiv.textContent = interpretations[combinationKey] || "未找到對應的解卦解釋";
                     
-                    benGuaDiv.textContent = `${trigrams[benGua.shang].name}上${trigrams[benGua.xia].name}下 (${trigrams[benGua.shang].element}上${trigrams[benGua.xia].element}下)`;
-                    huGuaDiv.textContent = `${trigrams[huGua.shang].name}上${trigrams[huGua.xia].name}下 (${trigrams[huGua.shang].element}上${trigrams[huGua.xia].element}下)`;
-                    bianGuaDiv.textContent = `${trigrams[bianGua.shang].name}上${trigrams[bianGua.xia].name}下 (${trigrams[bianGua.shang].element}上${trigrams[bianGua.xia].element}下)`;
+                    let interpretationText = interpretations[combinationKey] || "未找到對應的五行解釋";
+                    interpretationText += "\n\n本卦辭: " + (guaData[hexagramNames[benGuaKey]]?.ci || "未找到本卦辭");
+                    interpretationText += "\n動爻解釋: " + (guaData[hexagramNames[benGuaKey]]?.yaoCi?.[movingYao - 1] || "未找到動爻解釋");
+                    interpretationText += "\n\n變卦辭: " + (guaData[hexagramNames[bianGuaKey]]?.ci || "未找到變卦辭");
+                    interpretationDiv.textContent = interpretationText;
                     
-                    // 繪製卦象
+                    benGuaDiv.textContent = `${hexagramNames[benGuaKey]} (${trigrams[benGua.shang].name}上${trigrams[benGua.xia].name}下, ${trigrams[benGua.shang].element}上${trigrams[benGua.xia].element}下)`;
+                    huGuaDiv.textContent = `${hexagramNames[huGuaKey]} (${trigrams[huGua.shang].name}上${trigrams[huGua.xia].name}下, ${trigrams[huGua.shang].element}上${trigrams[huGua.xia].element}下)`;
+                    bianGuaDiv.textContent = `${hexagramNames[bianGuaKey]} (${trigrams[bianGua.shang].name}上${trigrams[bianGua.xia].name}下, ${trigrams[bianGua.shang].element}上${trigrams[bianGua.xia].element}下)`;
+                    
                     const benBinary = [...trigrams[benGua.xia].yao, ...trigrams[benGua.shang].yao];
                     const huBinary = [...trigrams[huGua.xia].yao, ...trigrams[huGua.shang].yao];
-                    const bianBinary = [...trigrams[bianGua.xia].yao, ...trigrams[bianGua.shang].yao];
+                    const bianBinary = [...trigrams[bianGua.xia].yao, ...trigrams[bianGua.xia].yao];
                     drawHexagram('mainHexagram', benBinary, movingYao);
                     drawHexagram('mutualHexagram', huBinary, 0);
                     drawHexagram('changedHexagram', bianBinary, 0);
@@ -841,8 +861,11 @@ const interpretations = {
                     saveHistory({
                         date: new Date().toLocaleString(),
                         benGua: `${trigrams[benGua.shang].name}${trigrams[benGua.xia].name}`,
+                        benGuaName: hexagramNames[benGuaKey],
                         huGua: `${trigrams[huGua.shang].name}${trigrams[huGua.xia].name}`,
+                        huGuaName: hexagramNames[huGuaKey],
                         bianGua: `${trigrams[bianGua.shang].name}${trigrams[bianGua.xia].name}`,
+                        bianGuaName: hexagramNames[bianGuaKey],
                         movingYao: movingYao
                     });
                 }, 800);
