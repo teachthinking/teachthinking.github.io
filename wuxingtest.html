@@ -341,7 +341,7 @@
                     
                     <div class="input-group">
                         <label for="hour">時辰（0-23）：</label>
-                        <input type="number" id="hour" min="0" max="23" value="1">
+                        <input type="number" id="hour" min="0" max="23" value="22">
                     </div>
                     
                     <button id="use-current-time">使用當前時間</button>
@@ -411,18 +411,18 @@
     <script>
         const interpretations = {
             "WS,WS,WS": "初始吉利，過程中得到幫助，最終結果吉利。整體大吉。\n\n乾坤和合福運開，\n貴人相助路途寬，\n順天應人成大業，\n吉星高照夢圓滿",
-            // ... 其他 interpretations 內容與您提供的相同，此處省略以縮短程式碼 ...
+            "WS,WS,WK": "初始吉利，過程中得到幫助，最終結果凶險。整體小吉。\n\n初陽普照福運生，\n貴人相助路途平，\n末遇風波需謹慎，\n守正持中化險情",
             "BH,BH,BH": "初始平和，過程平穩，最終平穩。整體大吉。\n\n初平心靜福運長，\n中途平穩保安康，\n四時和順終無憂，\n福壽綿延樂無疆"
         };
 
         const trigrams = {
             1: {"name": "乾", "element": "金", "yao": [1, 1, 1]},
-            2: {"name": "兌", "element": "金", "yao": [0, 1, 1]},
+            2: {"name": "兌", "element": "金", "yao": [1, 1, 0]},
             3: {"name": "離", "element": "火", "yao": [1, 0, 1]},
             4: {"name": "震", "element": "木", "yao": [0, 0, 1]},
-            5: {"name": "巽", "element": "木", "yao": [0, 0, 1]},
+            5: {"name": "巽", "element": "木", "yao": [0, 1, 1]},
             6: {"name": "坎", "element": "水", "yao": [0, 1, 0]},
-            7: {"name": "艮", "element": "土", "yao": [1, 0, 0]},
+            7: {"name": "艮", "element": "土", "yao": [0, 0, 1]},
             8: {"name": "坤", "element": "土", "yao": [0, 0, 0]}
         };
 
@@ -547,11 +547,9 @@
                 ctx.strokeStyle = '#333';
                 
                 if (binary[i] === 1) {
-                    // 陽爻：實線
                     ctx.moveTo(20, y);
                     ctx.lineTo(width - 20, y);
                 } else {
-                    // 陰爻：斷線
                     ctx.moveTo(20, y);
                     ctx.lineTo(width / 2 - 10, y);
                     ctx.moveTo(width / 2 + 10, y);
@@ -559,7 +557,6 @@
                 }
                 ctx.stroke();
                 
-                // 標記動爻
                 if (movingYao === i + 1) {
                     ctx.beginPath();
                     ctx.arc(width - 10, y, 5, 0, 2 * Math.PI);
@@ -709,9 +706,9 @@
                     bianGuaDiv.textContent = `${trigrams[bianGua.shang].name}上${trigrams[bianGua.xia].name}下 (${trigrams[bianGua.shang].element}上${trigrams[bianGua.xia].element}下)`;
                     
                     // 繪製卦象
-                    const benBinary = [...trigrams[benGua.xia].yao, ...trigrams[benGua.shang].yao].reverse();
-                    const huBinary = [...trigrams[huGua.xia].yao, ...trigrams[huGua.shang].yao].reverse();
-                    const bianBinary = [...trigrams[bianGua.xia].yao, ...trigrams[bianGua.shang].yao].reverse();
+                    const benBinary = [...trigrams[benGua.xia].yao, ...trigrams[benGua.shang].yao];
+                    const huBinary = [...trigrams[huGua.xia].yao, ...trigrams[huGua.shang].yao];
+                    const bianBinary = [...trigrams[bianGua.xia].yao, ...trigrams[bianGua.shang].yao];
                     drawHexagram('mainHexagram', benBinary, movingYao);
                     drawHexagram('mutualHexagram', huBinary, 0);
                     drawHexagram('changedHexagram', bianBinary, 0);
