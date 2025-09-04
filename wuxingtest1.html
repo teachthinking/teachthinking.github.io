@@ -1,0 +1,208 @@
+<!DOCTYPE html><html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>梅花心易｜占卦筆記</title>
+  <style>
+    body { font-family: "Microsoft JhengHei", sans-serif; margin: 20px; background: #f7f7f7; }
+    h1 { text-align: center; color: #333; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background: #eee; }
+    textarea { width: 100%; height: 50px; }
+    select, input { width: 95%; padding: 5px; }
+    .controls { margin-top: 20px; text-align: center; }
+    button { margin: 5px; padding: 8px 15px; }
+    .summary { margin-top: 30px; padding: 15px; background: #fff; border: 1px solid #ccc; }
+    .explain { color: #666; font-size: 0.9em; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <h1>梅花心易｜占卦筆記</h1>  <table>
+    <thead>
+      <tr>
+        <th>卦位層次</th>
+        <th>體</th>
+        <th>用/互/變</th>
+        <th>五行關係代號</th>
+        <th>判斷簡要</th>
+      </tr>
+    </thead>
+    <tbody id="records">
+      <tr>
+        <td>本卦</td>
+        <td><input></td>
+        <td><input></td>
+        <td>
+          <select onchange="showExplain(this)">
+            <option value="">選擇</option>
+            <option>WS</option>
+            <option>WK</option>
+            <option>SS</option>
+            <option>SK</option>
+            <option>BH</option>
+          </select>
+          <div class="explain"></div>
+        </td>
+        <td><textarea></textarea></td>
+      </tr>
+      <tr>
+        <td>體互</td>
+        <td><input></td>
+        <td><input></td>
+        <td>
+          <select onchange="showExplain(this)">
+            <option value="">選擇</option>
+            <option>WS</option>
+            <option>WK</option>
+            <option>SS</option>
+            <option>SK</option>
+            <option>BH</option>
+          </select>
+          <div class="explain"></div>
+        </td>
+        <td><textarea></textarea></td>
+      </tr>
+      <tr>
+        <td>用互</td>
+        <td><input></td>
+        <td><input></td>
+        <td>
+          <select onchange="showExplain(this)">
+            <option value="">選擇</option>
+            <option>WS</option>
+            <option>WK</option>
+            <option>SS</option>
+            <option>SK</option>
+            <option>BH</option>
+          </select>
+          <div class="explain"></div>
+        </td>
+        <td><textarea></textarea></td>
+      </tr>
+      <tr>
+        <td>變卦</td>
+        <td><input></td>
+        <td><input></td>
+        <td>
+          <select onchange="showExplain(this)">
+            <option value="">選擇</option>
+            <option>WS</option>
+            <option>WK</option>
+            <option>SS</option>
+            <option>SK</option>
+            <option>BH</option>
+          </select>
+          <div class="explain"></div>
+        </td>
+        <td><textarea></textarea></td>
+      </tr>
+    </tbody>
+  </table>  <div class="controls">
+    <button onclick="saveData()">💾 儲存</button>
+    <button onclick="downloadCSV()">⬇️ 匯出 CSV</button>
+    <button onclick="downloadJSON()">⬇️ 匯出 JSON</button>
+    <button onclick="resetForm()">🧹 清除</button>
+  </div>  <div class="summary">
+    <h3>📌 判斷摘要</h3>
+    <p><b>當下狀態（本卦）：</b><span id="sum-ben"></span></p>
+    <p><b>過程（體互/用互）：</b><span id="sum-guo"></span></p>
+    <p><b>最終結果（變卦）：</b><span id="sum-bian"></span></p>
+    <p><b>整體結論：</b><span id="sum-all"></span></p>
+  </div>  <script>
+    const table = document.getElementById("records");
+
+    const explainMap = {
+      WS: "用生體，大吉，有助力。",
+      WK: "用克體，大凶，受壓制。",
+      SS: "體生用，耗泄，付出。",
+      SK: "體克用，辛苦，但有望成功。",
+      BH: "體用比和，平和，順利。"
+    };
+
+    function showExplain(sel) {
+      const value = sel.value;
+      const explainDiv = sel.parentNode.querySelector(".explain");
+      explainDiv.textContent = value ? explainMap[value] : "";
+      updateSummary();
+    }
+
+    function getData() {
+      const rows = [...table.querySelectorAll("tr")];
+      return rows.map(r => {
+        const inputs = r.querySelectorAll("input, select, textarea");
+        return {
+          卦位層次: r.cells[0].innerText,
+          體: inputs[0].value,
+          用互變: inputs[1].value,
+          代號: inputs[2].value,
+          判斷: inputs[3].value
+        };
+      });
+    }
+
+    function saveData() {
+      const data = getData();
+      localStorage.setItem("meihua", JSON.stringify(data));
+      updateSummary();
+      alert("已儲存至瀏覽器");
+    }
+
+    function loadData() {
+      const data = JSON.parse(localStorage.getItem("meihua") || "null");
+      if (!data) return;
+      const rows = [...table.querySelectorAll("tr")];
+      data.forEach((d, i) => {
+        const inputs = rows[i].querySelectorAll("input, select, textarea");
+        inputs[0].value = d.體;
+        inputs[1].value = d.用互變;
+        inputs[2].value = d.代號;
+        showExplain(inputs[2]);
+        inputs[3].value = d.判斷;
+      });
+      updateSummary();
+    }
+
+    function resetForm() {
+      localStorage.removeItem("meihua");
+      [...table.querySelectorAll("input, select, textarea")].forEach(el => el.value = "");
+      [...table.querySelectorAll(".explain")].forEach(el => el.textContent = "");
+      updateSummary();
+    }
+
+    function downloadCSV() {
+      const data = getData();
+      const header = Object.keys(data[0]).join(",");
+      const rows = data.map(d => Object.values(d).map(v => `"${v}"`).join(","));
+      const csv = [header, ...rows].join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "占卦筆記.csv";
+      link.click();
+    }
+
+    function downloadJSON() {
+      const data = getData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "占卦筆記.json";
+      link.click();
+    }
+
+    function updateSummary() {
+      const data = getData();
+      document.getElementById("sum-ben").innerText = data[0].判斷 || explainMap[data[0].代號] || data[0].代號;
+      document.getElementById("sum-guo").innerText =
+        (data[1].判斷 || explainMap[data[1].代號] || data[1].代號) + " / " +
+        (data[2].判斷 || explainMap[data[2].代號] || data[2].代號);
+      document.getElementById("sum-bian").innerText = data[3].判斷 || explainMap[data[3].代號] || data[3].代號;
+      document.getElementById("sum-all").innerText = "依序推斷後歸納整體吉凶。";
+    }
+
+    // 初始化載入
+    loadData();
+    table.addEventListener("input", updateSummary);
+  </script></body>
+</html>
