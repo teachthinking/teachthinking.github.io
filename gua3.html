@@ -592,17 +592,6 @@ const interpretations = {
             8: {"name": "坤", "element": "土", "yao": [0, 0, 0]}
         };
 
-        const hexagramNames = {
-            "1,1": "乾為天", "1,2": "天澤履", "1,3": "天火同人", "1,4": "天雷無妄", "1,5": "天風姤", "1,6": "天水訟", "1,7": "天山遁", "1,8": "天地否",
-            "2,1": "澤天夬", "2,2": "兌為澤", "2,3": "澤火革", "2,4": "澤雷隨", "2,5": "澤風大過", "2,6": "澤水困", "2,7": "澤山咸", "2,8": "澤地萃",
-            "3,1": "火天大有", "3,2": "火澤睽", "3,3": "離為火", "3,4": "火雷噬嗑", "3,5": "火風鼎", "3,6": "火水未濟", "3,7": "火山旅", "3,8": "火地晋",
-            "4,1": "雷天大壯", "4,2": "雷澤歸妹", "4,3": "雷火豐", "4,4": "震為雷", "4,5": "雷風恒", "4,6": "雷水解", "4,7": "雷山小過", "4,8": "雷地豫",
-            "5,1": "風天小畜", "5,2": "風澤中孚", "5,3": "風火家人", "5,4": "風雷益", "5,5": "巽為風", "5,6": "風水渙", "5,7": "風山漸", "5,8": "風地觀",
-            "6,1": "水天需", "6,2": "水澤節", "6,3": "水火既濟", "6,4": "水雷屯", "6,5": "水風井", "6,6": "坎為水", "6,7": "水山蹇", "6,8": "水地比",
-            "7,1": "山天大畜", "7,2": "山澤損", "7,3": "山火賁", "7,4": "山雷頤", "7,5": "山風蠱", "7,6": "山水蒙", "7,7": "艮為山", "7,8": "山地剝",
-            "8,1": "地天泰", "8,2": "地澤臨", "8,3": "地火明夷", "8,4": "地雷復", "8,5": "地風升", "8,6": "地水師", "8,7": "地山謙", "8,8": "坤為地"
-        };
-
         const elementRelations = {
             "金": { "克": "木", "生": "水", "被克": "火", "被生": "土" },
             "木": { "克": "土", "生": "火", "被克": "金", "被生": "水" },
@@ -765,7 +754,7 @@ const interpretations = {
 
         async function loadGuaData() {
             try {
-                const response = await fetch('gua_data.json');
+                const response = await fetch('hexagrams_data.json');
                 if (!response.ok) throw new Error('無法載入卦辭資料');
                 return await response.json();
             } catch (error) {
@@ -894,9 +883,9 @@ const interpretations = {
                     combinationDiv.textContent = `五行生克分析: ${benRelation.display}, ${huRelation.display}, ${bianRelation.display}`;
                     
                     let interpretationText = interpretations[combinationKey] || "未找到對應的五行解釋";
-                    interpretationText += "\n\n本卦辭: " + (guaData[benGuaKey]?.ci || "未找到本卦辭");
-                    interpretationText += "\n動爻解釋: " + (guaData[benGuaKey]?.yaoCi[movingYao - 1] || "未找到動爻解釋");
-                    interpretationText += "\n\n變卦辭: " + (guaData[bianGuaKey]?.ci || "未找到變卦辭");
+                    interpretationText += "\n\n本卦辭: " + (guaData[hexagramNames[benGuaKey]]?.ci || "未找到本卦辭");
+                    interpretationText += "\n動爻解釋: " + (guaData[hexagramNames[benGuaKey]]?.yaoCi?.[movingYao - 1] || "未找到動爻解釋");
+                    interpretationText += "\n\n變卦辭: " + (guaData[hexagramNames[bianGuaKey]]?.ci || "未找到變卦辭");
                     interpretationDiv.textContent = interpretationText;
                     
                     benGuaDiv.textContent = `${hexagramNames[benGuaKey]} (${trigrams[benGua.shang].name}上${trigrams[benGua.xia].name}下, ${trigrams[benGua.shang].element}上${trigrams[benGua.xia].element}下)`;
@@ -905,7 +894,7 @@ const interpretations = {
                     
                     const benBinary = [...trigrams[benGua.xia].yao, ...trigrams[benGua.shang].yao];
                     const huBinary = [...trigrams[huGua.xia].yao, ...trigrams[huGua.shang].yao];
-                    const bianBinary = [...trigrams[bianGua.xia].yao, ...trigrams[bianGua.shang].yao];
+                    const bianBinary = [...trigrams[bianGua.xia].yao, ...trigrams[bianGua.xia].yao];
                     drawHexagram('mainHexagram', benBinary, movingYao);
                     drawHexagram('mutualHexagram', huBinary, 0);
                     drawHexagram('changedHexagram', bianBinary, 0);
