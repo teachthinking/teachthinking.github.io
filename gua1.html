@@ -6,7 +6,7 @@
     <title>梅花心易卜卦與解卦程式</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        h1, h2 { text-align: center; }
+        h1, h2, h3, h4 { text-align: center; }
         .section { margin-bottom: 20px; }
         .tab { display: inline-block; padding: 10px; background: #f0f0f0; cursor: pointer; }
         .active { background: #ddd; }
@@ -14,8 +14,10 @@
         button { padding: 10px; margin: 10px; }
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-        .gua { font-size: 2em; text-align: center; }
-        .gua-symbol { font-size: 3em; }
+        .gua { text-align: center; margin: 10px; }
+        .gua-symbol { font-size: 2em; }
+        .gua-display { display: flex; justify-content: space-around; }
+        .analysis-section { margin: 15px 0; }
     </style>
 </head>
 <body>
@@ -68,17 +70,17 @@
         </div>
 
         <div id="time" class="tab-content" style="display: none;">
-            <label>年份：</label><input type="number" id="year" min="1900" max="2100"><br>
-            <label>月份：</label><input type="number" id="month" min="1" max="12"><br>
-            <label>日期：</label><input type="number" id="day" min="1" max="31"><br>
-            <label>時辰（0-23）：</label><input type="number" id="hour" min="0" max="23"><br>
+            <label>年份：</label><input type="number" id="year" min="1900" max="2100" placeholder="例如: 2025"><br>
+            <label>月份：</label><input type="number" id="month" min="1" max="12" placeholder="1-12"><br>
+            <label>日期：</label><input type="number" id="day" min="1" max="31" placeholder="1-31"><br>
+            <label>時辰（0-23）：</label><input type="number" id="hour" min="0" max="23" placeholder="0-23"><br>
             <button onclick="useCurrentTime()">使用當前時間</button>
         </div>
 
         <div id="number" class="tab-content" style="display: none;">
-            <label>第一個數字：</label><input type="number" id="num1"><br>
-            <label>第二個數字：</label><input type="number" id="num2"><br>
-            <label>第三個數字：</label><input type="number" id="num3"><br>
+            <label>第一個數字（1-1000）：</label><input type="number" id="num1" min="1" max="1000"><br>
+            <label>第二個數字（1-1000）：</label><input type="number" id="num2" min="1" max="1000"><br>
+            <label>第三個數字（1-6）：</label><input type="number" id="num3" min="1" max="6"><br>
         </div>
 
         <label>占問事項：</label>
@@ -99,7 +101,7 @@
         <h2>解卦結果</h2>
         <p id="result-message">請選擇取卦方式並點擊"開始卜卦"按鈕獲取結果</p>
 
-        <div id="gua-display" style="display: none; display: flex; justify-content: space-around;">
+        <div id="gua-display" class="gua-display" style="display: none;">
             <div class="gua">
                 <h4>本卦</h4>
                 <div id="main-gua-symbol" class="gua-symbol"></div>
@@ -181,32 +183,30 @@
         // 八卦數據
         const gua_names = [
             [], // 0
-            ['','乾為天','天澤履','天火同人','天雷無妄','天風姤','天水訟','天山遯','天地否'], // 上1 乾
-            ['','澤天夬','兌為澤','澤火革','澤雷隨','澤風大過','澤水困','澤山咸','澤地萃'], // 上2 兌
-            ['','火天大有','火澤睽','離為火','火雷噬嗑','火風鼎','火水未濟','火山旅','火地晉'], // 上3 離
-            ['','雷天大壯','雷澤歸妹','雷火豐','震為雷','雷風恆','雷水解','雷山小過','雷地豫'], // 上4 震
-            ['','風天小畜','風澤中孚','風火家人','風雷益','巽為風','風水渙','風山漸','風地觀'], // 上5 巽
-            ['','水天需','水澤節','水火既濟','水雷屯','水風井','坎為水','水山蹇','水地比'], // 上6 坎
-            ['','山天大畜','山澤損','山火賁','山雷頤','山風蠱','山水蒙','艮為山','山地剝'], // 上7 艮
-            ['','地天泰','地澤臨','地火明夷','地雷復','地風升','地水師','地山謙','坤為地']  // 上8 坤
+            ['', '乾為天', '天澤履', '天火同人', '天雷無妄', '天風姤', '天水訟', '天山遯', '天地否'], // 上1 乾
+            ['', '澤天夬', '兌為澤', '澤火革', '澤雷隨', '澤風大過', '澤水困', '澤山咸', '澤地萃'], // 上2 兌
+            ['', '火天大有', '火澤睽', '離為火', '火雷噬嗑', '火風鼎', '火水未濟', '火山旅', '火地晉'], // 上3 離
+            ['', '雷天大壯', '雷澤歸妹', '雷火豐', '震為雷', '雷風恆', '雷水解', '雷山小過', '雷地豫'], // 上4 震
+            ['', '風天小畜', '風澤中孚', '風火家人', '風雷益', '巽為風', '風水渙', '風山漸', '風地觀'], // 上5 巽
+            ['', '水天需', '水澤節', '水火既濟', '水雷屯', '水風井', '坎為水', '水山蹇', '水地比'], // 上6 坎
+            ['', '山天大畜', '山澤損', '山火賁', '山雷頤', '山風蠱', '山水蒙', '艮為山', '山地剝'], // 上7 艮
+            ['', '地天泰', '地澤臨', '地火明夷', '地雷復', '地風升', '地水師', '地山謙', '坤為地']  // 上8 坤
         ];
 
-        const gua_symbols = ['','☰','☱','☲','☳','☴','☵','☶','☷'];
-
-        const gua_elements = ['','金','金','火','木','木','水','土','土'];
-
-        const gua_chinese = ['','乾','兌','離','震','巽','坎','艮','坤'];
+        const gua_symbols = ['', '☰', '☱', '☲', '☳', '☴', '☵', '☶', '☷'];
+        const gua_elements = ['', '金', '金', '火', '木', '木', '水', '土', '土'];
+        const gua_chinese = ['', '乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
 
         const yao_struct = [
-            [], //0
-            [1,1,1], //1 乾
-            [0,1,1], //2 兌
-            [1,0,1], //3 離
-            [0,0,1], //4 震 注意: 從下到上, 初爻是[0]
-            [1,0,0], //5 巽
-            [0,1,0], //6 坎
-            [1,1,0], //7 艮
-            [0,0,0]  //8 坤
+            [], // 0
+            [1,1,1], // 1 乾
+            [0,1,1], // 2 兌
+            [1,0,1], // 3 離
+            [0,0,1], // 4 震
+            [1,0,0], // 5 巽
+            [0,1,0], // 6 坎
+            [1,1,0], // 7 艮
+            [0,0,0]  // 8 坤
         ];
 
         // 顯示選項卡
@@ -229,36 +229,35 @@
         // 計算卦號
         function getGuaNum(num) {
             let gua = num % 8;
-            if (gua === 0) gua = 8;
-            return gua;
+            return gua === 0 ? 8 : gua;
         }
 
         // 計算動爻
         function getYaoNum(num) {
             let yao = num % 6;
-            if (yao === 0) yao = 6;
-            return yao;
+            return yao === 0 ? 6 : yao;
         }
 
-        // 获取本卦爻結構 [0]初爻 to [5]上爻
+        // 獲取本卦爻結構（從下到上：初爻到上爻）
         function getYaoArray(upper, lower) {
-            const lower_yao = yao_struct[lower].slice().reverse(); // 下卦爻從下到上
-            const upper_yao = yao_struct[upper].slice().reverse(); // 上卦爻從下到上
-            return [...lower_yao, ...upper_yao]; // 0:初,1:二,2:三,3:四,4:五,5:上
+            const lower_yao = yao_struct[lower].slice(); // 下卦爻
+            const upper_yao = yao_struct[upper].slice(); // 上卦爻
+            return [...lower_yao, ...upper_yao]; // [0,1,2,3,4,5] = [初,二,三,四,五,上]
         }
 
         // 獲取互卦
         function getMutualGua(yao_array) {
+            // 互卦：下卦取二三四爻，上卦取三四五爻
             const mutual_lower_yao = [yao_array[1], yao_array[2], yao_array[3]]; // 二三四
             const mutual_upper_yao = [yao_array[2], yao_array[3], yao_array[4]]; // 三四五
-            const mutual_lower = findGuaNum(mutual_lower_yao.reverse()); // reverse to match struct
-            const mutual_upper = findGuaNum(mutual_upper_yao.reverse());
-            return {upper: mutual_upper, lower: mutual_lower};
+            const mutual_lower = findGuaNum(mutual_lower_yao);
+            const mutual_upper = findGuaNum(mutual_upper_yao);
+            return { upper: mutual_upper, lower: mutual_lower };
         }
 
-        // 找卦數 from yao [bottom,mid,top]
+        // 查找卦號
         function findGuaNum(yao) {
-            for (let i=1; i<=8; i++) {
+            for (let i = 1; i <= 8; i++) {
                 if (yao_struct[i][0] === yao[0] && yao_struct[i][1] === yao[1] && yao_struct[i][2] === yao[2]) {
                     return i;
                 }
@@ -268,12 +267,13 @@
 
         // 獲取變卦
         function getChangedGua(yao_array, change_yao) {
-            yao_array[change_yao - 1] = 1 - yao_array[change_yao - 1]; // 翻轉
-            const changed_lower_yao = [yao_array[0], yao_array[1], yao_array[2]];
-            const changed_upper_yao = [yao_array[3], yao_array[4], yao_array[5]];
+            const new_yao = [...yao_array];
+            new_yao[change_yao - 1] = 1 - new_yao[change_yao - 1]; // 翻轉動爻
+            const changed_lower_yao = [new_yao[0], new_yao[1], new_yao[2]];
+            const changed_upper_yao = [new_yao[3], new_yao[4], new_yao[5]];
             const changed_lower = findGuaNum(changed_lower_yao);
             const changed_upper = findGuaNum(changed_upper_yao);
-            return {upper: changed_upper, lower: changed_lower};
+            return { upper: changed_upper, lower: changed_lower };
         }
 
         // 五行生克
@@ -300,28 +300,21 @@
 
         // 旺相休囚死
         function getWangXiang(element, month) {
-            // 簡化: 1-2冬,3-5春,6-8夏,9-11秋,12冬
-            let season = '';
-            if (month === 12 || month === 1 || month === 2) season = '冬';
-            else if (month >= 3 && month <= 5) season = '春';
-            else if (month >= 6 && month <= 8) season = '夏';
-            else if (month >= 9 && month <= 11) season = '秋';
-
+            const season = month === 12 || month === 1 || month === 2 ? '冬' :
+                           month >= 3 && month <= 5 ? '春' :
+                           month >= 6 && month <= 8 ? '夏' : '秋';
             const wangxiang = {
                 '春': { '木': '旺', '火': '相', '水': '休', '金': '囚', '土': '死' },
                 '夏': { '火': '旺', '土': '相', '木': '休', '水': '囚', '金': '死' },
                 '秋': { '金': '旺', '水': '相', '土': '休', '火': '囚', '木': '死' },
                 '冬': { '水': '旺', '木': '相', '金': '休', '土': '囚', '火': '死' }
             };
-            return wangxiang[season] ? wangxiang[season][element] || '未知' : '未知';
+            return wangxiang[season][element] || '未知';
         }
-
-        // 獲取月從輸入或當前
-        let current_month = new Date().getMonth() + 1;
 
         // 開始卜卦
         function startDivination() {
-            let upper, lower, change_yao, month = current_month;
+            let upper, lower, change_yao, month = new Date().getMonth() + 1;
             const active_tab = document.querySelector('.tab.active').innerText;
 
             if (active_tab === '直接取卦') {
@@ -333,7 +326,7 @@
                 month = parseInt(document.getElementById('month').value) || 0;
                 const day = parseInt(document.getElementById('day').value) || 0;
                 const hour = parseInt(document.getElementById('hour').value) || 0;
-                if (!year || !month || !day || !hour) return alert('請輸入完整時間');
+                if (!year || !month || !day || hour < 0) return alert('請輸入完整時間');
                 const sum1 = year + month + day;
                 const sum2 = sum1 + hour;
                 upper = getGuaNum(sum1);
@@ -346,12 +339,13 @@
                 if (!num1 || !num2 || !num3) return alert('請輸入三個數字');
                 upper = getGuaNum(num1);
                 lower = getGuaNum(num2);
-                change_yao = getYaoNum(num1 + num2 + num3);
+                change_yao = getYaoNum(num3);
             }
 
+            // 計算卦象
             const yao_array = getYaoArray(upper, lower);
             const mutual = getMutualGua(yao_array);
-            const changed = getChangedGua(yao_array.slice(), change_yao); // copy array
+            const changed = getChangedGua(yao_array, change_yao);
 
             // 顯示卦象
             document.getElementById('gua-display').style.display = 'flex';
@@ -359,62 +353,61 @@
             document.getElementById('result-message').style.display = 'none';
 
             document.getElementById('main-gua-symbol').innerHTML = gua_symbols[upper] + '<br>' + gua_symbols[lower];
-            document.getElementById('main-gua-name').innerText = gua_names[upper][lower] + ' (' + gua_chinese[upper] + gua_chinese[lower] + ')';
+            document.getElementById('main-gua-name').innerText = gua_names[upper][lower] + ` (${gua_chinese[upper]}${gua_chinese[lower]})`;
 
             document.getElementById('mutual-gua-symbol').innerHTML = gua_symbols[mutual.upper] + '<br>' + gua_symbols[mutual.lower];
-            document.getElementById('mutual-gua-name').innerText = gua_names[mutual.upper][mutual.lower] + ' (' + gua_chinese[mutual.upper] + gua_chinese[mutual.lower] + ')';
+            document.getElementById('mutual-gua-name').innerText = gua_names[mutual.upper][mutual.lower] + ` (${gua_chinese[mutual.upper]}${gua_chinese[mutual.lower]})`;
 
             document.getElementById('changed-gua-symbol').innerHTML = gua_symbols[changed.upper] + '<br>' + gua_symbols[changed.lower];
-            document.getElementById('changed-gua-name').innerText = gua_names[changed.upper][changed.lower] + ' (' + gua_chinese[changed.upper] + gua_chinese[changed.lower] + ')';
+            document.getElementById('changed-gua-name').innerText = gua_names[changed.upper][changed.lower] + ` (${gua_chinese[changed.upper]}${gua_chinese[changed.lower]})`;
 
-            // 體用: 下體上用
+            // 五行與生克
             const body_el = gua_elements[lower];
             const use_el = gua_elements[upper];
             const shengke = getShengKe(body_el, use_el);
             const jixiong = getJiXiong(shengke);
-
-            // 旺相
             const body_wang = getWangXiang(body_el, month);
             const use_wang = getWangXiang(use_el, month);
 
-            // 填充解讀 (簡單示例，實際可擴展)
-            document.getElementById('gua-detail').innerText = `本卦${gua_names[upper][lower]}，象徵...`; // 擴展
-            document.getElementById('wuxing-detail').innerText = `體卦五行：${body_el}，用卦五行：${use_el}，生克：${shengke}`;
-            document.getElementById('wangxiang-detail').innerText = `體卦${body_wang}，用卦${use_wang}`;
-            document.getElementById('dongyao-detail').innerText = `動爻在${change_yao}位，象徵變化...`;
-            document.getElementById('gua-combo').innerText = `本互變組合分析...`;
-            document.getElementById('response-scope').innerText = `適合${document.getElementById('question_type').value}事項`;
-            document.getElementById('life-advice').innerText = `處世建議：根據${jixiong}...`;
-            document.getElementById('response-period').innerText = `應期約在動爻相關時間...`;
+            // 填充解讀（簡化示例，實際需根據易經卦辭擴展）
+            document.getElementById('gua-detail').innerText = `本卦${gua_names[upper][lower]}，象徵${gua_chinese[upper]}在上${gua_chinese[lower]}在下，代表特定意象（請參考易經卦辭）。`;
+            document.getElementBy-Id('wuxing-detail').innerText = `體卦（下卦）：${body_el}，用卦（上卦）：${use_el}，生克關係：${shengke}。`;
+            document.getElementById('wangxiang-detail').innerText = `體卦旺相：${body_wang}，用卦旺相：${use_wang}。`;
+            document.getElementById('dongyao-detail').innerText = `動爻在第${change_yao}爻，代表變化點，需關注此爻的意象。`;
+            document.getElementById('gua-combo').innerText = `本卦${gua_names[upper][lower]}，互卦${gua_names[mutual.upper][mutual.lower]}，變卦${gua_names[changed.upper][changed.lower]}，組合反映事態進展。`;
+            document.getElementById('response-scope').innerText = `適合占問${document.getElementById('question_type').value}，結果受動爻與生克影響。`;
+            document.getElementById('life-advice').innerText = `處世建議：根據${jixiong}，宜謹慎行事，順應${shengke}之勢。`;
+            document.getElementById('response-period').innerText = `應期約在動爻${change_yao}相關的時間範圍，需結合實際情況判斷。`;
 
-            // 表格
+            // 五行生克分析表
             const tableBody = document.querySelector('#wuxing-table tbody');
             tableBody.innerHTML = '';
-            const row = document.createElement('tr');
-            row.innerHTML = `<td>本卦</td><td>${body_el}/${use_el}</td><td>${shengke}</td><td>${jixiong}</td><td>${body_wang}/${use_wang}</td>`;
-            tableBody.appendChild(row);
-            // 添加更多行 if needed
+            const row = `<tr>
+                <td>本卦</td>
+                <td>${body_el}/${use_el}</td>
+                <td>${shengke}</td>
+                <td>${jixiong}</td>
+                <td>${body_wang}/${use_wang}</td>
+            </tr>`;
+            tableBody.innerHTML = row;
 
-            // 歷史
+            // 添加歷史
             addToHistory(`${gua_names[upper][lower]} - ${document.getElementById('question_type').value}`);
         }
 
         // 隨機卜卦
         function randomDivination() {
-            const upper = Math.floor(Math.random() * 8) + 1;
-            const lower = Math.floor(Math.random() * 8) + 1;
-            const change_yao = Math.floor(Math.random() * 6) + 1;
-            document.getElementById('upper_gua').value = upper;
-            document.getElementById('lower_gua').value = lower;
-            document.getElementById('change_yao').value = change_yao;
+            document.getElementById('upper_gua').value = Math.floor(Math.random() * 8) + 1;
+            document.getElementById('lower_gua').value = Math.floor(Math.random() * 8) + 1;
+            document.getElementById('change_yao').value = Math.floor(Math.random() * 6) + 1;
             showTab('direct');
             startDivination();
         }
 
-        // 歷史
+        // 歷史記錄
         function addToHistory(entry) {
             const li = document.createElement('li');
-            li.innerText = new Date().toLocaleString() + ' - ' + entry;
+            li.innerText = `${new Date().toLocaleString()} - ${entry}`;
             document.getElementById('history-list').appendChild(li);
         }
 
