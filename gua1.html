@@ -12,7 +12,7 @@
             padding: 0;
             font-family: "Microsoft YaHei", "Heiti TC", sans-serif;
         }
-        
+
         body {
             background-color: #f9f5eb;
             color: #333;
@@ -21,7 +21,7 @@
             max-width: 1000px;
             margin: 0 auto;
         }
-        
+
         header {
             text-align: center;
             margin-bottom: 30px;
@@ -31,26 +31,26 @@
             color: #fff;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-        
+
         h1 {
             font-size: 2.2rem;
             margin-bottom: 10px;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
         }
-        
+
         .description {
             font-size: 1.1rem;
             margin-bottom: 20px;
             color: #f0e6d2;
         }
-        
+
         .container {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
             margin-bottom: 30px;
         }
-        
+
         .divination-section {
             flex: 1;
             min-width: 300px;
@@ -59,7 +59,7 @@
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         }
-        
+
         .result-section {
             flex: 2;
             min-width: 300px;
@@ -68,32 +68,32 @@
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         }
-        
+
         h2 {
             color: #8e7d5b;
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 2px solid #e8dbc5;
         }
-        
+
         h3 {
             color: #a94438;
             margin-top: 15px;
             margin-bottom: 10px;
             font-size: 1.2rem;
         }
-        
+
         .input-group {
             margin-bottom: 20px;
         }
-        
+
         label {
             display: block;
             margin-bottom: 8px;
             font-weight: bold;
             color: #666;
         }
-        
+
         input, select {
             width: 100%;
             padding: 12px;
@@ -101,7 +101,7 @@
             border-radius: 5px;
             font-size: 1rem;
         }
-        
+
         button {
             display: block;
             width: 100%;
@@ -115,35 +115,35 @@
             transition: all 0.3s ease;
             margin-top: 10px;
         }
-        
+
         button:hover {
             background: linear-gradient(135deg, #7a6b4e 0%, #b09868 100%);
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
-        
+
         .random-btn {
             background: linear-gradient(135deg, #6b7d8e 0%, #7a9cc9 100%);
         }
-        
+
         .random-btn:hover {
             background: linear-gradient(135deg, #5b6b7a 0%, #6888b0 100%);
         }
-        
+
         .result-content {
             padding: 20px;
             background-color: #f8f4e9;
             border-radius: 8px;
             min-height: 200px;
         }
-        
+
         .combination {
             font-weight: bold;
             color: #8e7d5b;
             margin-bottom: 15px;
             font-size: 1.2rem;
         }
-        
+
         .interpretation {
             font-size: 1.1rem;
             line-height: 1.8;
@@ -153,20 +153,20 @@
             border-radius: 4px;
             white-space: pre-line;
         }
-        
+
         .loading {
             text-align: center;
             padding: 40px;
             color: #8e7d5b;
         }
-        
+
         .gua-info {
             display: flex;
             justify-content: space-between;
             margin-top: 20px;
             flex-wrap: wrap;
         }
-        
+
         .gua-item {
             flex: 1;
             min-width: 150px;
@@ -176,43 +176,43 @@
             background: #f3eee2;
             border-radius: 8px;
         }
-        
+
         .gua-title {
             font-weight: bold;
             color: #8e7d5b;
             margin-bottom: 10px;
         }
-        
+
         .gua-value {
             font-size: 1.3rem;
             font-weight: bold;
         }
-        
+
         footer {
             text-align: center;
             margin-top: 40px;
             color: #888;
             font-size: 0.9rem;
         }
-        
+
         .method-selector {
             margin-bottom: 20px;
         }
-        
+
         .method-tab {
             display: none;
         }
-        
+
         .method-tab.active {
             display: block;
         }
-        
+
         .tab-buttons {
             display: flex;
             margin-bottom: 15px;
             border-bottom: 1px solid #e8dbc5;
         }
-        
+
         .tab-btn {
             padding: 10px 15px;
             background: #f3eee2;
@@ -223,12 +223,12 @@
             font-weight: bold;
             color: #8e7d5b;
         }
-        
+
         .tab-btn.active {
             background: #8e7d5b;
             color: white;
         }
-        
+
         /* gua.html CSS */
         .hexagram-container {
             display: flex;
@@ -264,7 +264,7 @@
             border-radius: 50%;
             margin-left: 8px;
         }
-        
+
         .table-container {
             overflow-x: auto;
             margin-top: 20px;
@@ -281,11 +281,11 @@
         th {
             background-color: #f3eee2;
         }
-        
+
         .hidden {
             display: none;
         }
-        
+
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -307,18 +307,18 @@
         <h1>梅花心易卜卦與解卦系統</h1>
         <p class="description">根據五行生克關係，解析卦象的吉凶變化</p>
     </header>
-    
+
     <div class="container">
         <section class="divination-section">
             <h2>卜卦區</h2>
-            
+
             <div class="method-selector">
                 <div class="tab-buttons">
                     <button class="tab-btn active" data-tab="direct">直接取卦</button>
                     <button class="tab-btn" data-tab="time">時間取卦</button>
                     <button class="tab-btn" data-tab="number">數字取卦</button>
                 </div>
-                
+
                 <div class="method-tab active" id="direct-tab">
                     <div class="input-group">
                         <label for="shang-gua">上卦（1-8）：</label>
@@ -333,7 +333,7 @@
                             <option value="8">8 - 坤卦 (土)</option>
                         </select>
                     </div>
-                    
+
                     <div class="input-group">
                         <label for="xia-gua">下卦（1-8）：</label>
                         <select id="xia-gua">
@@ -347,7 +347,7 @@
                             <option value="8">8 - 坤卦 (土)</option>
                         </select>
                     </div>
-                    
+
                     <div class="input-group">
                         <label for="moving-yao">變爻（1-6）：</label>
                         <select id="moving-yao">
@@ -360,53 +360,53 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="method-tab" id="time-tab">
                     <div class="input-group">
                         <label for="year">年份：</label>
                         <input type="number" id="year" min="1900" max="2100" value="2025">
                     </div>
-                    
+
                     <div class="input-group">
                         <label for="month">月份：</label>
                         <input type="number" id="month" min="1" max="12" value="9">
                     </div>
-                    
+
                     <div class="input-group">
                         <label for="day">日期：</label>
                         <input type="number" id="day" min="1" max="31" value="4">
                     </div>
-                    
+
                     <div class="input-group">
                         <label for="hour">時辰（0-23）：</label>
                         <input type="number" id="hour" min="0" max="23" value="1">
                     </div>
-                    
+
                     <button id="use-current-time">使用當前時間</button>
                 </div>
-                
+
                 <div class="method-tab" id="number-tab">
                     <div class="input-group">
                         <label for="number1">第一個數字（1-1000）：</label>
                         <input type="number" id="number1" min="1" max="1000" value="35">
                     </div>
-                    
+
                     <div class="input-group">
                         <label for="number2">第二個數字（1-1000）：</label>
                         <input type="number" id="number2" min="1" max="1000" value="48">
                     </div>
-                    
+
                     <div class="input-group">
                         <label for="number3">第三個數字（1-6）：</label>
                         <input type="number" id="number3" min="1" max="6" value="6">
                     </div>
                 </div>
             </div>
-            
+
             <button id="calculate-btn">開始卜卦</button>
             <button id="random-btn" class="random-btn">隨機卜卦</button>
         </section>
-        
+
         <section class="result-section">
             <h2>解卦結果</h2>
             <div class="result-content">
@@ -430,7 +430,7 @@
                             <div class="gua-value" id="bian-gua"></div>
                         </div>
                     </div>
-                    
+
                     <h3>五行生克分析表</h3>
                     <div class="table-container">
                         <table>
@@ -446,44 +446,44 @@
                             <tbody id="fiveElementTable"></tbody>
                         </table>
                     </div>
-                    
+
                     <h3>卦象深度解讀</h3>
                     <div class="interpretation" id="interpretation"></div>
                     <p id="guaCi"></p>
-                    
+
                     <h3>五行生克詳解</h3>
                     <div id="fiveElements"></div>
-                    
+
                     <h3>旺相休囚死分析</h3>
                     <div id="seasonalAnalysis"></div>
-                    
+
                     <h3>動爻分析</h3>
                     <div id="movingYao"></div>
-                    
+
                     <h3>卦象組合</h3>
                     <div id="guaCombination"></div>
-                    
+
                     <h3>應事範圍</h3>
                     <div id="application"></div>
-                    
+
                     <h3>處世之道</h3>
                     <div id="suggestion"></div>
-                    
+
                     <h3>應期分析</h3>
                     <div id="prediction"></div>
                 </div>
             </div>
         </section>
     </div>
-    
+
     <div id="history-section" class="divination-section hidden">
         <h2>卜卦歷史</h2>
         <div id="historyList"></div>
         <button id="clear-history-btn">清除歷史</button>
     </div>
-    
+
     <button id="show-history-btn" style="width: 200px; margin: 20px auto;">查看歷史紀錄</button>
-    
+
     <footer>
         <p>梅花心易卜卦程式 &copy; 2024 - 傳承千年智慧，僅供參考</p>
     </footer>
@@ -559,7 +559,7 @@
         const interpretations = {
             "WS,WS,WS": "初始吉利，過程中得到幫助，最終結果吉利。整體大吉。\n\n乾坤和合福運開，\n貴人相助路途寬，\n順天應人成大業，\n吉星高照夢圓滿",
             "WS,WS,WK": "初始吉利，過程中得到幫助，最終結果凶險。整體小吉。\n\n初陽普照福運生，\n貴人相助路途平，\n末遇風波需謹慎，\n守正持中化險情",
-            "WS,WS,SS": "初始吉利，過程中得到幫助，最終付出多收穫少。整體小吉。\n\n春風送暖百花香，\n貴人相助事業昌，\n勞多收少天道定，\n積善修德福綿長",
+            "WS,WS,SS": "初始吉利，過程中付出多收穫少，最終付出多收穫少。整體小吉。\n\n春風送暖百花香，\n貴人相助事業昌，\n勞多收少天道定，\n積善修德福綿長",
             "WS,WS,SK": "初始吉利，過程中得到幫助，最終通過努力成功。整體大吉。\n\n初得吉祥福氣濃，\n貴人攜手路途通，\n自強不息終成業，\n鵬程萬里志高鴻",
             "WS,WS,BH": "初始吉利，過程中得到幫助，最終平穩。整體大吉。\n\n紫氣東來福滿堂，\n貴人相助保安康，\n平穩安泰終無憂，\n福壽綿延樂無疆",
             "WS,WK,WS": "初始吉利，過程中遇到阻礙，最終結果吉利。整體小吉。\n\n初陽升起福運新，\n中途坎坷試志真，\n否極泰來終獲吉，\n破繭成蝶展宏圖",
@@ -574,7 +574,7 @@
             "WS,SS,BH": "初始吉利，過程中付出努力，最終平穩。整體小吉。\n\n初陽吉利福運濃，\n中途勤勉志更宏，\n平穩安泰終無憂，\n知足常樂壽康寧",
             "WS,SK,WS": "初始吉利，過程中克服困難，最終結果吉利。整體大吉。\n\n初吉福運啟宏圖，\n披荊斬棘志不渝，\n終獲坦途成大業，\n勇智雙全名四方",
             "WS,SK,WK": "初始吉利，過程中克服困難，最終結果凶險。整體小吉。\n\n初陽吉利福運開，\n中途克難志不摧，\n末路艱辛宜慎行，\n守正不阿待春來",
-            "WS,SK,SS": "初始吉利，過程中克服困難，最終付出多收穫少。整體小吉。\n\n初吉福運啟新程，\n中克險阻志堅定，\n勞多收少天理明，\n積少成多福自生",
+            "WS,SK,SS": "初始吉利，過程中克服困難，最終付出多收穫少。整體小吉。\n\n初吉福運啟新程，\n中克險阻志堅定，\n勞多收少天道在，\n積少成多福自生",
             "WS,SK,SK": "初始吉利，過程中克服困難，最終通過努力成功。整體大吉。\n\n初吉福運開新篇，\n千錘百煉志彌堅，\n自強不息終成業，\n風雨過後彩虹妍",
             "WS,SK,BH": "初始吉利，過程中克服困難，最終平穩。整體大吉。\n\n初吉福運啟宏圖，\n中克艱難志不渝，\n平穩安泰終無憂，\n陰陽平衡壽康寧",
             "WS,BH,WS": "初始吉利，過程平穩，最終結果吉利。整體大吉。\n\n初陽吉利福運長，\n中途平穩志安康，\n順水行舟終獲吉，\n福澤綿延萬事昌",
@@ -594,7 +594,7 @@
             "WK,WK,BH": "初始凶險，過程中遇到阻礙，最終平穩。整體小凶。\n\n初逢凶險心多憂，\n中途坎坷志難酬，\n平穩安泰終無恙，\n守正持中保安康",
             "WK,SS,WS": "初始凶險，過程中付出努力，最終結果吉利。整體小凶。\n\n初逢凶險志不餒，\n中途勤奮志彌堅，\n否極泰來終獲吉，\n天道酬勤福自來",
             "WK,SS,WK": "初始凶險，過程中付出努力，最終結果凶險。整體大凶。\n\n初逢凶險心多憂，\n中途勞苦志不休，\n末路多艱宜慎行，\n退避三舍保平安",
-            "WK,SS,SS": "初始凶險，過程中付出努力，最終付出多收穫少。整體大凶。\n\n初逢凶險路難行，\n中途勞碌事難成，\n勞多收少天理在，\n韜光養晦待時清",
+            "WK,SS,SS": "初始凶險，過程中付出努力，最終付出多收穫少。整體大凶。\n\n初逢凶險路難行，\n中途勞碌事難成，\n勞多收少天道在，\n韜光養晦待時清",
             "WK,SS,SK": "初始凶險，過程中付出努力，最終通過努力成功。整體小凶。\n\n初逢凶險志不移，\n中途奮鬥勇前行，\n自強不息終成業，\n功成名就福壽全",
             "WK,SS,BH": "初始凶險，過程中付出努力，最終平穩。整體小凶。\n\n初逢凶險心不驚，\n中途勤勉志不休，\n平穩安泰終無憂，\n守正持中保安康",
             "WK,SK,WS": "初始凶險，過程中克服困難，最終結果吉利。整體小吉。\n\n初逢凶險路難行，\n中途克難志更堅，\n否極泰來終獲吉，\n風雨過後彩虹妍",
@@ -659,7 +659,7 @@
             "SK,BH,BH": "初始通過努力成功，過程平穩，最終平穩。整體小吉。\n\n初經磨礪志不移，\n中途平穩路坦然，\n平穩安泰終無憂，\n陰陽平衡壽康寧",
             "BH,WS,WS": "初始平穩，過程中得到幫助，最終結果吉利。整體大吉。\n\n初行安泰路坦然，\n貴人相助福自來，\n順水行舟終獲吉，\n功成名就福壽全",
             "BH,WS,WK": "初始平穩，過程中得到幫助，最終結果凶險。整體小吉。\n\n初行安泰路坦然，\n貴人相助福自來，\n末路多艱宜慎行，\n退避三舍保平安",
-            "BH,WS,SS": "初始平穩，過程中得到幫助，最終付出多收穫少。整體小吉。\n\n初行安泰路坦然，\n貴人相助福自來，\n勞多收少天道在，\n知足常樂福自來",
+            "BH,WS,SS": "初始平穩，過程中得到幫助，最終付出多收穫少。整體小吉。\n\n初行安泰路坦然，\n貴人相助福自來，\n勞多收少天道在，\n知足常樂福自生",
             "BH,WS,SK": "初始平穩，過程中得到幫助，最終通過努力成功。整體大吉。\n\n初行安泰路坦然，\n貴人相助福自來，\n自強不息終成業，\n功成名就福壽全",
             "BH,WS,BH": "初始平穩，過程中得到幫助，最終平穩。整體大吉。\n\n初行安泰路坦然，\n貴人相助福自來，\n平穩安泰終無憂，\n陰陽平衡壽康寧",
             "BH,WK,WS": "初始平穩，過程中遇到阻礙，最終結果吉利。整體小吉。\n\n初行安泰路坦然，\n中途坎坷路難行，\n否極泰來終獲吉，\n磨礪心志得新生",
@@ -768,7 +768,7 @@
                 
                 showLoading();
                 setTimeout(() => {
-                    const benGua = guaTable[shangGua].name + '上' + guaTable[xiaGua].name + '下';
+                    const benGuaName = guaTable[shangGua].name + '上' + guaTable[xiaGua].name + '下';
                     
                     const benBinary = guaBinary[shangGua - 1] + guaBinary[xiaGua - 1];
                     let bianBinary = benBinary.split('');
@@ -778,67 +778,70 @@
                     
                     const shangBianIndex = parseInt(bianBinary.substring(0, 3), 2);
                     const xiaBianIndex = parseInt(bianBinary.substring(3, 6), 2);
-                    const shangBianGua = guaNames[shangBianIndex];
-                    const xiaBianGua = guaNames[xiaBianIndex];
-                    const bianGua = shangBianGua + '上' + xiaBianGua + '下';
+                    const shangBianGuaName = guaNames[shangBianIndex];
+                    const xiaBianGuaName = guaNames[xiaBianIndex];
+                    const bianGuaName = shangBianGuaName + '上' + xiaBianGuaName + '下';
                     
                     const huBinaryUpper = benBinary.substring(1, 4);
                     const huBinaryLower = benBinary.substring(2, 5);
                     const shangHuIndex = parseInt(huBinaryUpper, 2);
                     const xiaHuIndex = parseInt(huBinaryLower, 2);
-                    const shangHuGua = guaNames[shangHuIndex];
-                    const xiaHuGua = guaNames[xiaHuIndex];
-                    const huGua = shangHuGua + '上' + xiaHuGua + '下';
+                    const shangHuGuaName = guaNames[shangHuIndex];
+                    const xiaHuGuaName = guaNames[xiaHuIndex];
+                    const huGuaName = shangHuGuaName + '上' + xiaHuGuaName + '下';
                     
-                    const benGuaObj = guaTable[shangGua];
-                    const benGuaElement = guaTable[xiaGua];
-                    const huGuaObj = { name: shangHuGua + xiaHuGua, fiveElement: getGuaFiveElement(shangHuGua) + getGuaFiveElement(xiaHuGua) };
-                    const bianGuaObj = { name: shangBianGua + xiaBianGua, fiveElement: getGuaFiveElement(shangBianGua) + getGuaFiveElement(xiaBianGua) };
+                    const benGuaShangElement = guaTable[shangGua].fiveElement;
+                    const benGuaXiaElement = guaTable[xiaGua].fiveElement;
+                    const huGuaShangElement = getGuaFiveElementByName(shangHuGuaName);
+                    const huGuaXiaElement = getGuaFiveElementByName(xiaHuGuaName);
+                    const bianGuaShangElement = getGuaFiveElementByName(shangBianGuaName);
+                    const bianGuaXiaElement = getGuaFiveElementByName(xiaBianGuaName);
                     
-                    const resultText = getInterpretation(benGuaObj.fiveElement, benGuaElement.fiveElement, huGuaObj.fiveElement, bianGuaObj.fiveElement);
+                    const resultText = getInterpretation(benGuaShangElement, benGuaXiaElement, huGuaShangElement, huGuaXiaElement, bianGuaShangElement, bianGuaXiaElement);
                     
-                    document.getElementById('ben-gua').textContent = guaTable[shangGua].name + '上' + guaTable[xiaGua].name + '下';
-                    document.getElementById('hu-gua').textContent = shangHuGua + '上' + xiaHuGua + '下';
-                    document.getElementById('bian-gua').textContent = shangBianGua + '上' + xiaBianGua + '下';
+                    document.getElementById('ben-gua').textContent = benGuaName;
+                    document.getElementById('hu-gua').textContent = huGuaName;
+                    document.getElementById('bian-gua').textContent = bianGuaName;
                     document.getElementById('interpretation').textContent = resultText;
                     
                     drawHexagram('mainHexagram', benBinary, movingYao);
                     drawHexagram('mutualHexagram', huBinaryUpper + huBinaryLower, 0);
                     drawHexagram('changedHexagram', bianBinary, 0);
                     
-                    displayDeepInterpretation(benGua, benGua, huGua, bianGua, movingYao);
-                    displayFiveElementTable(shangGua, xiaGua, shangHuGua, xiaHuGua, shangBianGua, xiaBianGua, movingYao);
+                    displayDeepInterpretation(benGuaName, huGuaName, bianGuaName, movingYao, shangGua, xiaGua, shangHuGuaName, xiaHuGuaName, shangBianGuaName, xiaBianGuaName);
+                    displayFiveElementTable(shangGua, xiaGua, shangHuGuaName, xiaHuGuaName, shangBianGuaName, xiaBianGuaName);
                     
                     resultDiv.style.display = 'block';
                     saveHistory({
                         date: new Date().toLocaleString(),
                         benGua: guaTable[shangGua].name + guaTable[xiaGua].name,
-                        huGua: shangHuGua + xiaHuGua,
-                        bianGua: shangBianGua + xiaBianGua,
+                        huGua: shangHuGuaName + xiaHuGuaName,
+                        bianGua: shangBianGuaName + xiaBianGuaName,
                         movingYao: movingYao
                     });
                 }, 800);
             }
             
-            function getInterpretation(shangGuaElement, xiaGuaElement, huGuaElement, bianGuaElement) {
-                const benRelation = getRelation(shangGuaElement, xiaGuaElement);
-                const huRelation = getRelation(shangGuaElement, huGuaElement.substring(0,1)) + getRelation(xiaGuaElement, huGuaElement.substring(1,2));
-                const bianRelation = getRelation(shangGuaElement, bianGuaElement.substring(0,1)) + getRelation(xiaGuaElement, bianGuaElement.substring(1,2));
+            function getInterpretation(benGuaShangElement, benGuaXiaElement, huGuaShangElement, huGuaXiaElement, bianGuaShangElement, bianGuaXiaElement) {
+                const benRelation = getRelation(benGuaShangElement, benGuaXiaElement);
+                const huRelation = getRelation(benGuaShangElement, huGuaShangElement);
+                const bianRelation = getRelation(benGuaShangElement, bianGuaShangElement);
                 
                 const key = `${benRelation},${huRelation},${bianRelation}`;
                 return interpretations[key] || '無法解析此組合';
             }
             
-            function getRelation(g1, g2) {
-                if (g1 === g2) return 'BH';
-                if (fiveElementRelations[g1].generates === g2) return 'WS';
-                if (fiveElementRelations[g1].overcomes === g2) return 'WK';
-                if (fiveElementRelations[g1].generatedBy === g2) return 'SS';
-                if (fiveElementRelations[g1].overcomeBy === g2) return 'SK';
+            function getRelation(el1, el2) {
+                if (!el1 || !el2) return 'BH';
+                if (el1 === el2) return 'BH';
+                if (fiveElementRelations[el1].generates === el2) return 'WS';
+                if (fiveElementRelations[el1].overcomes === el2) return 'WK';
+                if (fiveElementRelations[el1].generatedBy === el2) return 'SS';
+                if (fiveElementRelations[el1].overcomeBy === el2) return 'SK';
                 return 'UNKNOWN';
             }
             
-            function getGuaFiveElement(guaName) {
+            function getGuaFiveElementByName(guaName) {
                 const index = guaNames.indexOf(guaName);
                 return fiveElements[index];
             }
@@ -890,26 +893,27 @@
                 }
             }
 
-            function displayDeepInterpretation(benGua, huGua, bianGua, benGuaString, movingYao) {
-                const guaCi = guaCiData[benGuaString];
+            function displayDeepInterpretation(benGuaName, huGuaName, bianGuaName, movingYao, shangGua, xiaGua, shangHuGuaName, xiaHuGuaName, shangBianGuaName, xiaBianGuaName) {
+                const guaCi = guaCiData[benGuaName];
                 if (guaCi) {
                     document.getElementById('guaCi').innerHTML = `<h3>${guaCi.name} - 卦辭：</h3><p>${guaCi.ci}</p>`;
                     const movingYaoText = guaCi.yaoCi[movingYao - 1];
                     document.getElementById('movingYao').innerHTML = `<h3>動爻分析：</h3><p>動爻為第 ${movingYao} 爻，${movingYaoText}</p>`;
                 }
 
-                const mainFiveElement = getGuaFiveElement(guaNames[(Number(benGua.substring(0, 1)) - 1)]);
-                const changingFiveElement = getGuaFiveElement(guaNames[(Number(bianGua.substring(0, 1)) - 1)]);
+                const mainFiveElement = guaTable[shangGua].fiveElement;
+                const changingFiveElement = getGuaFiveElementByName(shangBianGuaName);
                 
-                document.getElementById('fiveElements').innerHTML = `<h3>五行生克詳解：</h3><p>本卦屬 ${mainFiveElement}，變卦屬 ${changingFiveElement}，${getRelationText(mainFiveElement, changingFiveElement)}</p>`;
+                document.getElementById('fiveElements').innerHTML = `<h3>五行生克詳解：</h3><p>本卦上卦屬 ${mainFiveElement}，變卦上卦屬 ${changingFiveElement}，其關係為 ${getRelationText(mainFiveElement, changingFiveElement)}</p>`;
                 document.getElementById('seasonalAnalysis').innerHTML = `<h3>旺相休囚死分析：</h3><p>本卦五行${mainFiveElement}，當前季節${seasons[mainFiveElement]}時最旺。判斷吉凶需結合占卜日期。</p>`;
-                document.getElementById('guaCombination').innerHTML = `<h3>卦象組合：</h3><p>${guaImages[guaNames[(Number(benGua.substring(0, 1)) - 1)]]} - ${guaImages[guaNames[(Number(benGua.substring(2, 3)) - 1)]]}</p>`;
+                document.getElementById('guaCombination').innerHTML = `<h3>卦象組合：</h3><p>${guaImages[guaNames[shangGua - 1]]} - ${guaImages[guaNames[xiaGua - 1]]}</p>`;
                 document.getElementById('application').innerHTML = `<h3>應事範圍：</h3><p>此卦象對應於...（此處需根據卦象組合進一步解析）</p>`;
                 document.getElementById('suggestion').innerHTML = `<h3>處世之道：</h3><p>根據卦象的特性，建議...（此處需根據卦象組合進一步解析）</p>`;
                 document.getElementById('prediction').innerHTML = `<h3>應期分析：</h3><p>應期可參考動爻所屬五行與當前流年、月、日的關係，例如 ${getRelationText(mainFiveElement, fiveElements[getGuaIndexFromDate()])}...</p>`;
             }
 
             function getRelationText(el1, el2) {
+                if (!el1 || !el2) return '無關係';
                 if (el1 === el2) return `比和（平）`;
                 if (fiveElementRelations[el1].generates === el2) return `我生（泄）`;
                 if (fiveElementRelations[el1].overcomes === el2) return `我剋（耗）`;
@@ -918,20 +922,20 @@
                 return '無關係';
             }
 
-            function displayFiveElementTable(shangGua, xiaGua, shangHuGua, xiaHuGua, shangBianGua, xiaBianGua, movingYao) {
+            function displayFiveElementTable(shangGua, xiaGua, shangHuGuaName, xiaHuGuaName, shangBianGuaName, xiaBianGuaName) {
                 const tableBody = document.getElementById('fiveElementTable');
                 tableBody.innerHTML = '';
                 
-                const guaData = [
-                    { name: `本卦上卦 (${guaNames[shangGua - 1]})`, element: fiveElements[shangGua - 1] },
-                    { name: `本卦下卦 (${guaNames[xiaGua - 1]})`, element: fiveElements[xiaGua - 1] },
-                    { name: `互卦上卦 (${shangHuGua})`, element: getGuaFiveElement(shangHuGua) },
-                    { name: `互卦下卦 (${xiaHuGua})`, element: getGuaFiveElement(xiaHuGua) },
-                    { name: `變卦上卦 (${shangBianGua})`, element: getGuaFiveElement(shangBianGua) },
-                    { name: `變卦下卦 (${xiaBianGua})`, element: getGuaFiveElement(xiaBianGua) }
-                ];
+                const mainGuaElement = guaTable[shangGua].fiveElement;
                 
-                const mainGuaElement = fiveElements[shangGua - 1];
+                const guaData = [
+                    { name: `本卦上卦 (${guaTable[shangGua].name})`, element: guaTable[shangGua].fiveElement },
+                    { name: `本卦下卦 (${guaTable[xiaGua].name})`, element: guaTable[xiaGua].fiveElement },
+                    { name: `互卦上卦 (${shangHuGuaName})`, element: getGuaFiveElementByName(shangHuGuaName) },
+                    { name: `互卦下卦 (${xiaHuGuaName})`, element: getGuaFiveElementByName(xiaHuGuaName) },
+                    { name: `變卦上卦 (${shangBianGuaName})`, element: getGuaFiveElementByName(shangBianGuaName) },
+                    { name: `變卦下卦 (${xiaBianGuaName})`, element: getGuaFiveElementByName(xiaBianGuaName) }
+                ];
                 
                 guaData.forEach(data => {
                     const row = tableBody.insertRow();
@@ -944,8 +948,11 @@
             }
 
             function getJudgement(mainElement, element) {
-                if (fiveElementRelations[mainElement].generatedBy === element || fiveElementRelations[mainElement].generates === element) return '吉';
-                if (fiveElementRelations[mainElement].overcomeBy === element || fiveElementRelations[mainElement].overcomes === element) return '凶';
+                if (!mainElement || !element) return '無法判斷';
+                if (fiveElementRelations[mainElement].generatedBy === element) return '吉';
+                if (fiveElementRelations[mainElement].overcomes === element) return '吉';
+                if (fiveElementRelations[mainElement].overcomeBy === element) return '凶';
+                if (fiveElementRelations[mainElement].generates === element) return '凶';
                 return '平';
             }
             
