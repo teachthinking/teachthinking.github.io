@@ -251,25 +251,7 @@
             }
             
             .gua-info {
-                flex-direction: column;
-            }
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <h1>梅花心易卜卦系統 - 五行生克與旺相休囚死分析</h1>
-        <p class="description">根據五行生克關係與季節旺相休囚死，解析卦象的吉凶變化</p>
-    </header>
-    
-    <div class="container">
-        <section class="divination-section">
-            <h2>卜卦區</h2>
-            <div class="input-group">
-                <label for="number1">第一個數字（1-8）：</label>
-                <input type="number" id="number1" min="1" max="8" value="3">
-            </div>
-            
+                flex-direction: columnoʻ
             <div class="input-group">
                 <label for="number2">第二個數字（1-8）：</label>
                 <input type="number" id="number2" min="1" max="8" value="5">
@@ -703,8 +685,8 @@
             sixYao[yaoIndex] = sixYao[yaoIndex] === 1 ? 0 : 1;
             
             // 分為下卦和上卦
-            const bianXiaYao = sixYao.slice(0, 3); // 初爻、二爻、三爻
-            const bianShangYao = sixYao.slice(3, 6); // 四爻、五爻、上爻
+            const bianXiaYao = sixYao.slice(0, 2); // 初爻、二爻、三爻
+            const bianShangYao = sixYao.slice(3, 5); // 四爻、五爻、上爻
             
             return {
                 shang: findTrigramByYao(bianShangYao),
