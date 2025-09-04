@@ -564,10 +564,7 @@
             const xiaStatus = elementStatus[xiaElement];     // 用的五行狀態
             
             let relationKey, relationDisplay;
-            if (shangElement === xiaElement) {
-                relationKey = "BH";
-                relationDisplay = `體${trigrams[gua.shang].name}${shangElement}${shangStatus}與用${trigrams[movingYao <= 3 ? gua.xia : gua.shang].name}${xiaElement}${xiaStatus}比和`;
-            } else if (elementRelations[shangElement]["生"] === xiaElement) {
+             if (elementRelations[shangElement]["生"] === xiaElement) {
                 relationKey = "SS";
                 relationDisplay = `體${trigrams[gua.shang].name}${shangElement}${shangStatus}生用${trigrams[movingYao <= 3 ? gua.xia : gua.shang].name}${xiaElement}${xiaStatus}`;
             } else if (elementRelations[shangElement]["克"] === xiaElement) {
