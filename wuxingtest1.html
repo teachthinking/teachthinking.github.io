@@ -141,6 +141,15 @@
       });
     }
 
+    function generateOverall(data) {
+      const parts = data.map(d => d.判斷 || explainMap[d.代號] || d.代號);
+      if (parts.every(p => p)) {
+        return `此卦以${parts[0]}為基，當下${parts[1]}，中途${parts[2]}，續程${parts[3]}，最後${parts[4]}，宜謹慎防範。`;
+      } else {
+        return "請完整填寫體、用、體互、用互、變卦後，自動生成整體判斷。";
+      }
+    }
+
     function saveData() {
       const data = getData();
       localStorage.setItem("meihua", JSON.stringify(data));
@@ -198,7 +207,7 @@
         (data[1].判斷 || explainMap[data[1].代號] || data[1].代號) + " / " +
         (data[2].判斷 || explainMap[data[2].代號] || data[2].代號);
       document.getElementById("sum-bian").innerText = data[3].判斷 || explainMap[data[3].代號] || data[3].代號;
-      document.getElementById("sum-all").innerText = "依序推斷後歸納整體吉凶。";
+      document.getElementById("sum-all").innerText = generateOverall([data[0], data[1], data[2], data[3], data[3]]);
     }
 
     // 初始化載入
