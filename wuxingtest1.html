@@ -1,942 +1,865 @@
+```html
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>梅花心易卜卦與解卦程式</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: "Microsoft YaHei", "Heiti TC", sans-serif;
-        }
-        
-        body {
-            background-color: #f9f5eb;
-            color: #333;
-            line-height: 1.6;
-            padding: 20px;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: linear-gradient(135deg, #8e7d5b 0%, #c9ad7a 100%);
-            border-radius: 10px;
-            color: #fff;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        h1 {
-            font-size: 2.2rem;
-            margin-bottom: 10px;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
-        }
-        
-        .description {
-            font-size: 1.1rem;
-            margin-bottom: 20px;
-            color: #f0e6d2;
-        }
-        
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .divination-section {
-            flex: 1;
-            min-width: 300px;
-            background: #fff;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-        }
-        
-        .result-section {
-            flex: 2;
-            min-width: 300px;
-            background: #fff;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-        }
-        
-        h2 {
-            color: #8e7d5b;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e8dbc5;
-        }
-        
-        .input-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #666;
-        }
-        
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 1rem;
-        }
-        
-        button {
-            display: block;
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #8e7d5b 0%, #c9ad7a 100%);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-        
-        button:hover {
-            background: linear-gradient(135deg, #7a6b4e 0%, #b09868 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-        
-        .random-btn {
-            background: linear-gradient(135deg, #6b7d8e 0%, #7a9cc9 100%);
-        }
-        
-        .random-btn:hover {
-            background: linear-gradient(135deg, #5b6b7a 0%, #6888b0 100%);
-        }
-        
-        .result-content {
-            padding: 20px;
-            background-color: #f8f4e9;
-            border-radius: 8px;
-            min-height: 200px;
-        }
-        
-        .combination {
-            font-weight: bold;
-            color: #8e7d5b;
-            margin-bottom: 15px;
-            font-size: 1.2rem;
-        }
-        
-        .interpretation {
-            font-size: 1.1rem;
-            line-height: 1.8;
-            padding: 15px;
-            background-color: #fff;
-            border-left: 4px solid #c9ad7a;
-            border-radius: 4px;
-            white-space: pre-line;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #8e7d5b;
-        }
-        
-        .gua-info {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .gua-item {
-            flex: 1;
-            min-width: 150px;
-            text-align: center;
-            padding: 15px;
-            margin: 10px;
-            background: #f3eee2;
-            border-radius: 8px;
-        }
-        
-        .gua-title {
-            font-weight: bold;
-            color: #8e7d5b;
-            margin-bottom: 10px;
-        }
-        
-        .gua-value {
-            font-size: 1.3rem;
-            font-weight: bold;
-        }
-        
-        .history-section {
-            background: #fff;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            margin-top: 20px;
-        }
-        
-        .history-item {
-            padding: 10px;
-            border-bottom: 1px solid #e8dbc5;
-            cursor: pointer;
-        }
-        
-        .history-item:hover {
-            background-color: #f3eee2;
-        }
-        
-        canvas {
-            display: block;
-            margin: 10px auto;
-            border: 1px solid #ddd;
-        }
-        
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            color: #888;
-            font-size: 0.9rem;
-        }
-        
-        .method-selector {
-            margin-bottom: 20px;
-        }
-        
-        .method-tab {
-            display: none;
-        }
-        
-        .method-tab.active {
-            display: block;
-        }
-        
-        .tab-buttons {
-            display: flex;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #e8dbc5;
-        }
-        
-        .tab-btn {
-            padding: 10px 15px;
-            background: #f3eee2;
-            border: none;
-            border-radius: 5px 5px 0 0;
-            cursor: pointer;
-            margin-right: 5px;
-            font-weight: bold;
-            color: #8e7d5b;
-        }
-        
-        .tab-btn.active {
-            background: #8e7d5b;
-            color: white;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-            
-            .gua-info {
-                flex-direction: column;
-            }
-            
-            .tab-buttons {
-                flex-wrap: wrap;
-            }
-            
-            .tab-btn {
-                margin-bottom: 5px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>梅花心易卜卦系統</title>
+  <link href="https://cdn.jsdelivr.net/ npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Serif TC', serif;
+      background: linear-gradient(to bottom, #f5e8c7, #d9c2a6);
+      color: #2f2f2f;
+    }
+    .scroll-bg {
+      background: url('https://via.placeholder.com/800x600.png?text=Scroll+Background') center/cover, #f5e8c7;
+      border: 2px solid #8b4513;
+      border-radius: 8px;
+      padding: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .hexagram-line {
+      width: 100px;
+      height: 10px;
+      margin: 5px 0;
+    }
+    .yang-line {
+      background: #2f2f2f;
+    }
+    .yin-line {
+      background: linear-gradient(to right, #2f2f2f 40%, transparent 40%, transparent 60%, #2f2f2f 60%);
+    }
+    .moving-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #a94438;
+      border-radius: 50%;
+      margin-left: 8px;
+    }
+    .table-container {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    th, td {
+      border: 1px solid #d9c2a6;
+      padding: 8px;
+      text-align: center;
+    }
+    .history-item {
+      cursor: pointer;
+      padding: 0.5rem;
+      border-bottom: 1px solid #d9c2a6;
+    }
+    .history-item:hover {
+      background: #f5e8c7;
+    }
+    @media (max-width: 640px) {
+      .scroll-bg {
+        padding: 1rem;
+      }
+      .hexagram-line {
+        width: 80px;
+      }
+    }
+  </style>
 </head>
-<body>
-    <header>
-        <h1>梅花心易卜卦與解卦程式</h1>
-        <p class="description">根據五行生克關係，解析卦象的吉凶變化</p>
-    </header>
-    
-    <div class="container">
-        <section class="divination-section">
-            <h2>卜卦區</h2>
-            
-            <div class="method-selector">
-                <div class="tab-buttons">
-                    <button class="tab-btn active" data-tab="direct">直接取卦</button>
-                    <button class="tab-btn" data-tab="time">時間取卦</button>
-                    <button class="tab-btn" data-tab="number">數字取卦</button>
-                </div>
-                
-                <div class="method-tab active" id="direct-tab">
-                    <div class="input-group">
-                        <label for="shang-gua">上卦（1-8）：</label>
-                        <select id="shang-gua">
-                            <option value="1">1 - 乾卦 (金)</option>
-                            <option value="2" selected>2 - 兌卦 (金)</option>
-                            <option value="3">3 - 離卦 (火)</option>
-                            <option value="4">4 - 震卦 (木)</option>
-                            <option value="5">5 - 巽卦 (木)</option>
-                            <option value="6">6 - 坎卦 (水)</option>
-                            <option value="7">7 - 艮卦 (土)</option>
-                            <option value="8">8 - 坤卦 (土)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="xia-gua">下卦（1-8）：</label>
-                        <select id="xia-gua">
-                            <option value="1">1 - 乾卦 (金)</option>
-                            <option value="2">2 - 兌卦 (金)</option>
-                            <option value="3" selected>3 - 離卦 (火)</option>
-                            <option value="4">4 - 震卦 (木)</option>
-                            <option value="5">5 - 巽卦 (木)</option>
-                            <option value="6">6 - 坎卦 (水)</option>
-                            <option value="7">7 - 艮卦 (土)</option>
-                            <option value="8">8 - 坤卦 (土)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="moving-yao">變爻（1-6）：</label>
-                        <select id="moving-yao">
-                            <option value="1" selected>1 - 初爻</option>
-                            <option value="2">2 - 二爻</option>
-                            <option value="3">3 - 三爻</option>
-                            <option value="4">4 - 四爻</option>
-                            <option value="5">5 - 五爻</option>
-                            <option value="6">6 - 上爻</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="method-tab" id="time-tab">
-                    <div class="input-group">
-                        <label for="year">年份：</label>
-                        <input type="number" id="year" min="1900" max="2100" value="2025">
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="month">月份：</label>
-                        <input type="number" id="month" min="1" max="12" value="9">
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="day">日期：</label>
-                        <input type="number" id="day" min="1" max="31" value="4">
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="hour">時辰（0-23）：</label>
-                        <input type="number" id="hour" min="0" max="23" value="23">
-                    </div>
-                    
-                    <button id="use-current-time">使用當前時間</button>
-                </div>
-                
-                <div class="method-tab" id="number-tab">
-                    <div class="input-group">
-                        <label for="number1">第一個數字（百位數）：</label>
-                        <input type="number" id="number1" min="100" max="999" value="357">
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="number2">第二個數字（百位數）：</label>
-                        <input type="number" id="number2" min="100" max="999" value="482">
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="number3">第三個數字（百位數）：</label>
-                        <input type="number" id="number3" min="100" max="999" value="619">
-                    </div>
-                </div>
-            </div>
-            
-            <button id="calculate-btn">開始卜卦</button>
-            <button id="random-btn" class="random-btn">隨機卜卦</button>
-        </section>
-        
-        <section class="result-section">
-            <h2>解卦結果</h2>
-            <div class="result-content">
-                <div class="loading" id="result-loading">請選擇取卦方式並點擊"開始卜卦"按鈕獲取結果</div>
-                <div id="result" style="display: none;">
-                    <div class="combination" id="combination"></div>
-                    <div class="interpretation" id="interpretation"></div>
-                    
-                    <div class="gua-info">
-                        <div class="gua-item">
-                            <div class="gua-title">本卦</div>
-                            <div class="gua-value" id="ben-gua"></div>
-                            <canvas id="mainHexagram" width="100" height="150"></canvas>
-                        </div>
-                        <div class="gua-item">
-                            <div class="gua-title">互卦</div>
-                            <div class="gua-value" id="hu-gua"></div>
-                            <canvas id="mutualHexagram" width="100" height="150"></canvas>
-                        </div>
-                        <div class="gua-item">
-                            <div class="gua-title">變卦</div>
-                            <div class="gua-value" id="bian-gua"></div>
-                            <canvas id="changedHexagram" width="100" height="150"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+<body class="min-h-screen flex flex-col items-center justify-center">
+  <div class="w-full max-w-4xl mx-auto scroll-bg">
+    <h1 class="text-4xl font-bold text-center mb-4 text-ink">梅花心易卜卦系統</h1>
+    <p class="text-center text-lg mb-6">觀天地之象，察萬物之理，得易數之妙</p>
+
+    <div class="mb-6">
+      <label class="block text-lg font-medium mb-2">起卦方式</label>
+      <select id="castMethod" class="w-full p-2 border rounded-md mb-4">
+        <option value="random">隨機起卦</option>
+        <option value="date">日期起卦</option>
+        <option value="number">數字起卦</option>
+        <option value="time">時間起卦</option>
+        <option value="manual">手動起卦</option>
+      </select>
+
+      <div id="dateInput" class="hidden mb-4">
+        <label class="block text-lg font-medium mb-2">選擇日期</label>
+        <input type="date" id="castDate" class="w-full p-2 border rounded-md" />
+      </div>
+
+      <div id="numberInput" class="hidden mb-4">
+        <label class="block text-lg font-medium mb-2">輸入三個三位數（100-999，用空格分隔）</label>
+        <input type="text" id="numberInput" class="w-full p-2 border rounded-md" placeholder="例如：123 456 789" />
+      </div>
+
+      <div id="timeInput" class="hidden mb-4">
+        <label class="block text-lg font-medium mb-2">輸入時間（HH:MM，24小時制）</label>
+        <input type="time" id="castTime" class="w-full p-2 border rounded-md" />
+      </div>
+
+      <div id="manualInput" class="hidden mb-4">
+        <label class="block text-lg font-medium mb-2">手動選擇六爻（自下而上）及動爻</label>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="flex items-center">
+            <label class="mr-2">初爻</label>
+            <select id="yao1" class="p-1 border rounded-md">
+              <option value="1">陽爻（—）</option>
+              <option value="0">陰爻（- -）</option>
+            </select>
+          </div>
+          <div class="flex items-center">
+            <label class="mr-2">二爻</label>
+            <select id="yao2" class="p-1 border rounded-md">
+              <option value="1">陽爻（—）</option>
+              <option value="0">陰爻（- -）</option>
+            </select>
+          </div>
+          <div class="flex items-center">
+            <label class="mr-2">三爻</label>
+            <select id="yao3" class="p-1 border rounded-md">
+              <option value="1">陽爻（—）</option>
+              <option value="0">陰爻（- -）</option>
+            </select>
+          </div>
+          <div class="flex items-center">
+            <label class="mr-2">四爻</label>
+            <select id="yao4" class="p-1 border rounded-md">
+              <option value="1">陽爻（—）</option>
+              <option value="0">陰爻（- -）</option>
+            </select>
+          </div>
+          <div class="flex items-center">
+            <label class="mr-2">五爻</label>
+            <select id="yao5" class="p-1 border rounded-md">
+              <option value="1">陽爻（—）</option>
+              <option value="0">陰爻（- -）</option>
+            </select>
+          </div>
+          <div class="flex items-center">
+            <label class="mr-2">上爻</label>
+            <select id="yao6" class="p-1 border rounded-md">
+              <option value="1">陽爻（—）</option>
+              <option value="0">陰爻（- -）</option>
+            </select>
+          </div>
+          <div class="flex items-center">
+            <label class="mr-2">動爻</label>
+            <select id="movingYao" class="p-1 border rounded-md">
+              <option value="0">無動爻</option>
+              <option value="1">初爻</option>
+              <option value="2">二爻</option>
+              <option value="3">三爻</option>
+              <option value="4">四爻</option>
+              <option value="5">五爻</option>
+              <option value="6">上爻</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <label class="block text-lg font-medium mb-2">占問事項</label>
+      <select id="questionType" class="w-full p-2 border rounded-md mb-4">
+        <option value="事業">事業</option>
+        <option value="財運">財運</option>
+        <option value="感情">感情</option>
+        <option value="健康">健康</option>
+        <option value="學業">學業</option>
+        <option value="其他">其他</option>
+      </select>
+      <input id="question" type="text" class="w-full p-2 border rounded-md mb-4" placeholder="請述問事詳情（可略）">
+
+      <button onclick="castHexagram()" class="w-full bg-red-700 text-white p-2 rounded-md hover:bg-red-800">開始卜卦</button>
     </div>
+
+    <div id="result" class="hidden">
+      <h2 class="text-2xl font-semibold mb-4">卦象顯示</h2>
+      <div class="flex flex-col sm:flex-row justify-around mb-4">
+        <div>
+          <h3 class="text-lg font-medium">本卦</h3>
+          <div id="mainHexagram" class="mb-2"></div>
+          <p id="mainGuaName" class="text-center"></p>
+        </div>
+        <div>
+          <h3 class="text-lg font-medium">互卦</h3>
+          <div id="mutualHexagram" class="mb-2"></div>
+          <p id="mutualGuaName" class="text-center"></p>
+        </div>
+        <div>
+          <h3 class="text-lg font-medium">變卦</h3>
+          <div id="changedHexagram" class="mb-2"></div>
+          <p id="changedGuaName" class="text-center"></p>
+        </div>
+      </div>
+
+      <h2 class="text-2xl font-semibold mb-4">卦象深度解讀</h2>
+      <h3 class="text-lg font-medium mb-2">卦象詳解</h3>
+      <div id="guaCi" class="mb-4"></div>
+      <h3 class="text-lg font-medium mb-2">五行生克詳解</h3>
+      <div id="fiveElements" class="mb-4"></div>
+      <h3 class="text-lg font-medium mb-2">旺相休囚死分析</h3>
+      <div id="seasonalAnalysis" class="mb-4"></div>
+      <h3 class="text-lg font-medium mb-2">動爻分析</h3>
+      <div id="movingYao" class="mb-4"></div>
+      <h3 class="text-lg font-medium mb-2">卦象組合</h3>
+      <div id="guaCombination" class="mb-4"></div>
+      <h3 class="text-lg font-medium mb-2">應事範圍</h3>
+      <div id="application" class="mb-4"></div>
+      <h3 class="text-lg font-medium mb-2">處世之道</h3>
+      <div id="suggestion" class="mb-4"></div>
+
+      <h2 class="text-2xl font-semibold mb-4">五行生克分析表</h2>
+      <div class="table-container">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-100">
+              <th>卦象</th>
+              <th>五行屬性</th>
+              <th>生克關係</th>
+              <th>吉凶判斷</th>
+              <th>旺相休囚</th>
+            </tr>
+          </thead>
+          <tbody id="fiveElementTable"></tbody>
+        </table>
+      </div>
+
+      <h3 class="text-lg font-medium mb-2 mt-4">應期分析</h3>
+      <div id="prediction" class="mb-4"></div>
+    </div>
+
+    <div id="history" class="mt-6 hidden">
+      <h2 class="text-2xl font-semibold mb-4">卜卦歷史</h2>
+      <div id="historyList" class="mb-4"></div>
+      <button onclick="clearHistory()" class="w-full bg-red-600 text-white p-2 rounded-md hover:bg-red-700">清除歷史</button>
+    </div>
+
+    <div class="mt-6 text-center">
+      <button onclick="showHistory()" class="bg-gray-600 text-white p-2 rounded-md hover:bg-gray-700">查看歷史</button>
+    </div>
+  </div>
+
+  <footer class="mt-6 text-center text-sm">
+    梅花心易卜卦系統 · 傳承千年智慧 · 僅供參考
+  </footer>
+<script>
+  const guaNames = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤'];
+  const guaImages = {
+    '乾': '天，剛健中正，宜果斷進取，行健不息。',
+    '兌': '澤，悅而通達，宜和睦交流，喜悅以成。',
+    '離': '火，麗而依附，宜明察慎行，文明以麗。',
+    '震': '雷，動而奮發，宜振作有為，震驚百里。',
+    '巽': '風，順而入微，宜柔和漸進，隨風而入。',
+    '坎': '水，險而深邃，宜謹慎守正，履險如夷。',
+    '艮': '山，止而厚重，宜靜觀待機，止於至善。',
+    '坤': '地，順而廣博，宜包容謙卑，厚德載物。'
+  };
+  const fiveElements = ['金', '金', '火', '木', '木', '水', '土', '土'];
+  const yaoSymbols = ['—', '- -'];
+  const fiveElementRelations = {
+    '金': { generates: '水', overcomes: '木', generatedBy: '土', overcomeBy: '火' },
+    '木': { generates: '火', overcomes: '土', generatedBy: '水', overcomeBy: '金' },
+    '水': { generates: '木', overcomes: '火', generatedBy: '金', overcomeBy: '土' },
+    '火': { generates: '土', overcomes: '金', generatedBy: '木', overcomeBy: '水' },
+    '土': { generates: '金', overcomes: '水', generatedBy: '火', overcomeBy: '木' }
+  };
+  const seasons = {
+    '木': '春季（正月至三月）',
+    '火': '夏季（四月至六月）',
+    '土': '季末（三、六、九、十二月）',
+    '金': '秋季（七月至九月）',
+    '水': '冬季（十月至十二月）'
+  };
+  const guaCiData = {
+    '乾上乾下': { name: '乾為天', ci: '元亨利貞，剛健中正，宜自強不息。', yaoCi: ['初九：潛龍勿用，宜潛藏蓄力。', '九二：見龍在田，宜顯露才華。', '九三：君子終日乾乾，宜勤勉不懈。', '九四：或躍在淵，宜審時進退。', '九五：飛龍在天，宜乘勢而為。', '上九：亢龍有悔，宜謙退防過。'] },
+    '乾上坎下': { name: '天水訟', ci: '有孚窒惕，宜謹慎爭訟，守正以待。', yaoCi: ['初六：不永所事，宜小事謹慎。', '六二：不克訟，宜退避三舍。', '九三：食舊德，宜安守本分。', '六四：不克訟，宜復正安和。', '九五：訟元吉，宜公正處事。', '上九：或錫之鞶帶，宜謙退勿爭。'] },
+    '震上坤下': { name: '雷地豫', ci: '利建侯行師，宜振奮順時，謀定而動。', yaoCi: ['初六：鳴豫凶，宜謹慎勿躁。', '六二：介於石，宜守正不移。', '六三：盱豫悔，宜審慎勿進。', '九四：由豫大有得，宜順勢而為。', '六五：貞疾，宜調養慎行。', '上六：冥豫，宜謙退防過。'] },
+    '坤上坤下': { name: '坤為地', ci: '元亨，利牝馬之貞，宜順勢而為，厚德載物。', yaoCi: ['初六：履霜堅冰至，宜謹慎行事。', '六二：直方大，宜正直行事。', '六三：含章可貞，宜潛藏待時。', '六四：括囊無咎，宜謹慎守口。', '六五：黃裳元吉，宜謙和行事。', '上六：龍戰於野，宜謙退防爭。'] },
+    '艮上坤下': { name: '山地剝', ci: '不利有攸往，宜靜守待時，謹慎以行。', yaoCi: ['初六：剝床以足，宜謹慎小事。', '六二：剝床以辨，宜穩固根基。', '六三：剝之無咎，宜守正不爭。', '六四：剝床以膚，宜謹防損失。', '六五：貫魚以宮人，宜順勢而為。', '上九：碩果不食，宜謙退守成。'] },
+    '坎上坤下': { name: '水地比', ci: '吉，原筮元永貞，宜親比和睦，誠信以行。', yaoCi: ['初六：有孚比之，宜誠信相交。', '六二：比之自內，宜內修德行。', '六三：比之匪人，宜慎選同道。', '六四：外比之，宜廣結善緣。', '九五：顯比，宜公正無私。', '上六：比之無首，宜謹慎行事。'] },
+    '巽上坤下': { name: '風地觀', ci: '盥而不薦，宜觀察時機，謹慎以待。', yaoCi: ['初六：童觀，宜謙學觀察。', '六二：窺觀，宜內省慎行。', '六三：觀我生，宜審己進退。', '六四：觀國之光，宜廣學求進。', '九五：觀我生，宜自省修德。', '上九：觀其生，宜高瞻遠矚。'] },
+    '離上坤下': { name: '火地晉', ci: '康侯用錫馬，宜進取有為，光明正大。', yaoCi: ['初六：晉如摧如，宜謹慎起步。', '六二：晉如愁如，宜堅守正道。', '六三：眾允悔亡，權宜團結進取。', '九四：晉如鼫鼠，宜謹防小人。', '六五：悔亡失得，宜坦然進取。', '上九：晉其角，宜謙退防過。'] },
+    '兌上坤下': { name: '澤地萃', ci: '亨，王假有廟，宜團結和睦，聚眾成事。', yaoCi: ['初六：有孚不終，宜誠信團結。', '六二：引吉無咎，宜真誠相交。', '六三：萃如嗟如，宜謹慎求援。', '九四：大吉無咎，宜廣結善緣。', '九五：萃有位，宜公正行事。', '上六：齎咨涕洟，宜靜觀其變。'] },
+    '乾上坤下': { name: '天地否', ci: '否之匪人，宜謹慎守正，待時而動。', yaoCi: ['初六：拔茅茹，宜團結謹慎。', '六二：包承，宜謙順待時。', '六三：包羞，宜低調行事。', '九四：有命無咎，宜順勢而為。', '九五：休否，宜積極轉化。', '上九：傾否，宜謹慎終結。'] },
+    '兌上乾下': { name: '澤天夬', ci: '揚於王庭，宜果斷行事，謹慎以終。', yaoCi: ['初九：壯於前趾，宜�谨慎起步。', '九二：惕號莫夜，宜警醒防患。', '九三：壯於頰，宜謙退慎行。', '九四：臀無膚，宜穩健行事。', '九五：莧陸夬夬，宜果斷中正。', '上六：無號凶，宜謙退防過。'] },
+    '離上乾下': { name: '火天大有', ci: '元亨，宜廣納賢才，光明正大。', yaoCi: ['初九：無交害，宜謹慎起步。', '九二：大車以載，宜穩健進取。', '九三：公用亨，宜團結共事。', '九四：匪其彭，宜謹防過盛。', '六五：厥孚交如，宜誠信待人。', '上九：自天祐之，宜謙和守成。'] },
+    '震上乾下': { name: '雷天大壯', ci: '利貞，宜剛健守正，謹慎進取。', yaoCi: ['初九：壯於趾，宜謹慎起步。', '九二：貞吉，宜堅守正道。', '九三：小人用壯，宜謙退慎行。', '九四：貞吉悔亡，宜果斷進取。', '六五：喪羊於易，宜謹防損失。', '上六：羝羊觸藩，宜謙退待時。'] },
+    '巽上乾下': { name: '風天小畜', ci: '亨，密雲不雨，宜蓄力待時。', yaoCi: ['初九：復自道，宜謹慎回歸。', '九二：牽復，宜團結共進。', '九三：輿說輻，宜謹防紛爭。', '六四：有孚血去，宜誠信行事。', '六五：有孚攣如，宜真誠團結。', '上九：既雨既處，宜謙退守成。'] },
+    '坎上乾下': { name: '水天需', ci: '有孚光亨，宜耐心以待，謹慎行事。', yaoCi: ['初九：需於郊，宜靜待時機。', '九二：需於沙，宜謹慎前行。', '九三：需於泥，宜防患未然。', '六四：需於血，宜謹慎脫險。', '九五：需於酒食，宜安享待時。', '上六：入於穴，宜謙退守正。'] },
+    '艮上乾下': { name: '山天大畜', ci: '利貞，宜蓄德修身，謹慎進取。', yaoCi: ['初九：有厲利已，宜謹慎止步。', '九二：輿說輻，宜穩健行事。', '九三：良馬逐，宜積極進取。', '六四：童牛之牿，宜謹防初難。', '六五：豶豕之牙，宜和緩行事。', '上九：何天之衢，宜廣開前路。'] },
+    '坤上乾下': { name: '地天泰', ci: '小往大來，宜順勢而為，通達和順。', yaoCi: ['初九：拔茅茹，宜團結進取。', '九二：包荒，宜包容廣納。', '九三：無平不陂，宜謹慎持盈。', '六四：翩翩不富，宜謙退待時。', '六五：帝乙歸妹，宜和睦行事。', '上六：城復於隍，宜謹防傾覆。'] },
+    '坤上兌下': { name: '地澤臨', ci: '元亨，宜親臨教化，謙和以行。', yaoCi: ['初九：咸臨吉，宜和睦進取。', '九二：咸臨無咎，宜真誠行事。', '六三：甘臨無攸利，宜謹慎勿進。', '六四：至臨無咎，宜親近賢才。', '六五：知臨大君，宜公正行事。', '上六：敦臨吉，宜厚德載物。'] },
+    '艮上兌下': { name: '山澤損', ci: '有孚元吉，宜損己利人，謹慎行事。', yaoCi: ['初九：已事遄往，宜速助他人。', '九二：利貞，宜守正勿貪。', '六三：三人行損一人，宜團結共事。', '六四：損其疾，宜謙和待人。', '六五：或益之，宜坦然受助。', '上九：弗損益之，宜謙退守成。'] },
+    '坎上兌下': { name: '水澤節', ci: '亨，宜節制有度，謹慎行事。', yaoCi: ['初九：不出戶庭，宜謹慎守靜。', '九二：不出門庭凶，宜積極有為。', '六三：不節若，宜反省節制。', '六四：安節亨，宜順勢而行。', '九五：甘節吉，宜中正行事。', '上六：苦節凶，宜謙退防過。'] },
+    '巽上兌下': { name: '風澤中孚', ci: '豚魚吉，宜誠信感化，守正以行。', yaoCi: ['初九：虞吉，宜謹慎起步。', '九二：鳴鶴在陰，宜真誠待人。', '六三：得敵，宜謹防爭執。', '六四：月幾望，宜謙和行事。', '九五：有孚攣如，宜誠信團結。', '上九：翰音登于天，宜謙退防過。'] },
+    '震上兌下': { name: '雷澤歸妹', ci: '征凶，宜謹慎感情，順勢而行。', yaoCi: ['初九：歸妹以娣，宜謙順行事。', '九二：眇能視，宜謹慎前行。', '六三：歸妹以須，宜靜待時機。', '六四：愆期，宜耐心以待。', '九五：帝乙歸妹，宜和睦行事。', '上六：女承筐無實，宜謙退守正。'] },
+    '離上兌下': { name: '火澤睽', ci: '小事吉，宜謹慎求同，化解分歧。', yaoCi: ['初九：悔亡喪馬，宜坦然面對。', '九二：遇主於巷，宜真誠相交。', '六三：見輿曳，宜謹防阻礙。', '六四：睽孤遇元夫，宜結交賢才。', '九五：悔亡厥宗，宜團結共事。', '上九：睽孤見豕，宜謹防誤解。'] },
+    '乾上兌下': { name: '天澤履', ci: '履虎尾，宜謹慎行事，守正無咎。', yaoCi: ['初九：素履往，宜謙慎起步。', '九二
+
+  function validateElement(element) {
+    return ['金', '木', '水', '火', '土'].includes(element);
+  }
+
+  function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
+  }
+
+  // Generate hexagram from three three-digit numbers
+  function generateHexagramFromInput(input) {
+    const numbers = input.split(' ').map(n => parseInt(n)).filter(n => !isNaN(n) && n >= 100 && n <= 999);
+    if (numbers.length !== 3) {
+      throw new Error('請輸入三個有效的三位數，範圍為100-999');
+    }
+
+    // Sum digits of each number
+    const sums = numbers.map(num => {
+      let sum = 0;
+      while (num > 0) {
+        sum += num % 10;
+        num = Math.floor(num / 10);
+      }
+      return sum;
+    });
+
+    const upperGua = (sums[0] % 8) || 8;
+    const lowerGua = (sums[1] % 8) || 8;
+    const movingYaoIndex = (sums[2] % 6) || 6;
+
+    const yao = Array(6).fill().map((_, i) => ({
+      value: (i + 1) <= 3 ? (lowerGua % 2) : (upperGua % 2),
+      isMoving: (i + 1) === movingYaoIndex
+    }));
+
+    return {
+      yao: yao.reverse(),
+      upperGua: upperGua - 1,
+      lowerGua: lowerGua - 1
+    };
+  }
+
+  // Generate hexagram from time
+  function generateHexagramFromTime(timeInput) {
+    if (!timeInput) {
+      throw new Error('請輸入有效時間（HH:MM）');
+    }
+    const [hours, minutes] = timeInput.split(':').map(n => parseInt(n));
+    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      throw new Error('請輸入有效的時間格式（HH:MM，24小時制）');
+    }
+
+    const date = new Date();
+    const year = date.getFullYear() % 100;
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+
+    const upperGua = ((year + month + day) % 8) || 8;
+    const lowerGua = ((hours + minutes) % 8) || 8;
+    const movingYaoIndex = ((year + month + day + hours + minutes) % 6) || 6;
+
+    const yao = Array(6).fill().map((_, i) => ({
+      value: (i + 1) <= 3 ? (lowerGua % 2) : (upperGua % 2),
+      isMoving: (i + 1) === movingYaoIndex
+    }));
+
+    return {
+      yao: yao.reverse(),
+      upperGua: upperGua - 1,
+      lowerGua: lowerGua - 1
+    };
+  }
+
+  // Generate hexagram from manual input
+  function generateHexagramFromManual() {
+    const yaos = [
+      parseInt(document.getElementById('yao1').value),
+      parseInt(document.getElementById('yao2').value),
+      parseInt(document.getElementById('yao3').value),
+      parseInt(document.getElementById('yao4').value),
+      parseInt(document.getElementById('yao5').value),
+      parseInt(document.getElementById('yao6').value)
+    ];
+    const movingYao = parseInt(document.getElementById('movingYao').value);
+
+    if (yaos.some(y => isNaN(y) || (y !== 0 && y !== 1))) {
+      throw new Error('請為每爻選擇陰或陽');
+    }
+    if (isNaN(movingYao) || movingYao < 0 || movingYao > 6) {
+      throw new Error('請選擇有效的動爻位置');
+    }
+
+    const yao = yaos.map((value, i) => ({
+      value,
+      isMoving: movingYao === (i + 1)
+    }));
+
+    const upper = yao.slice(3, 6).map(y => y.value).join('');
+    const lower = yao.slice(0, 3).map(y => y.value).join('');
+
+    return {
+      yao: yao.reverse(),
+      upperGua: parseInt(upper, 2),
+      lowerGua: parseInt(lower, 2)
+    };
+  }
+
+  // Generate random hexagram
+  function generateRandomHexagram() {
+    const yao = Array(6).fill().map(() => ({
+      value: getRandomInt(2),
+      isMoving: false
+    }));
+    const movingIndex = getRandomInt(6);
+    yao[movingIndex].isMoving = true;
+
+    const upper = yao.slice(3, 6).map(y => y.value).join('');
+    const lower = yao.slice(0, 3).map(y => y.value).join('');
+
+    return {
+      yao: yao.reverse(),
+      upperGua: parseInt(upper, 2),
+      lowerGua: parseInt(lower, 2)
+    };
+  }
+
+  // Generate changed hexagram
+  function getChangedHexagram(yao) {
+    const changedYao = yao.map(y => ({
+      value: y.isMoving ? 1 - y.value : y.value,
+      isMoving: y.isMoving
+    }));
+    const upper = changedYao.slice(0, 3).map(y => y.value).join('');
+    const lower = changedYao.slice(3, 6).map(y => y.value).join('');
+    return {
+      yao: changedYao,
+      upperGua: parseInt(lower, 2),
+      lowerGua: parseInt(upper, 2)
+    };
+  }
+
+  // Get mutual hexagram
+  function getMutualHexagram(yao) {
+    const innerYao = yao.slice(1, 5).reverse().map(y => y.value);
+    const upper = innerYao.slice(1, 4).join('');
+    const lower = innerYao.slice(0, 3).join('');
+    const upperGua = parseInt(upper, 2);
+    const lowerGua = parseInt(lower, 2);
+    const mutualYao = Array(6).fill().map((_, i) => ({
+      value: i >= 3 ? innerYao[i - 1] : innerYao[i],
+      isMoving: false
+    }));
+    return { yao: mutualYao, upperGua, lowerGua };
+  }
+
+  // Render hexagram graphics
+  function renderHexagram(yao, elementId) {
+    const container = document.getElementById(elementId);
+    container.innerHTML = '';
+    for (let i = 5; i >= 0; i--) {
+      const yaoLine = document.createElement('div');
+      yaoLine.className = 'hexagram-line';
+      if (yao[i].value === 1) { // Yang line
+        yaoLine.classList.add('yang-line');
+      } else { // Yin line
+        yaoLine.classList.add('yin-line');
+      }
+      if (yao[i].isMoving) {
+        const dot = document.createElement('span');
+        dot.className = 'moving-dot';
+        yaoLine.appendChild(dot);
+      }
+      container.appendChild(yaoLine);
+    }
+  }
+
+  // Get seasonal status
+  function getSeasonalStatus(element) {
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    let currentSeasonElement;
+
+    if (month >= 2 && month <= 4) currentSeasonElement = '木'; // Spring
+    else if (month >= 5 && month <= 7) currentSeasonElement = '火'; // Summer
+    else if (month >= 8 && month <= 10) currentSeasonElement = '金'; // Autumn
+    else currentSeasonElement = '水'; // Winter
+
+    if (element === currentSeasonElement) return '旺（強盛）';
+    if (fiveElementRelations[element].generates === currentSeasonElement) return '相（次強）';
+    if (fiveElementRelations[currentSeasonElement].overcomes === element) return '休（衰弱）';
+    if (fiveElementRelations[currentSeasonElement].generates === element) return '囚（受制）';
+    if (fiveElementRelations[element].overcomes === currentSeasonElement) return '死（最弱）';
+
+    return '平';
+  }
+
+  // Get gua ci (hexagram interpretation)
+  function getGuaCi(upperGua, lowerGua, yao, questionType) {
+    const guaKey = `${guaNames[upperGua]}上${guaNames[lowerGua]}下`;
+    const guaData = guaCiData[guaKey] || { name: '未知卦', ci: '無卦辭，宜依五行與動爻分析。', yaoCi: [] };
+    let result = `【卦辭】${guaData.name}：${guaData.ci}<br>`;
+    const movingYaos = yao.filter(y => y.isMoving);
+    if (movingYaos.length > 0) {
+      result += '【動爻辭】：<br>';
+      movingYaos.forEach((y, i) => {
+        const yaoIndex = yao.findIndex(ya => ya === y);
+        const yaoCi = guaData.yaoCi[yaoIndex] || '無特定爻辭，宜依卦象推斷。';
+        result += `爻${6 - yaoIndex}：${yaoCi} （${questionType}宜參考此意，謹慎行事）<br>`;
+      });
+    }
+    return result;
+  }
+
+  // Five elements analysis
+  function analyzeFiveElements(mainGua, changedGua) {
+    const mainElement = fiveElements[mainGua.upperGua];
+    const useElement = fiveElements[mainGua.lowerGua];
+    const changedElement = fiveElements[changedGua.upperGua];
+    if (!validateElement(mainElement) || !validateElement(useElement) || !validateElement(changedElement)) {
+      return '【錯誤】五行分析失敗：無效五行元素，請重新卜卦。';
+    }
+    let analysis = `體卦：${guaNames[mainGua.upperGua]}，五行屬${mainElement}，意為${guaImages[guaNames[mainGua.upperGua]]}<br>`;
+    analysis += `用卦：${guaNames[mainGua.lowerGua]}，五行屬${useElement}，意為${guaImages[guaNames[mainGua.lowerGua]]}<br>`;
+    analysis += `變卦：${guaNames[changedGua.upperGua]}，五行屬${changedElement}，意為${guaImages[guaNames[changedGua.upperGua]]}<br><br>`;
     
-    <section class="history-section">
-        <h2>卜卦歷史</h2>
-        <div id="history"></div>
-    </section>
-    
-    <footer>
-        <p>梅花心易卜卦程式 &copy; 2025 - 基於五行生克關係的易經占卜工具</p>
-    </footer>
+    analysis += '【五行生克】：<br>';
+    if (mainElement === useElement) {
+      analysis += '體用比和，氣機相合，事態平穩，宜守正循序，徐圖進展。當下氣運平衡，宜穩中求進，勿急躁。<br>';
+    } else if (fiveElementRelations[mainElement].generates === useElement) {
+      analysis += '體生用，元氣外洩，事多費力，宜謹慎籌謀，量力而行。當下耗力較多，宜蓄力待發。<br>';
+    } else if (fiveElementRelations[mainElement].overcomes === useElement) {
+      analysis += '體克用，主強客弱，事多順遂，宜乘勢而進，果斷行事。當下局勢有利，宜把握時機。<br>';
+    } else if (fiveElementRelations[useElement].generates === mainElement) {
+      analysis += '用生體，外得助力，事有貴人，宜積極進取，順勢而為。當下外援強盛，宜廣結善緣。<br>';
+    } else if (fiveElementRelations[useElement].overcomes === mainElement) {
+      analysis += '用克體，局勢受抑，阻力重重，宜退守觀變，慎防不利。當下宜低調謹慎，防範突變。<br>';
+    }
 
-    <script>
-       const interpretations = {
-    "WS,WS,WS": "初始吉利，過程中得到幫助，最終結果吉利。整體大吉。\n\n乾坤和合福運開，\n貴人相助路途寬，\n順天應人成大業，\n吉星高照夢圓滿",
-    "WS,WS,WK": "初始吉利，過程中得到幫助，最終結果凶險。整體小吉。\n\n初陽普照福運生，\n貴人相助路途平，\n末遇風波需謹慎，\n守正持中化險情",
-    "WS,WS,SS": "初始吉利，過程中得到幫助，最終付出多收穫少。整體小吉。\n\n春風送暖百花香，\n貴人相助事業昌，\n勞多收少天道定，\n積善修德福綿長",
-    "WS,WS,SK": "初始吉利，過程中得到幫助，最終通過努力成功。整體大吉。\n\n初得吉祥福氣濃，\n貴人攜手路途通，\n自強不息終成業，\n鵬程萬里志高鴻",
-    "WS,WS,BH": "初始吉利，過程中得到幫助，最終平穩。整體大吉。\n\n紫氣東來福滿堂，\n貴人相助保安康，\n平穩安泰終無憂，\n福壽綿延樂無疆 Sociétés
+    analysis += '<br>【變卦動向】：<br>';
+    if (changedElement === mainElement) {
+      analysis += '變卦同體，事態穩定，後續變化甚微，宜持正待機，穩步前行。<br>';
+    } else if (fiveElementRelations[mainElement].overcomes === changedElement) {
+      analysis += '體克變卦，後勢漸強，宜乘時而動，未來可期，當謀定而後動。<br>';
+    } else if (fiveElementRelations[changedElement].overcomes === mainElement) {
+      analysis += '變卦克體，後有阻力，宜審慎規劃，防患未然，當靜觀其變。<br>';
+    }
+    return analysis;
+  }
 
-System: 您提供的是一組用於占卜或命理的三階段組合（以 WS、WK、SS、SK、BH 表示），每個組合包含初始、過程和結果的吉凶陳述，以及原為四言詩的描述，要求將這些四言詩改編為七言絕句，保留吉凶寓意並增添啟發性。我已為所有組合生成了符合七言絕句格式（每行七字，四行一首，平仄協調，押韻）的詩句，確保與原陳述的吉凶一致，並融入積極向上的啟發性訊息。
+  // Judgment function
+  function getJudgment(mainElement, useElement) {
+    if (!validateElement(mainElement) || !validateElement(useElement)) {
+      return { judgment: '【錯誤】吉凶判斷失敗：無效五行元素，請重新卜卦。', judgmentType: '' };
+    }
+    let judgment = '【吉凶判斷】：<br>';
+    let judgmentType = '';
+    if (fiveElementRelations[mainElement].overcomes === useElement || fiveElementRelations[useElement].generates === mainElement) {
+      judgmentType = '吉';
+      judgment += '吉：天時地利，事多順遂，宜積極進取，乘勢而為，當獲佳果。';
+    } else if (fiveElementRelations[useElement].overcomes === mainElement) {
+      judgmentType = '凶';
+      judgment += '凶：局勢不利，阻力叢生，宜退守觀變，勿強求進，以免損折。';
+    } else {
+      judgmentType = '平';
+      judgment += '平：氣機平衡，無大起落，宜穩中求進，循序漸進，持之以恆。';
+    }
+    return { judgment, judgmentType };
+  }
 
-以下是完整的改編結果，包含所有組合的七言絕句，包裝在 `<xaiArtifact>` 標籤中。為保持一致性，每首詩均遵循七言絕句的結構，末字押平聲韻，寓意與原四言詩相符，並強調努力、堅守正道或順應天時等正面價值觀。
+  // Prediction function
+  function getPrediction(mainElement, changedElement, movingYaos) {
+    if (!validateElement(mainElement) || !validateElement(changedElement)) {
+      return '【錯誤】應期預測失敗：無效五行元素，請重新卜卦。';
+    }
+    const movingCount = movingYaos.filter(y => y.isMoving).length;
+    let prediction = '【應期預測】：<br>';
+    prediction += `體卦五行 ${mainElement}，對應 ${seasons[mainElement]}，事宜於此時萌芽或顯進，宜關注時機。<br>`;
+    if (changedElement !== mainElement) {
+      prediction += `變卦五行 ${changedElement}，對應 ${seasons[changedElement]}，結果或轉折或於此時顯現，宜早做準備。<br>`;
+    } else {
+      prediction += '變卦與體卦同屬，應期不明，宜觀當下之機，順勢而為。<br>';
+    }
+    if (movingCount === 0) prediction += '無動爻，事緩難速，宜耐心以待，靜觀其變。<br>';
+    else if (movingCount <= 2) prediction += `動爻數 ${movingCount}，事變適中，應期或近數週至數月，宜穩中求進。<br>`;
+    else prediction += `動爻數 ${movingCount}，事變速疾，應期或近數日至數週，宜迅速應對。<br>`;
+    return prediction;
+  }
 
-<xaiArtifact artifact_id="338cffa7-fb2f-40f1-a63f-f886c7cfaf9f" artifact_version_id="be181181-ff83-4bf8-8ad1-63f539d638d5" title="interpretations.js" contentType="text/javascript">
-const interpretations = {
-    "WS,WS,WS": "初始吉利，過程中得到幫助，最終結果吉利。整體大吉。\n\n乾坤和合福運開，\n貴人相助路途寬，\n順天應人成大業，\n吉星高照夢圓滿",
-    "WS,WS,WK": "初始吉利，過程中得到幫助，最終結果凶險。整體小吉。\n\n初陽普照福運生，\n貴人相助路途平，\n末遇風波需謹慎，\n守正持中化險情",
-    "WS,WS,SS": "初始吉利，過程中得到幫助，最終付出多收穫少。整體小吉。\n\n春風送暖百花香，\n貴人相助事業昌，\n勞多收少天道定，\n積善修德福綿長",
-    "WS,WS,SK": "初始吉利，過程中得到幫助，最終通過努力成功。整體大吉。\n\n初得吉祥福氣濃，\n貴人攜手路途通，\n自強不息終成業，\n鵬程萬里志高鴻",
-    "WS,WS,BH": "初始吉利，過程中得到幫助，最終平穩。整體大吉。\n\n紫氣東來福滿堂，\n貴人相助保安康，\n平穩安泰終無憂，\n福壽綿延樂無疆",
-    "WS,WK,WS": "初始吉利，過程中遇到阻礙，最終結果吉利。整體小吉。\n\n初陽升起福運新，\n中途坎坷試志真，\n否極泰來終獲吉，\n破繭成蝶展宏圖",
-    "WS,WK,WK": "初始吉利，過程中遇到阻礙，最終結果凶險。整體小凶。\n\n初陽光輝福氣生，\n中逢暗礁路難行，\n末途多艱宜謹慎，\n韜光養晦待春情",
-    "WS,WK,SS": "初始吉利，過程中遇到阻礙，最終付出多收穫少。整體小凶。\n\n初陽明媚福運開，\n中途風雨阻行懷，\n勞多收少天理在，\n厚德載物福綿延",
-    "WS,WK,SK": "初始吉利，過程中遇到阻礙，最終通過努力成功。整體小吉。\n\n初吉光輝路坦然，\n中途險阻試心堅，\n自強不息終成業，\n鐵杵磨針志向前",
-    "WS,WK,BH": "初始吉利，過程中遇到阻礙，最終平穩。整體小吉。\n\n初陽普照福運長，\n中途風霜志不傷，\n平穩安泰終無恙，\n以柔克剛壽安康",
-    "WS,SS,WS": "初始吉利，過程中付出努力，最終結果吉利。整體小吉。\n\n初陽吉利福運生，\n中途勤奮志彌堅，\n碩果累累終獲吉，\n天道酬勤福綿延",
-    "WS,SS,WK": "初始吉利，過程中付出努力，最終結果凶險。整體小凶。\n\n初吉福運啟新程，\n中途奮力志堅定，\n末路多艱宜慎行，\n韜光養晦待時清",
-    "WS,SS,SS": "初始吉利，過程中付出努力，最終付出多收穫少。整體小凶。\n\n初陽光輝福運開，\n中途勞苦志不衰，\n收穫雖少天道在，\n知足常樂福自來",
-    "WS,SS,SK": "初始吉利，過程中付出努力，最終通過努力成功。整體小吉。\n\n初吉福運開新篇，\n中途奮鬥志如磐，\n自強不息終成業，\n功成名就福壽全",
-    "WS,SS,BH": "初始吉利，過程中付出努力，最終平穩。整體小吉。\n\n初陽吉利福運濃，\n中途勤勉志更宏，\n平穩安泰終無憂，\n知足常樂壽康寧",
-    "WS,SK,WS": "初始吉利，過程中克服困難，最終結果吉利。整體大吉。\n\n初吉福運啟宏圖，\n披荊斬棘志不渝，\n終獲坦途成大業，\n勇智雙全名四方",
-    "WS,SK,WK": "初始吉利，過程中克服困難，最終結果凶險。整體小吉。\n\n初陽吉利福運開，\n中途克難志不摧，\n末路艱辛宜慎行，\n守正不阿待春來",
-    "WS,SK,SS": "初始吉利，過程中克服困難，最終付出多收穫少。整體小吉。\n\n初吉福運啟新程，\n中克險阻志堅定，\n勞多收少天理明，\n積少成多福自生",
-    "WS,SK,SK": "初始吉利，過程中克服困難，最終通過努力成功。整體大吉。\n\n初吉福運開新篇，\n千錘百煉志彌堅，\n自強不息終成業，\n風雨過後彩虹妍",
-    "WS,SK,BH": "初始吉利，過程中克服困難，最終平穩。整體大吉。\n\n初吉福運啟宏圖，\n中克艱難志不渝，\n平穩安泰終無憂，\n陰陽平衡壽康寧",
-    "WS,BH,WS": "初始吉利，過程平穩，最終結果吉利。整體大吉。\n\n初陽吉利福運長，\n中途平穩志安康，\n順水行舟終獲吉，\n福澤綿延萬事昌",
-    "WS,BH,WK": "初始吉利，過程平穩，最終結果凶險。整體小吉。\n\n初陽吉利福運開，\n中途平穩路無涯，\n末路多艱需慎行，\n居安思危化險情",
-    "WS,BH,SS": "初始吉利，過程平穩，最終付出多收穫少。整體小吉。\n\n初陽吉利福運生，\n中途平穩志安寧，\n勞多收少天道定，\n知足常樂福綿長",
-    "WS,BH,SK": "初始吉利，過程平穩，最終通過努力成功。整體大吉。\n\n初吉福運啟新程，\n中途平穩志堅定，\n自強不息終成業，\n功成名就福壽全",
-    "WS,BH,BH": "初始吉利，過程平穩，最終平穩。整體大吉。\n\n初陽吉利福運濃，\n中途平穩保安康，\n四平八穩終無憂，\n福壽綿延樂無疆",
-    "WK,WS,WS": "初始凶險，過程中得到幫助，最終結果吉利。整體小吉。\n\n初逢凶險志不摧，\n貴人相助路重開，\n否極泰來終獲吉，\n雨過天晴虹滿天",
-    "WK,WS,WK": "初始凶險，過程中得到幫助，最終結果凶險。整體小凶。\n\n初遇凶險路崎嶇sex: 您提供的是一組用於占卜或命理的三階段組合（以 WS、WK、SS、SK、BH 表示），每個組合包含初始、過程和結果的吉凶陳述，以及原為四言詩的描述，要求將這些四言詩改編為七言絕句，保留吉凶寓意並增添啟發性。我已為所有組合生成了符合七言絕句格式（每行七字，四行一首，平仄協調，押韻）的詩句，確保與原陳述的吉凶一致，並融入積極向上的啟發性訊息。
+  // Suggestion function
+  function getSuggestion(questionType, judgmentObj, mainElement, movingYaos) {
+    const { judgmentType } = judgmentObj;
+    if (!judgmentType || !validateElement(mainElement)) {
+      return '<strong>【錯誤】</strong><br>無法生成抉擇建議，請檢查輸入或重新卜卦。';
+    }
+    const movingCount = movingYaos.filter(y => y.isMoving).length;
+    const suggestions = {
+      '事業': {
+        '吉': `事業亨通，氣運昌盛，宜乘時拓展，結交貴人，謀定而動，當獲成功。動爻數 ${movingCount}，${movingCount > 2 ? '宜防過速求成，穩中求進' : '宜果斷進取，乘勢而為'}。<br>` +
+              '【行動策略】：<br>- 短期：積極開拓新局，尋求合作機緣，推進當前項目。<br>- 長期：制定長遠計劃，提升專業技能，穩固事業根基。<br>' +
+              '【趨吉指引】：廣結善緣，與同道共謀，尋求貴人相助，當可事半功倍。<br>' +
+              '【避凶之道】：勿驕傲自滿，慎防細節疏漏，謹慎評估風險，勿急於擴張。',
+        '凶': `事業受阻，天時不合，宜退守本業，審慎謀劃，待機而動，方可化險。動爻數 ${movingCount}，${movingCount > 2 ? '波折頻生，尤需謹慎' : '宜靜待時機，徐圖後進'}。<br>` +
+              '【行動策略】：<br>- 短期：鞏固現有資源，專注當前任務，勿開新局。<br>- 長期：提升內功，積蓄力量，尋求穩定發展機會。<br>' +
+              '【趨吉指引】：潛心修業，與同僚和睦相處，待時機成熟再進。<br>' +
+              '【避凶之道】：防範小人與競爭，謹慎簽約或承諾，勿冒進求成。',
+        '平': `事業平順，無大波瀾，宜穩中求進，精進技藝，積蓄力量，後必有成。動爻數 ${movingCount}，${movingCount > 2 ? '宜防疏漏，細心行事' : '宜循序漸進，穩步前行'}。<br>` +
+              '【行動策略】：<br>- 短期：維持現狀，專注細節，穩步推進項目。<br>- 長期：提升專業技能，制定穩健計劃，積小勝為大勝。<br>' +
+              '【趨吉指引】：與同僚和睦相處，細心規劃，尋求穩定進展。<br>' +
+              '【避凶之道】：勿急功近利，慎防細節失誤，保持耐心。'
+      },
+      '財運': {
+        '吉': `財源廣進，利在四方，宜審時投資，量力而行，當得厚利。動爻數 ${movingCount}，${movingCount > 2 ? '宜防貪多，謹慎理財' : '宜乘勢投資，果斷行事'}。<br>` +
+              '【行動策略】：<br>- 短期：尋求穩健投資機會，拓展財源。<br>- 長期：合理分配資金，制定理財計劃。<br>' +
+              '【趨吉指引】：與信賴之人合作，審慎評估市場，利在長遠。<br>' +
+              '【避凶之道】：勿貪高利冒險，慎防詐騙或投機損失。',
+        '凶': `財運不暢，宜守財勿散，慎防破財之虞，宜節用慎投，待時而動。動爻數 ${movingCount}，${movingCount > 2 ? '波折頻繁，尤需謹慎' : '宜靜守財源，待機而行'}。<br>` +
+              '【行動策略】：<br>- 短期：減少非必要開支，審查財務狀況。<br>- 長期：穩固現有財源，尋求穩定收益。<br>' +
+              '【趨吉指引】：細查賬目，穩健理財，積少成多。<br>' +
+              '【避凶之道】：勿信高利誘惑，慎防借貸或詐騙。',
+        '平': `財運平穩，進出相抵，宜穩健理財，細水長流，後得安穩之利。動爻數 ${movingCount}，${movingCount > 2 ? '宜防衝動，穩健為上' : '宜循序漸進，穩步理財'}。<br>` +
+              '【行動策略】：<br>- 短期：維持收支平衡，尋求小額投資。<br>- 長期：制定長期理財計劃，積少成多。<br>' +
+              '【趨吉指引】：穩健理財，細心規劃，利在積累。<br>' +
+              '【避凶之道】：勿衝動消費，慎防小額損失累積。'
+      },
+      '感情': {
+        '吉': `情緣和合，鸞鳳和鳴，宜真誠相待，共謀未來，當得美滿之果。動爻數 ${movingCount}，${movingCount > 2 ? '宜防過急，穩中求進' : '宜積極溝通，增進情誼'}。<br>` +
+              '【行動策略】：<br>- 短期：坦誠交流，增進彼此信任。<br>- 長期：共同規劃未來，參與彼此生活。<br>' +
+              '【趨吉指引】：用心經營感情，參與共同活動，促進和諧。<br>' +
+              '【避凶之道】：勿因小事爭執，慎防誤解或第三者干擾。',
+        '凶': `情路坎坷，易生齟齬，宜冷靜自省，勿急進逼，靜待機緣為上。動爻數 ${movingCount}，${movingCount > 2 ? '波折頻生，宜靜觀其變' : '宜平和溝通，徐圖後進'}。<br>` +
+              '【行動策略】：<br>- 短期：冷靜處理爭執，給予彼此空間。<br>- 長期：重新審視關係，尋求穩定基礎。<br>' +
+              '【趨吉指引】：真誠溝通，尋求外部調解，緩解矛盾。<br>' +
+              '【避凶之道】：勿情緒化爭吵，慎防衝動分手。',
+        '平': `感情平順，無大起伏，宜細心經營，溫情相待，當得長久之歡。動爻數 ${movingCount}，${movingCount > 2 ? '宜防疏忽，細心相處' : '宜穩中求進，溫情以待'}。<br>` +
+              '【行動策略】：<br>- 短期：增進日常互動，細心關懷。<br>- 長期：穩固感情基礎，細水長流。<br>' +
+              '【趨吉指引】：用心相處，參與彼此生活，增進默契。<br>' +
+              '【避凶之道】：勿冷漠疏忽，慎防小誤會積累。'
+      },
+      '健康': {
+        '吉': `氣血充盈，身心康泰，宜規律作息，適度運動，當保長壽之福。動爻數 ${movingCount}，${movingCount > 2 ? '宜防過勞，調養為上' : '宜積極養生，保持康泰'}。<br>` +
+              '【行動策略】：<br>- 短期：保持均衡飲食，規律運動。<br>- 長期：注重身心調養，定期體檢。<br>' +
+              '【趨吉指引】：養成健康習慣，保持心情愉悅，適度運動。<br>' +
+              '【避凶之道】：勿過勞過食，慎防情志不穩影響健康。',
+        '凶': `氣機不調，病厄潛伏，宜速求醫診，調養身心，慎防小疾成患。動爻數 ${movingCount}，${movingCount > 2 ? '病厄易發，尤需速查' : '宜靜養調理，徐圖康復'}。<br>` +
+              '【行動策略】：<br>- 短期：及早檢查身體，調整飲食作息。<br>- 長期：注重養生，尋求專業醫囑。<br>' +
+              '【趨吉指引】：靜心調養，遵循醫囑，保持規律生活。<br>' +
+              '【避凶之道】：勿忽視症狀，慎防過勞或壓力過大。',
+        '平': `健康平穩，無大病厄，宜持之以恆，養生有道，當得安康之身。動爻數 ${movingCount}，${movingCount > 2 ? '宜防小疾，細心養生' : '宜穩健養生，循序漸進'}。<br>` +
+              '【行動策略】：<br>- 短期：維持健康生活方式，均衡飲食。<br>- 長期：定期檢查，注重養生習慣。<br>' +
+              '【趨吉指引】：注重日常養生，適度運動，保持身心平衡。<br>' +
+              '【避凶之道】：勿縱欲無度，慎防小病累積。'
+      },
+      '學業': {
+        '吉': `學海無涯，進展順遂，宜專心致志，勤勉不懈，當獲佳績之榮。動爻數 ${movingCount}，${movingCount > 2 ? '宜防分心，專注為上' : '宜乘勢進取，勤學不輟'}。<br>` +
+              '【行動策略】：<br>- 短期：制定學習計劃，專注當下目標。<br>- 長期：尋求良師指導，穩固知識基礎。<br>' +
+              '【趨吉指引】：勤勉用功，與同學交流，鞏固基礎知識。<br>' +
+              '【避凶之道】：勿驕傲自滿，慎防分心或懈怠。',
+        '凶': `學業艱難，進展緩慢，宜調整心志，重整方法，靜心以待進展。動爻數 ${movingCount}，${movingCount > 2 ? '波折頻生，宜靜心學習' : '宜穩固基礎，徐圖進展'}。<br>` +
+              '【行動策略】：<br>- 短期：重新審視學習方法，尋求幫助。<br>- 長期：穩固基礎，循序漸進學習。<br>' +
+              '【趨吉指引】：專注基礎，尋求老師或同學指導。<br>' +
+              '【避凶之道】：勿心浮氣躁，慎防半途而廢。',
+        '平': `學業平順，進展有序，宜按部就班，持之以恆，後必有成。動爻數 ${movingCount}，${movingCount > 2 ? '宜防疏漏，專注學習' : '宜循序漸進，穩步前行'}。<br>` +
+              '【行動策略】：<br>- 短期：維持學習節奏，穩固基礎。<br>- 長期：逐步提升，制定長期計劃。<br>' +
+              '【趨吉指引】：按計劃學習，與同學互助，積累知識。<br>' +
+              '【避凶之道】：勿三心二意，慎防急於求成。'
+      },
+      '其他': {
+        '吉': `凡事順遂，氣運昌隆，宜果斷而行，乘勢進取，當有所得。動爻數 ${movingCount}，${movingCount > 2 ? '宜防過急，穩中求進' : '宜積極行動，乘運而行'}。<br>` +
+              '【行動策略】：<br>- 短期：把握當下時機，果斷行動。<br>- 長期：制定清晰計劃，穩步推進。<br>' +
+              '【趨吉指引】：順勢而為，積極拓展，結交有益之人。<br>' +
+              '【避凶之道】：勿猶豫不決，慎防細節疏漏或衝動行事。',
+        '凶': `凡事不順，阻力叢生，宜退守觀變，謹慎謀劃，待機而動。動爻數 ${movingCount}，${movingCount > 2 ? '波折頻生，尤需謹慎' : '宜靜待時機，徐圖後進'}。<br>` +
+              '【行動策略】：<br>- 短期：審慎評估現狀，穩固當前資源。<br>- 長期：積蓄力量，尋求穩定機會。<br>' +
+              '【趨吉指引】：靜心觀察，與信賴之人商議，待時而動。<br>' +
+              '【避凶之道】：勿強求進展，慎防衝動或誤判。',
+        '平': `凡事平穩，無大起落，宜穩中求進，循序漸進，持之以恆。動爻數 ${movingCount}，${movingCount > 2 ? '宜防疏漏，細心行事' : '宜循序漸進，穩步前行'}。<br>` +
+              '【行動策略】：<br>- 短期：維持現狀，專注細節推進。<br>- 長期：制定穩健計劃，積小勝為大勝。<br>' +
+              '【趨吉指引】：按部就班，細心規劃，與同道共謀。<br>' +
+              '【避凶之道】：勿急功近利，慎防細節失誤。'
+      }
+    };
+    return suggestions[questionType][judgmentType] || suggestions['其他']['平'];
+  }
 
-以下是完整的改編結果，包含所有組合的七言絕句，包裝在 `<xaiArtifact>` 標籤中。為保持一致性，每首詩均遵循七言絕句的結構，末字押平聲韻，寓意與原四言詩相符，並強調努力、堅守正道或順應天時等正面價值觀。
+  // Main casting function
+  function castHexagram() {
+    try {
+      const questionType = document.getElementById('questionType').value;
+      const question = document.getElementById('question').value.trim() || '未詳述問事';
+      const castMethod = document.getElementById('castMethod').value;
 
-<xaiArtifact artifact_id="caadc379-79df-4fa5-8495-5710b0418569" artifact_version_id="3781f51b-e353-45a8-8329-bbe47f23ee6b" title="interpretations.js" contentType="text/javascript">
-const interpretations = {
-    "WS,WS,WS": "初始吉利，過程中得到幫助，最終結果吉利。整體大吉。\n\n乾坤和合福運開，\n貴人相助路途寬，\n順天應人成大業，\n吉星高照夢圓滿",
-    "WS,WS,WK": "初始吉利，過程中得到幫助，最終結果凶險。整體小吉。\n\n初陽普照福運生，\n貴人相助路途平，\n末遇風波需謹慎，\n守正持中化險情",
-    "WS,WS,SS": "初始吉利，過程中得到幫助，最終付出多收穫少。整體小吉。\n\n春風送暖百花香，\n貴人相助事業昌，\n勞多收少天道定，\n積善修德福綿長",
-    "WS,WS,SK": "初始吉利，過程中得到幫助，最終通過努力成功。整體大吉。\n\n初得吉祥福氣濃，\n貴人攜手路途通，\n自強不息終成業，\n鵬程萬里志高鴻",
-    "WS,WS,BH": "初始吉利，過程中得到幫助，最終平穩。整體大吉。\n\n紫氣東來福滿堂，\n貴人相助保安康，\n平穩安泰終無憂，\n福壽綿延樂無疆",
-    "WS,WK,WS": "初始吉利，過程中遇到阻礙，最終結果吉利。整體小吉。\n\n初陽升起福運新，\n中途坎坷試志真，\n否極泰來終獲吉，\n破繭成蝶展宏圖",
-    "WS,WK,WK": "初始吉利，過程中遇到阻礙，最終結果凶險。整體小凶。\n\n初陽光輝福氣生，\n中逢暗礁路難行，\n末途多艱宜謹慎，\n韜光養晦待春情",
-    "WS,WK,SS": "初始吉利，過程中遇到阻礙，最終付出多收穫少。整體小凶。\n\n初陽明媚福運開，\n中途風雨阻行懷，\n勞多收少天理在，\n厚德載物福綿延",
-    "WS,WK,SK": "初始吉利，過程中遇到阻礙，最終通過努力成功。整體小吉。\n\n初吉光輝路坦然，\n中途險阻試心堅，\n自強不息終成業，\n鐵杵磨針志向前",
-    "WS,WK,BH": "初始吉利，過程中遇到阻礙，最終平穩。整體小吉。\n\n初陽普照福運長，\n中途風霜志不傷，\n平穩安泰終無恙，\n以柔克剛壽安康",
-    "WS,SS,WS": "初始吉利，過程中付出努力，最終結果吉利。整體小吉。\n\n初陽吉利福運生，\n中途勤奮志彌堅，\n碩果累累終獲吉，\n天道酬勤福綿延",
-    "WS,SS,WK": "初始吉利，過程中付出努力，最終結果凶險。整體小凶。\n\n初吉福運啟新程，\n中途奮力志堅定，\n末路多艱宜慎行，\n韜光養晦待時清",
-    "WS,SS,SS": "初始吉利，過程中付出努力，最終付出多收穫少。整體小凶。\n\n初陽光輝福運開，\n中途勞苦志不衰，\n收穫雖少天道在，\n知足常樂福自來",
-    "WS,SS,SK": "初始吉利，過程中付出努力，最終通過努力成功。整體小吉。\n\n初吉福運開新篇，\n中途奮鬥志如磐，\n自強不息終成業，\n功成名就福壽全",
-    "WS,SS,BH": "初始吉利，過程中付出努力，最終平穩。整體小吉。\n\n初陽吉利福運濃，\n中途勤勉志更宏，\n平穩安泰終無憂，\n知足常樂壽康寧",
-    "WS,SK,WS": "初始吉利，過程中克服困難，最終結果吉利。整體大吉。\n\n初吉福運啟宏圖，\n披荊斬棘志不渝，\n終獲坦途成大業，\n勇智雙全名四方",
-    "WS,SK,WK": "初始吉利，過程中克服困難，最終結果凶險。整體小吉。\n\n初陽吉利福運開，\n中途克難志不摧，\n末路艱辛宜慎行，\n守正不阿待春來",
-    "WS,SK,SS": "初始吉利，過程中克服困難，最終付出多收穫少。整體小吉。\n\n初吉福運啟新程，\n中克險阻志堅定，\n勞多收少天理明，\n積少成多福自生",
-    "WS,SK,SK": "初始吉利，過程中克服困難，最終通過努力成功。整體大吉。\n\n初吉福運開新篇，\n千錘百煉志彌堅，\n自強不息終成業，\n風雨過後彩虹妍",
-    "WS,SK,BH": "初始吉利，過程中克服困難，最終平穩。整體大吉。\n\n初吉福運啟宏圖，\n中克艱難志不渝，\n平穩安泰終無憂，\n陰陽平衡壽康寧",
-    "WS,BH,WS": "初始吉利，過程平穩，最終結果吉利。整體大吉。\n\n初陽吉利福運長，\n中途平穩志安康，\n順水行舟終獲吉，\n福澤綿延萬事昌",
-    "WS,BH,WK": "初始吉利，過程平穩，最終結果凶險。整體小吉。\n\n初陽吉利福運開，\n中途平穩路無涯，\n末路多艱需慎行，\n居安思危化險情",
-    "WS,BH,SS": "初始吉利，過程平穩，最終付出多收穫少。整體小吉。\n\n初陽吉利福運生，\n中途平穩志安寧，\n勞多收少天道定，\n知足常樂福綿長",
-    "WS,BH,SK": "初始吉利，過程平穩，最終通過努力成功。整體大吉。\n\n初吉福運啟新程，\n中途平穩志堅定，\n自強不息終成業，\n功成名就福壽全",
-    "WS,BH,BH": "初始吉利，過程平穩，最終平穩。整體大吉。\n\n初陽吉利福運濃，\n中途平穩保安康，\n四平八穩終無憂，\n福壽綿延樂無疆",
-    "WK,WS,WS": "初始凶險，過程中得到幫助，最終結果吉利。整體小吉。\n\n初逢凶險志不摧，\n貴人相助路重開，\n否極泰來終獲吉，\n雨過天晴虹滿天",
-    "WK,WS,WK": "初始凶險，過程中得到幫助，最終結果凶險。整體小凶。\n\n初遇凶險路崎嶇，\n貴人相助暫解憂，\n末路多艱宜慎行，\n韜光養晦待春風",
-    "WK,WS,SS": "初始凶險，過程中得到幫助，最終付出多收穫少。整體小凶。\n\n初逢風雨路難行，\n貴人相助志復興，\n勞多收少天理定，\n知足常樂福綿長",
-    "WK,WS,SK": "初始凶險，過程中得到幫助，最終通過努力成功。整體小吉。\n\n初遇凶險志堅強，\n貴人相助路更暢，\n自強不息終成業，\n功成名就福壽長",
-    "WK,WS,BH": "初始凶險，過程中得到幫助，最終平穩。整體小吉。\n\n初逢凶險路艱辛，\n貴人相助開新程，\n平穩安泰終無憂，\n以柔克剛壽康寧",
-    "WK,WK,WS": "初始凶險，過程中遇到阻礙，最終結果吉利。整體小凶。\n\n初遇風波志不移，\n中途險阻試心期，\n否極泰來終獲吉，\n破繭成蝶展新機",
-    "WK,WK,WK": "初始凶險，過程中遇到阻礙，最終結果凶險。整體大凶。\n\n初逢凶險路途艱，\n中途暗礁更添難，\n末路多舛宜慎行，\n韜光養晦待時安",
-    "WK,WK,SS": "初始凶險，過程中遇到阻礙，最終付出多收穫少。整體大凶。\n\n初遇風雨路崎嶇，\n中途坎坷志不孤，\n勞多收少天道定，\n積善修德福來遲",
-    "WK,WK,SK": "初始凶險，過程中遇到阻礙，最終通過努力成功。整體小凶。\n\n初逢凶險路難行，\n中途險阻試志誠，\n自強不息終成業，\n鐵杵磨針功自成",
-    "WK,WK,BH": "初始凶險，過程中遇到阻礙，最終平穩。整體小凶。\n\n初遇凶險志不衰，\n中途風霜路更危，\n平穩安泰終無憂，\n以柔克剛壽康寧",
-    "WK,SS,WS": "初始凶險，過程中付出努力，最終結果吉利。整體小凶。\n\n初逢凶險志不摧，\n中途勤奮路重開，\n碩果累累終獲吉，\n天道酬勤福綿長",
-    "WK,SS,WK": "初始凶險，過程中付出努力，最終結果凶險。整體大凶。\n\n初遇凶險路途難，\n中途奮力志不寒，\n末路多艱宜慎行，\n韜光養晦待春還",
-    "WK,SS,SS": "初始凶險，過程中付出努力，最終付出多收穫少。整體大凶。\n\n初逢風雨路崎嶇，\n中途勞苦志不孤，\n收穫雖少天理定，\n知足常樂福自來",
-    "WK,SS,SK": "初始凶險，過程中付出努力，最終通過努力成功。整體小凶。\n\n初遇凶險志堅強，\n中途奮鬥路更長，\n自強不息終成業，\n功成名就福壽昌",
-    "WK,SS,BH": "初始凶險，過程中付出努力，最終平穩。整體小凶。\n\n初逢凶險路艱辛，\n中途勤勉志更真，\n平穩安泰終無憂，\n知足常樂壽康寧",
-    "WK,SK,WS": "初始凶險，過程中克服困難，最終結果吉利。整體小吉。\n\n初逢凶險志不移，\n披荊斬棘開新機，\n終獲坦途成大業，\n勇智雙全名四方",
-    "WK,SK,WK": "初始凶險，過程中克服困難，最終結果凶險。整體小凶。\n\n初遇凶險路崎嶇，\n中克艱難志不孤，\n末路多舛宜慎行，\n守正不阿待春風",
-    "WK,SK,SS": "初始凶險，過程中克服困難，最終付出多收穫少。整體小凶。\n\n初逢風雨志堅強，\n中克險阻路更長，\n勞多收少天理定，\n積少成多福自來",
-    "WK,SK,SK": "初始凶險，過程中克服困難，最終通過努力成功。整體小吉。\n\n初遇凶險志不衰，\n千錘百煉路不危，\n自強不息終成業，\n風雨過後彩虹美",
-    "WK,SK,BH": "初始凶險，過程中克服困難，最終平穩。整體小吉。\n\n初逢凶險路艱辛，\n中克艱難志更真，\n平穩安泰終無憂，\n陰陽平衡壽康寧",
-    "WK,BH,WS": "初始凶險，過程平穩，最終結果吉利。整體小吉。\n\n初遇凶險志不摧，\n中途平穩路重開，\n順水行舟終獲吉，\n福澤綿延萬事昌",
-    "WK,BH,WK": "初始凶險，過程平穩，最終結果凶險。整體小凶。\n\n初逢凶險路崎嶇，\n中途平穩志不孤，\n末路多艱宜慎行，\n居安思危化險情",
-    "WK,BH,SS": "初始凶險，過程平穩，最終付出多收穫少。整體小凶。\n\n初遇風雨路難行，\n中途平穩志安寧，\n勞多收少天道定，\n知足常樂福綿長",
-    "WK,BH,SK": "初始凶險，過程平穩，最終通過努力成功。整體小吉。\n\n初遇凶險志堅強，\n中途平穩路更暢，\n自強不息終成業，\n功成名就福壽長",
-    "WK,BH,BH": "初始凶險，過程平穩，最終平穩。整體小吉。\n\n初逢凶險路艱辛，\n中途平穩志更真，\n四平八穩終無憂，\n福壽綿延樂無疆",
-    "SS,WS,WS": "初始耗泄，付出較多，過程中得到幫助，最終結果吉利。整體小吉。\n\n初勞付出志不衰，\n貴人相助路重開，\n碩果累累終獲吉，\n天道酬勤福綿長",
-    "SS,WS,WK": "初始耗泄，付出較多，過程中得到幫助，最終結果凶險。整體小凶。\n\n初勞付出路崎嶇，\n貴人相助暫解憂，\n末路多艱宜慎行，\n韜光養晦待春風",
-    "SS,WS,SS": "初始耗泄，付出較多，過程中得到幫助，最終付出多收穫少。整體小凶。\n\n初勞付出志堅強，\n貴人相助路更長，\n收穫雖少天理定，\n知足常樂福自來",
-    "SS,WS,SK": "初始耗泄，付出較多，過程中得到幫助，最終通過努力成功。整體小吉。\n\n初勞付出志不移，\n貴人相助開新機，\n自強不息終成業，\n功成名就福壽昌",
-    "SS,WS,BH": "初始耗泄，付出較多，過程中得到幫助，最終平穩。整體小吉。\n\n初勞付出路艱辛，\n貴人相助志更真，\n平穩安泰終無憂，\n以柔克剛壽康寧",
-    "SS,WK,WS": "初始耗 creed，付出較多，過程中遇到阻礙，最終結果吉利。整體小凶。\n\n初勞付出志不摧，\n中途坎坷試心懷，\n否極泰來終獲吉，\n破繭成蝶展新機",
-    "SS,WK,WK": "初始耗泄，付出較多，過程中遇到阻礙，最終結果凶險。整體大凶。\n\n初勞付出路崎嶇，\n中逢暗礁更添難，\n末路多舛宜慎行，\n韜光養晦待時安",
-    "SS,WK,SS": "初始耗泄，付出較多，過程中遇到阻礙，最終付出多收穫少。整體大凶。\n\n初勞付出志堅強，\n中途險阻路更長，\n收穫雖少天道定，\n積善修德福來遲",
-    "SS,WK,SK": "初始耗泄，付出較多，過程中遇到阻礙，最終通過努力成功。整體小凶。\n\n初勞付出志不衰，\n中途險阻試志真，\n自強不息終成業，\n鐵杵磨針功自成",
-    "SS,WK,BH": "初始耗泄，付出較多，過程中遇到阻礙，最終平穩。整體小凶。\n\n初勞付出路艱辛，\n中途風霜志不移，\n平穩安泰終無憂，\n以柔克剛壽康寧",
-    "SS,SS,WS": "初始耗泄，付出較多，過程中付出努力，最終結果吉利。整體小凶。\n\n初勞付出志彌堅，\n中途勤奮路更寬，\n碩果累累終獲吉，\n天道酬勤福綿長",
-    "SS,SS,WK": "初始耗泄，付出較多，過程中付出努力，最終結果凶險。整體大凶。\n\n初勞付出路崎嶇，\n中途奮力志不孤，\n末路多艱宜慎行，\n韜光養晦待春風",
-    "SS,SS,SS": "初始耗泄，付出較多，過程中付出努力，最終付出多收穫少。整體大凶。\n\n初勞付出志堅強，\n中途勞苦路更長，\n收穫雖少天理定，\n知足常樂福自來",
-    "SS,SS,SK": "初始耗泄，付出較多，過程中付出努力，最終通過努力成功。整體小凶。\n\n初勞付出志不移，\n中途奮鬥開新機，\n自強不息終成業，\n功成名就福壽昌",
-    "SS,SS,BH": "初始耗泄，付出較多，過程中付出努力，最終平穩。整體小凶。\n\n初勞付出路艱辛，\n中途勤勉志更真，\n平穩安泰終無憂，\n知足常樂壽康寧",
-    "SS,SK,WS": "初始耗泄，付出較多，過程中克服困難，最終結果吉利。整體小吉。\n\n初勞付出志不摧，\n披荊斬棘開新機，\n終獲坦途成大業，\n勇智雙全名四方",
-    "SS,SK,WK": "初始耗泄，付出較多，過程中克服困難，最終結果凶險。整體小凶。\n\n初勞付出路崎嶇，\n中克艱難志不孤，\n末路多舛宜慎行，\n守正不阿待春風",
-    "SS,SK,SS": "初始耗泄，付出較多，過程中克服困難，最終付出多收穫少。整體小凶。\n\n初勞付出志堅強，\n中克險阻路更長，\n勞多收少天理定，\n積少成多福自來",
-    "SS,SK,SK": "初始耗泄，付出較多，過程中克服困難，最終通過努力成功。整體小吉。\n\n初勞付出志不衰，\n千錘百煉開新機，\n自強不息終成業，\n風雨過後彩虹美",
-    "SS,SK,BH": "初始耗泄，付出較多，過程中克服困難，最終平穩。整體小吉。\n\n初勞付出路艱辛，\n中克艱難志更真，\n平穩安泰終無憂，\n陰陽平衡壽康寧",
-    "SS,BH,WS": "初始耗泄，付出較多，過程平穩，最終結果吉利。整體小吉。\n\n初勞付出志不摧，\n中途平穩路重開，\n順水行舟終獲吉，\n福澤綿延萬事昌",
-    "SS,BH,WK": "初始耗泄，付出較多，過程平穩，最終結果凶險。整體小凶。\n\n初勞付出路崎嶇，\n中途平穩志不孤，\n末路多艱宜慎行，\n居安思危化險情",
-    "SS,BH,SS": "初始耗泄，付出較多，過程平穩，最終付出多收穫少。整體小凶。\n\n初勞付出志堅強，\n中途平穩路更長，\n收穫雖少天道定，\n知足常樂福自來",
-    "SS,BH,SK": "初始耗泄，付出較多，過程平穩，最終通過努力成功。整體小吉。\n\n初勞付出志不移，\n中途平穩開新機，\n自強不息終成業，\n功成名就福壽昌",
-    "SS,BH,BH": "初始耗泄，付出較多，過程平穩，最終平穩。整體小吉。\n\n初勞付出路艱辛，\n中途平穩志更真，\n四平八穩終無憂，\n福壽綿延樂無疆",
-    "SK,WS,WS": "初始辛苦，但有望成功，過程中得到幫助，最終結果吉利。整體大吉。\n\n初辛奮鬥志不衰，\n貴人相助路重開，\n碩果累累終獲吉，\n天道酬勤福綿長",
-    "SK,WS,WK": "初始辛苦，但有望成功，過程中得到幫助，最終結果凶險。整體小吉。\n\n初辛奮鬥志堅強，\n貴人相助路更暢，\n末路多艱宜慎行，\n韜光養晦待春風",
-    "SK,WS,SS": "初始辛苦，但有望成功，過程中得到幫助，最終付出多收穫少。整體小吉。\n\n初辛奮鬥志不摧，\n貴人相助開新機，\n收穫雖少天理定，\n知足常樂福自來",
-    "SK,WS,SK": "初始辛苦，但有望成功，過程中得到幫助，最終通過努力成功。整體大吉。\n\n初辛奮鬥志不移，\n貴人相助路重開，\n自強不息終成業，\n功成名就福壽昌",
-    "SK,WS,BH": "初始辛苦，但有望成功，過程中得到幫助，最終平穩。整體大吉。\n\n初辛奮鬥路艱辛，\n貴人相助志更真，\n平穩安泰終無憂，\n以柔克剛壽康寧",
-    "SK,WK,WS": "初始辛苦，但有望成功，過程中遇到阻礙，最終結果吉利。整體小吉。\n\n初辛奮鬥志不摧，\n中途坎坷試心懷，\n否極泰來終獲吉，\n破繭成蝶展新機",
-    "SK,WK,WK": "初始辛苦，但有望成功，過程中遇到阻礙，最終結果凶險。整體小凶。\n\n初辛奮鬥路崎嶇，\n中逢暗礁更添難，\n末路多舛宜慎行，\n韜光養晦待時安",
-    "SK,WK,SS": "初始辛苦，但有望成功，過程中遇到阻礙，最終付出多收穫少。整體小凶。\n\n初辛奮鬥志堅強，\n中途險阻路更長，\n收穫雖少天道定，\n積善修德福來遲",
-    "SK,WK,SK": "初始辛苦，但有望成功，過程中遇到阻礙，最終通過努力成功。整體小吉。\n\n初辛奮鬥志不衰，\n中途險阻試志真，\n自強不息終成業，\n鐵杵磨針功自成",
-    "SK,WK,BH": "初始辛苦，但有望成功，過程中遇到阻礙，最終平穩。整體小吉。\n\n初辛奮鬥路艱辛，\n中途風霜志不移，\n平穩安泰終無憂，\n以柔克剛壽康寧",
-    "SK,SS,WS": "初始辛苦，但有望成功，過程中付出努力，最終結果吉利。整體小吉。\n\n初辛奮鬥志彌堅，\n中途勤奮路更寬，\n碩果累累終獲吉，\n天道酬勤福綿長",
-    "SK,SS,WK": "初始辛苦，但有望成功，過程中付出努力，最終結果凶險。整體小凶。\n\n初辛奮鬥路崎嶇，\n中途奮力志不孤，\n末路多艱宜慎行，\n韜光養晦待春風",
-    "SK,SS,SS": "初始辛苦，但有望成功，過程中付出努力，最終付出多收穫少。整體小凶。\n\n初辛奮鬥志堅強，\n中途勞苦路更長，\n收穫雖少天理定，\n知足常樂福自來",
-    "SK,SS,SK": "初始辛苦，但有望成功，過程中付出努力，最終通過努力成功。整體小吉。\n\n初辛奮鬥志不移，\n中途奮鬥開新機，\n自強不息終成業，\n功成名就福壽昌",
-    "SK,SS,BH": "初始辛苦，但有望成功，過程中付出努力，最終平穩。整體小吉。\n\n初辛奮鬥路艱辛，\n中途勤勉志更真，\n平穩安泰終無憂，\n知足常樂壽康寧",
-    "SK,SK,WS": "初始辛苦，但有望成功，過程中克服困難，最終結果吉利。整體大吉。\n\n初辛奮鬥志不摧，\n披荊斬棘開新機，\n終獲坦途成大業，\n勇智雙全名四方",
-    "SK,SK,WK": "初始辛苦，但有望成功，過程中克服困難，最終結果凶險。整體小吉。\n\n初辛奮鬥路崎嶇，\n中克艱難志不孤，\n末路多舛宜慎行，\n守正不阿待春風",
-    "SK,SK,SS": "初始辛苦，但有望成功，過程中克服困難，最終付出多收穫少。整體小吉。\n\n初辛奮鬥志堅強，\n中克險阻路更長，\n勞多收少天理定，\n積少成多福自來",
-    "SK,SK,SK": "初始辛苦，但有望成功，過程中克服困難，最終通過努力成功。整體大吉。\n\n初辛奮鬥志不衰，\n千錘百煉開新機，\n自強不息終成業，\n風雨過後彩虹美",
-    "SK,SK,BH": "初始辛苦，但有望成功，過程中克服困難，最終平穩。整體大吉。\n\n初辛奮鬥路艱辛，\n中克艱難志更真，\n平穩安泰終無憂，\n陰陽平衡壽康寧",
-    "SK,BH,WS": "初始辛苦，但有望成功，過程平穩，最終結果吉利。整體大吉。\n\n初辛奮鬥志不摧，\n中途平穩路重開，\n順水行舟終獲吉，\n福澤綿延萬事昌",
-    "SK,BH,WK": "初始辛苦，但有望成功，過程平穩，最終結果凶險。整體小吉。\n\n初辛奮鬥路崎嶇，\n中途平穩志不孤，\n末路多艱宜慎行，\n居安思危化險情",
-    "SK,BH,SS": "初始辛苦，但有望成功，過程平穩，最終付出多收穫少。整體小吉。\n\n初辛奮鬥志堅強，\n中途平穩路更長，\n收穫雖少天道定，\n知足常樂福自來",
-    "SK,BH,SK": "初始辛苦，但有望成功，過程平穩，最終通過努力成功。整體大吉。\n\n初辛奮鬥志不移，\n中途平穩開新機，\n自強不息終成業，\n功成名就福壽昌",
-    "SK,BH,BH": "初始辛苦，但有望成功，過程平穩，最終平穩。整體大吉。\n\n初辛奮鬥路艱辛，\n中途平穩志更真，\n四平八穩終無憂，\n福壽綿延樂無疆",
-    "BH,WS,WS": "初始平和，過程中得到幫助，最終結果吉利。整體大吉。\n\n初平心靜福運開，\n貴人相助路途寬，\n順水行舟終獲吉，\n福澤綿延萬事昌",
-    "BH,WS,WK": "初始平和，過程中得到幫助，最終結果凶險。整體小吉。\n\n初平心靜福運生，\n貴人相助路途平，\n末路多艱宜慎行，\n居安思危化險情",
-    "BH,WS,SS": "初始平和，過程中得到幫助，最終付出多收穫少。整體小吉。\n\n初平心靜福運開，\n貴人相助志安泰，\n勞多收少天道定，\n知足常樂福綿長",
-    "BH,WS,SK": "初始平和，過程中得到幫助，最終通過努力成功。整體大吉。\n\n初平心靜福運濃，\n貴人相助路途通，\n自強不息終成業，\n功成名就福壽全",
-    "BH,WS,BH": "初始平和，過程中得到幫助，最終平穩。整體大吉。\n\n初平心靜福運長，\n貴人相助保安康，\n四平八穩終無憂，\n福壽綿延樂無疆",
-    "BH,WK,WS": "初始平和，過程中遇到阻礙，最終結果吉利。整體小吉。\n\n初平心靜志不摧，\n中途坎坷試心懷，\n否極泰來終獲吉，\n破繭成蝶展新機",
-    "BH,WK,WK": "初始平和，過程中遇到阻礙，最終結果凶險。整體小凶。\n\n初平心靜路崎嶇，\n中逢暗礁更添難，\n末路多舛宜慎行，\n韜光養晦待時安",
-    "BH,WK,SS": "初始平和，過程中遇到阻礙，最終付出多收穫少。整體小凶。\n\n初平心靜志堅強，\n中途險阻路更長，\n收穫雖少天理定，\n積善修德福來遲",
-    "BH,WK,SK": "初始平和，過程中遇到阻礙，最終通過努力成功。整體小吉。\n\n初平心靜志不衰，\n中途險阻試志真，\n自強不息終成業，\n鐵杵磨針功自成",
-    "BH,WK,BH": "初始平和，過程中遇到阻礙，最終平穩。整體小吉。\n\n初平心靜路艱辛，\n中途風霜志不移，\n平穩安泰終無憂，\n以柔克剛壽康寧",
-    "BH,SS,WS": "初始平和，過程中付出努力，最終結果吉利。整體小吉。\n\n初平心靜福運生，\n中途勤奮志彌堅，\n碩果累累終獲吉，\n天道酬勤福綿長",
-    "BH,SS,WK": "初始平和，過程中付出努力，最終結果凶險。整體小凶。\n\n初平心靜路崎嶇，\n中途奮力志不孤，\n末路多艱宜慎行，\n韜光養晦待春風",
-    "BH,SS,SS": "初始平和，過程中付出努力，最終付出多收穫少。整體小凶。\n\n初平心靜志堅強，\n中途勞苦路更長，\n收穫雖少天道定，\n知足常樂福自來",
-    "BH,SS,SK": "初始平和，過程中付出努力，最終通過努力成功。整體小吉。\n\n初平心靜志不移，\n中途奮鬥開新機，\n自強不息終成業，\n功成名就福壽昌",
-    "BH,SS,BH": "初始平和，過程中付出努力，最終平穩。整體小吉。\n\n初平心靜路艱辛，\n中途勤勉志更真，\n平穩安泰終無憂，\n知足常樂壽康寧",
-    "BH,SK,WS": "初始平和，過程中克服困難，最終結果吉利。整體大吉。\n\n初平心靜志不摧，\n披荊斬棘開新機，\n終獲坦途成大業，\n勇智雙全名四方",
-    "BH,SK,WK": "初始平和，過程中克服困難，最終結果凶險。整體小吉。\n\n初平心靜路崎嶇，\n中克艱難志不孤，\n末路多舛宜慎行，\n守正不阿待春風",
-    "BH,SK,SS": "初始平和，過程中克服困難，最終付出多收穫少。整體小吉。\n\n初平心靜志堅強，\n中克險阻路更長，\n勞多收少天理定，\n積少成多福自來",
-    "BH,SK,SK": "初始平和，過程中克服困難，最終通過努力成功。整體大吉。\n\n初平心靜志不衰，\n千錘百煉開新機，\n自強不息終成業，\n風雨過後彩虹美",
-    "BH,SK,BH": "初始平和，過程中克服困難，最終平穩。整體大吉。\n\n初平心靜路艱辛，\n中克艱難志更真，\n平穩安泰終無憂，\n陰陽平衡壽康寧",
-    "BH,BH,WS": "初始平和，過程平穩，最終結果吉利。整體大吉。\n\n初平心靜福運開，\n中途平穩路途寬，\n順水行舟終獲吉，\n福澤綿延萬事昌",
-    "BH,BH,WK": "初始平和，過程平穩，最終結果凶險。整體小吉。\n\n初平心靜福運生，\n中途平穩志安寧，\n末路多艱宜慎行，\n居安思危化險情",
-    "BH,BH,SS": "初始平和，過程平穩，最終付出多收穫少。整體小吉。\n\n初平心靜福運濃，\n中途平穩路途通，\n收穫雖少天道定，\n知足常樂福自來",
-    "BH,BH,SK": "初始平和，過程平穩，最終通過努力成功。整體大吉。\n\n初平心靜志不移，\n中途平穩開新機，\n自強不息終成業，\n功成名就福壽昌",
-    "BH,BH,BH": "初始平和，過程平穩，最終平穩。整體大吉。\n\n初平心靜福運長，\n中途平穩保安康，\n四時和順終無憂，\n福壽綿延樂無疆"
-};
+      let mainGua, changedGua, mutualGua;
 
-        const trigrams = {
-            1: {"name": "乾", "element": "金", "yao": [1, 1, 1]},
-            2: {"name": "兌", "element": "金", "yao": [1, 1, 0]},
-            3: {"name": "離", "element": "火", "yao": [1, 0, 1]},
-            4: {"name": "震", "element": "木", "yao": [1, 0, 0]},
-            5: {"name": "巽", "element": "木", "yao": [0, 1, 1]},
-            6: {"name": "坎", "element": "水", "yao": [0, 1, 0]},
-            7: {"name": "艮", "element": "土", "yao": [0, 0, 1]},
-            8: {"name": "坤", "element": "土", "yao": [0, 0, 0]}
-        };
-
-        const elementRelations = {
-            "金": { "克": "木", "生": "水", "被克": "火", "被生": "土" },
-            "木": { "克": "土", "生": "火", "被克": "金", "被生": "水" },
-            "水": { "克": "火", "生": "木", "被克": "土", "被生": "金" },
-            "火": { "克": "金", "生": "土", "被克": "水", "被生": "木" },
-            "土": { "克": "水", "生": "金", "被克": "木", "被生": "火" }
-        };
-
-        const seasonElementStatus = {
-            spring: { "木": "旺", "火": "相", "水": "休", "金": "囚", "土": "死" },
-            summer: { "火": "旺", "土": "相", "木": "休", "水": "囚", "金": "死" },
-            autumn: { "金": "旺", "水": "相", "土": "休", "火": "囚", "木": "死" },
-            winter: { "水": "旺", "木": "相", "金": "休", "土": "囚", "火": "死" }
-        };
-
-        function getSeason(year, month, day) {
-            if (!year || !month || !day) return 'autumn';
-            if ((month === 2 && day >= 4) || (month === 3) || (month === 4) || (month === 5 && day <= 4)) {
-                return 'spring';
-            } else if ((month === 5 && day >= 5) || (month === 6) || (month === 7) || (month === 8 && day <= 6)) {
-                return 'summer';
-            } else if ((month === 8 && day >= 7) || (month === 9) || (month === 10) || (month === 11 && day <= 6)) {
-                return 'autumn';
-            } else {
-                return 'winter';
-            }
+      if (castMethod === 'random') {
+        mainGua = generateRandomHexagram();
+      } else if (castMethod === 'date') {
+        const dateInput = document.getElementById('castDate');
+        if (!dateInput.value) {
+          throw new Error('請選擇一個日期');
         }
-
-        function calculateRelation(gua, movingYao, year, month, day) {
-            let tiElement, yongElement, tiName, yongName;
-            if (movingYao <= 3) {
-                tiElement = trigrams[gua.shang].element;
-                yongElement = trigrams[gua.xia].element;
-                tiName = trigrams[gua.shang].name;
-                yongName = trigrams[gua.xia].name;
-            } else {
-                tiElement = trigrams[gua.xia].element;
-                yongElement = trigrams[gua.shang].element;
-                tiName = trigrams[gua.xia].name;
-                yongName = trigrams[gua.shang].name;
-            }
-            
-            const season = getSeason(year, month, day);
-            const elementStatus = seasonElementStatus[season];
-            const tiStatus = elementStatus[tiElement];
-            const yongStatus = elementStatus[yongElement];
-            
-            let relationKey, relationDisplay;
-            if (elementRelations[tiElement]["生"] === yongElement) {
-                relationKey = "SS";
-                relationDisplay = `體${tiName}${tiElement}${tiStatus}生用${yongName}${yongElement}${yongStatus}`;
-            } else if (elementRelations[tiElement]["克"] === yongElement) {
-                relationKey = "SK";
-                relationDisplay = `體${tiName}${tiElement}${tiStatus}克用${yongName}${yongElement}${yongStatus}`;
-            } else if (elementRelations[yongElement]["生"] === tiElement) {
-                relationKey = "WS";
-                relationDisplay = `用${yongName}${yongElement}${yongStatus}生體${tiName}${tiElement}${tiStatus}`;
-            } else if (elementRelations[yongElement]["克"] === tiElement) {
-                relationKey = "WK";
-                relationDisplay = `用${yongName}${yongElement}${yongStatus}克體${tiName}${tiElement}${tiStatus}`;
-            } else {
-                relationKey = "BH";
-                relationDisplay = `體${tiName}${tiElement}${tiStatus}與用${yongName}${yongElement}${yongStatus}比和`;
-            }
-            
-            return { key: relationKey, display: relationDisplay };
+        const date = new Date(dateInput.value);
+        const numbers = `${date.getFullYear() % 100} ${date.getMonth() + 1} ${date.getDate()}`;
+        mainGua = generateHexagramFromInput(numbers);
+      } else if (castMethod === 'number') {
+        const numberInput = document.getElementById('numberInput');
+        if (!numberInput.value) {
+          throw new Error('請輸入三個三位數');
         }
-
-        function findTrigramByYao(yaoArray) {
-            for (const [key, value] of Object.entries(trigrams)) {
-                if (JSON.stringify(value.yao) === JSON.stringify(yaoArray)) {
-                    return parseInt(key);
-                }
-            }
-            return 1; // 默認返回乾卦
+        mainGua = generateHexagramFromInput(numberInput.value);
+      } else if (castMethod === 'time') {
+        const timeInput = document.getElementById('castTime');
+        if (!timeInput.value) {
+          throw new Error('請輸入時間');
         }
+        mainGua = generateHexagramFromTime(timeInput.value);
+      } else if (castMethod === 'manual') {
+        mainGua = generateHexagramFromManual();
+      } else {
+        throw new Error('請選擇一個有效的起卦方式');
+      }
 
-        function calculateHuGua(benGua) {
-            const xiaYao = [...trigrams[benGua.xia].yao];
-            const shangYao = [...trigrams[benGua.shang].yao];
-            const sixYao = [...xiaYao, ...shangYao];
-            const huXiaYao = [sixYao[1], sixYao[2], sixYao[3]];
-            const huShangYao = [sixYao[2], sixYao[3], sixYao[4]];
-            return {
-                shang: findTrigramByYao(huShangYao),
-                xia: findTrigramByYao(huXiaYao)
-            };
-        }
+      changedGua = getChangedHexagram(mainGua.yao);
+      mutualGua = getMutualHexagram(mainGua.yao);
 
-        function calculateBianGua(benGua, movingYao) {
-            const xiaYao = [...trigrams[benGua.xia].yao];
-            const shangYao = [...trigrams[benGua.shang].yao];
-            const sixYao = [...xiaYao, ...shangYao];
-            const yaoIndex = movingYao - 1;
-            sixYao[yaoIndex] = sixYao[yaoIndex] === 1 ? 0 : 1;
-            const bianXiaYao = sixYao.slice(0, 3);
-            const bianShangYao = sixYao.slice(3, 6);
-            return {
-                shang: findTrigramByYao(bianShangYao),
-                xia: findTrigramByYao(bianXiaYao)
-            };
-        }
+      const mainElement = fiveElements[mainGua.upperGua];
+      const useElement = fiveElements[mainGua.lowerGua];
+      const changedElement = fiveElements[changedGua.upperGua];
 
-        function drawHexagram(canvasId, binary, movingYao) {
-            const canvas = document.getElementById(canvasId);
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            const width = canvas.width;
-            const height = canvas.height;
-            const yaoHeight = height / 6;
-            const lineWidth = 10;
-            const gap = 5;
-            
-            for (let i = 0; i < 6; i++) {
-                const y = (5 - i) * yaoHeight + yaoHeight / 2;
-                ctx.beginPath();
-                ctx.lineWidth = lineWidth;
-                ctx.strokeStyle = '#333';
-                
-                if (binary[i] === 1) {
-                    ctx.moveTo(20, y);
-                    ctx.lineTo(width - 20, y);
-                } else {
-                    ctx.moveTo(20, y);
-                    ctx.lineTo(width / 2 - 10, y);
-                    ctx.moveTo(width / 2 + 10, y);
-                    ctx.lineTo(width - 20, y);
-                }
-                ctx.stroke();
-                
-                if (movingYao === i + 1) {
-                    ctx.beginPath();
-                    ctx.arc(width - 10, y, 5, 0, 2 * Math.PI);
-                    ctx.fillStyle = 'red';
-                    ctx.fill();
-                }
-            }
-        }
+      // Render graphical hexagrams
+      renderHexagram(mainGua.yao, 'mainHexagram');
+      renderHexagram(mutualGua.yao, 'mutualHexagram');
+      renderHexagram(changedGua.yao, 'changedHexagram');
 
-        function saveHistory(record) {
-            let history = JSON.parse(localStorage.getItem('divinationHistory') || '[]');
-            history.unshift(record);
-            if (history.length > 10) history = history.slice(0, 10);
-            localStorage.setItem('divinationHistory', JSON.stringify(history));
-            displayHistory();
-        }
+      // Update hexagram names
+      document.getElementById('mainGuaName').textContent = `${guaNames[mainGua.upperGua]}上${guaNames[mainGua.lowerGua]}下`;
+      document.getElementById('mutualGuaName').textContent = `${guaNames[mutualGua.upperGua]}上${guaNames[mutualGua.lowerGua]}下`;
+      document.getElementById('changedGuaName').textContent = `${guaNames[changedGua.upperGua]}上${guaNames[changedGua.lowerGua]}下`;
 
-        function displayHistory() {
-            const historyDiv = document.getElementById('history');
-            let history = JSON.parse(localStorage.getItem('divinationHistory') || '[]');
-            historyDiv.innerHTML = '';
-            history.forEach((record, index) => {
-                const item = document.createElement('div');
-                item.className = 'history-item';
-                item.textContent = `${record.date}: 本卦 ${record.benGua} (${record.benGuaName}), 互卦 ${record.huGua} (${record.huGuaName}), 變卦 ${record.bianGua} (${record.bianGuaName}), 動爻 ${record.movingYao}`;
-                historyDiv.appendChild(item);
-            });
-        }
+      // Update analysis sections
+      document.getElementById('guaCi').innerHTML = getGuaCi(mainGua.upperGua, mainGua.lowerGua, mainGua.yao, questionType);
+      document.getElementById('fiveElements').innerHTML = analyzeFiveElements(mainGua, changedGua);
+      document.getElementById('seasonalAnalysis').innerHTML = `【旺相休囚死分析】：<br>本卦五行 ${mainElement}，當前狀態：${getSeasonalStatus(mainElement)}<br>` +
+                              `用卦五行 ${useElement}，當前狀態：${getSeasonalStatus(useElement)}<br>` +
+                              `變卦五行 ${changedElement}，當前狀態：${getSeasonalStatus(changedElement)}`;
+      const movingCount = mainGua.yao.filter(y => y.isMoving).length;
+      document.getElementById('movingYao').innerHTML = `【動爻分析】：動爻數 ${movingCount}，${movingCount > 2 ? '事變速疾，宜迅速應對' : '事變適中，宜穩中求進'}.`;
+      document.getElementById('guaCombination').innerHTML = `【卦象組合】：<br>本卦：${guaNames[mainGua.upperGua]}上${guaNames[mainGua.lowerGua]}下，意為${guaImages[guaNames[mainGua.upperGua]]}<br>` +
+                            `互卦：${guaNames[mutualGua.upperGua]}上${guaNames[mutualGua.lowerGua]}下，意為${guaImages[guaNames[mutualGua.upperGua]]}<br>` +
+                            `變卦：${guaNames[changedGua.upperGua]}上${guaNames[changedGua.lowerGua]}下，意為${guaImages[guaNames[changedGua.upperGua]]}`;
+      document.getElementById('application').innerHTML = `【應事範圍】：<br>${questionType}相關事項，宜參考卦象與動爻，謹慎行事。`;
+      document.getElementById('suggestion').innerHTML = getSuggestion(questionType, getJudgment(mainElement, useElement), mainElement, mainGua.yao);
+      document.getElementById('prediction').innerHTML = getPrediction(mainElement, changedElement, mainGua.yao);
 
-        async function loadGuaData() {
-            try {
-                const response = await fetch('hexagrams_data.json');
-                if (!response.ok) throw new Error('無法載入卦辭資料');
-                return await response.json();
-            } catch (error) {
-                console.error('載入卦辭失敗:', error);
-                return {};
-            }
-        }
+      // Update five elements table
+      const { judgmentType } = getJudgment(mainElement, useElement);
+      const tableBody = document.getElementById('fiveElementTable');
+      tableBody.innerHTML = `
+        <tr>
+          <td>本卦</td><td>${mainElement}</td><td>${fiveElementRelations[mainElement].generates === useElement ? '體生用' : fiveElementRelations[mainElement].overcomes === useElement ? '體克用' : '比和'}</td><td>${judgmentType}</td><td>${getSeasonalStatus(mainElement)}</td>
+        </tr>
+        <tr>
+          <td>用卦</td><td>${useElement}</td><td>${fiveElementRelations[useElement].generates === mainElement ? '用生體' : fiveElementRelations[useElement].overcomes === mainElement ? '用克體' : '比和'}</td><td>-</td><td>${getSeasonalStatus(useElement)}</td>
+        </tr>
+        <tr>
+          <td>變卦</td><td>${changedElement}</td><td>${fiveElementRelations[mainElement].overcomes === changedElement ? '體克變' : fiveElementRelations[changedElement].overcomes === mainElement ? '變克體' : '同體'}</td><td>-</td><td>${getSeasonalStatus(changedElement)}</td>
+        </tr>
+      `;
 
-        document.addEventListener('DOMContentLoaded', async function() {
-            const guaData = await loadGuaData();
-            const calculateBtn = document.getElementById('calculate-btn');
-            const randomBtn = document.getElementById('random-btn');
-            const useCurrentTimeBtn = document.getElementById('use-current-time');
-            const resultLoading = document.getElementById('result-loading');
-            const resultDiv = document.getElementById('result');
-            const combinationDiv = document.getElementById('combination');
-            const interpretationDiv = document.getElementById('interpretation');
-            const benGuaDiv = document.getElementById('ben-gua');
-            const huGuaDiv = document.getElementById('hu-gua');
-            const bianGuaDiv = document.getElementById('bian-gua');
-            const tabBtns = document.querySelectorAll('.tab-btn');
-            
-            displayHistory();
-            
-            tabBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const tabId = this.getAttribute('data-tab');
-                    tabBtns.forEach(b => b.classList.remove('active'));
-                    document.querySelectorAll('.method-tab').forEach(tab => tab.classList.remove('active'));
-                    this.classList.add('active');
-                    document.getElementById(`${tabId}-tab`).classList.add('active');
-                });
-            });
-            
-            useCurrentTimeBtn.addEventListener('click', function() {
-                const now = new Date();
-                document.getElementById('year').value = now.getFullYear();
-                document.getElementById('month').value = now.getMonth() + 1;
-                document.getElementById('day').value = now.getDate();
-                document.getElementById('hour').value = now.getHours();
-            });
-            
-            calculateBtn.addEventListener('click', calculateDivination);
-            randomBtn.addEventListener('click', generateRandomNumbers);
-            
-            async function calculateDivination() {
-                const activeTab = document.querySelector('.method-tab.active').id;
-                let shangGua, xiaGua, movingYao, year, month, day;
-                
-                if (activeTab === 'direct-tab') {
-                    shangGua = parseInt(document.getElementById('shang-gua').value);
-                    xiaGua = parseInt(document.getElementById('xia-gua').value);
-                    movingYao = parseInt(document.getElementById('moving-yao').value);
-                    year = new Date().getFullYear();
-                    month = new Date().getMonth() + 1;
-                    day = new Date().getDate();
-                    if (isNaN(shangGua) || isNaN(xiaGua) || isNaN(movingYao)) {
-                        alert('請確保上卦、下卦和變爻選擇有效值');
-                        return;
-                    }
-                } else if (activeTab === 'time-tab') {
-                    year = parseInt(document.getElementById('year').value);
-                    month = parseInt(document.getElementById('month').value);
-                    day = parseInt(document.getElementById('day').value);
-                    const hour = parseInt(document.getElementById('hour').value);
-                    if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hour)) {
-                        alert('請確保年、月、日、時辰輸入有效數字');
-                        return;
-                    }
-                    if (month < 1 || month > 12 || day < 1 || day > 31 || hour < 0 || hour > 23) {
-                        alert('請檢查年、月、日、時辰的範圍是否正確');
-                        return;
-                    }
-                    shangGua = (year + month + day) % 8;
-                    shangGua = shangGua === 0 ? 8 : shangGua;
-                    xiaGua = (year + month + day + hour) % 8;
-                    xiaGua = xiaGua === 0 ? 8 : xiaGua;
-                    movingYao = (year + month + day + hour) % 6;
-                    movingYao = movingYao === 0 ? 6 : movingYao;
-                } else if (activeTab === 'number-tab') {
-                    const num1 = parseInt(document.getElementById('number1').value);
-                    const num2 = parseInt(document.getElementById('number2').value);
-                    const num3 = parseInt(document.getElementById('number3').value);
-                    year = new Date().getFullYear();
-                    month = new Date().getMonth() + 1;
-                    day = new Date().getDate();
-                    if (isNaN(num1) || isNaN(num2) || isNaN(num3)) {
-                        alert('請確保輸入三個有效的百位數字');
-                        return;
-                    }
-                    if (num1 < 100 || num1 > 999 || num2 < 100 || num2 > 999 || num3 < 100 || num3 > 999) {
-                        alert('請確保輸入的數字在100到999之間');
-                        return;
-                    }
-                    shangGua = num1 % 8;
-                    shangGua = shangGua === 0 ? 8 : shangGua;
-                    xiaGua = num2 % 8;
-                    xiaGua = xiaGua === 0 ? 8 : xiaGua;
-                    movingYao = num3 % 6;
-                    movingYao = movingYao === 0 ? 6 : movingYao;
-                }
-                
-                if (shangGua < 1 || shangGua > 8 || xiaGua < 1 || xiaGua > 8 || movingYao < 1 || movingYao > 6) {
-                    alert('卦象計算錯誤，請檢查輸入參數');
-                    return;
-                }
-                
-                resultLoading.style.display = 'block';
-                resultDiv.style.display = 'none';
-                
-                setTimeout(() => {
-                    const benGua = { shang: shangGua, xia: xiaGua };
-                    const huGua = calculateHuGua(benGua);
-                    const bianGua = calculateBianGua(benGua, movingYao);
-                    
-                    const benRelation = calculateRelation(benGua, movingYao, year, month, day);
-                    const huRelation = calculateRelation(huGua, movingYao, year, month, day);
-                    const bianRelation = calculateRelation(bianGua, movingYao, year, month, day);
-                    
-                    const combinationKey = `${benRelation.key},${huRelation.key},${bianRelation.key}`;
-                    
-                    const benGuaKey = `${benGua.shang},${benGua.xia}`;
-                    const huGuaKey = `${huGua.shang},${huGua.xia}`;
-                    const bianGuaKey = `${bianGua.shang},${bianGua.xia}`;
-                    
-                    combinationDiv.textContent = `五行生克分析: ${benRelation.display}, ${huRelation.display}, ${bianRelation.display}`;
-                    
-                    let interpretationText = interpretations[combinationKey] || "未找到對應的五行解釋";
-                    interpretationText += "\n\n本卦辭: " + (guaData[hexagramNames[benGuaKey]]?.ci || "未找到本卦辭");
-                    interpretationText += "\n動爻解釋: " + (guaData[hexagramNames[benGuaKey]]?.yaoCi?.[movingYao - 1] || "未找到動爻解釋");
-                    interpretationText += "\n\n變卦辭: " + (guaData[hexagramNames[bianGuaKey]]?.ci || "未找到變卦辭");
-                    interpretationDiv.textContent = interpretationText;
-                    
-                    benGuaDiv.textContent = `${hexagramNames[benGuaKey]} (${trigrams[benGua.shang].name}上${trigrams[benGua.xia].name}下, ${trigrams[benGua.shang].element}上${trigrams[benGua.xia].element}下)`;
-                    huGuaDiv.textContent = `${hexagramNames[huGuaKey]} (${trigrams[huGua.shang].name}上${trigrams[huGua.xia].name}下, ${trigrams[huGua.shang].element}上${trigrams[huGua.xia].element}下)`;
-                    bianGuaDiv.textContent = `${hexagramNames[bianGuaKey]} (${trigrams[bianGua.shang].name}上${trigrams[bianGua.xia].name}下, ${trigrams[bianGua.shang].element}上${trigrams[bianGua.xia].element}下)`;
-                    
-                    const benBinary = [...trigrams[benGua.xia].yao, ...trigrams[benGua.shang].yao];
-                    const huBinary = [...trigrams[huGua.xia].yao, ...trigrams[huGua.shang].yao];
-                    const bianBinary = [...trigrams[bianGua.xia].yao, ...trigrams[bianGua.xia].yao];
-                    drawHexagram('mainHexagram', benBinary, movingYao);
-                    drawHexagram('mutualHexagram', huBinary, 0);
-                    drawHexagram('changedHexagram', bianBinary, 0);
-                    
-                    resultLoading.style.display = 'none';
-                    resultDiv.style.display = 'block';
-                    
-                    saveHistory({
-                        date: new Date().toLocaleString(),
-                        benGua: `${trigrams[benGua.shang].name}${trigrams[benGua.xia].name}`,
-                        benGuaName: hexagramNames[benGuaKey],
-                        huGua: `${trigrams[huGua.shang].name}${trigrams[huGua.xia].name}`,
-                        huGuaName: hexagramNames[huGuaKey],
-                        bianGua: `${trigrams[bianGua.shang].name}${trigrams[bianGua.xia].name}`,
-                        bianGuaName: hexagramNames[bianGuaKey],
-                        movingYao: movingYao
-                    });
-                }, 800);
-            }
-            
-            function generateRandomNumbers() {
-                const activeTab = document.querySelector('.method-tab.active').id;
-                
-                if (activeTab === 'direct-tab') {
-                    document.getElementById('shang-gua').value = Math.floor(Math.random() * 8) + 1;
-                    document.getElementById('xia-gua').value = Math.floor(Math.random() * 8) + 1;
-                    document.getElementById('moving-yao').value = Math.floor(Math.random() * 6) + 1;
-                } else if (activeTab === 'time-tab') {
-                    const now = new Date();
-                    document.getElementById('year').value = now.getFullYear();
-                    document.getElementById('month').value = now.getMonth() + 1;
-                    document.getElementById('day').value = now.getDate();
-                    document.getElementById('hour').value = now.getHours();
-                } else if (activeTab === 'number-tab') {
-                    document.getElementById('number1').value = Math.floor(Math.random() * 900) + 100;
-                    document.getElementById('number2').value = Math.floor(Math.random() * 900) + 100;
-                    document.getElementById('number3').value = Math.floor(Math.random() * 900) + 100;
-                }
-                
-                calculateDivination();
-            }
-        });
-    </script>
+      // Show result section and hide history
+      document.getElementById('result').classList.remove('hidden');
+      document.getElementById('history').classList.add('hidden');
+
+      // Store in history
+      const history = JSON.parse(localStorage.getItem('hexagramHistory') || '[]');
+      history.unshift({
+        date: new Date().toLocaleString('zh-TW'),
+        questionType,
+        question,
+        mainGua: `${guaNames[mainGua.upperGua]}上${guaNames[mainGua.lowerGua]}下`,
+        mutualGua: `${guaNames[mutualGua.upperGua]}上${guaNames[mutualGua.lowerGua]}下`,
+        changedGua: `${guaNames[changedGua.upperGua]}上${guaNames[changedGua.lowerGua]}下`,
+        guaCi: document.getElementById('guaCi').innerHTML,
+        fiveElements: document.getElementById('fiveElements').innerHTML,
+        judgment: getJudgment(mainElement, useElement).judgment,
+        prediction: document.getElementById('prediction').innerHTML,
+        suggestion: document.getElementById('suggestion').innerHTML,
+        seasonalAnalysis: document.getElementById('seasonalAnalysis').innerHTML,
+        movingYao: document.getElementById('movingYao').innerHTML,
+        guaCombination: document.getElementById('guaCombination').innerHTML,
+        application: document.getElementById('application').innerHTML,
+        hexagrams: { main: mainGua.yao, mutual: mutualGua.yao, changed: changedGua.yao }
+      });
+      localStorage.setItem('hexagramHistory', JSON.stringify(history));
+
+    } catch (error) {
+      console.error('卜卦錯誤:', error);
+      alert('卜卦失敗：' + error.message);
+    }
+  }
+
+  // History functions
+  function showHistory() {
+    const historyList = document.getElementById('historyList');
+    const history = JSON.parse(localStorage.getItem('hexagramHistory') || '[]');
+    historyList.innerHTML = history.length ? history.map((item, i) => `
+      <div class="history-item" onclick="displayHistoryItem(${i})">
+        ${item.date} - ${item.questionType}: ${item.question}
+      </div>
+    `).join('') : '無卜卦歷史';
+    document.getElementById('history').classList.remove('hidden');
+    document.getElementById('result').classList.add('hidden');
+  }
+
+  function displayHistoryItem(index) {
+    const history = JSON.parse(localStorage.getItem('hexagramHistory') || '[]');
+    const item = history[index];
+    if (item) {
+      renderHexagram(item.hexagrams.main, 'mainHexagram');
+      renderHexagram(item.hexagrams.mutual, 'mutualHexagram');
+      renderHexagram(item.hexagrams.changed, 'changedHexagram');
+      document.getElementById('mainGuaName').textContent = item.mainGua;
+      document.getElementById('mutualGuaName').textContent = item.mutualGua;
+      document.getElementById('changedGuaName').textContent = item.changedGua;
+      document.getElementById('guaCi').innerHTML = item.guaCi;
+      document.getElementById('fiveElements').innerHTML = item.fiveElements;
+      document.getElementById('seasonalAnalysis').innerHTML = item.seasonalAnalysis;
+      document.getElementById('movingYao').innerHTML = item.movingYao;
+      document.getElementById('guaCombination').innerHTML = item.guaCombination;
+      document.getElementById('application').innerHTML = item.application;
+      document.getElementById('suggestion').innerHTML = item.suggestion;
+      document.getElementById('prediction').innerHTML = item.prediction;
+
+      document.getElementById('result').classList.remove('hidden');
+      document.getElementById('history').classList.add('hidden');
+    }
+  }
+
+  function clearHistory() {
+    localStorage.removeItem('hexagramHistory');
+    document.getElementById('historyList').innerHTML = '無卜卦歷史';
+  }
+
+  // Event listeners for input changes
+ document.getElementById('castMethod').addEventListener('change', (event) => {
+  const method = event.target.value;
+  document.getElementById('dateInput').classList.add('hidden');
+  document.getElementById('numberInput').classList.add('hidden');
+  document.getElementById('timeInput').classList.add('hidden');
+  document.getElementById('manualInput').classList.add('hidden');
+
+  if (method === 'date') {
+    document.getElementById('dateInput').classList.remove('hidden');
+  } else if (method === 'number') {
+    document.getElementById('numberInput').classList.remove('hidden');
+  } else if (method === 'time') {
+    document.getElementById('timeInput').classList.remove('hidden');
+  } else if (method === 'manual') {
+    document.getElementById('manualInput').classList.remove('hidden');
+  }
+});
+
+// Set default date to today
+document.getElementById('castDate').value = new Date().toISOString().split('T')[0];
+
+// Initialize page
+document.getElementById('result').classList.add('hidden');
+document.getElementById('history').classList.add('hidden');
+</script>
 </body>
 </html>
