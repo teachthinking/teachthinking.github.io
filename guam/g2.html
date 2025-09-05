@@ -334,7 +334,7 @@ function startDivination() {
 
     const upperName = trigramsName[lower] || "未知";
     const lowerName = trigramsName[upper] || "未知";
-    const hexagramArr = generateHexagram(lower,upper );
+    const hexagramArr = generateHexagram(upper,lower );
     const hexagramStr = displayHexagram(hexagramArr);
 
     const mutual = generateMutualHexagram(hexagramArr);
