@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8" />
-<title>專業梅花心易卜卦系統</title>
+<title>專業梅花心意卜卦系統</title>
 <style>
   body { font-family: Arial, sans-serif; margin: 20px; }
   pre { font-family: monospace; font-size: 18px; line-height: 1.6; }
@@ -138,8 +138,8 @@ function generateHexagram(upper, lower) {
 }
 
 function generateMutualHexagram(hexagram) {
-  const lowerLines = [hexagram[1], hexagram[2], hexagram[3]];
-  const upperLines = [hexagram[2], hexagram[3], hexagram[4]];
+  const lowerLines = [hexagram[1], hexagram[2], hexagram[3]]; // 第2-4爻組成互卦下卦
+  const upperLines = [hexagram[2], hexagram[3], hexagram[4]]; // 第3-5爻組成互卦上卦
   const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
   return { upper, lower, hexagram: [...lowerLines, ...upperLines] };
@@ -147,10 +147,10 @@ function generateMutualHexagram(hexagram) {
 
 function generateChangedHexagram(hexagram, movingLine) {
   const changedHexagram = [...hexagram];
-  const index = 6 - movingLine; // 動爻從下到上計算
+  const index = 6 - movingLine; // 動爻從下到上計算（1為最下爻，6為最上爻）
   changedHexagram[index] = changedHexagram[index] === "—" ? "--" : "—";
-  const lowerLines = changedHexagram.slice(0, 3);
-  const upperLines = changedHexagram.slice(3, 6);
+  const lowerLines = changedHexagram.slice(0, 3); // 下卦：第1-3爻
+  const upperLines = changedHexagram.slice(3, 6); // 上卦：第4-6爻
   const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
   return { upper, lower, hexagram: changedHexagram };
