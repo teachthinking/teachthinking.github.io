@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8" />
-<title>專業梅花心意卜卦系統</title>
+<title>專業梅花心易卜卦系統</title>
 <style>
   body { font-family: Arial, sans-serif; margin: 20px; }
   pre { font-family: monospace; font-size: 18px; line-height: 1.6; }
@@ -134,12 +134,12 @@ function calculateHexagramFromManual(upper, lower, movingLine) {
 }
 
 function generateHexagram(upper, lower) {
-  return [...baguaLines[lower], ...baguaLines[upper]]; // 下卦在前，上卦在後
+  return [...baguaLines[lower], ...baguaLines[upper]]; // 下卦在前，上卦在後，從下到上：索引0=初爻，索引5=上爻
 }
 
 function generateMutualHexagram(hexagram) {
-  const lowerLines = [hexagram[1], hexagram[2], hexagram[3]]; // 第2-4爻組成互卦下卦
-  const upperLines = [hexagram[2], hexagram[3], hexagram[4]]; // 第3-5爻組成互卦上卦
+  const lowerLines = [hexagram[1], hexagram[2], hexagram[3]]; // 第2-4爻為互卦下卦
+  const upperLines = [hexagram[2], hexagram[3], hexagram[4]]; // 第3-5爻為互卦上卦
   const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
   return { upper, lower, hexagram: [...lowerLines, ...upperLines] };
@@ -147,17 +147,17 @@ function generateMutualHexagram(hexagram) {
 
 function generateChangedHexagram(hexagram, movingLine) {
   const changedHexagram = [...hexagram];
-  const index = 6 - movingLine; // 動爻從下到上計算（1為最下爻，6為最上爻）
+  const index = movingLine - 1; // 動爻從下到上：1=索引0, 6=索引5
   changedHexagram[index] = changedHexagram[index] === "—" ? "--" : "—";
-  const lowerLines = changedHexagram.slice(0, 3); // 下卦：第1-3爻
-  const upperLines = changedHexagram.slice(3, 6); // 上卦：第4-6爻
+  const lowerLines = changedHexagram.slice(0, 3); // 下卦：索引0-2
+  const upperLines = changedHexagram.slice(3, 6); // 上卦：索引3-5
   const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
   return { upper, lower, hexagram: changedHexagram };
 }
 
 function displayHexagram(hexagram) {
-  return hexagram.slice().reverse().join('\n'); // 顯示時從下到上
+  return hexagram.join('\n'); // 顯示從下到上：第一行=初爻，最後行=上爻
 }
 
 function determineWuxingStatus(element, timeElement) {
