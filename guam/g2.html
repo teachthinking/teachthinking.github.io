@@ -126,7 +126,7 @@ function calculateHexagramFromThreeDigits(number) {
   const upper = hundreds === 0 ? 7 : hundreds - 1;
   const lower = tens === 0 ? 7 : tens - 1;
   const movingLine = (units % 6) || 6;
-  return { upper, lower, movingLine };
+  return {lower , upper, movingLine };
 }
 
 function calculateHexagramFromManual(upper, lower, movingLine) {
@@ -134,7 +134,7 @@ function calculateHexagramFromManual(upper, lower, movingLine) {
   lower = (parseInt(lower) - 1 + 8) % 8;
   movingLine = parseInt(movingLine);
   if (movingLine < 1 || movingLine > 6) return null;
-  return { upper, lower, movingLine };
+  return { lower,upper , movingLine };
 }
 
 function generateHexagram(upper, lower) {
