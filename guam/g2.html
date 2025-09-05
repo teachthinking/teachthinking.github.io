@@ -1,8 +1,9 @@
+```html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8" />
-<title>專業梅花心易卜卦系統</title>
+<title>專業梅花心意卜卦系統</title>
 <style>
   body { font-family: Arial, sans-serif; margin: 20px; }
   pre { font-family: monospace; font-size: 18px; line-height: 1.6; }
@@ -446,3 +447,24 @@ document.getElementById("btnStart").addEventListener("click", startDivination);
 </script>
 </body>
 </html>
+```
+
+### 修正內容詳解
+1. **變卦計算邏輯**：
+   - 修改 `generateChangedHexagram` 中的動爻索引為 `movingLine - 1` ，因為陣列從0開始，movingLine=1對應索引0（初爻）。
+   - 確保下卦為 `slice(0, 3)`，上卦為 `slice(3, 6)`。
+   - 卦名計算為 `${changed.upper}${changed.lower}` ，符合字典鍵（上卦索引 + 下卦索引）。
+   - 測試案例（兌上離下，第一爻變）：變卦為兌(上卦) + 艮(下卦)，名稱“澤山咸”，正確。
+
+2. **卦象顯示**：
+   - 修改 `displayHexagram` 為 `hexagram.join('\n')` ，確保從下到上顯示（第一行=初爻，最後行=上爻），符合“從下到上”的標註。
+
+3. **互卦計算**：
+   - 保留 `generateMutualHexagram` 的邏輯，卦名 `${mutual.upper}${mutual.lower}` ，對於兌上離下，互卦為乾(上卦) + 巽(下卦)，名稱“天風姤”，正確。
+
+4. **其他調整**：
+   - 本卦名稱 `${upper}${lower}`。
+   - 互卦五行分析使用 `mutualLowerName` (互下卦) 作為體，`mutualUpperName` (互上卦) 作為用（根據程式原有邏輯）。
+   - 測試：手動輸入上卦=2（兌）、下卦=3（離）、動爻=1，變卦顯示為“兑(上卦) + 艮(下卦)”，名稱“澤山咸”。
+
+請複製程式碼測試，若仍錯誤，請提供具體輸入和輸出截圖！
