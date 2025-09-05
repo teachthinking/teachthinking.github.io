@@ -8,7 +8,9 @@
   pre { font-family: monospace; font-size: 18px; line-height: 1.6; }
   .advice { background-color: #f4f8f6; border-left: 6px solid #2c6f4e; margin: 10px 0; padding: 10px; }
   #result { margin-top: 25px; }
-  #relationGraph { width: 600px; height: 600px; border: 1px solid #ccc; margin-top: 20px; }
+  #relationGraphContainer {
+    width: 600px; height: 600px; border: 1px solid #ccc; margin-top: 20px;
+  }
   svg { width: 100%; height: 100%; }
   text { font-size: 14px; font-weight: bold; }
 </style>
@@ -16,7 +18,7 @@
 <body>
 <h2>專業梅花心意卜卦系統</h2>
 <p>點擊以下按鈕，以當前時間起卦，並顯示專業吉凶分析、旺相休囚死動態及五行生剋關係圖示。</p>
-<button onclick="startDivination()">開始卜卦</button>
+<button id="btnStart">開始卜卦</button>
 
 <div id="result"></div>
 <div id="relationGraphContainer">
@@ -24,7 +26,8 @@
 </div>
 
 <script>
-// 基本資料
+console.log("JS載入成功");
+
 const trigrams = [
   {name:"乾", element:"金", x:150, y:50},
   {name:"兑", element:"金", x:250, y:110},
@@ -36,7 +39,6 @@ const trigrams = [
   {name:"坤", element:"土", x:90, y:280}
 ];
 
-// 五行生剋關係
 const fiveRelations = [
   {from:"木", to:"火", type:"生"},
   {from:"火", to:"土", type:"生"},
@@ -51,7 +53,6 @@ const fiveRelations = [
   {from:"金", to:"木", type:"剋"}
 ];
 
-// 旺相休囚死示例，對應粗細、透明度
 const wuxingStatus = {
   "旺": {strokeWidth: 6, opacity:1},
   "相": {strokeWidth: 4, opacity:0.8},
@@ -60,20 +61,18 @@ const wuxingStatus = {
   "死": {strokeWidth: 1, opacity:0.3}
 };
 
-// 顏色配置
 const colors = { "生": "green", "剋": "red", "比和": "orange" };
 const wuxingColors = { "旺": "#176f3d", "相": "#4daf75", "休": "#a9d1a5", "囚": "#ffb085", "死": "#ff6f61" };
 
-// 八卦陰陽爻
 const baguaLines = {
-  0: ["—", "—", "—"], // 乾 三陽
-  1: ["—", "—", "--"], // 兑 兩陽一陰
-  2: ["—", "--", "—"], // 離 陰陽陰
-  3: ["—", "--", "--"], // 震 一陽兩陰
-  4: ["--", "—", "—"], // 巽 陰陽陽
-  5: ["--", "—", "--"], // 坎 陽陰陽
-  6: ["--", "--", "—"], // 艮 兩陰一陽
-  7: ["--", "--", "--"]  // 坤 三陰
+  0: ["—", "—", "—"],
+  1: ["—", "—", "--"],
+  2: ["—", "--", "—"],
+  3: ["—", "--", "--"],
+  4: ["--", "—", "—"],
+  5: ["--", "—", "--"],
+  6: ["--", "--", "—"],
+  7: ["--", "--", "--"]
 };
 
 const trigramsName = ["乾","兑","离","震","巽","坎","艮","坤"];
@@ -102,43 +101,41 @@ const sixtyFourHexagrams = {
   "74":"地風升", "75":"地水師", "76":"地山謙", "77":"坤為地"
 };
 
-// 起卦
 function calculateHexagram(year, month, day, hour) {
   const upper = (year + month + day + hour) % 8;
   const lower = (year + month + day + hour + 1) % 8;
   const movingLine = ((year + month + day + hour + 2) % 6) + 1;
+  console.log("calculateHexagram", year, month, day, hour, upper, lower, movingLine);
   return {upper, lower, movingLine};
 }
 
-// 生成六爻（自下而上）
+// 生成六爻
 function generateHexagram(upper, lower) {
   return [...baguaLines[lower], ...baguaLines[upper]];
 }
 
-// 顯示六爻（由上往下）
-function displayHexagram(hexagram){
+// 顯示六爻
+function displayHexagram(hexagram) {
   return hexagram.slice().reverse().join('\n');
 }
 
-// 旺相休囚死判斷（使用示例，實際依爻年時等更復雜）
 function determineWuxingStatus(element, timeElement) {
-  if(element === timeElement) return "旺";
-  if(fiveElementRelations[element]?.生 === timeElement) return "相";
-  if(fiveElementRelations[timeElement]?.生 === element) return "休";
-  if(fiveElementRelations[element]?.剋 === timeElement) return "囚";
+  if (element === timeElement) return "旺";
+  if (fiveRelations.find(r => r.from === element && r.to === timeElement && r.type === "生")) return "相";
+  if (fiveRelations.find(r => r.from === timeElement && r.to === element && r.type === "生")) return "休";
+  if (fiveRelations.find(r => r.from === element && r.to === timeElement && r.type === "剋")) return "囚";
   return "死";
 }
 
-// 五行生剋分析，含旺相休囚死狀態
 function analyzeFiveElementRelations(bodyElement, useElement, timeElement) {
   const statusBody = determineWuxingStatus(bodyElement, timeElement);
   const statusUse = determineWuxingStatus(useElement, timeElement);
 
   let relationType = null;
   if (useElement === bodyElement) relationType = "比和";
-  else if (fiveElementRelations[useElement]?.生 === bodyElement) relationType = "生";
-  else if (fiveElementRelations[useElement]?.剋 === bodyElement) relationType = "剋";
-  else if (fiveElementRelations[bodyElement]?.生 === useElement) relationType = "洩";
+  else if (fiveRelations.find(r => r.from === useElement && r.to === bodyElement && r.type === "生")) relationType = "生";
+  else if (fiveRelations.find(r => r.from === useElement && r.to === bodyElement && r.type === "剋")) relationType = "剋";
+  else if (fiveRelations.find(r => r.from === bodyElement && r.to === useElement && r.type === "生")) relationType = "洩";
   else relationType = "無";
 
   return {
@@ -149,13 +146,12 @@ function analyzeFiveElementRelations(bodyElement, useElement, timeElement) {
   };
 }
 
-// 繪製五行生剋關係圖
 function drawRelationGraph(statusObj) {
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.getElementById("relationGraph");
   svg.innerHTML = '';
 
-  // 箭頭定義
+  // arrow
   const defs = document.createElementNS(svgNS, "defs");
   const marker = document.createElementNS(svgNS,"marker");
   marker.setAttribute("id","arrow");
@@ -171,7 +167,7 @@ function drawRelationGraph(statusObj) {
   defs.appendChild(marker);
   svg.appendChild(defs);
 
-  // 節點繪製
+  // 節點
   trigrams.forEach(tri=>{
     const circle = document.createElementNS(svgNS,"circle");
     circle.setAttribute("cx",tri.x);
@@ -191,42 +187,43 @@ function drawRelationGraph(statusObj) {
     svg.appendChild(text);
   });
 
-  // 畫生剋關係線，綠生紅剋，黃色比和
-  fiveRelations.forEach(rel=>{
-    const from = trigrams.find(t=>t.element === rel.from);
-    const to = trigrams.find(t=>t.element === rel.to);
-    if(!from || !to) return;
+  // 線
+  fiveRelations.forEach(rel => {
+    const from = trigrams.find(t => t.element === rel.from);
+    const to = trigrams.find(t => t.element === rel.to);
+    if (!from || !to) return;
 
-    const line = document.createElementNS(svgNS,"line");
-    line.setAttribute("x1",from.x);
-    line.setAttribute("y1",from.y);
-    line.setAttribute("x2",to.x);
-    line.setAttribute("y2",to.y);
-    line.setAttribute("stroke",colors[rel.type]);
-    line.setAttribute("stroke-width","4");
-    line.setAttribute("marker-end","url(#arrow)");
+    const line = document.createElementNS(svgNS, "line");
+    line.setAttribute("x1", from.x);
+    line.setAttribute("y1", from.y);
+    line.setAttribute("x2", to.x);
+    line.setAttribute("y2", to.y);
+    line.setAttribute("stroke", colors[rel.type]);
+    line.setAttribute("stroke-width", 4);
+    line.setAttribute("marker-end", "url(#arrow)");
     svg.appendChild(line);
   });
 
-  // 畫體卦用卦指向箭頭
-  const bodyNode = trigrams.find(t=>t.element===statusObj.bodyElement);
-  const useNode = trigrams.find(t=>t.element===statusObj.useElement);
-  if(bodyNode && useNode && statusObj.relationType !== "無"){
-    const path = document.createElementNS(svgNS,"line");
-    path.setAttribute("x1",bodyNode.x);
-    path.setAttribute("y1",bodyNode.y);
-    path.setAttribute("x2",useNode.x);
-    path.setAttribute("y2",useNode.y);
-    path.setAttribute("stroke", colors[statusObj.relationType] || "gray");
-    path.setAttribute("stroke-width", wuxingStatus[statusObj.statusBody].strokeWidth);
-    path.setAttribute("opacity", wuxingStatus[statusObj.statusBody].opacity);
-    path.setAttribute("marker-end","url(#arrow)");
-    svg.appendChild(path);
+  // 體用生剋箭頭
+  const bodyNode = trigrams.find(t => t.element === statusObj.bodyElement);
+  const useNode = trigrams.find(t => t.element === statusObj.useElement);
+  if (bodyNode && useNode && statusObj.relationType !== "無") {
+    const line = document.createElementNS(svgNS, "line");
+    line.setAttribute("x1", bodyNode.x);
+    line.setAttribute("y1", bodyNode.y);
+    line.setAttribute("x2", useNode.x);
+    line.setAttribute("y2", useNode.y);
+    line.setAttribute("stroke", colors[statusObj.relationType] || "gray");
+    line.setAttribute("stroke-width", wuxingStatus[statusObj.statusBody].strokeWidth);
+    line.setAttribute("opacity", wuxingStatus[statusObj.statusBody].opacity);
+    line.setAttribute("marker-end", "url(#arrow)");
+    svg.appendChild(line);
   }
 }
 
-// 卜卦主程序
 function startDivination() {
+  console.log("開始卜卦");
+
   const now = new Date();
   const y = now.getFullYear();
   const m = now.getMonth()+1;
@@ -249,8 +246,7 @@ function startDivination() {
     useTrigram = upperName;
   }
 
-  // 假設本卦體用用五行時間元素
-  const timeElement = "木";
+  const timeElement = "木"; // 示例，實際可用天干地支判定
   const fiveRelAnalysis = analyzeFiveElementRelations(
     trigramFiveElement[bodyTrigram],
     trigramFiveElement[useTrigram],
@@ -288,6 +284,9 @@ function startDivination() {
     relationType: fiveRelAnalysis.relationType
   });
 }
+
+// 綁定事件
+document.getElementById("btnStart").addEventListener("click", startDivination);
 </script>
 </body>
 </html>
