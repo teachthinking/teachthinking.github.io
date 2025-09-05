@@ -334,14 +334,14 @@ function startDivination() {
 
     const upperName = trigramsName[upper] || "未知";
     const lowerName = trigramsName[lower] || "未知";
-    const hexagramArr = generateHexagram(upper, lower);
+    const hexagramArr = generateHexagram(lower,upper );
     const hexagramStr = displayHexagram(hexagramArr);
 
     const mutual = generateMutualHexagram(hexagramArr);
     const mutualUpperName = trigramsName[mutual.upper] || "未知";
     const mutualLowerName = trigramsName[mutual.lower] || "未知";
     const mutualHexagramStr = displayHexagram(mutual.hexagram);
-    const mutualHexagramName = sixtyFourHexagrams[`${mutual.lower}${mutual.upper}`] || "未知卦";
+    const mutualHexagramName = sixtyFourHexagrams[`${mutual.upper}${mutual.lower}`] || "未知卦";
 
     const changed = generateChangedHexagram(hexagramArr, movingLine);
     const changedUpperName = trigramsName[changed.upper] || "未知";
