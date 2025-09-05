@@ -129,12 +129,12 @@ function calculateHexagramFromThreeDigits(number) {
   return {lower , upper, movingLine };
 }
 
-function calculateHexagramFromManual(lower,upper , movingLine) {
+function calculateHexagramFromManual(upper, lower, movingLine) {
   upper = (parseInt(upper) - 1 + 8) % 8;
   lower = (parseInt(lower) - 1 + 8) % 8;
   movingLine = parseInt(movingLine);
   if (movingLine < 1 || movingLine > 6) return null;
-  return { lower,upper , movingLine };
+  return { upper ,lower, movingLine };
 }
 
 function generateHexagram(upper, lower) {
