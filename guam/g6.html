@@ -84,7 +84,7 @@
     const trigrams = [
       {name:"乾", element:"金"},
       {name:"兑", element:"金"},
-      {name:"离", element:"火"},
+      {name:"離", element:"火"},
       {name:"震", element:"木"},
       {name:"巽", element:"木"},
       {name:"坎", element:"水"},
@@ -135,9 +135,9 @@
       7: ["--", "--", "--"]
     };
 
-    const trigramsName = ["乾","兑","离","震","巽","坎","艮","坤"];
+    const trigramsName = ["乾","兑","離","震","巽","坎","艮","坤"];
     const trigramFiveElement = {
-      "乾": "金", "兑": "金", "離": "火", // 修正'离'為'離'
+      "乾": "金", "兑": "金", "離": "火",
       "震": "木", "巽": "木", "坎": "水",
       "艮": "土", "坤": "土"
     };
@@ -398,19 +398,21 @@
       // 繪製五行圓圈和文字
       positions.forEach(pos => {
         const hasTrigram = elementTrigrams[pos.element].length > 0;
-        const isBody = pos.element === bodyElement;
         const currentRadius = hasTrigram ? 50 : circleRadius;
         const currentFontSize = hasTrigram ? 24 : 18;
 
         const g = document.createElementNS(svgNS, "g");
-        g.setAttribute("opacity", 1);
+        const status = determineWuxingStatus(pos.element, timeElement);
+        const statusProps = wuxingStatus[status] || wuxingStatus["死"];
+
+        g.setAttribute("opacity", statusProps.opacity);
         const circle = document.createElementNS(svgNS, "circle");
         circle.setAttribute("cx", pos.x);
         circle.setAttribute("cy", pos.y);
         circle.setAttribute("r", currentRadius);
-        circle.setAttribute("stroke", isBody ? "#ff4500" : "#444");
-        circle.setAttribute("stroke-width", isBody ? "6" : "2");
-        circle.setAttribute("fill", fiveElementColors[pos.element] || "#eee");
+        circle.setAttribute("stroke", fiveElementColors[pos.element] || "#444");
+        circle.setAttribute("stroke-width", statusProps.strokeWidth);
+        circle.setAttribute("fill", "#fff");
         g.appendChild(circle);
 
         const elementText = document.createElementNS(svgNS, "text");
@@ -422,6 +424,15 @@
         elementText.textContent = pos.element;
         g.appendChild(elementText);
         svg.appendChild(g);
+
+        const statusText = document.createElementNS(svgNS, "text");
+        statusText.setAttribute("x", pos.x);
+        statusText.setAttribute("y", pos.y + currentRadius + 20);
+        statusText.setAttribute("text-anchor", "middle");
+        statusText.setAttribute("font-size", "14px");
+        statusText.setAttribute("fill", "#000");
+        statusText.textContent = `(${status})`;
+        svg.appendChild(statusText);
       });
 
       // 繪製卦象名稱
@@ -464,7 +475,6 @@
         line.setAttribute("marker-end", "url(#arrow)");
         svg.appendChild(line);
 
-        // 在線上標註關係
         const relText = document.createElementNS(svgNS, "text");
         relText.setAttribute("x", (startPoint.x + endPoint.x) / 2);
         relText.setAttribute("y", (startPoint.y + endPoint.y) / 2 - 10);
@@ -475,12 +485,9 @@
         relText.textContent = statusObj.relationType;
         svg.appendChild(relText);
 
-        // 標註體和用
-        const bodyLabelX = bodyNode.x + (bodyRadius + 15) * Math.cos(angle - Math.PI / 2);
-        const bodyLabelY = bodyNode.y + (bodyRadius + 15) * Math.sin(angle - Math.PI / 2);
         const bodyLabel = document.createElementNS(svgNS, "text");
         bodyLabel.setAttribute("x", bodyNode.x);
-        bodyLabel.setAttribute("y", bodyNode.y + bodyRadius + 15); // 調整位置
+        bodyLabel.setAttribute("y", bodyNode.y - bodyRadius - 5);
         bodyLabel.setAttribute("text-anchor", "middle");
         bodyLabel.setAttribute("font-size", "14px");
         bodyLabel.setAttribute("font-weight", "bold");
@@ -488,11 +495,9 @@
         bodyLabel.textContent = "體";
         svg.appendChild(bodyLabel);
         
-        const useLabelX = useNode.x + (useRadius + 15) * Math.cos(angle + Math.PI / 2);
-        const useLabelY = useNode.y + (useRadius + 15) * Math.sin(angle + Math.PI / 2);
         const useLabel = document.createElementNS(svgNS, "text");
         useLabel.setAttribute("x", useNode.x);
-        useLabel.setAttribute("y", useNode.y + useRadius + 15); // 調整位置
+        useLabel.setAttribute("y", useNode.y - useRadius - 5);
         useLabel.setAttribute("text-anchor", "middle");
         useLabel.setAttribute("font-size", "14px");
         useLabel.setAttribute("font-weight", "bold");
@@ -501,7 +506,6 @@
         svg.appendChild(useLabel);
       }
 
-      // 調整標題位置，更靠上
       const questionText = document.createElementNS(svgNS, "text");
       questionText.setAttribute("x", centerX);
       questionText.setAttribute("y", 40); // 調整Y軸位置
@@ -535,15 +539,31 @@
         const now = new Date();
         const month = now.getMonth() + 1;
         let timeElement;
-        // Simplified month to element mapping for demonstration
-        if (month >= 3 && month <= 5) timeElement = "木"; // Spring
-        else if (month >= 6 && month <= 8) timeElement = "火"; // Summer
-        else if (month >= 9 && month <= 11) timeElement = "金"; // Autumn
-        else timeElement = "水"; // Winter (Dec, Jan, Feb)
+        
+        // Revised Five Element determination based on Gregorian calendar months
+        const date = new Date();
+        const day = date.getDate();
+        const monthIndex = date.getMonth();
 
-        // Adding Earth element consideration
-        const day = now.getDate();
-        if (day >= 18 && day <= 20) timeElement = "土"; // A simple rule for Earth element days
+        // 簡化五行判斷 (以月令為準)
+        if (monthIndex >= 2 && monthIndex <= 4) {
+            timeElement = "木"; // 春天：木
+        } else if (monthIndex >= 5 && monthIndex <= 7) {
+            timeElement = "火"; // 夏天：火
+        } else if (monthIndex >= 8 && monthIndex <= 10) {
+            timeElement = "金"; // 秋天：金
+        } else {
+            timeElement = "水"; // 冬天：水
+        }
+        
+        // 每個月的土旺日
+        const isEarthDay = [2, 5, 8, 11].includes(monthIndex);
+        if (isEarthDay) {
+            const startOfEarthPeriod = new Date(date.getFullYear(), monthIndex, 18);
+            if (date.getTime() >= startOfEarthPeriod.getTime()) {
+                timeElement = "土";
+            }
+        }
         
         if (mode === "time") {
           const y = now.getFullYear();
