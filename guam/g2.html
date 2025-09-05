@@ -153,8 +153,8 @@ function generateChangedHexagram(hexagram, movingLine) {
   const changedHexagram = [...hexagram];
   const index = 6 - movingLine; // top 5, bottom 0
   changedHexagram[index] = changedHexagram[index] === "—" ? "--" : "—";
-  const upperLines = changedHexagram.slice(3, 5);
-  const lowerLines = changedHexagram.slice(0, 2);
+  const upperLines = changedHexagram.slice(5, 3);
+  const lowerLines = changedHexagram.slice(2, 0);
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
   const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
   return { upper ,lower, hexagram: changedHexagram };
