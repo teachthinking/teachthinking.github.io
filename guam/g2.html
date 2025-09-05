@@ -142,8 +142,8 @@ function generateHexagram(lower,upper ) {
 }
 
 function generateMutualHexagram(hexagram) {
-  const upperLines = [hexagram[3], hexagram[2], hexagram[1]]; // line5 top to line3 bottom
-  const lowerLines = [hexagram[4], hexagram[3], hexagram[2]]; // line4 top to line2 bottom
+  const upperLines = [hexagram[2], hexagram[3], hexagram[4]]; // line5 top to line3 bottom
+  const lowerLines = [hexagram[1], hexagram[2], hexagram[3]]; // line4 top to line2 bottom
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
   const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
   return {lower,  upper, hexagram: [...lowerLines, ...upperLines] };
