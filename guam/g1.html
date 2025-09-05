@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>梅花心意卜卦工具</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  pre { font-family: monospace; font-size: 16px; line-height: 1.5; }
+  .advice { margin-top: 10px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9; }
+  table { border-collapse: collapse; margin-top: 20px; max-width: 100%; }
+  th, td { border: 1px solid #ccc; padding: 5px 8px; text-align: center;}
+  th { background: #eee; }
+</style>
+</head>
+<body>
+<h2>梅花心意卜卦工具</h2>
+<p>點擊按鈕使用當前時間起卦，並獲得專業吉凶解析與建議。</p>
+<button onclick="generateDivination()">開始卜卦</button>
+<div id="result"></div>
+
+<script>
+// 八卦對應五行與三爻組合(由下爻至上爻)
+const trigramFiveElement = {
+  "乾": "金", "兑": "金", "离": "火",
+  "震": "木", "巽": "木", "坎": "水",
+  "艮": "土", "坤": "土"
+};
+const fiveElementRelations = {
+  "金": { "生": "水", "剋": "木" },
+  "木": { "生": "火", "剋": "土" },
+  "水": { "生": "木", "剋": "火" },
+  "火": { "生": "土", "剋": "金" },
+  "土": { "生": "金", "剋": "水" }
+};
+const trigrams = ["乾", "兑", "离", "震", "巽", "坎", "艮", "坤"];
+const baguaLines = {
+  0: ["—","—","—"],   // 乾    三陽爻
+  1: ["—","—","--"],   // 兑    兩陽一陰
+  2: ["—","--","—"],   // 离    陰陽陰
+  3: ["—","--","--"],   // 震    一陽兩陰
+  4: ["--","—","—"],   // 巽    陰陽陽
+  5: ["--","—","--"],   // 坎    陽陰陽
+  6: ["--","--","—"],   // 艮    兩陰一陽
+  7: ["--","--","--"]   // 坤    三陰爻
+};
+// 六十四卦對照表 (簡化只放卦名)
+// 格式: 【下卦】【上卦】 = 卦名
+const sixtyFourHexagrams = {
+  "7700": "泰", "7701": "否", "7702": "同人", "7703": "大有", "7704": "謙", "7705": "豫", "7706": "隨", "7707": "蠱",
+  "7600": "遯", "7601": "大過", "7602": "夬", "7603": "姤", "7604": "萃", "7605": "升", "7606": "困", "7607": "井",
+  "7500": "需", "7501": "訟", "7502": "師", "7503": "比", "7504": "小畜", "7505": "履", "7506": "泰", "7507": "否",
+  "7400": "謙", "7401": "豫", "7402": "隨", "7403": "蠱", "7404": "乾", "7405": "兌", "7406": "離", "7407": "震",
+  "7300": "蒙", "7301": "需", "7302": "訟", "7303": "師", "7304": "比", "7305": "小畜", "7306": "履", "7307": "泰",
+  "7200": "否", "7201": "同人", "7202": "大有", "7203": "謙", "7204": "豫", "7205": "隨", "7206": "蠱", "7207": "遯",
+  "7100": "剝", "7101": "復", "7102": "無妄", "7103": "大畜", "7104": "頤", "7105": "大過", "7106": "坤", "7107": "井",
+  "7000": "師", "7001": "比", "7002": "小畜", "7003": "履", "7004": "咸", "7005": "恆", "7006": "遯", "7007": "大壯"
+};
+
+// 起卦函式
+function calculateMeihuaDivination(year, month, day, hour) {
+  const upper = (year + month + day) % 8;
+  const lower = (year + month + day + hour) % 8;
+  const movingLine = ((year + month + day + hour) % 6) + 1;
+  return {
+    upperTrigram: upper,
+    lowerTrigram: lower,
+    movingLine: movingLine
+  };
+}
+
+// 生成六爻卦象陣列(由下往上排列)
+function generateHexagram(upperIndex, lowerIndex) {
+  return [...baguaLines[lowerIndex], ...baguaLines[upperIndex]];
+}
+// 文字顯示六爻卦象
+function displayHexagram(hexagram) {
+  let result = "";
+  for(let i = 5; i >= 0; i--) {
+    result += hexagram[i] + "\n";
+  }
+  return result;
+}
+
+// 吉凶分析與建議
+function analyzeDivination(bodyTrigram, useTrigram) {
+  const bodyElement = trigramFiveElement[bodyTrigram];
+  const useElement = trigramFiveElement[useTrigram];
+  let resultText = "";
+  let adviceText = "";
+
+  if (useElement === bodyElement) {
+    resultText = "用卦與體卦五行相同，表示和諧，吉利。";
+    adviceText = "可積極推進計畫，把握良機。";
+  } else if (fiveElementRelations[useElement]?.生 === bodyElement) {
+    resultText = "用卦生體卦，代表有助力，吉利。";
+    adviceText = "遇到障礙時會有外來扶助，適合抓住機會。";
+  } else if (fiveElementRelations[useElement]?.剋 === bodyElement) {
+    resultText = "用卦剋體卦，代表有壓制，可能有阻礙。";
+    adviceText = "應謹慎行事，避免冒進，宜穩健應對。";
+  } else if (fiveElementRelations[bodyElement]?.生 === useElement) {
+    resultText = "體卦生用卦，主體無力，存在洩氣情形。";
+    adviceText = "需加強自身實力，避免急躁和輕忽風險。";
+  } else {
+    resultText = "吉凶關係不明，需要綜合判斷。";
+    adviceText = "保持平和心態，密切關注形勢變化。";
+  }
+
+  return { resultText, adviceText };
+}
+// 結合上下卦號組成六十四卦key
+function getHexagramName(upperIndex, lowerIndex) {
+  const key = `${lowerIndex}${upperIndex}`;
+  // 若找不到，顯示為"未知卦"
+  return sixtyFourHexagrams[key] || "未知卦";
+}
+
+// 產生卜卦並顯示
+function generateDivination() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+  const hour = now.getHours();
+
+  const { upperTrigram, lowerTrigram, movingLine } = calculateMeihuaDivination(year, month, day, hour);
+  const upperTrigName = trigrams[upperTrigram];
+  const lowerTrigName = trigrams[lowerTrigram];
+  const hexagram = generateHexagram(upperTrigram, lowerTrigram);
+
+  // 動爻 <=3 動用下卦，否則用上卦
+  let bodyTrigram, useTrigram;
+  if (movingLine <= 3) {
+    bodyTrigram = upperTrigName;
+    useTrigram = lowerTrigName;
+  } else {
+    bodyTrigram = lowerTrigName;
+    useTrigram = upperTrigName;
+  }
+
+  const analysis = analyzeDivination(bodyTrigram, useTrigram);
+  const hexagramName = getHexagramName(upperTrigram, lowerTrigram);
+
+  let html = `<p>起卦時間：${year}年${month}月${day}日 ${hour}時</p>`;
+  html += `<p>本卦：${upperTrigName}（上卦）＋${lowerTrigName}（下卦）</p>`;
+  html += `<pre>${displayHexagram(hexagram)}</pre>`;
+  html += `<p>動爻：第${movingLine}爻</p>`;
+  html += `<p>體卦：${bodyTrigram}，用卦：${useTrigram}</p>`;
+  html += `<p>六十四卦名稱：${hexagramName}</p>`;
+  html += `<p>吉凶分析：${analysis.resultText}</p>`;
+  html += `<div class="advice"><strong>建議：</strong>${analysis.adviceText}</div>`;
+
+  document.getElementById('result').innerHTML = html;
+}
+</script>
+</body>
+</html>
