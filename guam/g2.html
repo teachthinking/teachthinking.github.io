@@ -75,12 +75,12 @@ const wuxingColors = { "旺": "#176f3d", "相": "#4daf75", "休": "#a9d1a5", "�
 
 const baguaLines = {
   0: ["—", "—", "—"], // 乾
-  1: ["--", "—", "—"], // 兑
+  1: ["—", "—", "--"], // 兑
   2: ["—", "--", "—"], // 离
-  3: ["--", "--", "—"], // 震
-  4: ["—", "—", "--"], // 巽
+  3: ["—", "--", --"], // 震
+  4: ["--", "—", "—"], // 巽
   5: ["--", "—", "--"], // 坎
-  6: ["—", "--", "--"], // 艮
+  6: ["--", "--", "—"], // 艮
   7: ["--", "--", "--"] // 坤
 };
 
@@ -142,8 +142,8 @@ function generateHexagram(upper, lower) {
 }
 
 function generateMutualHexagram(hexagram) {
-  const lowerLines = [hexagram[4], hexagram[3], hexagram[2]]; // 本卦2-4爻（從下到上）
-  const upperLines = [hexagram[3], hexagram[2], hexagram[1]]; // 本卦3-5爻
+  const lowerLines = [hexagram[2], hexagram[3], hexagram[4]]; // 本卦2-4爻（從下到上）
+  const upperLines = [hexagram[1], hexagram[2], hexagram[3]]; // 本卦3-5爻
   const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
   return { upper, lower, hexagram: [...upperLines, ...lowerLines] };
