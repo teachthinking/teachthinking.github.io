@@ -115,7 +115,7 @@ function calculateHexagramFromTime(year, month, day, hour) {
   const upper = sum % 8;
   const lower = (sum + 1) % 8;
   const movingLine = ((sum + 2) % 6) + 1;
-  return { upper, lower, movingLine };
+  return { lower, upper, movingLine };
 }
 
 function calculateHexagramFromThreeDigits(number) {
