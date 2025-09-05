@@ -151,10 +151,10 @@ function generateMutualHexagram(hexagram) {
 
 function generateChangedHexagram(hexagram, movingLine) {
   const changedHexagram = [...hexagram];
-  const index = 6 - movingLine;
+  const index = 5 - movingLine;
   changedHexagram[index] = changedHexagram[index] === "—" ? "--" : "—";
-  const lowerLines = changedHexagram.slice(0, 3);
-  const upperLines = changedHexagram.slice(3, 6);
+  const lowerLines = changedHexagram.slice(0, 2);
+  const upperLines = changedHexagram.slice(3, 5);
   const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
   return { upper, lower, hexagram: changedHexagram };
