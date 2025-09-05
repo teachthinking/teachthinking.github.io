@@ -112,8 +112,8 @@ const sixtyFourHexagrams = {
 
 function calculateHexagramFromTime(year, month, day, hour) {
   const sum = year + month + day + hour;
-  const upper = sum % 8;
-  const lower = (sum + 1) % 8;
+  const lower = sum % 8;
+  const upper = (sum + 1) % 8;
   const movingLine = ((sum + 2) % 6) + 1;
   return { lower, upper, movingLine };
 }
@@ -123,8 +123,8 @@ function calculateHexagramFromThreeDigits(number) {
   const hundreds = Math.floor(number / 100) % 8;
   const tens = Math.floor((number % 100) / 10) % 8;
   const units = number % 10;
-  const upper = hundreds === 0 ? 7 : hundreds - 1;
-  const lower = tens === 0 ? 7 : tens - 1;
+  const lower = hundreds === 0 ? 7 : hundreds - 1;
+  const upper = tens === 0 ? 7 : tens - 1;
   const movingLine = (units % 6) || 6;
   return {lower , upper, movingLine };
 }
@@ -142,8 +142,8 @@ function generateHexagram(lower,upper ) {
 }
 
 function generateMutualHexagram(hexagram) {
-  const upperLines = [hexagram[1], hexagram[2], hexagram[3]]; // line5 top to line3 bottom
-  const lowerLines = [hexagram[2], hexagram[3], hexagram[4]]; // line4 top to line2 bottom
+  const upperLines = [hexagram[2], hexagram[3], hexagram[4]]; // line5 top to line3 bottom
+  const lowerLines = [hexagram[1], hexagram[2], hexagram[3]]; // line4 top to line2 bottom
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
   const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
   return {lower,  upper, hexagram: [...lowerLines, ...upperLines] };
