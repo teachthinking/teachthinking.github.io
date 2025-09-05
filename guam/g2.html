@@ -17,7 +17,7 @@
 </style>
 </head>
 <body>
-<h2>專業梅花心意卜卦系統</h2>
+<h2>專業梅花心易卜卦系統</h2>
 <p>選擇起卦模式，並輸入相關資料，點擊按鈕起卦。</p>
 <label for="divinationMode">起卦模式：</label>
 <select id="divinationMode">
@@ -157,7 +157,7 @@ function generateChangedHexagram(hexagram, movingLine) {
   const lowerLines = changedHexagram.slice(0, 2);
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
   const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
-  return { upper, lower, hexagram: changedHexagram };
+  return { lower ,upper, hexagram: changedHexagram };
 }
 
 function displayHexagram(hexagram) {
