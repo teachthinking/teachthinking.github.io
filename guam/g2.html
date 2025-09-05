@@ -74,14 +74,14 @@ const colors = { "生": "green", "剋": "red", "比和": "orange", "洩": "blue"
 const wuxingColors = { "旺": "#176f3d", "相": "#4daf75", "休": "#a9d1a5", "囚": "#ffb085", "死": "#ff6f61" };
 
 const baguaLines = {
-  0: ["—", "—", "—"],
-  1: ["—", "—", "--"],
-  2: ["—", "--", "—"],
-  3: ["—", "--", "--"],
-  4: ["--", "—", "—"],
-  5: ["--", "—", "--"],
-  6: ["--", "--", "—"],
-  7: ["--", "--", "--"]
+  0: ["—", "—", "—"], // 乾 top to bottom
+  1: ["--", "—", "—"], // 兑
+  2: ["—", "--", "—"], // 离
+  3: ["--", "--", "—"], // 震
+  4: ["—", "—", "--"], // 巽
+  5: ["--", "—", "--"], // 坎
+  6: ["—", "--", "--"], // 艮
+  7: ["--", "--", "--"] // 坤
 };
 
 const trigramsName = ["乾","兑","离","震","巽","坎","艮","坤"];
@@ -123,14 +123,14 @@ function calculateHexagramFromThreeDigits(number) {
   const hundreds = Math.floor(number / 100) % 8;
   const tens = Math.floor((number % 100) / 10) % 8;
   const units = number % 10;
-  const upper = hundreds === 0 ? 7 : hundreds - 1; // 1-8 -> 0-7
+  const upper = hundreds === 0 ? 7 : hundreds - 1;
   const lower = tens === 0 ? 7 : tens - 1;
   const movingLine = (units % 6) || 6;
   return { upper, lower, movingLine };
 }
 
 function calculateHexagramFromManual(upper, lower, movingLine) {
-  upper = (parseInt(upper) - 1 + 8) % 8; // 1-8 -> 0-7
+  upper = (parseInt(upper) - 1 + 8) % 8;
   lower = (parseInt(lower) - 1 + 8) % 8;
   movingLine = parseInt(movingLine);
   if (movingLine < 1 || movingLine > 6) return null;
@@ -138,25 +138,25 @@ function calculateHexagramFromManual(upper, lower, movingLine) {
 }
 
 function generateHexagram(upper, lower) {
-  return [...baguaLines[upper] || ["—", "—", "—"], ...baguaLines[lower] || ["—", "—", "—"]];
+  return [...(baguaLines[upper] || ["—", "—", "—"]), ...(baguaLines[lower] || ["—", "—", "—"])];
 }
 
 function generateMutualHexagram(hexagram) {
-  const lowerLines = [hexagram[1], hexagram[2], hexagram[3]];
-  const upperLines = [hexagram[2], hexagram[3], hexagram[4]];
-  const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
+  const upperLines = [hexagram[1], hexagram[2], hexagram[3]]; // line5 top to line3 bottom
+  const lowerLines = [hexagram[2], hexagram[3], hexagram[4]]; // line4 top to line2 bottom
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
+  const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
   return { upper, lower, hexagram: [...upperLines, ...lowerLines] };
 }
 
 function generateChangedHexagram(hexagram, movingLine) {
   const changedHexagram = [...hexagram];
-  const index = 6 - movingLine;
+  const index = 6 - movingLine; // top 0, bottom 5
   changedHexagram[index] = changedHexagram[index] === "—" ? "--" : "—";
-  const lowerLines = changedHexagram.slice(3, 6);
   const upperLines = changedHexagram.slice(0, 3);
-  const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
+  const lowerLines = changedHexagram.slice(3, 6);
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
+  const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
   return { upper, lower, hexagram: changedHexagram };
 }
 
@@ -213,17 +213,15 @@ function drawRelationGraph(statusObj, allTrigrams) {
   defs.appendChild(marker);
   svg.appendChild(defs);
 
-  // 五角形參數
   const centerX = 300, centerY = 300, radius = 200;
   const positions = [];
   for (let i = 0; i < 5; i++) {
-    const angle = (i * 72 - 90) * Math.PI / 180; // -90使火在上
+    const angle = (i * 72 - 90) * Math.PI / 180;
     const x = centerX + radius * Math.cos(angle);
     const y = centerY + radius * Math.sin(angle);
     positions.push({x, y, element: fiveElementsOrder[i]});
   }
 
-  // 畫五角形邊線（生關係，綠色）
   for (let i = 0; i < 5; i++) {
     const from = positions[i];
     const to = positions[(i + 1) % 5];
@@ -238,7 +236,6 @@ function drawRelationGraph(statusObj, allTrigrams) {
     svg.appendChild(line);
   }
 
-  // 畫剋關係（紅色，五芒星內線）
   for (let i = 0; i < 5; i++) {
     const from = positions[i];
     const to = positions[(i + 2) % 5];
@@ -253,7 +250,6 @@ function drawRelationGraph(statusObj, allTrigrams) {
     svg.appendChild(line);
   }
 
-  // 畫節點圈
   positions.forEach(pos => {
     const circle = document.createElementNS(svgNS, "circle");
     circle.setAttribute("cx", pos.x);
@@ -264,7 +260,6 @@ function drawRelationGraph(statusObj, allTrigrams) {
     circle.setAttribute("fill", wuxingColors[determineWuxingStatus(pos.element, statusObj.timeElement)] || "#eee");
     svg.appendChild(circle);
 
-    // 五行文字
     const elementText = document.createElementNS(svgNS, "text");
     elementText.setAttribute("x", pos.x);
     elementText.setAttribute("y", pos.y + 6);
@@ -274,7 +269,6 @@ function drawRelationGraph(statusObj, allTrigrams) {
     svg.appendChild(elementText);
   });
 
-  // 標注卦名（群組各卦）
   const elementTrigrams = { "火": [], "土": [], "金": [], "水": [], "木": [] };
   allTrigrams.forEach(tri => {
     const ele = trigramFiveElement[tri.name];
@@ -284,11 +278,11 @@ function drawRelationGraph(statusObj, allTrigrams) {
   positions.forEach((pos, i) => {
     const trigList = elementTrigrams[pos.element];
     if (trigList.length > 0) {
-      const textOffsetX = (i === 1 || i === 2) ? 40 : (i === 3 || i === 4) ? -40 : 0; // 右靠右，左靠左
-      const textOffsetY = (i === 0) ? -40 : (i === 2 || i === 3) ? 40 : 0; // 上靠上，下靠下
+      const textOffsetX = (i === 1 || i === 2) ? 40 : (i === 3 || i === 4) ? -40 : 0;
+      const textOffsetY = (i === 0) ? -40 : (i === 2 || i === 3) ? 40 : 0;
       const trigText = document.createElementNS(svgNS, "text");
       trigText.setAttribute("x", pos.x + textOffsetX);
-      trigText.setAttribute("y", pos.y + textOffsetY + 20); // 避免遮擋
+      trigText.setAttribute("y", pos.y + textOffsetY + 20);
       trigText.setAttribute("text-anchor", textOffsetX > 0 ? "start" : textOffsetX < 0 ? "end" : "middle");
       trigText.setAttribute("fill", "#000");
       trigText.textContent = trigList.join(', ');
@@ -296,7 +290,6 @@ function drawRelationGraph(statusObj, allTrigrams) {
     }
   });
 
-  // 體用箭頭
   const bodyNode = positions.find(p => p.element === statusObj.bodyElement);
   const useNode = positions.find(p => p.element === statusObj.useElement);
   if (bodyNode && useNode && statusObj.relationType !== "無") {
@@ -314,7 +307,7 @@ function drawRelationGraph(statusObj, allTrigrams) {
 }
 
 function startDivination() {
-  console.log("開始卜卦");
+  console.log("Button clicked, starting divination");
   try {
     const mode = document.getElementById("divinationMode").value;
     let upper, lower, movingLine;
@@ -406,7 +399,6 @@ function startDivination() {
       </div>
     `;
 
-    // 收集所有卦用於標注
     const allTrigrams = [
       {name: upperName, label: "本上:"},
       {name: lowerName, label: "本下:"},
@@ -427,29 +419,30 @@ function startDivination() {
       relationType: fiveRelAnalysis.relationType
     }, allTrigrams);
   } catch (error) {
-    console.error("Error:", error);
-    document.getElementById("result").innerHTML = `<p style="color: red;">錯誤：${error.message}</p>`;
+    console.error("Error in startDivination:", error);
+    document.getElementById("result").innerHTML = `<p style="color: red;">錯誤：無法完成卜卦，請檢查控制台以獲取詳細信息。</p>`;
   }
 }
 
-// 動態輸入欄位
-const modeSelect = document.getElementById("divinationMode");
-const inputFields = document.getElementById("inputFields");
-modeSelect.addEventListener("change", () => {
-  inputFields.innerHTML = '';
-  const mode = modeSelect.value;
-  if (mode === "threeDigits") {
-    inputFields.innerHTML = '<label>三位數：</label><input id="threeDigitsInput" type="number" min="100" max="999" value="123">';
-  } else if (mode === "manual") {
-    inputFields.innerHTML = `
-      <label>上卦(1-8)：</label><input id="upperInput" type="number" min="1" max="8" value="1"><br>
-      <label>下卦(1-8)：</label><input id="lowerInput" type="number" min="1" max="8" value="2"><br>
-      <label>動爻(1-6)：</label><input id="movingInput" type="number" min="1" max="6" value="6">
-    `;
-  }
-});
+document.addEventListener("DOMContentLoaded", () => {
+  const modeSelect = document.getElementById("divinationMode");
+  const inputFields = document.getElementById("inputFields");
+  modeSelect.addEventListener("change", () => {
+    inputFields.innerHTML = '';
+    const mode = modeSelect.value;
+    if (mode === "threeDigits") {
+      inputFields.innerHTML = '<label>三位數：</label><input id="threeDigitsInput" type="number" min="100" max="999" value="123">';
+    } else if (mode === "manual") {
+      inputFields.innerHTML = `
+        <label>上卦(1-8)：</label><input id="upperInput" type="number" min="1" max="8" value="1"><br>
+        <label>下卦(1-8)：</label><input id="lowerInput" type="number" min="1" max="8" value="2"><br>
+        <label>動爻(1-6)：</label><input id="movingInput" type="number" min="1" max="6" value="6">
+      `;
+    }
+  });
 
-document.getElementById("btnStart").addEventListener("click", startDivination);
+  document.getElementById("btnStart").addEventListener("click", startDivination);
+});
 </script>
 </body>
 </html>
