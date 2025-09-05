@@ -151,7 +151,7 @@ function generateMutualHexagram(hexagram) {
 
 function generateChangedHexagram(hexagram, movingLine) {
   const changedHexagram = [...hexagram];
-  const index = 5 - movingLine ;
+  const index = 1 - movingLine ;
   changedHexagram[index] = changedHexagram[index] === "—" ? "--" : "—";
   const lowerLines = changedHexagram.slice(3, 6);
   const upperLines = changedHexagram.slice(0, 3);
