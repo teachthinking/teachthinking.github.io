@@ -113,9 +113,9 @@ const sixtyFourHexagrams = {
 function calculateHexagramFromTime(year, month, day, hour) {
   const sum = year + month + day + hour;
   const upper = sum % 8;
-  const lower = (sum + 1) % 8;
+  const  = (sum + 1) % 8;
   const movingLine = ((sum + 2) % 6) + 1;
-  return { upper, lower, movingLine };
+  return { upper, , movingLine };
 }
 
 function calculateHexagramFromThreeDigits(number) {
@@ -124,9 +124,9 @@ function calculateHexagramFromThreeDigits(number) {
   const tens = Math.floor((number % 100) / 10) % 8;
   const units = number % 10;
   const upper = hundreds === 0 ? 7 : hundreds - 1; // 1-8 -> 0-7
-  const lower = tens === 0 ? 7 : tens - 1;
+  const  = tens === 0 ? 7 : tens - 1;
   const movingLine = (units % 6) || 6;
-  return { upper, lower, movingLine };
+  return { upper, , movingLine };
 }
 
 function calculateHexagramFromManual(upper, lower, movingLine) {
@@ -137,8 +137,8 @@ function calculateHexagramFromManual(upper, lower, movingLine) {
   return { upper, lower, movingLine };
 }
 
-function generateHexagram(upper, lower) {
-  return [...baguaLines[upper] || ["—", "—", "—"], ...baguaLines[lower] || ["—", "—", "—"]];
+function generateHexagram(lower, upper) {
+  return [...baguaLines[lower] || ["—", "—", "—"], ...baguaLines[upper] || ["—", "—", "—"]];
 }
 
 function generateMutualHexagram(hexagram) {
