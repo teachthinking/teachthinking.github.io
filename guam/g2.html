@@ -146,7 +146,7 @@ function generateMutualHexagram(hexagram) {
   const lowerLines = [hexagram[2], hexagram[3], hexagram[4]]; // line4 top to line2 bottom
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
   const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
-  return {lower,  upper, hexagram: [...upperLines, ...lowerLines] };
+  return {lower,  upper, hexagram: [...lowerLines, ...upperLines] };
 }
 
 function generateChangedHexagram(hexagram, movingLine) {
