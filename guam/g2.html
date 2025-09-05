@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>專業梅花心意卜卦系統</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  pre { font-family: monospace; font-size: 18px; line-height: 1.6; }
+  .advice { background-color: #f4f8f6; border-left: 6px solid #2c6f4e; margin: 10px 0; padding: 10px; }
+  #result { margin-top: 25px; }
+  #relationGraphContainer {
+    width: 600px; height: 600px; border: 1px solid #ccc; margin-top: 20px;
+  }
+  svg { width: 100%; height: 100%; }
+  text { font-size: 12px; font-weight: bold; }
+  label { margin-right: 10px; }
+</style>
+</head>
+<body>
+<h2>專業梅花心意卜卦系統</h2>
+<p>選擇起卦模式，並輸入相關資料，點擊按鈕起卦。</p>
+<label for="divinationMode">起卦模式：</label>
+<select id="divinationMode">
+  <option value="time">時間起卦（自動取當前時間）</option>
+  <option value="threeDigits">三位數起卦（輸入三位數，如123）</option>
+  <option value="manual">手動指定（上卦1-8、下卦1-8、動爻1-6）</option>
+</select><br><br>
+<div id="inputFields"></div>
+<button id="btnStart">開始卜卦</button>
+
+<div id="result"></div>
+<div id="relationGraphContainer">
+  <svg id="relationGraph"></svg>
+</div>
+
+<script>
+console.log("JS載入成功");
+
+const trigrams = [
+  {name:"乾", element:"金"},
+  {name:"兑", element:"金"},
+  {name:"离", element:"火"},
+  {name:"震", element:"木"},
+  {name:"巽", element:"木"},
+  {name:"坎", element:"水"},
+  {name:"艮", element:"土"},
+  {name:"坤", element:"土"}
+];
+
+const fiveElementsOrder = ["火", "土", "金", "水", "木"]; // 五角形順序：火頂，順時針
+
+const fiveRelations = [
+  {from:"木", to:"火", type:"生"},
+  {from:"火", to:"土", type:"生"},
+  {from:"土", to:"金", type:"生"},
+  {from:"金", to:"水", type:"生"},
+  {from:"水", to:"木", type:"生"},
+  {from:"木", to:"土", type:"剋"},
+  {from:"土", to:"水", type:"剋"},
+  {from:"水", to:"火", type:"剋"},
+  {from:"火", to:"金", type:"剋"},
+  {from:"金", to:"木", type:"剋"}
+];
+
+const wuxingStatus = {
+  "旺": {strokeWidth: 6, opacity:1},
+  "相": {strokeWidth: 4, opacity:0.8},
+  "休": {strokeWidth: 2, opacity:0.6},
+  "囚": {strokeWidth: 1, opacity:0.4},
+  "死": {strokeWidth: 1, opacity:0.3}
+};
+
+const colors = { "生": "green", "剋": "red", "比和": "orange", "洩": "blue", "無": "gray" };
+const wuxingColors = { "旺": "#176f3d", "相": "#4daf75", "休": "#a9d1a5", "囚": "#ffb085", "死": "#ff6f61" };
+
+const baguaLines = {
+  0: ["—", "—", "—"],
+  1: ["—", "—", "--"],
+  2: ["—", "--", "—"],
+  3: ["—", "--", "--"],
+  4: ["--", "—", "—"],
+  5: ["--", "—", "--"],
+  6: ["--", "--", "—"],
+  7: ["--", "--", "--"]
+};
+
+const trigramsName = ["乾","兑","离","震","巽","坎","艮","坤"];
+const trigramFiveElement = {
+  "乾": "金", "兑": "金", "离": "火",
+  "震": "木", "巽": "木", "坎": "水",
+  "艮": "土", "坤": "土"
+};
+
+const sixtyFourHexagrams = {
+  "00":"乾為天", "01":"天澤履", "02":"天火同人", "03":"天雷無妄",
+  "04":"天風姤", "05":"天水訟", "06":"天山遯", "07":"天地否",
+  "10":"澤天夬", "11":"兌為澤", "12":"澤火革", "13":"澤雷隨",
+  "14":"澤風大過", "15":"澤水困", "16":"澤山咸", "17":"澤地萃",
+  "20":"火天大有", "21":"火澤睽", "22":"離為火", "23":"火雷噬嗑",
+  "24":"火風鼎", "25":"火水未濟", "26":"火山旅", "27":"火地晉",
+  "30":"雷天大壯", "31":"雷澤歸妹", "32":"雷火豐", "33":"震為雷",
+  "34":"雷風恆", "35":"雷水解", "36":"雷山小過", "37":"雷地豫",
+  "40":"風天小畜", "41":"風澤中孚", "42":"風火家人", "43":"風雷益",
+  "44":"巽為風", "45":"風水渙", "46":"風山漸", "47":"風地觀",
+  "50":"水天需", "51":"水澤節", "52":"水火既濟", "53":"水雷屯",
+  "54":"水風井", "55":"坎為水", "56":"水山蹇", "57":"水地比",
+  "60":"山天大畜", "61":"山澤損", "62":"山火賁", "63":"山雷頤",
+  "64":"山風蠱", "65":"山水蒙", "66":"艮為山", "67":"山地剝",
+  "70":"地天泰", "71":"地澤臨", "72":"地火明夷", "73":"地雷復",
+  "74":"地風升", "75":"地水師", "76":"地山謙", "77":"坤為地"
+};
+
+function calculateHexagramFromTime(year, month, day, hour) {
+  const sum = year + month + day + hour;
+  const upper = sum % 8;
+  const lower = (sum + 1) % 8;
+  const movingLine = ((sum + 2) % 6) + 1;
+  return { upper, lower, movingLine };
+}
+
+function calculateHexagramFromThreeDigits(number) {
+  if (number < 100 || number > 999) return null;
+  const hundreds = Math.floor(number / 100) % 8;
+  const tens = Math.floor((number % 100) / 10) % 8;
+  const units = number % 10;
+  const upper = hundreds === 0 ? 7 : hundreds - 1; // 1-8 -> 0-7
+  const lower = tens === 0 ? 7 : tens - 1;
+  const movingLine = (units % 6) || 6;
+  return { upper, lower, movingLine };
+}
+
+function calculateHexagramFromManual(upper, lower, movingLine) {
+  upper = (parseInt(upper) - 1 + 8) % 8; // 1-8 -> 0-7
+  lower = (parseInt(lower) - 1 + 8) % 8;
+  movingLine = parseInt(movingLine);
+  if (movingLine < 1 || movingLine > 6) return null;
+  return { upper, lower, movingLine };
+}
+
+function generateHexagram(upper, lower) {
+  return [...baguaLines[upper] || ["—", "—", "—"], ...baguaLines[lower] || ["—", "—", "—"]];
+}
+
+function generateMutualHexagram(hexagram) {
+  const lowerLines = [hexagram[1], hexagram[2], hexagram[3]];
+  const upperLines = [hexagram[2], hexagram[3], hexagram[4]];
+  const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
+  const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
+  return { upper, lower, hexagram: [...upperLines, ...lowerLines] };
+}
+
+function generateChangedHexagram(hexagram, movingLine) {
+  const changedHexagram = [...hexagram];
+  const index = 6 - movingLine;
+  changedHexagram[index] = changedHexagram[index] === "—" ? "--" : "—";
+  const lowerLines = changedHexagram.slice(3, 6);
+  const upperLines = changedHexagram.slice(0, 3);
+  const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
+  const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
+  return { upper, lower, hexagram: changedHexagram };
+}
+
+function displayHexagram(hexagram) {
+  return hexagram.slice().reverse().join('\n');
+}
+
+function determineWuxingStatus(element, timeElement) {
+  if (!element || !timeElement) return "死";
+  if (element === timeElement) return "旺";
+  if (fiveRelations.find(r => r.from === element && r.to === timeElement && r.type === "生")) return "相";
+  if (fiveRelations.find(r => r.from === timeElement && r.to === element && r.type === "生")) return "休";
+  if (fiveRelations.find(r => r.from === element && r.to === timeElement && r.type === "剋")) return "囚";
+  return "死";
+}
+
+function analyzeFiveElementRelations(bodyElement, useElement, timeElement) {
+  const statusBody = determineWuxingStatus(bodyElement, timeElement);
+  const statusUse = determineWuxingStatus(useElement, timeElement);
+
+  let relationType = null;
+  if (useElement === bodyElement) relationType = "比和";
+  else if (fiveRelations.find(r => r.from === useElement && r.to === bodyElement && r.type === "生")) relationType = "生";
+  else if (fiveRelations.find(r => r.from === useElement && r.to === bodyElement && r.type === "剋")) relationType = "剋";
+  else if (fiveRelations.find(r => r.from === bodyElement && r.to === useElement && r.type === "生")) relationType = "洩";
+  else relationType = "無";
+
+  return {
+    statusBody,
+    statusUse,
+    relationType,
+    description: `體卦五行：${bodyElement || "未知"}（${statusBody}），用卦五行：${useElement || "未知"}（${statusUse}），關係：${relationType}`
+  };
+}
+
+function drawRelationGraph(statusObj, allTrigrams) {
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("relationGraph");
+  if (!svg) return;
+  svg.innerHTML = '';
+
+  const defs = document.createElementNS(svgNS, "defs");
+  const marker = document.createElementNS(svgNS, "marker");
+  marker.setAttribute("id", "arrow");
+  marker.setAttribute("markerWidth", "10");
+  marker.setAttribute("markerHeight", "7");
+  marker.setAttribute("refX", "10");
+  marker.setAttribute("refY", "3.5");
+  marker.setAttribute("orient", "auto");
+  const path = document.createElementNS(svgNS, "path");
+  path.setAttribute("d", "M 0 0 L 10 3.5 L 0 7 Z");
+  path.setAttribute("fill", "currentColor");
+  marker.appendChild(path);
+  defs.appendChild(marker);
+  svg.appendChild(defs);
+
+  // 五角形參數
+  const centerX = 300, centerY = 300, radius = 200;
+  const positions = [];
+  for (let i = 0; i < 5; i++) {
+    const angle = (i * 72 - 90) * Math.PI / 180; // -90使火在上
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
+    positions.push({x, y, element: fiveElementsOrder[i]});
+  }
+
+  // 畫五角形邊線（生關係，綠色）
+  for (let i = 0; i < 5; i++) {
+    const from = positions[i];
+    const to = positions[(i + 1) % 5];
+    const line = document.createElementNS(svgNS, "line");
+    line.setAttribute("x1", from.x);
+    line.setAttribute("y1", from.y);
+    line.setAttribute("x2", to.x);
+    line.setAttribute("y2", to.y);
+    line.setAttribute("stroke", "green");
+    line.setAttribute("stroke-width", 4);
+    line.setAttribute("marker-end", "url(#arrow)");
+    svg.appendChild(line);
+  }
+
+  // 畫剋關係（紅色，五芒星內線）
+  for (let i = 0; i < 5; i++) {
+    const from = positions[i];
+    const to = positions[(i + 2) % 5];
+    const line = document.createElementNS(svgNS, "line");
+    line.setAttribute("x1", from.x);
+    line.setAttribute("y1", from.y);
+    line.setAttribute("x2", to.x);
+    line.setAttribute("y2", to.y);
+    line.setAttribute("stroke", "red");
+    line.setAttribute("stroke-width", 4);
+    line.setAttribute("marker-end", "url(#arrow)");
+    svg.appendChild(line);
+  }
+
+  // 畫節點圈
+  positions.forEach(pos => {
+    const circle = document.createElementNS(svgNS, "circle");
+    circle.setAttribute("cx", pos.x);
+    circle.setAttribute("cy", pos.y);
+    circle.setAttribute("r", 30);
+    circle.setAttribute("stroke", "#444");
+    circle.setAttribute("stroke-width", "2");
+    circle.setAttribute("fill", wuxingColors[determineWuxingStatus(pos.element, statusObj.timeElement)] || "#eee");
+    svg.appendChild(circle);
+
+    // 五行文字
+    const elementText = document.createElementNS(svgNS, "text");
+    elementText.setAttribute("x", pos.x);
+    elementText.setAttribute("y", pos.y + 6);
+    elementText.setAttribute("text-anchor", "middle");
+    elementText.setAttribute("fill", "#000");
+    elementText.textContent = pos.element;
+    svg.appendChild(elementText);
+  });
+
+  // 標注卦名（群組各卦）
+  const elementTrigrams = { "火": [], "土": [], "金": [], "水": [], "木": [] };
+  allTrigrams.forEach(tri => {
+    const ele = trigramFiveElement[tri.name];
+    if (ele) elementTrigrams[ele].push(tri.label + tri.name);
+  });
+
+  positions.forEach((pos, i) => {
+    const trigList = elementTrigrams[pos.element];
+    if (trigList.length > 0) {
+      const textOffsetX = (i === 1 || i === 2) ? 40 : (i === 3 || i === 4) ? -40 : 0; // 右靠右，左靠左
+      const textOffsetY = (i === 0) ? -40 : (i === 2 || i === 3) ? 40 : 0; // 上靠上，下靠下
+      const trigText = document.createElementNS(svgNS, "text");
+      trigText.setAttribute("x", pos.x + textOffsetX);
+      trigText.setAttribute("y", pos.y + textOffsetY + 20); // 避免遮擋
+      trigText.setAttribute("text-anchor", textOffsetX > 0 ? "start" : textOffsetX < 0 ? "end" : "middle");
+      trigText.setAttribute("fill", "#000");
+      trigText.textContent = trigList.join(', ');
+      svg.appendChild(trigText);
+    }
+  });
+
+  // 體用箭頭
+  const bodyNode = positions.find(p => p.element === statusObj.bodyElement);
+  const useNode = positions.find(p => p.element === statusObj.useElement);
+  if (bodyNode && useNode && statusObj.relationType !== "無") {
+    const line = document.createElementNS(svgNS, "line");
+    line.setAttribute("x1", bodyNode.x);
+    line.setAttribute("y1", bodyNode.y);
+    line.setAttribute("x2", useNode.x);
+    line.setAttribute("y2", useNode.y);
+    line.setAttribute("stroke", colors[statusObj.relationType] || "gray");
+    line.setAttribute("stroke-width", wuxingStatus[statusObj.statusBody].strokeWidth);
+    line.setAttribute("opacity", wuxingStatus[statusObj.statusBody].opacity);
+    line.setAttribute("marker-end", "url(#arrow)");
+    svg.appendChild(line);
+  }
+}
+
+function startDivination() {
+  console.log("開始卜卦");
+  try {
+    const mode = document.getElementById("divinationMode").value;
+    let upper, lower, movingLine;
+    if (mode === "time") {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth() + 1;
+      const d = now.getDate();
+      const h = now.getHours();
+      ({ upper, lower, movingLine } = calculateHexagramFromTime(y, m, d, h));
+    } else if (mode === "threeDigits") {
+      const number = parseInt(document.getElementById("threeDigitsInput").value);
+      const result = calculateHexagramFromThreeDigits(number);
+      if (!result) throw new Error("請輸入有效三位數 (100-999)");
+      ({ upper, lower, movingLine } = result);
+    } else if (mode === "manual") {
+      const upperInput = document.getElementById("upperInput").value;
+      const lowerInput = document.getElementById("lowerInput").value;
+      const movingInput = document.getElementById("movingInput").value;
+      const result = calculateHexagramFromManual(upperInput, lowerInput, movingInput);
+      if (!result) throw new Error("請輸入有效數字：上卦/下卦1-8，動爻1-6");
+      ({ upper, lower, movingLine } = result);
+    }
+
+    const upperName = trigramsName[upper] || "未知";
+    const lowerName = trigramsName[lower] || "未知";
+    const hexagramArr = generateHexagram(upper, lower);
+    const hexagramStr = displayHexagram(hexagramArr);
+
+    const mutual = generateMutualHexagram(hexagramArr);
+    const mutualUpperName = trigramsName[mutual.upper] || "未知";
+    const mutualLowerName = trigramsName[mutual.lower] || "未知";
+    const mutualHexagramStr = displayHexagram(mutual.hexagram);
+    const mutualHexagramName = sixtyFourHexagrams[`${mutual.lower}${mutual.upper}`] || "未知卦";
+
+    const changed = generateChangedHexagram(hexagramArr, movingLine);
+    const changedUpperName = trigramsName[changed.upper] || "未知";
+    const changedLowerName = trigramsName[changed.lower] || "未知";
+    const changedHexagramStr = displayHexagram(changed.hexagram);
+    const changedHexagramName = sixtyFourHexagrams[`${changed.lower}${changed.upper}`] || "未知卦";
+
+    let bodyTrigram, useTrigram;
+    if (movingLine >= 4) {
+      bodyTrigram = lowerName;
+      useTrigram = upperName;
+    } else {
+      bodyTrigram = upperName;
+      useTrigram = lowerName;
+    }
+
+    const timeElement = "木";
+    const fiveRelAnalysis = analyzeFiveElementRelations(trigramFiveElement[bodyTrigram], trigramFiveElement[useTrigram], timeElement);
+    const mutualFiveRelAnalysis = analyzeFiveElementRelations(trigramFiveElement[mutualLowerName], trigramFiveElement[mutualUpperName], timeElement);
+    const changedFiveRelAnalysis = analyzeFiveElementRelations(
+      trigramFiveElement[movingLine >= 4 ? changedLowerName : changedUpperName],
+      trigramFiveElement[movingLine >= 4 ? changedUpperName : changedLowerName],
+      timeElement
+    );
+
+    document.getElementById("result").innerHTML = `
+      <h3>本卦</h3>
+      <p>${upperName}(上卦) + ${lowerName}(下卦)</p>
+      <pre>卦象（從下到上）:\n${hexagramStr}</pre>
+      <h3>本卦名稱</h3>
+      <p>${sixtyFourHexagrams[`${lower}${upper}`] || "未知卦"}</p>
+      <h3>動爻</h3>
+      <p>第${movingLine}爻</p>
+      <h3>本卦體用</h3>
+      <p>體卦:${bodyTrigram} (${trigramFiveElement[bodyTrigram] || "未知"}), 用卦:${useTrigram} (${trigramFiveElement[useTrigram] || "未知"})</p>
+      <h3>本卦五行生剋分析</h3>
+      <p>${fiveRelAnalysis.description}</p>
+      <h3>互卦</h3>
+      <p>${mutualUpperName}(上卦) + ${mutualLowerName}(下卦)</p>
+      <pre>卦象（從下到上）:\n${mutualHexagramStr}</pre>
+      <h3>互卦名稱</h3>
+      <p>${mutualHexagramName}</p>
+      <h3>互卦五行分析</h3>
+      <p>${mutualFiveRelAnalysis.description}</p>
+      <h3>變卦</h3>
+      <p>${changedUpperName}(上卦) + ${changedLowerName}(下卦)</p>
+      <pre>卦象（從下到上）:\n${changedHexagramStr}</pre>
+      <h3>變卦名稱</h3>
+      <p>${changedHexagramName}</p>
+      <h3>變卦五行分析</h3>
+      <p>${changedFiveRelAnalysis.description}</p>
+      <div class="advice">
+        <strong>趨吉避凶建議：</strong>
+        <p>${fiveRelAnalysis.relationType === "剋" || changedFiveRelAnalysis.relationType === "剋" ? "建議小心應對，避免衝突與風險。" : "可把握有利機會，積極行動。"}</p>
+      </div>
+    `;
+
+    // 收集所有卦用於標注
+    const allTrigrams = [
+      {name: upperName, label: "本上:"},
+      {name: lowerName, label: "本下:"},
+      {name: mutualUpperName, label: "互上:"},
+      {name: mutualLowerName, label: "互下:"},
+      {name: changedUpperName, label: "變上:"},
+      {name: changedLowerName, label: "變下:"},
+      {name: bodyTrigram, label: "體:"},
+      {name: useTrigram, label: "用:"}
+    ];
+
+    drawRelationGraph({
+      bodyElement: trigramFiveElement[bodyTrigram],
+      useElement: trigramFiveElement[useTrigram],
+      timeElement: timeElement,
+      statusBody: fiveRelAnalysis.statusBody,
+      statusUse: fiveRelAnalysis.statusUse,
+      relationType: fiveRelAnalysis.relationType
+    }, allTrigrams);
+  } catch (error) {
+    console.error("Error:", error);
+    document.getElementById("result").innerHTML = `<p style="color: red;">錯誤：${error.message}</p>`;
+  }
+}
+
+// 動態輸入欄位
+const modeSelect = document.getElementById("divinationMode");
+const inputFields = document.getElementById("inputFields");
+modeSelect.addEventListener("change", () => {
+  inputFields.innerHTML = '';
+  const mode = modeSelect.value;
+  if (mode === "threeDigits") {
+    inputFields.innerHTML = '<label>三位數：</label><input id="threeDigitsInput" type="number" min="100" max="999" value="123">';
+  } else if (mode === "manual") {
+    inputFields.innerHTML = `
+      <label>上卦(1-8)：</label><input id="upperInput" type="number" min="1" max="8" value="1"><br>
+      <label>下卦(1-8)：</label><input id="lowerInput" type="number" min="1" max="8" value="2"><br>
+      <label>動爻(1-6)：</label><input id="movingInput" type="number" min="1" max="6" value="6">
+    `;
+  }
+});
+
+document.getElementById("btnStart").addEventListener("click", startDivination);
+</script>
+</body>
+</html>
