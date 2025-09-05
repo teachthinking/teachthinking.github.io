@@ -49,15 +49,15 @@
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 font-sans">
   <header class="w-full max-w-3xl bg-white shadow-md rounded-lg p-6 mb-6">
     <h2 class="text-2xl font-bold text-center text-gray-800">專業梅花心意卜卦系統</h2>
-    <p class="text-center text-gray-600 mt-2">輸入問題，選擇起卦模式，輸入資料後點擊開始卜卦</p>
+    <p class="text-center text-gray-600 mt-2">選擇起卦模式，輸入資料後點擊開始卜卦</p>
   </header>
 
   <main class="w-full max-w-3xl bg-white shadow-md rounded-lg p-6">
     <div class="mb-4">
       <label for="questionInput" class="block text-sm font-medium text-gray-700 mb-2">
-        <i class="fas fa-question-circle mr-2 tooltip" data-tooltip="輸入您的問題"></i>卜卦問題
+        <i class="fas fa-question-circle mr-2"></i>卜卦問題
       </label>
-      <input id="questionInput" type="text" placeholder="例如：明天適合出遊嗎？" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" id="questionInput" placeholder="例如：明天適合出遊嗎？" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
     </div>
 
     <div class="mb-4">
@@ -78,12 +78,9 @@
     </button>
 
     <div id="result" class="mt-6"></div>
-    <div id="relationGraphContainer" class="hidden"></div>
   </main>
 
   <script>
-    console.log("JS載入成功");
-
     const trigrams = [
       {name:"乾", element:"金"},
       {name:"兑", element:"金"},
@@ -103,30 +100,29 @@
       {from:"金", to:"水", type:"生"},
       {from:"水", to:"木", type:"生"},
       {from:"木", to:"土", type:"剋"},
-      {from:"土", to:"水", type:"剥"},
+      {from:"土", to:"水", type:"剋"},
       {from:"水", to:"火", type:"剋"},
       {from:"火", to:"金", type:"剋"},
       {from:"金", to:"木", type:"剋"}
     ];
 
-    const wuxingStatus = {
-      "旺": {strokeWidth: 6, opacity: 1},
-      "相": {strokeWidth: 4, opacity: 0.8},
-      "休": {strokeWidth: 2, opacity: 0.6},
-      "囚": {strokeWidth: 1, opacity: 0.4},
-      "死": {strokeWidth: 1, opacity: 0.3}
+    const fiveElementColors = {
+      "金": "#ffd700",
+      "木": "#228b22",
+      "水": "#1e90ff",
+      "火": "#dc143c",
+      "土": "#a52a2a"
     };
 
-    const elementColors = {
-      "木": "#00FF00", // 綠色
-      "火": "#FF0000", // 紅色
-      "土": "#FFFF00", // 黃色
-      "金": "#FFFFFF", // 白色
-      "水": "#0000FF"  // 藍色
+    const wuxingStatus = {
+      "旺": {strokeWidth: 6, opacity:1},
+      "相": {strokeWidth: 4, opacity:0.8},
+      "休": {strokeWidth: 2, opacity:0.6},
+      "囚": {strokeWidth: 1, opacity:0.4},
+      "死": {strokeWidth: 1, opacity:0.3}
     };
 
     const colors = { "用生體": "green", "用剋體": "red", "比和": "orange", "體生用": "blue", "體剋用": "purple", "無": "gray" };
-    const wuxingColors = { "旺": "#176f3d", "相": "#4daf75", "休": "#a9d1a5", "囚": "#ffb085", "死": "#ff6f61" };
 
     const baguaLines = {
       0: ["—", "—", "—"],
@@ -278,42 +274,50 @@
     }
 
     function isGil(type) {
-      if (type === "用生體" || type === "比和") return 2; // 吉
-      if (type === "體剋用") return 1; // 中等
-      if (type === "用剋體" || type === "體生用") return -1; // 凶
-      return 0; // 中性
+      if (type === "用生體") return 3; //大吉
+      if (type === "比和") return 2; //中吉
+      if (type === "體剋用") return 1; //小吉
+      if (type === "體生用") return -1; //小凶
+      if (type === "用剋體") return -2; //中凶
+      return 0; //平/無
     }
 
-    function getCategory(relation1, relation2, relation3) {
-      const score = isGil(relation1) + isGil(relation2) + isGil(relation3);
-      if (score >= 5) return "大吉";
-      if (score >= 3) return "中吉";
-      if (score >= 1) return "小吉";
-      if (score === 0) return "平";
-      if (score >= -2) return "小凶";
-      if (score >= -4) return "中凶";
-      return "大凶";
+    function getFinalVerdict(relations) {
+      const totalScore = relations.reduce((sum, rel) => sum + isGil(rel), 0);
+      
+      if (totalScore >= 5) return "大吉";
+      if (totalScore >= 2) return "中吉";
+      if (totalScore >= 1) return "小吉";
+      if (totalScore === 0) return "平";
+      if (totalScore <= -4) return "大凶";
+      if (totalScore <= -2) return "中凶";
+      if (totalScore <= -1) return "小凶";
+      return "平";
     }
 
-    function getAdvice(category) {
-      const advices = {
-        "大吉": "事物順利無阻，極佳時機，宜積極行動。",
-        "中吉": "整體有利，穩中求進，可把握機會。",
-        "小吉": "稍有助力，需謹慎行事，方能有所成。",
-        "平": "平穩無大波瀾，宜保持現狀，謹慎決策。",
-        "小凶": "略有阻礙，需小心應對，避免冒進。",
-        "中凶": "挑戰較多，宜低調行事，謀定而後動。",
-        "大凶": "困難重重，宜暫緩行動，尋求轉機。"
+    function getAdvice(relations) {
+      const type1 = relations[0], type2 = relations[1], type3 = relations[2];
+      const adviceMap = {
+        "用生體": "從開始到結束都對自身非常有利，一帆風順。",
+        "比和": "事事和諧，平順無阻，適合穩步前進。",
+        "體剋用": "事情有成功的潛力，但不是輕鬆得來，需要付出努力和智慧去克服。",
+        "體生用": "自身力量有所損耗，付出的多，收穫的少，需要注意消耗。",
+        "用剋體": "從頭到尾都處於被動或不利的局面，難以有所作為。"
       };
-      return advices[category] || "綜合考慮五行關係，建議根據具體情況小心應對。";
+      
+      if (type1 === "用生體" && type2 === "用生體" && type3 === "用生體") return "三者皆為用生體，大吉大利，事半功倍，無往不利。";
+      if (type1 === "用剋體" && type2 === "用剋體" && type3 === "用剋體") return "三者皆為用剋體，大凶之象，阻礙重重，應小心應對。";
+      if (isGil(type1) > 0 && isGil(type2) > 0 && isGil(type3) < 0) return "先吉後凶，開始順利但最終有變故，需防範風險。";
+      if (isGil(type1) < 0 && isGil(type2) < 0 && isGil(type3) > 0) return "先凶後吉，起初困難但最終能克服，要有耐心。";
+      return "綜合分析，" + adviceMap[type1] + adviceMap[type2] + adviceMap[type3];
     }
 
     function drawRelationGraph(statusObj, allTrigrams, timeElement, question) {
       const svgNS = "http://www.w3.org/2000/svg";
       const svg = document.createElementNS(svgNS, "svg");
-      svg.setAttribute("width", "600");
+      svg.setAttribute("width", "700");
       svg.setAttribute("height", "700");
-      svg.setAttribute("viewBox", "0 0 600 700");
+      svg.setAttribute("viewBox", "0 0 700 700");
 
       const defs = document.createElementNS(svgNS, "defs");
       const marker = document.createElementNS(svgNS, "marker");
@@ -329,18 +333,14 @@
       marker.appendChild(path);
       defs.appendChild(marker);
       svg.appendChild(defs);
+      
+      const background = document.createElementNS(svgNS, "rect");
+      background.setAttribute("width", "100%");
+      background.setAttribute("height", "100%");
+      background.setAttribute("fill", "#f0f0f0");
+      svg.appendChild(background);
 
-      // 問題標題
-      const titleText = document.createElementNS(svgNS, "text");
-      titleText.setAttribute("x", "300");
-      titleText.setAttribute("y", "50");
-      titleText.setAttribute("text-anchor", "middle");
-      titleText.setAttribute("font-size", "20");
-      titleText.setAttribute("fill", "#000");
-      titleText.textContent = question || "五行生克圖";
-      svg.appendChild(titleText);
-
-      const centerX = 300, centerY = 350, radius = 200;
+      const centerX = 350, centerY = 350, radius = 250, circleRadius = 40;
       const positions = [];
       for (let i = 0; i < 5; i++) {
         const angle = (i * 72 - 90) * Math.PI / 180;
@@ -349,72 +349,81 @@
         positions.push({x, y, element: fiveElementsOrder[i]});
       }
 
-      // 生箭頭
-      for (let i = 0; i < 5; i++) {
-        const from = positions[i];
-        const to = positions[(i + 1) % 5];
-        const statusFrom = determineWuxingStatus(from.element, timeElement);
-        const angle = Math.atan2(to.y - from.y, to.x - from.x);
-        const circleRadius = elementTrigrams[from.element]?.length > 0 ? 40 : 30;
-        const x2 = to.x - circleRadius * Math.cos(angle);
-        const y2 = to.y - circleRadius * Math.sin(angle);
-        const line = document.createElementNS(svgNS, "line");
-        line.setAttribute("x1", from.x);
-        line.setAttribute("y1", from.y);
-        line.setAttribute("x2", x2);
-        line.setAttribute("y2", y2);
-        line.setAttribute("stroke", "green");
-        line.setAttribute("stroke-width", wuxingStatus[statusFrom].strokeWidth);
-        line.setAttribute("marker-end", "url(#arrow)");
-        svg.appendChild(line);
-      }
-
-      // 剋箭頭（單向）
-      for (let i = 0; i < 5; i++) {
-        const from = positions[i];
-        const to = positions[(i + 2) % 5];
-        const statusFrom = determineWuxingStatus(from.element, timeElement);
-        const angle = Math.atan2(to.y - from.y, to.x - from.x);
-        const circleRadius = elementTrigrams[to.element]?.length > 0 ? 40 : 30;
-        const x2 = to.x - circleRadius * Math.cos(angle);
-        const y2 = to.y - circleRadius * Math.sin(angle);
-        const line = document.createElementNS(svgNS, "line");
-        line.setAttribute("x1", from.x);
-        line.setAttribute("y1", from.y);
-        line.setAttribute("x2", x2);
-        line.setAttribute("y2", y2);
-        line.setAttribute("stroke", "red");
-        line.setAttribute("stroke-width", wuxingStatus[statusFrom].strokeWidth);
-        line.setAttribute("marker-end", "url(#arrow)");
-        svg.appendChild(line);
-      }
-
       const elementTrigrams = { "火": [], "土": [], "金": [], "水": [], "木": [] };
       allTrigrams.forEach(tri => {
         const ele = trigramFiveElement[tri.name];
         if (ele) elementTrigrams[ele].push(tri.label + tri.name);
       });
+      const involvedElements = new Set(Object.values(trigramFiveElement).filter(e => e));
+      const bodyElement = trigramFiveElement[statusObj.bodyTrigram];
 
+      // 生箭頭
+      for (let i = 0; i < 5; i++) {
+        const from = positions[i];
+        const to = positions[(i + 1) % 5];
+        const line = document.createElementNS(svgNS, "line");
+        const fromRadius = involvedElements.has(from.element) ? 50 : circleRadius;
+        const toRadius = involvedElements.has(to.element) ? 50 : circleRadius;
+        const angle = Math.atan2(to.y - from.y, to.x - from.x);
+        const x1 = from.x + fromRadius * Math.cos(angle);
+        const y1 = from.y + fromRadius * Math.sin(angle);
+        const x2 = to.x - toRadius * Math.cos(angle);
+        const y2 = to.y - toRadius * Math.sin(angle);
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+        line.setAttribute("stroke", "green");
+        line.setAttribute("stroke-width", "2");
+        line.setAttribute("marker-end", "url(#arrow)");
+        svg.appendChild(line);
+      }
+
+      // 剋箭頭
+      for (let i = 0; i < 5; i++) {
+        const from = positions[i];
+        const to = positions[(i + 2) % 5];
+        const line = document.createElementNS(svgNS, "line");
+        const fromRadius = involvedElements.has(from.element) ? 50 : circleRadius;
+        const toRadius = involvedElements.has(to.element) ? 50 : circleRadius;
+        const angle = Math.atan2(to.y - from.y, to.x - from.x);
+        const x1 = from.x + fromRadius * Math.cos(angle);
+        const y1 = from.y + fromRadius * Math.sin(angle);
+        const x2 = to.x - toRadius * Math.cos(angle);
+        const y2 = to.y - toRadius * Math.sin(angle);
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+        line.setAttribute("stroke", "red");
+        line.setAttribute("stroke-width", "2");
+        line.setAttribute("marker-end", "url(#arrow)");
+        svg.appendChild(line);
+      }
+      
       positions.forEach(pos => {
         const hasTrigram = elementTrigrams[pos.element].length > 0;
-        const isBody = pos.element === statusObj.bodyElement;
+        const isBody = pos.element === bodyElement;
+        const currentRadius = hasTrigram ? 50 : circleRadius;
+        const currentFontSize = hasTrigram ? 24 : 18;
+
         const g = document.createElementNS(svgNS, "g");
-        g.setAttribute("opacity", hasTrigram ? 1 : 0.5);
+        g.setAttribute("opacity", 1);
         const circle = document.createElementNS(svgNS, "circle");
         circle.setAttribute("cx", pos.x);
         circle.setAttribute("cy", pos.y);
-        circle.setAttribute("r", hasTrigram ? 40 : 30);
-        circle.setAttribute("stroke", isBody ? "#000" : "#444");
-        circle.setAttribute("stroke-width", isBody ? "4" : "2");
-        circle.setAttribute("fill", elementColors[pos.element] || "#eee");
+        circle.setAttribute("r", currentRadius);
+        circle.setAttribute("stroke", isBody ? "#ff4500" : "#444");
+        circle.setAttribute("stroke-width", isBody ? "6" : "2");
+        circle.setAttribute("fill", fiveElementColors[pos.element] || "#eee");
         g.appendChild(circle);
 
         const elementText = document.createElementNS(svgNS, "text");
         elementText.setAttribute("x", pos.x);
-        elementText.setAttribute("y", pos.y + (hasTrigram ? 6 : 4));
+        elementText.setAttribute("y", pos.y + currentFontSize / 4);
         elementText.setAttribute("text-anchor", "middle");
+        elementText.setAttribute("font-size", `${currentFontSize}px`);
         elementText.setAttribute("fill", "#000");
-        elementText.setAttribute("font-size", hasTrigram ? "16" : "12");
         elementText.textContent = pos.element;
         g.appendChild(elementText);
         svg.appendChild(g);
@@ -422,94 +431,80 @@
 
       positions.forEach((pos, i) => {
         const trigList = elementTrigrams[pos.element];
-        if (trigList.length > 0) {
-          const textOffsetX = (i === 1 || i === 2) ? 50 : (i === 3 || i === 4) ? -50 : 0;
-          const textOffsetY = (i === 0) ? -50 : (i === 2 || i === 3) ? 50 : 0;
+        const hasTrigram = trigList.length > 0;
+        if (hasTrigram) {
+          const textOffsetX = (i === 1 || i === 2) ? 60 : (i === 3 || i === 4) ? -60 : 0;
+          const textOffsetY = (i === 0) ? -60 : (i === 2 || i === 3) ? 60 : 0;
           const trigText = document.createElementNS(svgNS, "text");
           trigText.setAttribute("x", pos.x + textOffsetX);
-          trigText.setAttribute("y", pos.y + textOffsetY + 30);
+          trigText.setAttribute("y", pos.y + textOffsetY);
           trigText.setAttribute("text-anchor", textOffsetX > 0 ? "start" : textOffsetX < 0 ? "end" : "middle");
+          trigText.setAttribute("font-size", "16px");
           trigText.setAttribute("fill", "#000");
-          trigText.setAttribute("font-size", "14");
           trigText.textContent = trigList.join(', ');
           svg.appendChild(trigText);
         }
       });
-
+      
       const bodyNode = positions.find(p => p.element === statusObj.bodyElement);
       const useNode = positions.find(p => p.element === statusObj.useElement);
+      const bodyRadius = involvedElements.has(bodyNode?.element) ? 50 : circleRadius;
+      const useRadius = involvedElements.has(useNode?.element) ? 50 : circleRadius;
       if (bodyNode && useNode && statusObj.relationType !== "無") {
         const angle = Math.atan2(useNode.y - bodyNode.y, useNode.x - bodyNode.x);
-        const circleRadius = elementTrigrams[useNode.element]?.length > 0 ? 40 : 30;
-        const x2 = useNode.x - circleRadius * Math.cos(angle);
-        const y2 = useNode.y - circleRadius * Math.sin(angle);
+        const x1 = bodyNode.x + bodyRadius * Math.cos(angle);
+        const y1 = bodyNode.y + bodyRadius * Math.sin(angle);
+        const x2 = useNode.x - useRadius * Math.cos(angle);
+        const y2 = useNode.y - useRadius * Math.sin(angle);
+
         const line = document.createElementNS(svgNS, "line");
-        line.setAttribute("x1", bodyNode.x);
-        line.setAttribute("y1", bodyNode.y);
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
         line.setAttribute("x2", x2);
         line.setAttribute("y2", y2);
         line.setAttribute("stroke", colors[statusObj.relationType] || "gray");
-        line.setAttribute("stroke-width", wuxingStatus[statusObj.statusBody].strokeWidth);
-        line.setAttribute("opacity", wuxingStatus[statusObj.statusBody].opacity);
+        line.setAttribute("stroke-width", "4");
         line.setAttribute("marker-end", "url(#arrow)");
         svg.appendChild(line);
+
+        const relText = document.createElementNS(svgNS, "text");
+        relText.setAttribute("x", (x1 + x2) / 2);
+        relText.setAttribute("y", (y1 + y2) / 2 - 10);
+        relText.setAttribute("text-anchor", "middle");
+        relText.setAttribute("font-size", "14px");
+        relText.setAttribute("fill", colors[statusObj.relationType] || "gray");
+        relText.textContent = statusObj.relationType;
+        svg.appendChild(relText);
       }
 
-      // 吉凶標註
-      const luckText = document.createElementNS(svgNS, "text");
-      luckText.setAttribute("x", "300");
-      luckText.setAttribute("y", "650");
-      luckText.setAttribute("text-anchor", "middle");
-      luckText.setAttribute("font-size", "20");
-      luckText.setAttribute("fill", statusObj.luck === "大吉" || statusObj.luck === "中吉" || statusObj.luck === "小吉" ? "green" : statusObj.luck === "平" ? "black" : "red");
-      luckText.textContent = `吉凶：${statusObj.luck}`;
-      svg.appendChild(luckText);
+      const questionText = document.createElementNS(svgNS, "text");
+      questionText.setAttribute("x", 50);
+      questionText.setAttribute("y", 50);
+      questionText.setAttribute("font-size", "20px");
+      questionText.setAttribute("font-weight", "bold");
+      questionText.setAttribute("fill", "#333");
+      questionText.textContent = `問題：${question || "無"}的五行生克圖`;
+      svg.appendChild(questionText);
 
       return svg.outerHTML;
     }
 
-    function openGraphWindow(graphHtml) {
-      const newWindow = window.open('', '_blank', 'width=700,height=800');
-      newWindow.document.write(`
-        <!DOCTYPE html>
-        <html lang="zh-Hant">
-        <head>
-          <meta charset="UTF-8">
-          <title>五行生克圖</title>
-          <style>
-            body { margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; background: #f0f0f0; }
-            #downloadBtn { margin-top: 10px; padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-            #downloadBtn:hover { background: #218838; }
-          </style>
-        </head>
-        <body>
-          ${graphHtml}
-          <button id="downloadBtn">下載 SVG</button>
-          <script>
-            document.getElementById('downloadBtn').addEventListener('click', () => {
-              const svg = document.querySelector('svg');
-              const serializer = new XMLSerializer();
-              const source = serializer.serializeToString(svg);
-              const blob = new Blob(['<?xml version="1.0" standalone="no"?>\r\n' + source], {type: 'image/svg+xml'});
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = 'wuxing_relation.svg';
-              a.click();
-              URL.revokeObjectURL(url);
-            });
-          </script>
-        </body>
-        </html>
-      `);
-      newWindow.document.close();
+    function downloadSvg(svgHtml, filename) {
+      const blob = new Blob([svgHtml], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
 
     function startDivination() {
-      console.log("開始卜卦");
       try {
         const mode = document.getElementById("divinationMode").value;
-        const question = document.getElementById("questionInput").value || "未指定問題";
+        const question = document.getElementById("questionInput").value;
         let upper, lower, movingLine;
         const now = new Date();
         const month = now.getMonth() + 1;
@@ -581,8 +576,9 @@
           timeElement
         );
 
-        const category = getCategory(fiveRelAnalysis.relationType, mutualFiveRelAnalysis.relationType, changedFiveRelAnalysis.relationType);
-        const adviceText = getAdvice(category);
+        const allRelations = [fiveRelAnalysis.relationType, mutualFiveRelAnalysis.relationType, changedFiveRelAnalysis.relationType];
+        const finalVerdict = getFinalVerdict(allRelations);
+        const adviceText = getAdvice(allRelations);
 
         const allTrigrams = [
           {name: upperName, label: "本上:"},
@@ -594,15 +590,13 @@
           {name: bodyTrigram, label: "體:"},
           {name: useTrigram, label: "用:"}
         ];
-
+        
         const graphHtml = drawRelationGraph({
           bodyElement: trigramFiveElement[bodyTrigram],
           useElement: trigramFiveElement[useTrigram],
+          bodyTrigram: bodyTrigram,
           timeElement: timeElement,
-          statusBody: fiveRelAnalysis.statusBody,
-          statusUse: fiveRelAnalysis.statusUse,
-          relationType: fiveRelAnalysis.relationType,
-          luck: category
+          relationType: fiveRelAnalysis.relationType
         }, allTrigrams, timeElement, question);
 
         document.getElementById("result").innerHTML = `
@@ -635,15 +629,36 @@
             </div>
           </div>
           <div class="advice mt-4">
-            <strong><i class="fas fa-lightbulb mr-2"></i>趨吉避凶建議（${category}）：</strong>
+            <strong><i class="fas fa-star mr-2"></i>吉凶判斷：<span class="font-bold text-lg">${finalVerdict}</span></strong>
+            <p class="mt-2"><strong><i class="fas fa-lightbulb mr-2"></i>趨吉避凶建議：</strong>
             <p>${adviceText}</p>
           </div>
           <button id="viewGraphBtn" class="mt-4 w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200">
-            <i class="fas fa-chart-pie mr-2"></i>查看五行生克圖（新視窗）
+            <i class="fas fa-chart-pie mr-2"></i>查看五行生克圖
+          </button>
+          <button id="downloadGraphBtn" class="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+            <i class="fas fa-download mr-2"></i>下載五行生克圖 (SVG)
           </button>
         `;
 
-        document.getElementById("viewGraphBtn").addEventListener("click", () => openGraphWindow(graphHtml));
+        document.getElementById("viewGraphBtn").addEventListener("click", () => {
+          const newWindow = window.open('', '_blank', 'width=700,height=700');
+          newWindow.document.write(`
+            <!DOCTYPE html>
+            <html lang="zh-Hant">
+            <head>
+              <meta charset="UTF-8">
+              <title>五行生克圖</title>
+            </head>
+            <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh; background:#f0f0f0;">
+              ${graphHtml}
+            </body>
+            </html>
+          `);
+          newWindow.document.close();
+        });
+        document.getElementById("downloadGraphBtn").addEventListener("click", () => downloadSvg(graphHtml, "五行生克圖.svg"));
+
       } catch (error) {
         console.error("Error:", error);
         document.getElementById("result").innerHTML = `<p class="text-red-500"><i class="fas fa-exclamation-circle mr-2"></i>錯誤：${error.message}</p>`;
