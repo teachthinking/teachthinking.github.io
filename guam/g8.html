@@ -367,7 +367,6 @@
         const ele = trigramFiveElement[tri.name];
         if (ele) elementTrigrams[ele].push(tri.label + tri.name);
       });
-      const involvedElements = new Set(Object.values(trigramFiveElement).filter(e => e));
       const bodyElementFive = trigramFiveElement[statusObj.bodyTrigram]; // 體卦的五行
 
       // 繪製五行生克箭頭
@@ -376,8 +375,10 @@
         const toNode = elementNodeMap.get(relation.to);
 
         if (fromNode && toNode) {
-          const fromRadius = circleRadius;
-          const toRadius = circleRadius;
+          let fromRadius = circleRadius;
+          let toRadius = circleRadius;
+          if (fromNode.element === bodyElementFive) fromRadius = 50;
+          if (toNode.element === bodyElementFive) toRadius = 50;
 
           const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x);
 
