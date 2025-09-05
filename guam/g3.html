@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -6,26 +5,40 @@
 <title>專業梅花心意卜卦系統</title>
 <style>
   body { font-family: Arial, sans-serif; margin: 20px; }
+  pre { font-family: monospace; font-size: 18px; line-height: 1.6; }
   .advice { background-color: #f4f8f6; border-left: 6px solid #2c6f4e; margin: 10px 0; padding: 10px; }
   #result { margin-top: 25px; }
   #relationGraphContainer {
     width: 100%; max-width: 600px; height: 600px; border: 1px solid #ccc; margin-top: 20px;
   }
-  #hexagramContainer {
-    display: flex; flex-wrap: wrap; justify-content: space-around; margin-top: 20px;
-  }
-  .hexagram-box { 
-    text-align: center; margin: 10px; width: 100px; 
-  }
-  .hexagram-box svg { width: 80px; height: 120px; }
-  .hexagram-box p { margin: 5px 0; font-size: 14px; }
   svg { width: 100%; height: 100%; }
   text { font-size: 12px; font-weight: bold; }
   label { margin-right: 10px; }
+  .hexagram-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    gap: 20px;
+  }
+  .hexagram-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 150px;
+  }
+  .hexagram-svg {
+    width: 100px;
+    height: 120px;
+    margin-bottom: 10px;
+  }
   @media (max-width: 600px) {
-    .hexagram-box { width: 80px; }
-    .hexagram-box svg { width: 60px; height: 100px; }
-    .hexagram-box p { font-size: 12px; }
+    .hexagram-box {
+      min-width: 100px;
+    }
+    .hexagram-svg {
+      width: 80px;
+      height: 100px;
+    }
   }
 </style>
 </head>
@@ -42,7 +55,6 @@
 <button id="btnStart">開始卜卦</button>
 
 <div id="result"></div>
-<div id="hexagramContainer"></div>
 <div id="relationGraphContainer">
   <svg id="relationGraph"></svg>
 </div>
@@ -148,12 +160,12 @@ function calculateHexagramFromManual(upper, lower, movingLine) {
 }
 
 function generateHexagram(upper, lower) {
-  return [...baguaLines[lower], ...baguaLines[upper]];
+  return [...baguaLines[lower], ...baguaLines[upper]]; // 下卦在前，上卦在後，索引0=初爻，5=上爻
 }
 
 function generateMutualHexagram(hexagram) {
-  const lowerLines = [hexagram[1], hexagram[2], hexagram[3]];
-  const upperLines = [hexagram[2], hexagram[3], hexagram[4]];
+  const lowerLines = [hexagram[1], hexagram[2], hexagram[3]]; // 第2-4爻為互卦下卦
+  const upperLines = [hexagram[2], hexagram[3], hexagram[4]]; // 第3-5爻為互卦上卦
   const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
   return { upper, lower, hexagram: [...lowerLines, ...upperLines] };
@@ -161,79 +173,77 @@ function generateMutualHexagram(hexagram) {
 
 function generateChangedHexagram(hexagram, movingLine) {
   const changedHexagram = [...hexagram];
-  const index = movingLine - 1;
+  const index = movingLine - 1; // 動爻從下到上：1=索引0, 6=索引5
   changedHexagram[index] = changedHexagram[index] === "—" ? "--" : "—";
-  const lowerLines = changedHexagram.slice(0, 3);
-  const upperLines = changedHexagram.slice(3, 6);
+  const lowerLines = changedHexagram.slice(0, 3); // 下卦：索引0-2
+  const upperLines = changedHexagram.slice(3, 6); // 上卦：索引3-5
   const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
   return { upper, lower, hexagram: changedHexagram };
 }
 
-function drawHexagram(hexagram, movingLine, containerId, title) {
-  const container = document.getElementById(containerId);
+function drawHexagramSVG(hexagram, movingLine = null) {
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute("width", "80");
+  svg.setAttribute("width", "100");
   svg.setAttribute("height", "120");
-  const yPositions = [20, 40, 60, 80, 100, 120].slice(0, 6); // 從下到上
+  svg.setAttribute("viewBox", "0 0 100 120");
 
+  const lineHeight = 20; // 每爻高度
   hexagram.forEach((line, index) => {
-    const y = yPositions[5 - index]; // 從下到上：index=0 -> y=120
-    if (line === "—") {
+    const y = (5 - index) * lineHeight + 10; // 從下到上繪製，索引0=初爻在底部
+    if (line === "—") { // 陽爻
       const path = document.createElementNS(svgNS, "path");
-      path.setAttribute("d", `M 10 ${y} H 70`);
+      path.setAttribute("d", `M 20 ${y} H 80`);
       path.setAttribute("stroke", index + 1 === movingLine ? "red" : "black");
       path.setAttribute("stroke-width", "4");
       svg.appendChild(path);
-    } else {
+    } else { // 陰爻
       const path1 = document.createElementNS(svgNS, "path");
-      path1.setAttribute("d", `M 10 ${y} H 35`);
+      path1.setAttribute("d", `M 20 ${y} H 45`);
       path1.setAttribute("stroke", index + 1 === movingLine ? "red" : "black");
       path1.setAttribute("stroke-width", "4");
       svg.appendChild(path1);
       const path2 = document.createElementNS(svgNS, "path");
-      path2.setAttribute("d", `M 45 ${y} H 70`);
+      path2.setAttribute("d", `M 55 ${y} H 80`);
       path2.setAttribute("stroke", index + 1 === movingLine ? "red" : "black");
       path2.setAttribute("stroke-width", "4");
       svg.appendChild(path2);
     }
   });
 
-  const box = document.createElement("div");
-  box.className = "hexagram-box";
-  box.innerHTML = `<p>${title}</p>`;
-  box.appendChild(svg);
-  container.appendChild(box);
+  return svg.outerHTML;
 }
 
-function displayHexagrams(mainHexagram, mutualHexagram, changedHexagram, movingLine, mainUpper, mainLower, mutualUpper, mutualLower, changedUpper, changedLower, bodyTrigram) {
-  const container = document.getElementById("hexagramContainer");
-  container.innerHTML = "";
-  
-  drawHexagram(mainHexagram, movingLine, "hexagramContainer", 
-    `本卦：${sixtyFourHexagrams[`${mainUpper}${mainLower}`] || "未知"}<br>` +
-    `上卦：${trigramsName[mainUpper]} (${trigramFiveElement[trigramsName[mainUpper]]})<br>` +
-    `下卦：${trigramsName[mainLower]} (${trigramFiveElement[trigramsName[mainLower]]})<br>` +
-    `體卦：${bodyTrigram} (${trigramFiveElement[bodyTrigram]})`
-  );
-  drawHexagram(mutualHexagram, 0, "hexagramContainer", 
-    `互卦：${sixtyFourHexagrams[`${mutualUpper}${mutualLower}`] || "未知"}<br>` +
-    `上卦：${trigramsName[mutualUpper]} (${trigramFiveElement[trigramsName[mutualUpper]]})<br>` +
-    `下卦：${trigramsName[mutualLower]} (${trigramFiveElement[trigramsName[mutualLower]]})`
-  );
-  drawHexagram(changedHexagram, 0, "hexagramContainer", 
-    `變卦：${sixtyFourHexagrams[`${changedUpper}${changedLower}`] || "未知"}<br>` +
-    `上卦：${trigramsName[changedUpper]} (${trigramFiveElement[trigramsName[changedUpper]]})<br>` +
-    `下卦：${trigramsName[changedLower]} (${trigramFiveElement[trigramsName[changedLower]]})`
-  );
+function displayHexagram(hexagram, movingLine = null) {
+  return drawHexagramSVG(hexagram, movingLine);
 }
 
-function getPointOnCircle(cx, cy, radius, angle) {
-  const rad = angle * Math.PI / 180;
+function determineWuxingStatus(element, timeElement) {
+  if (!element || !timeElement) return "死";
+  if (element === timeElement) return "旺";
+  if (fiveRelations.find(r => r.from === element && r.to === timeElement && r.type === "生")) return "相";
+  if (fiveRelations.find(r => r.from === timeElement && r.to === element && r.type === "生")) return "休";
+  if (fiveRelations.find(r => r.from === element && r.to === timeElement && r.type === "剋")) return "囚";
+  return "死";
+}
+
+function analyzeFiveElementRelations(bodyElement, useElement, timeElement) {
+  const statusBody = determineWuxingStatus(bodyElement, timeElement);
+  const statusUse = determineWuxingStatus(useElement, timeElement);
+
+  let relationType = null;
+  if (useElement === bodyElement) relationType = "比和";
+  else if (fiveRelations.find(r => r.from === useElement && r.to === bodyElement && r.type === "生")) relationType = "生";
+  else if (fiveRelations.find(r => r.from === useElement && r.to === bodyElement && r.type === "剋")) relationType = "剋";
+  else if (fiveRelations.find(r => r.from === bodyElement && r.to === useElement && r.type === "生")) relationType = "洩";
+  else relationType = "無";
+
   return {
-    x: cx + radius * Math.cos(rad),
-    y: cy + radius * Math.sin(rad)
+    statusBody,
+    statusUse,
+    relationType,
+    description: `體卦五行：${bodyElement || "未知"}（${statusBody}），用卦五行：${useElement || "未知"}（${statusUse}），關係：${relationType}`
   };
 }
 
@@ -261,50 +271,53 @@ function drawRelationGraph(statusObj, allTrigrams) {
   const centerX = 300, centerY = 300, radius = 200, circleRadius = 30;
   const positions = [];
   for (let i = 0; i < 5; i++) {
-    const angle = (i * 72 - 90);
-    positions.push({x: centerX, y: centerY, radius, angle, element: fiveElementsOrder[i]});
+    const angle = (i * 72 - 90) * Math.PI / 180;
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
+    positions.push({x, y, element: fiveElementsOrder[i]});
   }
 
-  // 畫五行生線（綠色）
+  // 生關係（綠色箭頭）
   for (let i = 0; i < 5; i++) {
     const from = positions[i];
     const to = positions[(i + 1) % 5];
-    const fromPoint = getPointOnCircle(from.x, from.y, from.radius - circleRadius, from.angle);
-    const toPoint = getPointOnCircle(to.x, to.y, to.radius - circleRadius, to.angle);
+    const angle = Math.atan2(to.y - from.y, to.x - from.x);
+    const x2 = to.x - circleRadius * Math.cos(angle);
+    const y2 = to.y - circleRadius * Math.sin(angle);
     const line = document.createElementNS(svgNS, "line");
-    line.setAttribute("x1", fromPoint.x);
-    line.setAttribute("y1", fromPoint.y);
-    line.setAttribute("x2", toPoint.x);
-    line.setAttribute("y2", toPoint.y);
+    line.setAttribute("x1", from.x);
+    line.setAttribute("y1", from.y);
+    line.setAttribute("x2", x2);
+    line.setAttribute("y2", y2);
     line.setAttribute("stroke", "green");
     line.setAttribute("stroke-width", 4);
     line.setAttribute("marker-end", "url(#arrow)");
     svg.appendChild(line);
   }
 
-  // 畫五行剋線（紅色）
+  // 剋關係（紅色箭頭）
   for (let i = 0; i < 5; i++) {
     const from = positions[i];
     const to = positions[(i + 2) % 5];
-    const fromPoint = getPointOnCircle(from.x, from.y, from.radius - circleRadius, from.angle);
-    const toPoint = getPointOnCircle(to.x, to.y, to.radius - circleRadius, to.angle);
+    const angle = Math.atan2(to.y - from.y, to.x - from.x);
+    const x2 = to.x - circleRadius * Math.cos(angle);
+    const y2 = to.y - circleRadius * Math.sin(angle);
     const line = document.createElementNS(svgNS, "line");
-    line.setAttribute("x1", fromPoint.x);
-    line.setAttribute("y1", fromPoint.y);
-    line.setAttribute("x2", toPoint.x);
-    line.setAttribute("y2", toPoint.y);
+    line.setAttribute("x1", from.x);
+    line.setAttribute("y1", from.y);
+    line.setAttribute("x2", x2);
+    line.setAttribute("y2", y2);
     line.setAttribute("stroke", "red");
     line.setAttribute("stroke-width", 4);
     line.setAttribute("marker-end", "url(#arrow)");
     svg.appendChild(line);
   }
 
-  // 畫五行節點
+  // 繪製節點
   positions.forEach(pos => {
-    const point = getPointOnCircle(pos.x, pos.y, pos.radius, pos.angle);
     const circle = document.createElementNS(svgNS, "circle");
-    circle.setAttribute("cx", point.x);
-    circle.setAttribute("cy", point.y);
+    circle.setAttribute("cx", pos.x);
+    circle.setAttribute("cy", pos.y);
     circle.setAttribute("r", circleRadius);
     circle.setAttribute("stroke", "#444");
     circle.setAttribute("stroke-width", "2");
@@ -312,4 +325,200 @@ function drawRelationGraph(statusObj, allTrigrams) {
     svg.appendChild(circle);
 
     const elementText = document.createElementNS(svgNS, "text");
-    elementText.setAttribute("x", point
+    elementText.setAttribute("x", pos.x);
+    elementText.setAttribute("y", pos.y + 6);
+    elementText.setAttribute("text-anchor", "middle");
+    elementText.setAttribute("fill", "#000");
+    elementText.textContent = pos.element;
+    svg.appendChild(elementText);
+  });
+
+  // 標注卦名
+  const elementTrigrams = { "火": [], "土": [], "金": [], "水": [], "木": [] };
+  allTrigrams.forEach(tri => {
+    const ele = trigramFiveElement[tri.name];
+    if (ele) elementTrigrams[ele].push(tri.label + tri.name);
+  });
+
+  positions.forEach((pos, i) => {
+    const trigList = elementTrigrams[pos.element];
+    if (trigList.length > 0) {
+      const textOffsetX = (i === 1 || i === 2) ? 40 : (i === 3 || i === 4) ? -40 : 0;
+      const textOffsetY = (i === 0) ? -40 : (i === 2 || i === 3) ? 40 : 0;
+      const trigText = document.createElementNS(svgNS, "text");
+      trigText.setAttribute("x", pos.x + textOffsetX);
+      trigText.setAttribute("y", pos.y + textOffsetY + 20);
+      trigText.setAttribute("text-anchor", textOffsetX > 0 ? "start" : textOffsetX < 0 ? "end" : "middle");
+      trigText.setAttribute("fill", "#000");
+      trigText.textContent = trigList.join(', ');
+      svg.appendChild(trigText);
+    }
+  });
+
+  // 體用箭頭
+  const bodyNode = positions.find(p => p.element === statusObj.bodyElement);
+  const useNode = positions.find(p => p.element === statusObj.useElement);
+  if (bodyNode && useNode && statusObj.relationType !== "無") {
+    const angle = Math.atan2(useNode.y - bodyNode.y, useNode.x - bodyNode.x);
+    const x2 = useNode.x - circleRadius * Math.cos(angle);
+    const y2 = useNode.y - circleRadius * Math.sin(angle);
+    const line = document.createElementNS(svgNS, "line");
+    line.setAttribute("x1", bodyNode.x);
+    line.setAttribute("y1", bodyNode.y);
+    line.setAttribute("x2", x2);
+    line.setAttribute("y2", y2);
+    line.setAttribute("stroke", colors[statusObj.relationType] || "gray");
+    line.setAttribute("stroke-width", wuxingStatus[statusObj.statusBody].strokeWidth);
+    line.setAttribute("opacity", wuxingStatus[statusObj.statusBody].opacity);
+    line.setAttribute("marker-end", "url(#arrow)");
+    svg.appendChild(line);
+  }
+}
+
+function startDivination() {
+  console.log("開始卜卦");
+  try {
+    const mode = document.getElementById("divinationMode").value;
+    let upper, lower, movingLine;
+    if (mode === "time") {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth() + 1;
+      const d = now.getDate();
+      const h = now.getHours();
+      ({ upper, lower, movingLine } = calculateHexagramFromTime(y, m, d, h));
+    } else if (mode === "threeDigits") {
+      const num1 = parseInt(document.getElementById("num1Input").value);
+      const num2 = parseInt(document.getElementById("num2Input").value);
+      const num3 = parseInt(document.getElementById("num3Input").value);
+      const result = calculateHexagramFromThreeDigits(num1, num2, num3);
+      if (!result) throw new Error("請輸入三個有效三位數 (100-999)");
+      ({ upper, lower, movingLine } = result);
+    } else if (mode === "manual") {
+      const upperInput = document.getElementById("upperInput").value;
+      const lowerInput = document.getElementById("lowerInput").value;
+      const movingInput = document.getElementById("movingInput").value;
+      const result = calculateHexagramFromManual(upperInput, lowerInput, movingInput);
+      if (!result) throw new Error("請輸入有效數字：上卦/下卦1-8，動爻1-6");
+      ({ upper, lower, movingLine } = result);
+    }
+
+    const upperName = trigramsName[upper] || "未知";
+    const lowerName = trigramsName[lower] || "未知";
+    const hexagramArr = generateHexagram(upper, lower);
+    const hexagramStr = displayHexagram(hexagramArr, movingLine);
+
+    const mutual = generateMutualHexagram(hexagramArr);
+    const mutualUpperName = trigramsName[mutual.upper] || "未知";
+    const mutualLowerName = trigramsName[mutual.lower] || "未知";
+    const mutualHexagramStr = displayHexagram(mutual.hexagram);
+    const mutualHexagramName = sixtyFourHexagrams[`${mutual.upper}${mutual.lower}`] || "未知卦";
+
+    const changed = generateChangedHexagram(hexagramArr, movingLine);
+    const changedUpperName = trigramsName[changed.upper] || "未知";
+    const changedLowerName = trigramsName[changed.lower] || "未知";
+    const changedHexagramStr = displayHexagram(changed.hexagram);
+    const changedHexagramName = sixtyFourHexagrams[`${changed.upper}${changed.lower}`] || "未知卦";
+
+    let bodyTrigram, useTrigram;
+    if (movingLine >= 4) {
+      bodyTrigram = lowerName;
+      useTrigram = upperName;
+    } else {
+      bodyTrigram = upperName;
+      useTrigram = lowerName;
+    }
+
+    const timeElement = "木";
+    const fiveRelAnalysis = analyzeFiveElementRelations(trigramFiveElement[bodyTrigram], trigramFiveElement[useTrigram], timeElement);
+    const mutualFiveRelAnalysis = analyzeFiveElementRelations(trigramFiveElement[mutualLowerName], trigramFiveElement[mutualUpperName], timeElement);
+    const changedFiveRelAnalysis = analyzeFiveElementRelations(
+      trigramFiveElement[movingLine >= 4 ? changedLowerName : changedUpperName],
+      trigramFiveElement[movingLine >= 4 ? changedUpperName : changedLowerName],
+      timeElement
+    );
+
+    document.getElementById("result").innerHTML = `
+      <div class="hexagram-container">
+        <div class="hexagram-box">
+          <h3>本卦</h3>
+          ${hexagramStr}
+          <p>${sixtyFourHexagrams[`${upper}${lower}`] || "未知卦"}</p>
+          <p>上卦: ${upperName} (${trigramFiveElement[upperName] || "未知"})</p>
+          <p>下卦: ${lowerName} (${trigramFiveElement[lowerName] || "未知"})</p>
+          <p>體卦: ${bodyTrigram} (${trigramFiveElement[bodyTrigram] || "未知"})</p>
+          <p>動爻: 第${movingLine}爻</p>
+          <p>五行生剋: ${fiveRelAnalysis.description}</p>
+        </div>
+        <div class="hexagram-box">
+          <h3>互卦</h3>
+          ${mutualHexagramStr}
+          <p>${mutualHexagramName}</p>
+          <p>上卦: ${mutualUpperName} (${trigramFiveElement[mutualUpperName] || "未知"})</p>
+          <p>下卦: ${mutualLowerName} (${trigramFiveElement[mutualLowerName] || "未知"})</p>
+          <p>五行生剋: ${mutualFiveRelAnalysis.description}</p>
+        </div>
+        <div class="hexagram-box">
+          <h3>變卦</h3>
+          ${changedHexagramStr}
+          <p>${changedHexagramName}</p>
+          <p>上卦: ${changedUpperName} (${trigramFiveElement[changedUpperName] || "未知"})</p>
+          <p>下卦: ${changedLowerName} (${trigramFiveElement[changedLowerName] || "未知"})</p>
+          <p>五行生剋: ${changedFiveRelAnalysis.description}</p>
+        </div>
+      </div>
+      <div class="advice">
+        <strong>趨吉避凶建議：</strong>
+        <p>${fiveRelAnalysis.relationType === "剋" || changedFiveRelAnalysis.relationType === "剋" ? "建議小心應對，避免衝突與風險。" : "可把握有利機會，積極行動。"}</p>
+      </div>
+    `;
+
+    const allTrigrams = [
+      {name: upperName, label: "本上:"},
+      {name: lowerName, label: "本下:"},
+      {name: mutualUpperName, label: "互上:"},
+      {name: mutualLowerName, label: "互下:"},
+      {name: changedUpperName, label: "變上:"},
+      {name: changedLowerName, label: "變下:"},
+      {name: bodyTrigram, label: "體:"},
+      {name: useTrigram, label: "用:"}
+    ];
+
+    drawRelationGraph({
+      bodyElement: trigramFiveElement[bodyTrigram],
+      useElement: trigramFiveElement[useTrigram],
+      timeElement: timeElement,
+      statusBody: fiveRelAnalysis.statusBody,
+      statusUse: fiveRelAnalysis.statusUse,
+      relationType: fiveRelAnalysis.relationType
+    }, allTrigrams);
+  } catch (error) {
+    console.error("Error:", error);
+    document.getElementById("result").innerHTML = `<p style="color: red;">錯誤：${error.message}</p>`;
+  }
+}
+
+const modeSelect = document.getElementById("divinationMode");
+const inputFields = document.getElementById("inputFields");
+modeSelect.addEventListener("change", () => {
+  inputFields.innerHTML = '';
+  const mode = modeSelect.value;
+  if (mode === "threeDigits") {
+    inputFields.innerHTML = `
+      <label>第一個三位數（上卦）：</label><input id="num1Input" type="number" min="100" max="999" value="123"><br>
+      <label>第二個三位數（下卦）：</label><input id="num2Input" type="number" min="100" max="999" value="456"><br>
+      <label>第三個三位數（動爻）：</label><input id="num3Input" type="number" min="100" max="999" value="789">
+    `;
+  } else if (mode === "manual") {
+    inputFields.innerHTML = `
+      <label>上卦(1-8)：</label><input id="upperInput" type="number" min="1" max="8" value="2"><br>
+      <label>下卦(1-8)：</label><input id="lowerInput" type="number" min="1" max="8" value="3"><br>
+      <label>動爻(1-6)：</label><input id="movingInput" type="number" min="1" max="6" value="1">
+    `;
+  }
+});
+
+document.getElementById("btnStart").addEventListener("click", startDivination);
+</script>
+</body>
+</html>
