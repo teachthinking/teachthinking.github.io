@@ -137,8 +137,8 @@ function calculateHexagramFromManual(upper, lower, movingLine) {
   return { lower,upper , movingLine };
 }
 
-function generateHexagram(upper, lower) {
-  return [...(baguaLines[upper] || ["—", "—", "—"]), ...(baguaLines[lower] || ["—", "—", "—"])];
+function generateHexagram(lower,upper ) {
+  return [...(baguaLines[lower] || ["—", "—", "—"]), ...(baguaLines[upper] || ["—", "—", "—"])];
 }
 
 function generateMutualHexagram(hexagram) {
@@ -146,7 +146,7 @@ function generateMutualHexagram(hexagram) {
   const lowerLines = [hexagram[2], hexagram[3], hexagram[4]]; // line4 top to line2 bottom
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
   const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
-  return { upper, lower, hexagram: [...upperLines, ...lowerLines] };
+  return {lower,  upper, hexagram: [...upperLines, ...lowerLines] };
 }
 
 function generateChangedHexagram(hexagram, movingLine) {
