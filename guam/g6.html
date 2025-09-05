@@ -171,7 +171,7 @@
     }
 
     function calculateHexagramFromThreeDigits(num1, num2, num3) {
-      if (num1 < 100 || num1 > 999 || num2 < 100 || num2 > 999 || num3 < 100 || num3 > 999) return null;
+      if (isNaN(num1) || isNaN(num2) || isNaN(num3) || num1 < 100 || num1 > 999 || num2 < 100 || num2 > 999 || num3 < 100 || num3 > 999) return null;
       const upper = num1 % 8;
       const lower = num2 % 8;
       const movingLine = (num3 % 6) || 6;
@@ -179,10 +179,12 @@
     }
 
     function calculateHexagramFromManual(upper, lower, movingLine) {
-      upper = (parseInt(upper) - 1 + 8) % 8;
-      lower = (parseInt(lower) - 1 + 8) % 8;
+      upper = parseInt(upper);
+      lower = parseInt(lower);
       movingLine = parseInt(movingLine);
-      if (movingLine < 1 || movingLine > 6) return null;
+      if (isNaN(upper) || isNaN(lower) || isNaN(movingLine) || upper < 1 || upper > 8 || lower < 1 || lower > 8 || movingLine < 1 || movingLine > 6) return null;
+      upper = (upper - 1 + 8) % 8;
+      lower = (lower - 1 + 8) % 8;
       return { upper, lower, movingLine };
     }
 
@@ -457,53 +459,63 @@
       const useNode = elementNodeMap.get(statusObj.useElement);
       
       if (bodyNode && useNode && statusObj.relationType !== "無") {
-        const bodyRadius = involvedElements.has(bodyNode.element) ? 50 : circleRadius;
-        const useRadius = involvedElements.has(useNode.element) ? 50 : circleRadius;
-
-        const angle = Math.atan2(useNode.y - bodyNode.y, useNode.x - bodyNode.x);
-        
-        const startPoint = getPointOnCircle(bodyNode.x, bodyNode.y, bodyRadius, angle);
-        const endPoint = getPointOnCircle(useNode.x, useNode.y, useRadius, angle + Math.PI);
-
-        const line = document.createElementNS(svgNS, "line");
-        line.setAttribute("x1", startPoint.x);
-        line.setAttribute("y1", startPoint.y);
-        line.setAttribute("x2", endPoint.x);
-        line.setAttribute("y2", endPoint.y);
-        line.setAttribute("stroke", colors[statusObj.relationType] || "gray");
-        line.setAttribute("stroke-width", "4");
-        line.setAttribute("marker-end", "url(#arrow)");
-        svg.appendChild(line);
-
         const relText = document.createElementNS(svgNS, "text");
-        relText.setAttribute("x", (startPoint.x + endPoint.x) / 2);
-        relText.setAttribute("y", (startPoint.y + endPoint.y) / 2 - 10);
-        relText.setAttribute("text-anchor", "middle");
         relText.setAttribute("font-size", "14px");
         relText.setAttribute("font-weight", "bold");
         relText.setAttribute("fill", colors[statusObj.relationType] || "gray");
         relText.textContent = statusObj.relationType;
-        svg.appendChild(relText);
 
         const bodyLabel = document.createElementNS(svgNS, "text");
-        bodyLabel.setAttribute("x", bodyNode.x);
-        bodyLabel.setAttribute("y", bodyNode.y - bodyRadius - 5);
-        bodyLabel.setAttribute("text-anchor", "middle");
         bodyLabel.setAttribute("font-size", "14px");
         bodyLabel.setAttribute("font-weight", "bold");
         bodyLabel.setAttribute("fill", "#000");
         bodyLabel.textContent = "體";
-        svg.appendChild(bodyLabel);
-        
+
         const useLabel = document.createElementNS(svgNS, "text");
-        useLabel.setAttribute("x", useNode.x);
-        useLabel.setAttribute("y", useNode.y - useRadius - 5);
-        useLabel.setAttribute("text-anchor", "middle");
         useLabel.setAttribute("font-size", "14px");
         useLabel.setAttribute("font-weight", "bold");
         useLabel.setAttribute("fill", "#000");
         useLabel.textContent = "用";
-        svg.appendChild(useLabel);
+
+        if (statusObj.relationType !== "比和") {
+            const bodyRadius = involvedElements.has(bodyNode.element) ? 50 : circleRadius;
+            const useRadius = involvedElements.has(useNode.element) ? 50 : circleRadius;
+            const angle = Math.atan2(useNode.y - bodyNode.y, useNode.x - bodyNode.x);
+            const startPoint = getPointOnCircle(bodyNode.x, bodyNode.y, bodyRadius, angle);
+            const endPoint = getPointOnCircle(useNode.x, useNode.y, useRadius, angle + Math.PI);
+            
+            const line = document.createElementNS(svgNS, "line");
+            line.setAttribute("x1", startPoint.x);
+            line.setAttribute("y1", startPoint.y);
+            line.setAttribute("x2", endPoint.x);
+            line.setAttribute("y2", endPoint.y);
+            line.setAttribute("stroke", colors[statusObj.relationType] || "gray");
+            line.setAttribute("stroke-width", "4");
+            line.setAttribute("marker-end", "url(#arrow)");
+            svg.appendChild(line);
+
+            relText.setAttribute("x", (startPoint.x + endPoint.x) / 2);
+            relText.setAttribute("y", (startPoint.y + endPoint.y) / 2 - 10);
+            relText.setAttribute("text-anchor", "middle");
+            svg.appendChild(relText);
+
+            bodyLabel.setAttribute("x", bodyNode.x);
+            bodyLabel.setAttribute("y", bodyNode.y - bodyRadius - 5);
+            bodyLabel.setAttribute("text-anchor", "middle");
+            svg.appendChild(bodyLabel);
+        
+            useLabel.setAttribute("x", useNode.x);
+            useLabel.setAttribute("y", useNode.y - useRadius - 5);
+            useLabel.setAttribute("text-anchor", "middle");
+            svg.appendChild(useLabel);
+
+        } else {
+            const nodeRadius = involvedElements.has(bodyNode.element) ? 50 : circleRadius;
+            relText.setAttribute("x", bodyNode.x);
+            relText.setAttribute("y", bodyNode.y - nodeRadius - 10);
+            relText.setAttribute("text-anchor", "middle");
+            svg.appendChild(relText);
+        }
       }
 
       const questionText = document.createElementNS(svgNS, "text");
@@ -738,4 +750,34 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">
               <i class="fas fa-sort-numeric-up mr-2 tooltip" data-tooltip="輸入100-999"></i>第三個三位數（動爻）
             </label>
-            <input id="num3Input" type="number" min="100" max="
+            <input id="num3Input" type="number" min="100" max="999" value="789" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        `;
+      } else if (mode === "manual") {
+        inputFields.innerHTML = `
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-arrow-up mr-2 tooltip" data-tooltip="輸入1-8"></i>上卦
+            </label>
+            <input id="upperInput" type="number" min="1" max="8" value="2" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-arrow-down mr-2 tooltip" data-tooltip="輸入1-8"></i>下卦
+            </label>
+            <input id="lowerInput" type="number" min="1" max="8" value="3" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-exchange-alt mr-2 tooltip" data-tooltip="輸入1-6"></i>動爻
+            </label>
+            <input id="movingInput" type="number" min="1" max="6" value="1" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        `;
+      }
+    });
+
+    document.getElementById("btnStart").addEventListener("click", startDivination);
+  </script>
+</body>
+</html>
