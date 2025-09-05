@@ -138,7 +138,7 @@ function calculateHexagramFromManual(lower,upper , movingLine) {
 }
 
 function generateHexagram(lower,upper ) {
-  return [...(baguaLines[lower] || ["—", "—", "—"]), ...(baguaLines[upper] || ["—", "—", "—"])];
+  return [...(baguaLines[upper] || ["—", "—", "—"]), ...(baguaLines[lower] || ["—", "—", "—"])];
 }
 
 function generateMutualHexagram(hexagram) {
