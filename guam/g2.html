@@ -129,12 +129,12 @@ function calculateHexagramFromThreeDigits(number) {
   return {lower , upper, movingLine };
 }
 
-function calculateHexagramFromManual(upper, lower, movingLine) {
+function calculateHexagramFromManual(lower,upper , movingLine) {
   upper = (parseInt(upper) - 1 + 8) % 8;
   lower = (parseInt(lower) - 1 + 8) % 8;
   movingLine = parseInt(movingLine);
   if (movingLine < 1 || movingLine > 6) return null;
-  return { upper ,lower, movingLine };
+  return { lower,upper , movingLine };
 }
 
 function generateHexagram(upper, lower) {
@@ -153,11 +153,11 @@ function generateChangedHexagram(hexagram, movingLine) {
   const changedHexagram = [...hexagram];
   const index = 6 - movingLine;
   changedHexagram[index] = changedHexagram[index] === "—" ? "--" : "—";
-  const lowerLines = changedHexagram.slice(0, 2);
-  const upperLines = changedHexagram.slice(3, 5);
+//  const lowerLines = changedHexagram.slice(3, 1);
+//  const upperLines = changedHexagram.slice(6, 4);
   const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
   const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
-  return { upper, lower, hexagram: changedHexagram };
+  return { upper,lower,  hexagram: changedHexagram };
 }
 
 function displayHexagram(hexagram) {
