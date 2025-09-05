@@ -60,7 +60,7 @@ const wuxingStatus = {
   "死": {strokeWidth: 1, opacity:0.3}
 };
 
-const colors = { "生": "green", "剋": "red", "比和": "orange" };
+const colors = { "生": "green", "剋": "red", "比和": "orange", "洩": "blue", "無": "gray" };
 const wuxingColors = { "旺": "#176f3d", "相": "#4daf75", "休": "#a9d1a5", "囚": "#ffb085", "死": "#ff6f61" };
 
 const baguaLines = {
@@ -113,11 +113,32 @@ function calculateHexagram(year, month, day, hour) {
 }
 
 function generateHexagram(upper, lower) {
-  return [...(baguaLines[lower] || ["—", "—", "—"]), ...(baguaLines[upper] || ["—", "—", "—"])];
+  return [...baguaLines[upper], ...baguaLines[lower]]; // 上卦在上三爻，下卦在下三爻
+}
+
+function generateMutualHexagram(hexagram) {
+  // 互卦：二三四爻為下卦，三四五爻為上卦
+  const lowerLines = [hexagram[1], hexagram[2], hexagram[3]];
+  const upperLines = [hexagram[2], hexagram[3], hexagram[4]];
+  const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
+  const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
+  return { upper, lower };
+}
+
+function generateChangedHexagram(hexagram, movingLine) {
+  // 變卦：將動爻反轉（陰變陽，陽變陰）
+  const changedHexagram = [...hexagram];
+  const index = 6 - movingLine; // 動爻索引（從下到上，1->5, 2->4, ..., 6->0）
+  changedHexagram[index] = changedHexagram[index] === "—" ? "--" : "—";
+  const lowerLines = changedHexagram.slice(3, 6);
+  const upperLines = changedHexagram.slice(0, 3);
+  const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
+  const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
+  return { upper, lower, hexagram: changedHexagram };
 }
 
 function displayHexagram(hexagram) {
-  return hexagram.slice().reverse().join('\n');
+  return hexagram.slice().reverse().join('\n'); // 從下到上顯示
 }
 
 function determineWuxingStatus(element, timeElement) {
@@ -239,13 +260,29 @@ function startDivination() {
     const hexagramArr = generateHexagram(upper, lower);
     const hexagramStr = displayHexagram(hexagramArr);
 
+    // 計算互卦
+    const mutual = generateMutualHexagram(hexagramArr);
+    const mutualUpperName = trigramsName[mutual.upper] || "未知";
+    const mutualLowerName = trigramsName[mutual.lower] || "未知";
+    const mutualHexagramArr = generateHexagram(mutual.upper, mutual.lower);
+    const mutualHexagramStr = displayHexagram(mutualHexagramArr);
+    const mutualHexagramName = sixtyFourHexagrams[`${mutual.lower}${mutual.upper}`] || "未知卦";
+
+    // 計算變卦
+    const changed = generateChangedHexagram(hexagramArr, movingLine);
+    const changedUpperName = trigramsName[changed.upper] || "未知";
+    const changedLowerName = trigramsName[changed.lower] || "未知";
+    const changedHexagramStr = displayHexagram(changed.hexagram);
+    const changedHexagramName = sixtyFourHexagrams[`${changed.lower}${changed.upper}`] || "未知卦";
+
+    // 體用卦：動爻在上卦（4-6）則上卦為用卦，下卦為體卦；動爻在下卦（1-3）則下卦為用卦，上卦為體卦
     let bodyTrigram, useTrigram;
-    if (movingLine <= 3) {
-      bodyTrigram = upperName;
-      useTrigram = lowerName;
+    if (movingLine >= 4) {
+      bodyTrigram = lowerName; // 下卦為體卦
+      useTrigram = upperName;  // 上卦（動爻所在）為用卦
     } else {
-      bodyTrigram = lowerName;
-      useTrigram = upperName;
+      bodyTrigram = upperName; // 上卦為體卦
+      useTrigram = lowerName;  // 下卦（動爻所在）為用卦
     }
 
     const timeElement = "木"; // 示例，實際可用天干地支判定
@@ -255,7 +292,19 @@ function startDivination() {
       timeElement
     );
 
-    const hexagramName = sixtyFourHexagrams[`${lower}${upper}`] || "未知卦";
+    // 互卦五行分析
+    const mutualFiveRelAnalysis = analyzeFiveElementRelations(
+      trigramFiveElement[mutualLowerName] || "未知",
+      trigramFiveElement[mutualUpperName] || "未知",
+      timeElement
+    );
+
+    // 變卦五行分析
+    const changedFiveRelAnalysis = analyzeFiveElementRelations(
+      trigramFiveElement[movingLine >= 4 ? changedLowerName : changedUpperName] || "未知",
+      trigramFiveElement[movingLine >= 4 ? changedUpperName : changedLowerName] || "未知",
+      timeElement
+    );
 
     const resultDiv = document.getElementById("result");
     if (!resultDiv) {
@@ -268,17 +317,35 @@ function startDivination() {
       <h3>本卦</h3>
       <p>${upperName}(上卦) + ${lowerName}(下卦)</p>
       <pre>${hexagramStr}</pre>
-      <h3>六十四卦名稱</h3>
-      <p>${hexagramName}</p>
+      <h3>本卦名稱</h3>
+      <p>${sixtyFourHexagrams[`${lower}${upper}`] || "未知卦"}</p>
       <h3>動爻</h3>
       <p>第${movingLine}爻</p>
-      <h3>體卦用卦</h3>
+      <h3>本卦體用</h3>
       <p>體卦:${bodyTrigram} (${trigramFiveElement[bodyTrigram] || "未知"}), 用卦:${useTrigram} (${trigramFiveElement[useTrigram] || "未知"})</p>
-      <h3>五行生剋分析</h3>
+      <h3>本卦五行生剋分析</h3>
       <p>${fiveRelAnalysis.description}</p>
+      <h3>互卦</h3>
+      <p>${mutualUpperName}(上卦) + ${mutualLowerName}(下卦)</p>
+      <pre>${mutualHexagramStr}</pre>
+      <h3>互卦名稱</h3>
+      <p>${mutualHexagramName}</p>
+      <h3>互卦五行分析</h3>
+      <p>${mutualFiveRelAnalysis.description}</p>
+      <h3>變卦</h3>
+      <p>${changedUpperName}(上卦) + ${changedLowerName}(下卦)</p>
+      <pre>${changedHexagramStr}</pre>
+      <h3>變卦名稱</h3>
+      <p>${changedHexagramName}</p>
+      <h3>變卦五行分析</h3>
+      <p>${changedFiveRelAnalysis.description}</p>
       <div class="advice">
         <strong>趨吉避凶建議：</strong>
-        <p>${fiveRelAnalysis.relationType === "剋" ? "建議小心應對，避免衝突與風險。" : "可把握有利機會，積極行動。"}</p>
+        <p>${
+          fiveRelAnalysis.relationType === "剋" || changedFiveRelAnalysis.relationType === "�克"
+            ? "建議小心應對，避免衝突與風險，謹慎行事。"
+            : "可把握有利機會，積極行動，注意後續變化。"
+        }</p>
       </div>
     `;
 
