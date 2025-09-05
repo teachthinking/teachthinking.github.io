@@ -332,8 +332,8 @@ function startDivination() {
       ({ upper, lower, movingLine } = result);
     }
 
-    const upperName = trigramsName[upper] || "未知";
-    const lowerName = trigramsName[lower] || "未知";
+    const upperName = trigramsName[lower] || "未知";
+    const lowerName = trigramsName[upper] || "未知";
     const hexagramArr = generateHexagram(lower,upper );
     const hexagramStr = displayHexagram(hexagramArr);
 
