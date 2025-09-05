@@ -212,7 +212,7 @@
 
     function generateHexagram(upper, lower) {
       try {
-        if (!baguaLines[upper] || !baguaLines[lower]) {
+        if (upper < 0 || upper > 7 || lower < 0 || lower > 7) {
           throw new Error("無效的卦索引");
         }
         return [...baguaLines[lower], ...baguaLines[upper]];
@@ -261,8 +261,7 @@
       try {
         const svgNS = "http://www.w3.org/2000/svg";
         const svg = document.createElementNS(svgNS, "svg");
-        svg.setAttribute("width", "100");
-        svg.setAttribute("height", "120");
+        svg.setAttribute("class", "hexagram-svg");
         svg.setAttribute("viewBox", "0 0 100 120");
 
         const lineHeight = 20;
@@ -293,10 +292,6 @@
         console.error("繪製卦象圖錯誤:", e);
         throw new Error("繪製卦象圖失敗");
       }
-    }
-
-    function displayHexagram(hexagram, movingLine = null) {
-      return drawHexagramSVG(hexagram, movingLine);
     }
 
     function determineWuxingStatus(element, timeElement) {
@@ -383,7 +378,8 @@
       }
     }
 
-    function drawRelationGraph(statusObj, allTrigrams, timeElement, question) {
+    function drawRelationGraph(graphData) {
+      const { statusObj, allTrigrams, timeElement, question } = graphData;
       try {
         const svgNS = "http://www.w3.org/2000/svg";
         const svg = document.createElementNS(svgNS, "svg");
@@ -473,6 +469,7 @@
           const isBody = pos.element === statusObj.bodyElement;
           const g = document.createElementNS(svgNS, "g");
           g.setAttribute("opacity", hasTrigram ? 1 : 0.5);
+          
           const circle = document.createElementNS(svgNS, "circle");
           circle.setAttribute("cx", pos.x);
           circle.setAttribute("cy", pos.y);
@@ -489,7 +486,8 @@
           elementText.setAttribute("fill", "#000");
           elementText.setAttribute("font-size", hasTrigram ? "16" : "12");
           elementText.textContent = pos.element;
-          g.appendChild(g);
+          g.appendChild(elementText);
+          
           svg.appendChild(g);
         });
 
@@ -498,13 +496,15 @@
           if (trigList.length > 0) {
             const textOffsetX = (i === 1 || i === 2) ? 50 : (i === 3 || i === 4) ? -50 : 0;
             const textOffsetY = (i === 0) ? -50 : (i === 2 || i === 3) ? 50 : 0;
+            
             const trigText = document.createElementNS(svgNS, "text");
             trigText.setAttribute("x", pos.x + textOffsetX);
-            trigText.setAttribute("y", pos.y + textOffsetY + 30);
+            trigText.setAttribute("y", pos.y + textOffsetY + (textOffsetY === 0 ? 0 : -30));
             trigText.setAttribute("text-anchor", textOffsetX > 0 ? "start" : textOffsetX < 0 ? "end" : "middle");
             trigText.setAttribute("fill", "#000");
             trigText.setAttribute("font-size", "14");
             trigText.textContent = trigList.join(', ');
+            
             svg.appendChild(trigText);
           }
         });
@@ -558,6 +558,7 @@
             <title>五行生克圖</title>
             <style>
               body { margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; background: #f0f0f0; }
+              svg { max-width: 100%; height: auto; }
               #downloadBtn { margin-top: 10px; padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
               #downloadBtn:hover { background: #218838; }
             </style>
@@ -572,7 +573,7 @@
                   if (!svg) throw new Error("找不到 SVG 元素");
                   const serializer = new XMLSerializer();
                   const source = serializer.serializeToString(svg);
-                  const blob = new Blob(['<?xml version="1.0" standalone="no"?>\r\n' + source], {type: 'image/svg+xml'});
+                  const blob = new Blob(['<?xml version="1.0" standalone="no"?>\\r\\n' + source], {type: 'image/svg+xml'});
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
                   a.href = url;
@@ -604,6 +605,7 @@
         const now = new Date();
         const month = now.getMonth() + 1;
         let timeElement;
+        // 定義月令五行
         if ([3, 6, 9, 12].includes(month)) {
           timeElement = "土";
         } else if ([4, 5].includes(month)) {
@@ -641,18 +643,18 @@
         const upperName = trigramsName[upper] || "未知";
         const lowerName = trigramsName[lower] || "未知";
         const hexagramArr = generateHexagram(upper, lower);
-        const hexagramStr = displayHexagram(hexagramArr, movingLine);
+        const hexagramStr = drawHexagramSVG(hexagramArr, movingLine);
 
         const mutual = generateMutualHexagram(hexagramArr);
         const mutualUpperName = trigramsName[mutual.upper] || "未知";
         const mutualLowerName = trigramsName[mutual.lower] || "未知";
-        const mutualHexagramStr = displayHexagram(mutual.hexagram);
+        const mutualHexagramStr = drawHexagramSVG(mutual.hexagram);
         const mutualHexagramName = sixtyFourHexagrams[`${mutual.upper}${mutual.lower}`] || "未知卦";
 
         const changed = generateChangedHexagram(hexagramArr, movingLine);
         const changedUpperName = trigramsName[changed.upper] || "未知";
         const changedLowerName = trigramsName[changed.lower] || "未知";
-        const changedHexagramStr = displayHexagram(changed.hexagram);
+        const changedHexagramStr = drawHexagramSVG(changed.hexagram);
         const changedHexagramName = sixtyFourHexagrams[`${changed.upper}${changed.lower}`] || "未知卦";
 
         let bodyTrigram, useTrigram;
@@ -687,14 +689,18 @@
         ];
 
         const graphHtml = drawRelationGraph({
-          bodyElement: trigramFiveElement[bodyTrigram],
-          useElement: trigramFiveElement[useTrigram],
+          statusObj: {
+            bodyElement: trigramFiveElement[bodyTrigram],
+            useElement: trigramFiveElement[useTrigram],
+            statusBody: fiveRelAnalysis.statusBody,
+            statusUse: fiveRelAnalysis.statusUse,
+            relationType: fiveRelAnalysis.relationType,
+            luck: category
+          },
+          allTrigrams: allTrigrams,
           timeElement: timeElement,
-          statusBody: fiveRelAnalysis.statusBody,
-          statusUse: fiveRelAnalysis.statusUse,
-          relationType: fiveRelAnalysis.relationType,
-          luck: category
-        }, allTrigrams, timeElement, question);
+          question: question
+        });
 
         document.getElementById("result").innerHTML = `
           <div class="flex flex-wrap justify-around gap-4">
