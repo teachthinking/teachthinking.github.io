@@ -631,11 +631,11 @@
             const day = date.getDate();
             const hour = date.getHours();
             
-            // 2025年為巳年（年支6），時間16:41為申時（時支9）
+            // 2025年為巳年（年支6），時間17:38為酉時（時支10）
             const lunarYear = 6; // 巳年
             const lunarMonth = month;
             const lunarDay = day > 30 ? 30 : day;
-            const lunarHour = Math.floor((hour + 1) / 2) + 1; // 申時 (15:00-17:00)
+            const lunarHour = Math.floor((hour + 1) / 2) + 1; // 酉時 (17:00-19:00)
             
             return {
                 year: lunarYear,
@@ -679,8 +679,9 @@
             const lowerBinary = data.trigrams[lower].binary;
             const hexBinary = lowerBinary.concat(upperBinary);
 
-            const mutualLowerBinary = [hexBinary[1], hexBinary[2], hexBinary[3]];
-            const mutualUpperBinary = [hexBinary[2], hexBinary[3], hexBinary[4]];
+            // 互卦計算：第2、3、4爻為互卦下卦，第3、4、5爻為互卦上卦
+            const mutualLowerBinary = [hexBinary[1], hexBinary[2], hexBinary[3]]; // 爻2,3,4 -> 互下卦
+            const mutualUpperBinary = [hexBinary[2], hexBinary[3], hexBinary[4]]; // 爻3,4,5 -> 互上卦
             const mutualLower = binaryToTrigram(mutualLowerBinary);
             const mutualUpper = binaryToTrigram(mutualUpperBinary);
             const mutual = { upper: mutualUpper, lower: mutualLower };
@@ -693,10 +694,84 @@
             const changedUpper = binaryToTrigram(changedUpperBinary);
             const changed = { upper: changedUpper, lower: changedLower };
 
-            // 計算卦序號 (1-64)
-            const baseIndex = (upper - 1) * 8 + lower;
-            const mutualIndex = (mutualUpper - 1) * 8 + mutualLower;
-            const changedIndex = (changedUpper - 1) * 8 + changedLower;
+            const hexagramMap = {
+                // 乾 (1)
+                "1-1": 1,  // 乾為天
+                "1-2": 10, // 天澤履
+                "1-3": 13, // 天火同人
+                "1-4": 25, // 天雷無妄
+                "1-5": 44, // 天風姤
+                "1-6": 6,  // 天水訟
+                "1-7": 33, // 天山遁
+                "1-8": 12, // 天地否
+                // 兌 (2)
+                "2-1": 43, // 澤天夬
+                "2-2": 58, // 兌為澤
+                "2-3": 49, // 澤火革
+                "2-4": 17, // 澤雷隨
+                "2-5": 28, // 澤風大過
+                "2-6": 60, // 澤水困
+                "2-7": 31, // 澤山咸
+                "2-8": 19, // 澤地臨
+                // 離 (3)
+                "3-1": 14, // 火天大有
+                "3-2": 38, // 火澤睽
+                "3-3": 30, // 離為火
+                "3-4": 21, // 火雷噬嗑
+                "3-5": 37, // 風火家人
+                "3-6": 64, // 火水未濟
+                "3-7": 56, // 火山旅
+                "3-8": 36, // 地火明夷
+                // 震 (4)
+                "4-1": 34, // 雷天大壯
+                "4-2": 54, // 雷澤歸妹
+                "4-3": 55, // 雷火豐
+                "4-4": 51, // 震為雷
+                "4-5": 42, // 雷風益
+                "4-6": 40, // 雷水解
+                "4-7": 27, // 雷山小過
+                "4-8": 24, // 雷地復
+                // 巽 (5)
+                "5-1": 9,  // 風天小畜
+                "5-2": 61, // 風澤中孚
+                "5-3": 50, // 火風鼎
+                "5-4": 32, // 雷風恆
+                "5-5": 57, // 巽為風
+                "5-6": 48, // 風水井
+                "5-7": 53, // 風山漸
+                "5-8": 20, // 風地觀
+                // 坎 (6)
+                "6-1": 5,  // 水天需
+                "6-2": 47, // 水澤困
+                "6-3": 63, // 水火既濟
+                "6-4": 3,  // 水雷屯
+                "6-5": 59, // 風水渙
+                "6-6": 29, // 坎為水
+                "6-7": 39, // 水山蹇
+                "6-8": 8,  // 水地比
+                // 艮 (7)
+                "7-1": 26, // 山天大畜
+                "7-2": 31, // 山澤咸
+                "7-3": 22, // 山火賁
+                "7-4": 62, // 雷山小過
+                "7-5": 18, // 山風蠱
+                "7-6": 4,  // 山水蒙
+                "7-7": 52, // 艮為山
+                "7-8": 23, // 山地剝
+                // 坤 (8)
+                "8-1": 11, // 地天泰
+                "8-2": 45, // 地澤萃
+                "8-3": 35, // 地火明夷
+                "8-4": 16, // 地雷豫
+                "8-5": 46, // 地風升
+                "8-6": 7,  // 地水師
+                "8-7": 15, // 地山謙
+                "8-8": 2   // 坤為地
+            };
+
+            const baseIndex = hexagramMap[`${upper}-${lower}`] || 1;
+            const mutualIndex = hexagramMap[`${mutualUpper}-${mutualLower}`] || 1;
+            const changedIndex = hexagramMap[`${changedUpper}-${changedLower}`] || 1;
 
             const baseName = data.gua_texts[baseIndex]?.name || `${data.trigrams[upper].name}為${data.trigrams[lower].name}`;
             const mutualName = data.gua_texts[mutualIndex]?.name || `${data.trigrams[mutualUpper].name}為${data.trigrams[mutualLower].name}`;
@@ -723,8 +798,9 @@
         // E. 梅花易數解卦引擎
         function interpretHexagram(hexagram, targetType, targetDetails, external, caseName) {
             const { base, mutual, changed, moving } = hexagram;
-            const bodyTrigram = base.lower; // 體卦
-            const useTrigram = base.upper;  // 用卦
+            // 修正體卦：動爻所在卦為體卦
+            const bodyTrigram = moving <= 3 ? base.lower : base.upper; // 1-3爻動為下卦，4-6爻動為上卦
+            const useTrigram = moving <= 3 ? base.upper : base.lower;  // 用卦為另一卦
 
             // 1. 體用關係：判斷能否找回
             const bodyElement = data.trigrams[bodyTrigram].five_element;
@@ -749,7 +825,7 @@
             }
 
             // 2. 卦氣旺衰
-            const currentDate = new Date('2025-09-06T16:41:00');
+            const currentDate = new Date('2025-09-06T17:38:00');
             const season = getSeason(currentDate); // 秋季
             const strength = data.seasonal_strength[season] || {};
             const bodyStrength = strength.旺.includes(data.trigrams[bodyTrigram].name) ? '旺' : 
@@ -860,8 +936,8 @@
                 <div class="hexagram-row">
                     <div class="hexagram-column">
                         <p>本卦</p>
-                        <div class="hexagram hexagram-use">用卦 ${data.trigrams[base.upper].symbol}</div>
-                        <div class="hexagram hexagram-body">體卦 ${data.trigrams[base.lower].symbol}</div>
+                        <div class="hexagram ${moving <= 3 ? 'hexagram-use' : 'hexagram-body'}">${data.trigrams[base.upper].symbol}</div>
+                        <div class="hexagram ${moving <= 3 ? 'hexagram-body' : 'hexagram-use'}">${data.trigrams[base.lower].symbol}</div>
                         <p class="hexagram-label">${base.name} (${data.trigrams[base.upper].five_element})</p>
                     </div>
                     <div class="hexagram-column">
@@ -1033,7 +1109,7 @@
                 if (method) {
                     document.getElementById(`${method}-input`).classList.remove('hidden');
                     if (method === 'time') {
-                        const lunar = getLunarDate(new Date('2025-09-06T16:41:00'));
+                        const lunar = getLunarDate(new Date('2025-09-06T17:38:00'));
                         document.getElementById('lunar-year').value = lunar.year;
                         document.getElementById('lunar-month').value = lunar.month;
                         document.getElementById('lunar-day').value = lunar.day;
@@ -1043,7 +1119,7 @@
             });
 
             document.getElementById('set-current-time').addEventListener('click', () => {
-                const lunar = getLunarDate(new Date('2025-09-06T16:41:00'));
+                const lunar = getLunarDate(new Date('2025-09-06T17:38:00'));
                 document.getElementById('lunar-year').value = lunar.year;
                 document.getElementById('lunar-month').value = lunar.month;
                 document.getElementById('lunar-day').value = lunar.day;
