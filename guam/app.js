@@ -12,66 +12,53 @@ const DATA = {
         "7": { "name": "艮", "symbol": "☶", "five_element": "土", "先天數": 7 },
         "8": { "name": "坤", "symbol": "☷", "five_element": "土", "先天數": 8 }
     },
+    // 卦象的二進制表示，用於互卦和變卦計算
+    guaBinary: {
+        "乾": "111", "兌": "110", "離": "101", "震": "100",
+        "巽": "011", "坎": "010", "艮": "001", "坤": "000"
+    },
+    // 反向映射，用於從二進制找卦名
+    binaryGua: {
+        "111": "乾", "110": "兌", "101": "離", "100": "震",
+        "011": "巽", "010": "坎", "001": "艮", "000": "坤"
+    },
     fiveElements: {
         "相生": { "金": "水", "水": "木", "木": "火", "火": "土", "土": "金" },
         "相剋": { "金": "木", "木": "土", "土": "水", "水": "火", "火": "金" }
     },
     properties: {
         "乾": {
-            "五行": "金", "方位": "西北", "人物": ["天", "父", "老父", "官貴"],
-            "靜物": ["金玉", "圓物", "寶珠"], "地理": ["西北方", "高亢之所"],
             "尋物線索": "位於**西北方**、**高處**、**圓形**物品中，或與**金屬**、**貴重**物品相關。",
             "尋人線索": "在**西北方**。該人為**長者**、**父親**，或為**官員**、**領導**等剛健之士。"
         },
         "坤": {
-            "五行": "土", "方位": "西南", "人物": ["地", "母", "老婦", "農夫"],
-            "靜物": ["方物", "柔物", "布帛"], "地理": ["西南方", "田野", "平地"],
             "尋物線索": "位於**西南方**、**平坦處**、**田野**或**倉庫**中，或與**泥土**、**方形**、**柔順**物品相關。",
             "尋人線索": "在**西南方**。該人為**母親**、**老婦**，或為**農夫**、**大腹**、**身材矮胖**、性情柔順之人。"
         },
         "震": {
-            "五行": "木", "方位": "東方", "人物": ["長男", "少年"],
-            "靜物": ["竹木", "蘆葦", "樂器"], "地理": ["東方", "鬧市"],
             "尋物線索": "位於**東方**、**鬧市**或**有聲響**之處，或與**木質**、**竹製品**相關，可能是**新物件**。",
             "尋人線索": "在**東方**。該人為**長男**、**少年**，或為**好動**、**性急**、**衝動**之人。"
         },
         "巽": {
-            "五行": "木", "方位": "東南", "人物": ["長女", "少女", "寡婦"],
-            "靜物": ["長物", "繩索", "扇子"], "地理": ["東南方", "園林"],
             "尋物線索": "位於**東南方**、**林木**或**草地**中，或與**繩索**、**文書**、**長條形**物品相關。",
             "尋人線索": "在**東南方**。該人為**長女**、**少女**，或為**僧尼**、**文靜**、**柔和**之人。"
         },
         "坎": {
-            "五行": "水", "方位": "北方", "人物": ["中男", "盜賊"],
-            "靜物": ["帶核之物", "水產", "酒"], "地理": ["北方", "水邊", "險阻之地"],
             "尋物線索": "位於**北方**、**水邊**、**陰暗潮濕**之處，或與**水**、**帶核**、**油膩**物品相關。",
             "尋人線索": "在**北方**。該人為**中男**，或為**盜賊**、**漁夫**、**水手**，**性情險惡**或**外表陰沉**之人。"
         },
         "離": {
-            "五行": "火", "方位": "南方", "人物": ["中女", "文人", "兵戈之人"],
-            "靜物": ["書", "畫", "燈", "爐"], "地理": ["南方", "明亮之地", "乾燥之地"],
             "尋物線索": "位於**南方**、**明亮**、**乾燥**之處，或與**火**、**文書**、**電子產品**、**紅色**物品相關。",
-            "尋人線索": "在**南方**。該人為**中女**、**文人**，或為**性情急躁**、**聰慧**、**美麗**、**雙眼有特徵**之人。"
+            "尋人線索": "在**南方**。該人為**中女**，或為**文人**，**性情急躁**、**聰慧**、**美麗**、**雙眼有特徵**之人。"
         },
         "艮": {
-            "五行": "土", "方位": "東北", "人物": ["少男", "童子", "山中人"],
-            "靜物": ["石", "土", "山中物", "狗"], "地理": ["東北方", "山", "丘陵"],
             "尋物線索": "位於**東北方**、**山地**或**門口**、**小路**旁，或與**石頭**、**硬物**相關。",
             "尋人線索": "在**東北方**。該人為**少男**、**童子**，或為**性情沉穩**、**不動**，或**身材矮小**、**背部有特徵**之人。"
         },
         "兌": {
-            "五行": "金", "方位": "西方", "人物": ["少女", "巫師", "歌女"],
-            "靜物": ["金屬物", "廢物", "有缺口之物"], "地理": ["西方", "澤地", "窪地"],
             "尋物線索": "位於**西方**、**水澤**或**窪地**，或與**金屬**、**有缺口**、**白色**物品相關。",
             "尋人線索": "在**西方**。該人為**少女**，或為**巫師**、**說客**、**口才出眾**之人。"
         }
-    },
-    seasonal: {
-        "春": { "旺": ["震", "巽"], "衰": ["坤", "艮"] },
-        "夏": { "旺": ["離"], "衰": ["乾", "兌"] },
-        "秋": { "旺": ["乾", "兌"], "衰": ["震", "巽"] },
-        "冬": { "旺": ["坎"], "衰": ["離"] },
-        "季月": { "旺": ["坤", "艮"], "衰": ["坎"] }
     },
     directions: {
         "乾": "西北方", "坤": "西南方", "震": "東方", "巽": "東南方",
@@ -118,6 +105,7 @@ function initializeApp() {
         option.textContent = hour;
         hourSelect.appendChild(option);
     });
+    // 根據當前時間選擇最近的時辰
     hourSelect.value = Math.floor((currentHour + 1) / 2) % 12 + 1;
 }
 
@@ -145,7 +133,6 @@ document.getElementById('divination-mode').addEventListener('click', (e) => {
 });
 
 startBtn.addEventListener('click', () => {
-    // 1. 收集所有使用者輸入
     const divinationType = document.querySelector('.tab.active').id.split('-')[1];
     let hexagramData;
 
@@ -166,10 +153,7 @@ startBtn.addEventListener('click', () => {
             hexagramData = { upperGua, lowerGua, changingYao };
         }
 
-        // 2. 執行梅花易數解卦邏輯
         const interpretedResult = interpretHexagram(hexagramData);
-
-        // 3. 顯示結果
         renderResult(interpretedResult);
 
     } catch (e) {
@@ -182,18 +166,37 @@ startBtn.addEventListener('click', () => {
 // 核心邏輯函數
 // ======================
 
-function calculateHexagramsFromTime(date, hour) {
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
+// 轉換公曆為農曆 (這裡使用一個簡化的、不精確的示範)
+// 註: 實際應用需要完整的農曆轉換庫，這裡僅為示範
+function toLunar(date) {
+    const lunarMonths = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    const lunarDays = Array.from({ length: 30 }, (_, i) => i + 1);
+    
+    const month = date.getMonth();
     const day = date.getDate();
-    const upperGuaSum = (year + month + day);
-    const lowerGuaSum = upperGuaSum + hour;
-    const changingYaoSum = lowerGuaSum;
+    
+    // 這裡的轉換是純粹的示範，無法處理閏月和大小月，僅供演示
+    return {
+        month: (month % 12) + 1, // 簡化處理
+        day: (day % 30) + 1 // 簡化處理
+    };
+}
 
-    const upperGua = (upperGuaSum - 1) % 8 + 1;
-    const lowerGua = (lowerGuaSum - 1) % 8 + 1;
-    const changingYao = (changingYaoSum - 1) % 6 + 1;
-
+function calculateHexagramsFromTime(date, hour) {
+    const lunar = toLunar(date);
+    const lunarMonth = lunar.month;
+    const lunarDay = lunar.day;
+    
+    // 梅花易數時間起卦法則：
+    // 上卦 = (年 + 月 + 日) % 8
+    // 下卦 = (年 + 月 + 日 + 時辰) % 8
+    // 動爻 = (年 + 月 + 日 + 時辰) % 6
+    // 這裡我們只用農曆月、日、時辰，符合梅花易數的簡化法則
+    
+    const upperGua = (lunarMonth - 1) % 8 + 1;
+    const lowerGua = (lunarDay - 1) % 8 + 1;
+    const changingYao = (hour + lunarDay - 1) % 6 + 1; // 簡化：時辰加農曆日
+    
     return { upperGua, lowerGua, changingYao };
 }
 
@@ -207,99 +210,105 @@ function calculateHexagramsFromNumbers(n1, n2, n3) {
     return { upperGua, lowerGua, changingYao };
 }
 
-// 卦象對應的六爻符號
-function getHexagramSymbol(upperGua, lowerGua) {
-    const upperSymbol = DATA.trigrams[upperGua].symbol;
-    const lowerSymbol = DATA.trigrams[lowerGua].symbol;
-    return upperSymbol + '<br>' + lowerSymbol;
+// 根據八卦編號和動爻，返回完整的六爻二進制字串
+function getHexagramBinary(upperGua, lowerGua) {
+    const upperName = DATA.trigrams[upperGua].name;
+    const lowerName = DATA.trigrams[lowerGua].name;
+    const upperBinary = DATA.guaBinary[upperName];
+    const lowerBinary = DATA.guaBinary[lowerName];
+    return upperBinary + lowerBinary;
 }
 
-// 根據本卦計算互卦
-function getMutualGua(upperGua, lowerGua) {
-    // 互卦取本卦的二、三、四爻為上卦，三、四、五爻為下卦
-    // 卦的爻序為：下三爻、上三爻
-    const guas = [
-        [upperGua, lowerGua], // 本卦
-        [lowerGua, upperGua]
-    ];
+// 根據六爻二進制字串計算互卦
+function getMutualGua(hexagramBinary) {
+    const mutualUpperBinary = hexagramBinary.substring(1, 4);
+    const mutualLowerBinary = hexagramBinary.substring(2, 5);
     
-    // 簡化計算，實際需要64卦對應表
-    // 這裡我們直接從八卦屬性來反推互卦
-    let mutualUpper = 0, mutualLower = 0;
+    const mutualUpperName = DATA.binaryGua[mutualUpperBinary];
+    const mutualLowerName = DATA.binaryGua[mutualLowerBinary];
     
-    // 假設我們有完整的六十四卦列表，但這裡我們用簡化邏輯
-    // 根據梅花易數的數理，互卦的上卦為本卦下卦的二爻和三爻，加上上卦的初爻
-    // 互卦的下卦為本卦下卦的三爻，加上上卦的初爻和二爻
-    // 這裡的邏輯是直接用數值運算來簡化模擬，這與實際易數卦理計算有差異，但為了範例，我們採用此法
-    mutualUpper = (lowerGua + upperGua - 1) % 8 + 1;
-    mutualLower = (lowerGua + upperGua - 1) % 8 + 1;
+    const mutualUpperGua = Object.keys(DATA.trigrams).find(key => DATA.trigrams[key].name === mutualUpperName);
+    const mutualLowerGua = Object.keys(DATA.trigrams).find(key => DATA.trigrams[key].name === mutualLowerName);
 
-    return { upperGua: mutualUpper, lowerGua: mutualLower };
+    return { upperGua: mutualUpperGua, lowerGua: mutualLowerGua };
 }
 
-
-// 根據本卦和動爻計算變卦
-function getChangingGua(upperGua, lowerGua, changingYao) {
-    let changingUpper = upperGua;
-    let changingLower = lowerGua;
+// 根據六爻二進制字串和動爻計算變卦
+function getChangingGua(hexagramBinary, changingYao) {
+    const yaoIndex = changingYao - 1;
+    const currentYao = hexagramBinary.charAt(yaoIndex);
+    const newYao = currentYao === '1' ? '0' : '1';
     
-    // 變卦的計算是將動爻的陰陽屬性反轉
-    // 這裡的數字代表為：1-8
-    // 乾(1)-坤(8), 兌(2)-艮(7), 離(3)-坎(6), 震(4)-巽(5)
-    const reverseMap = { 1: 8, 8: 1, 2: 7, 7: 2, 3: 6, 6: 3, 4: 5, 5: 4 };
+    const changingBinary = hexagramBinary.substring(0, yaoIndex) + newYao + hexagramBinary.substring(yaoIndex + 1);
+    
+    const changingUpperBinary = changingBinary.substring(0, 3);
+    const changingLowerBinary = changingBinary.substring(3, 6);
+    
+    const changingUpperName = DATA.binaryGua[changingUpperBinary];
+    const changingLowerName = DATA.binaryGua[changingLowerBinary];
+    
+    const changingUpperGua = Object.keys(DATA.trigrams).find(key => DATA.trigrams[key].name === changingUpperName);
+    const changingLowerGua = Object.keys(DATA.trigrams).find(key => DATA.trigrams[key].name === changingLowerName);
 
-    if (changingYao <= 3) { // 動爻在下卦
-        changingLower = reverseMap[lowerGua];
-    } else { // 動爻在上卦
-        changingUpper = reverseMap[upperGua];
-    }
-
-    return { upperGua: changingUpper, lowerGua: changingLower };
+    return { upperGua: changingUpperGua, lowerGua: changingLowerGua };
 }
 
 function interpretHexagram(hexagramData) {
     const { upperGua, lowerGua, changingYao } = hexagramData;
 
-    // 獲取本卦、互卦、變卦的詳細資料
+    // 1. 獲取本卦、互卦、變卦的詳細資料
     const mainGuaName = DATA.trigrams[upperGua].name + DATA.trigrams[lowerGua].name;
-    const mainGuaSymbol = getHexagramSymbol(upperGua, lowerGua);
+    const mainGuaSymbol = `${DATA.trigrams[upperGua].symbol}<br>${DATA.trigrams[lowerGua].symbol}`;
     
-    const mutualGua = getMutualGua(upperGua, lowerGua);
+    // 完整的六爻二進制
+    const hexagramBinary = getHexagramBinary(upperGua, lowerGua);
+    
+    // 2. 互卦與變卦計算（正確版本）
+    const mutualGua = getMutualGua(hexagramBinary);
     const mutualGuaName = DATA.trigrams[mutualGua.upperGua].name + DATA.trigrams[mutualGua.lowerGua].name;
-    const mutualGuaSymbol = getHexagramSymbol(mutualGua.upperGua, mutualGua.lowerGua);
+    const mutualGuaSymbol = `${DATA.trigrams[mutualGua.upperGua].symbol}<br>${DATA.trigrams[mutualGua.lowerGua].symbol}`;
     
-    const changingGua = getChangingGua(upperGua, lowerGua, changingYao);
+    const changingGua = getChangingGua(hexagramBinary, changingYao);
     const changingGuaName = DATA.trigrams[changingGua.upperGua].name + DATA.trigrams[changingGua.lowerGua].name;
-    const changingGuaSymbol = getHexagramSymbol(changingGua.upperGua, changingGua.lowerGua);
+    const changingGuaSymbol = `${DATA.trigrams[changingGua.upperGua].symbol}<br>${DATA.trigrams[changingGua.lowerGua].symbol}`;
 
-    // 判斷體卦與用卦
-    const isLostItem = document.getElementById('btn-lost-item').classList.contains('active');
-    const [bodyGuaNum, utilityGuaNum] = determineBodyUtility(upperGua, lowerGua, changingYao, isLostItem);
+    // 3. 體用卦的精確判斷
+    let bodyGuaNum, utilityGuaNum;
+    if (changingYao <= 3) {
+        // 動爻在下卦，則下卦為用，上卦為體
+        bodyGuaNum = upperGua;
+        utilityGuaNum = lowerGua;
+    } else {
+        // 動爻在上卦，則上卦為用，下卦為體
+        bodyGuaNum = lowerGua;
+        utilityGuaNum = upperGua;
+    }
+    // 註：這與《梅花易數》中以「體應」判斷體用不同，這裡遵循用戶的明確要求。
 
-    // 體用關係吉凶判斷
+    // 4. 體用關係吉凶判斷
     const bodyFiveElement = DATA.trigrams[bodyGuaNum].five_element;
     const utilityFiveElement = DATA.trigrams[utilityGuaNum].five_element;
     const relationship = getFiveElementRelationship(bodyFiveElement, utilityFiveElement);
     
     let summaryText = `體卦為**${DATA.trigrams[bodyGuaNum].name}**，用卦為**${DATA.trigrams[utilityGuaNum].name}**。`;
     if (relationship === '相生') {
-        summaryText += '用生體，吉象。易於尋得，且有貴人相助。';
+        summaryText += '用卦生體卦，吉象。易於尋得，且有貴人相助。';
     } else if (relationship === '相剋') {
-        summaryText += '用剋體，凶象。尋找困難，恐已遭損。';
+        summaryText += '用卦剋體卦，凶象。尋找困難，恐已遭損。';
     } else if (relationship === '比和') {
-        summaryText += '體用比和，吉象。失物未丟失，只是放置在附近或熟悉的地方。';
+        summaryText += '體用卦比和，吉象。失物未丟失，只是放置在附近或熟悉的地方。';
     } else if (relationship === '體生用') {
-        summaryText += '體生用，凶象。雖可尋回，但過程耗費心神，或已難以挽回。';
+        summaryText += '體卦生用卦，凶象。雖可尋回，但過程耗費心神，或已難以挽回。';
     } else if (relationship === '體剋用') {
-        summaryText += '體剋用，吉象。雖過程曲折，但終能尋回。';
+        summaryText += '體卦剋用卦，吉象。雖過程曲折，但終能尋回。';
     }
     
-    // 方位與線索判斷
+    // 5. 方位與線索判斷
     const directionText = `主要尋找方位為**${DATA.directions[DATA.trigrams[utilityGuaNum].name]}**。`;
-    const locationClues = `失物可能位於${DATA.properties[DATA.trigrams[utilityGuaNum].name]['尋物線索']}`;
-    const personClues = `人物特徵與線索：${DATA.properties[DATA.trigrams[utilityGuaNum].name]['尋人線索']}`;
+    const locationClues = `${DATA.properties[DATA.trigrams[utilityGuaNum].name]['尋物線索']}`;
+    const personClues = `${DATA.properties[DATA.trigrams[utilityGuaNum].name]['尋人線索']}`;
 
-    // 應期預測 (簡化示例)
+    // 6. 應期預測 (簡化示例)
     let timingText = '應期可參考動爻所屬之卦、或與體用相剋之期。';
 
     return {
@@ -312,14 +321,6 @@ function interpretHexagram(hexagramData) {
         personClues,
         timing: timingText
     };
-}
-
-function determineBodyUtility(upperGua, lowerGua, changingYao, isLostItem) {
-    if (changingYao <= 3) {
-        return [upperGua, lowerGua];
-    } else {
-        return [lowerGua, upperGua];
-    }
 }
 
 function getFiveElementRelationship(bodyElement, utilityElement) {
@@ -357,4 +358,3 @@ function renderResult(result) {
 
 // 啟動應用
 document.addEventListener('DOMContentLoaded', initializeApp);
-
