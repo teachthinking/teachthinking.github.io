@@ -1,0 +1,131 @@
+:root {
+    --primary-color: #4CAF50;
+    --secondary-color: #F0F4C3;
+    --text-color: #333;
+    --background-color: #f9f9f9;
+    --card-background: #fff;
+    --border-color: #ddd;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.container {
+    max-width: 800px;
+    width: 100%;
+}
+
+.card {
+    background: var(--card-background);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+h1, h2 {
+    color: var(--primary-color);
+    text-align: center;
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+    margin-top: 0;
+}
+
+.button-group, .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+button, .tab {
+    padding: 10px 20px;
+    border: 1px solid var(--primary-color);
+    border-radius: 5px;
+    background-color: transparent;
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button.active, .tab.active {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+button:hover:not(.active), .tab:hover:not(.active) {
+    background-color: var(--secondary-color);
+}
+
+.tab-content, .target-form {
+    display: none;
+}
+
+.tab-content.active, .target-form.active {
+    display: block;
+}
+
+label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+input[type="date"], input[type="number"], select, textarea {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+#start-divination-btn {
+    display: block;
+    width: 100%;
+    background-color: var(--primary-color);
+    color: #fff;
+    font-size: 1.2rem;
+    padding: 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#start-divination-btn:hover {
+    background-color: #45a049;
+}
+
+#result-section {
+    transition: opacity 0.5s ease;
+}
+
+.hidden {
+    display: none;
+    opacity: 0;
+}
+
+.hexagram-display {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.gua-symbol {
+    font-family: '宋體', 'KaiTi', 'SimSun', serif;
+    font-size: 4rem;
+    line-height: 1;
+    margin: 0;
+}
