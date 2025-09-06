@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>梅花易數卜卦系統 - 尋找遺失物/人物</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header class="container">
+        <h1>梅花易數卜卦 - 尋找系統</h1>
+        <p>此程式利用梅花易數原理，協助您尋找遺失的物品或人物。所有運算皆在瀏覽器端完成，保護您的隱私。</p>
+    </header>
+
+    <main class="container">
+        <section class="card" id="target-selection">
+            <h2>占測目標</h2>
+            <p>請選擇您想占測的目標類型。</p>
+            <div class="button-group">
+                <button id="btn-lost-item" class="active">尋找遺失物</button>
+                <button id="btn-lost-person">尋找人物</button>
+            </div>
+        </section>
+
+        <section class="card" id="divination-mode">
+            <h2>步驟一：起卦方式</h2>
+            <div class="tabs">
+                <button id="tab-time" class="tab active">時間起卦</button>
+                <button id="tab-number" class="tab">數字起卦</button>
+                <button id="tab-manual" class="tab">手動輸入</button>
+            </div>
+
+            <div id="content-time" class="tab-content active">
+                <p>系統將自動換算為農曆並起卦。</p>
+                <label for="divination-date">公曆日期：</label>
+                <input type="date" id="divination-date" required>
+                <label for="divination-hour">時辰：</label>
+                <select id="divination-hour" required>
+                    </select>
+            </div>
+
+            <div id="content-number" class="tab-content">
+                <p>請隨機輸入三個數字。</p>
+                <label for="num1">數字一：</label><input type="number" id="num1" min="1">
+                <label for="num2">數字二：</label><input type="number" id="num2" min="1">
+                <label for="num3">數字三：</label><input type="number" id="num3" min="1">
+            </div>
+
+            <div id="content-manual" class="tab-content">
+                <p>請手動選擇卦象與動爻。</p>
+                <label for="manual-upper-gua">上卦：</label><select id="manual-upper-gua"></select>
+                <label for="manual-lower-gua">下卦：</label><select id="manual-lower-gua"></select>
+                <label for="manual-changing-yao">動爻：</label><select id="manual-changing-yao"></select>
+            </div>
+        </section>
+
+        <section class="card" id="target-details">
+            <h2>步驟二：目標詳細屬性</h2>
+            <div id="form-lost-item" class="target-form active">
+                <p>請提供遺失物的細節，以利精準推斷。</p>
+                <label for="item-type">物品類別：</label>
+                <select id="item-type">
+                    <option value="">請選擇</option>
+                    <option value="金屬/圓形物">金屬/圓形物 (乾/兌)</option>
+                    <option value="文書/電子/光亮物">文書/電子/光亮物 (離)</option>
+                    <option value="木製品/長條物">木製品/長條物 (震/巽)</option>
+                    <option value="土器/方形物/石">土器/方形物/石 (坤/艮)</option>
+                    <option value="液體/毛製品">液體/毛製品 (坎)</option>
+                </select>
+                <label for="item-color">顏色：</label>
+                <select id="item-color">
+                    <option value="">請選擇</option>
+                    <option value="金/白">金/白 (乾/兌)</option>
+                    <option value="土/黃">土/黃 (坤/艮)</option>
+                    <option value="木/青/綠">木/青/綠 (震/巽)</option>
+                    <option value="火/紅/紫">火/紅/紫 (離)</option>
+                    <option value="水/黑/藍">水/黑/藍 (坎)</option>
+                </select>
+            </div>
+            <div id="form-lost-person" class="target-form">
+                <p>請提供尋找人物的細節，以利精準推斷。</p>
+                <label for="person-relation">與您的關係：</label>
+                <select id="person-relation">
+                    <option value="">請選擇</option>
+                    <option value="父/長者">父/長者 (乾)</option>
+                    <option value="母/老婦">母/老婦 (坤)</option>
+                    <option value="長男/好動者">長男/好動者 (震)</option>
+                    <option value="長女/文靜者">長女/文靜者 (巽)</option>
+                    <option value="中男/險惡者">中男/險惡者 (坎)</option>
+                    <option value="中女/文人">中女/文人 (離)</option>
+                    <option value="少男/沉穩者">少男/沉穩者 (艮)</option>
+                    <option value="少女/口才佳者">少女/口才佳者 (兌)</option>
+                </select>
+                <label for="person-profession">職業/身份：</label>
+                <select id="person-profession">
+                    <option value="">請選擇</option>
+                    <option value="官員/領導">官員/領導 (乾)</option>
+                    <option value="農夫/工人">農夫/工人 (坤)</option>
+                    <option value="軍人/警察">軍人/警察 (震)</option>
+                    <option value="僧侶/文士">僧侶/文士 (巽)</option>
+                    <option value="漁夫/水手">漁夫/水手 (坎)</option>
+                    <option value="文人/藝術家">文人/藝術家 (離)</option>
+                    <option value="獄吏/山中人">獄吏/山中人 (艮)</option>
+                    <option value="巫師/說客/歌手">巫師/說客/歌手 (兌)</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>步驟三：外應記錄 (選填)</h2>
+            <p>在卜卦的當下，您身邊是否有任何特別的聲音、景象或事件？</p>
+            <textarea id="external-events" rows="3" placeholder="例如：突然聽到狗叫，看到紅色物體..."></textarea>
+        </section>
+
+        <button id="start-divination-btn">開始卜卦</button>
+
+        <section class="card hidden" id="result-section">
+            <h2>卜卦結果與深度解讀</h2>
+            <div id="hexagram-display" class="hexagram-display">
+                <div class="gua">
+                    <h3>本卦</h3>
+                    <pre id="main-gua-symbol" class="gua-symbol"></pre>
+                    <p id="main-gua-name"></p>
+                </div>
+                <div class="gua">
+                    <h3>互卦</h3>
+                    <pre id="mutual-gua-symbol" class="gua-symbol"></pre>
+                    <p id="mutual-gua-name"></p>
+                </div>
+                <div class="gua">
+                    <h3>變卦</h3>
+                    <pre id="changing-gua-symbol" class="gua-symbol"></pre>
+                    <p id="changing-gua-name"></p>
+                </div>
+            </div>
+            <div id="interpretation-output">
+                <h3>總論：尋找吉凶與難易</h3>
+                <p id="summary-text"></p>
+                <h3>方位指引</h3>
+                <p id="direction-text"></p>
+                <h3>環境與地點線索</h3>
+                <p id="location-clues"></p>
+                <h3 id="target-clues-title">物品特徵線索</h3>
+                <p id="target-clues-text"></p>
+                <h3>應期預測</h3>
+                <p id="timing-text"></p>
+                <h3>外應解讀</h3>
+                <p id="external-events-text"></p>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>學習與參考</h2>
+            <div id="learning-resources">
+                <p>卦例庫與基礎知識將在此處呈現。</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>此程式僅供參考，不具備任何預測能力。請勿過度依賴。</p>
+    </footer>
+
+    <script src="app.js" type="module"></script>
+</body>
+</html>
