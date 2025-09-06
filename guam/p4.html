@@ -59,19 +59,43 @@
             <h2>步驟二：目標詳細屬性</h2>
             <div id="form-lost-item" class="target-form active">
                 <p>請提供遺失物的細節，以利精準推斷。</p>
+                <label for="item-type">物品類別：</label>
+                <select id="item-type">
+                    <option value="">請選擇</option>
+                    <option value="金屬/貴重">金屬/貴重 (金玉、圓物)</option>
+                    <option value="文書/電子">文書/電子 (書、畫、電子產品)</option>
+                    <option value="木製/布料">木製/布料 (竹木、衣物)</option>
+                    <option value="土器/陶瓷">土器/陶瓷 (瓦器、石、硬物)</option>
+                    <option value="水相關">水相關 (液體、帶核之物)</option>
+                </select>
                 <label for="item-color">顏色：</label>
-                <input type="text" id="item-color" placeholder="例如：紅色、白色">
-                <label for="item-description">其他特徵：</label>
-                <textarea id="item-description" rows="3" placeholder="例如：圓形、金屬材質、有破損"></textarea>
+                <select id="item-color">
+                    <option value="">請選擇</option>
+                    <option value="金/白">金/白 (乾兌)</option>
+                    <option value="土/黃">土/黃 (坤艮)</option>
+                    <option value="木/青">木/青 (震巽)</option>
+                    <option value="火/紅">火/紅 (離)</option>
+                    <option value="水/黑">水/黑 (坎)</option>
+                </select>
             </div>
             <div id="form-lost-person" class="target-form">
                 <p>請提供尋找人物的細節，以利精準推斷。</p>
-                <label for="person-gender">性別：</label>
-                <select id="person-gender"><option value="男">男</option><option value="女">女</option></select>
-                <label for="person-age">年齡：</label>
-                <input type="text" id="person-age" placeholder="例如：中年、少年">
-                <label for="person-description">外貌或行為特徵：</label>
-                <textarea id="person-description" rows="3" placeholder="例如：身材矮胖、好動、官貴"></textarea>
+                <label for="person-relation">與您的關係：</label>
+                <select id="person-relation">
+                    <option value="">請選擇</option>
+                    <option value="家人">家人 (父/母/長男/長女...)</option>
+                    <option value="朋友/同事">朋友/同事</option>
+                    <option value="陌生人">陌生人 (官貴、盜賊等)</option>
+                </select>
+                <label for="person-age">年齡層：</label>
+                <select id="person-age">
+                    <option value="">請選擇</option>
+                    <option value="幼童">幼童 (艮)</option>
+                    <option value="少年">少年 (震/艮)</option>
+                    <option value="青年">青年 (坎/離)</option>
+                    <option value="中年">中年 (坎/離)</option>
+                    <option value="老年">老年 (乾/坤)</option>
+                </select>
             </div>
         </section>
 
@@ -109,7 +133,7 @@
                 <p id="direction-text"></p>
                 <h3>環境與地點線索</h3>
                 <p id="location-clues"></p>
-                <h3 id="target-clues-title">人物特徵線索</h3>
+                <h3 id="target-clues-title">物品特徵線索</h3>
                 <p id="target-clues-text"></p>
                 <h3>應期預測</h3>
                 <p id="timing-text"></p>
