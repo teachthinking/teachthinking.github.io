@@ -207,23 +207,57 @@ function calculateHexagramsFromNumbers(n1, n2, n3) {
     return { upperGua, lowerGua, changingYao };
 }
 
+// 根據本卦計算互卦
+function getMutualGua(upperGua, lowerGua) {
+    // 互卦取本卦的二、三、四爻為上卦，三、四、五爻為下卦
+    // 由於我們只有數字代表卦象，這裡簡化處理
+    const mutualUpper = upperGua === 1 ? 6 : (upperGua === 8 ? 7 : (upperGua === 2 ? 5 : (upperGua === 7 ? 2 : (upperGua === 5 ? 7 : (upperGua === 6 ? 4 : 8)))));
+    const mutualLower = lowerGua === 1 ? 6 : (lowerGua === 8 ? 7 : (lowerGua === 2 ? 5 : (lowerGua === 7 ? 2 : (lowerGua === 5 ? 7 : (lowerGua === 6 ? 4 : 8)))));
+    return { upperGua: mutualUpper, lowerGua: mutualLower };
+}
+
+// 根據本卦和動爻計算變卦
+function getChangingGua(upperGua, lowerGua, changingYao) {
+    let changingUpper = upperGua;
+    let changingLower = lowerGua;
+
+    if (changingYao <= 3) { // 動爻在下卦
+        // 變爻反轉陰陽
+        const newLowerGua = lowerGua === 1 ? 8 : (lowerGua === 2 ? 7 : (lowerGua === 3 ? 6 : (lowerGua === 4 ? 5 : (lowerGua === 5 ? 4 : (lowerGua === 6 ? 3 : (lowerGua === 7 ? 2 : 1))))));
+        changingLower = newLowerGua;
+    } else { // 動爻在上卦
+        const newUpperGua = upperGua === 1 ? 8 : (upperGua === 2 ? 7 : (upperGua === 3 ? 6 : (upperGua === 4 ? 5 : (upperGua === 5 ? 4 : (upperGua === 6 ? 3 : (upperGua === 7 ? 2 : 1))))));
+        changingUpper = newUpperGua;
+    }
+
+    return { upperGua: changingUpper, lowerGua: changingLower };
+}
+
 function interpretHexagram(hexagramData) {
     const { upperGua, lowerGua, changingYao } = hexagramData;
 
-    // 1. 獲取卦象詳細資料
-    const upperGuaDetails = DATA.trigrams[upperGua];
-    const lowerGuaDetails = DATA.trigrams[lowerGua];
+    // 獲取本卦、互卦、變卦的詳細資料
+    const mainGuaName = DATA.trigrams[upperGua].name + DATA.trigrams[lowerGua].name;
+    const mainGuaSymbol = `${DATA.trigrams[upperGua].symbol}<br>${DATA.trigrams[lowerGua].symbol}`;
+    
+    const mutualGua = getMutualGua(upperGua, lowerGua);
+    const mutualGuaName = DATA.trigrams[mutualGua.upperGua].name + DATA.trigrams[mutualGua.lowerGua].name;
+    const mutualGuaSymbol = `${DATA.trigrams[mutualGua.upperGua].symbol}<br>${DATA.trigrams[mutualGua.lowerGua].symbol}`;
+    
+    const changingGua = getChangingGua(upperGua, lowerGua, changingYao);
+    const changingGuaName = DATA.trigrams[changingGua.upperGua].name + DATA.trigrams[changingGua.lowerGua].name;
+    const changingGuaSymbol = `${DATA.trigrams[changingGua.upperGua].symbol}<br>${DATA.trigrams[changingGua.lowerGua].symbol}`;
 
-    // 2. 判斷體卦與用卦
+    // 判斷體卦與用卦
     const isLostItem = document.getElementById('btn-lost-item').classList.contains('active');
-    const [bodyGua, utilityGua] = determineBodyUtility(upperGua, lowerGua, changingYao, isLostItem);
+    const [bodyGuaNum, utilityGuaNum] = determineBodyUtility(upperGua, lowerGua, changingYao, isLostItem);
 
-    // 3. 體用關係吉凶判斷
-    const bodyFiveElement = DATA.trigrams[bodyGua].five_element;
-    const utilityFiveElement = DATA.trigrams[utilityGua].five_element;
+    // 體用關係吉凶判斷
+    const bodyFiveElement = DATA.trigrams[bodyGuaNum].five_element;
+    const utilityFiveElement = DATA.trigrams[utilityGuaNum].five_element;
     const relationship = getFiveElementRelationship(bodyFiveElement, utilityFiveElement);
     
-    let summaryText = `體卦為${DATA.trigrams[bodyGua].name}，用卦為${DATA.trigrams[utilityGua].name}。`;
+    let summaryText = `體卦為**${DATA.trigrams[bodyGuaNum].name}**，用卦為**${DATA.trigrams[utilityGuaNum].name}**。`;
     if (relationship === '相生') {
         summaryText += '用生體，吉象。易於尋得，且有貴人相助。';
     } else if (relationship === '相剋') {
@@ -236,33 +270,30 @@ function interpretHexagram(hexagramData) {
         summaryText += '體剋用，吉象。雖過程曲折，但終能尋回。';
     }
     
-    // 4. 方位與線索判斷 (簡化示例)
-    const directionText = DATA.directions[DATA.trigrams[utilityGua].name];
-    const locationClues = DATA.properties[DATA.trigrams[utilityGua].name]['尋物線索'];
-    const personClues = DATA.properties[DATA.trigrams[utilityGua].name]['尋人線索'];
+    // 方位與線索判斷
+    const directionText = `主要尋找方位為**${DATA.directions[DATA.trigrams[utilityGuaNum].name]}**。`;
+    const locationClues = `失物可能位於${DATA.properties[DATA.trigrams[utilityGuaNum].name]['尋物線索']}`;
+    const personClues = `人物特徵與線索：${DATA.properties[DATA.trigrams[utilityGuaNum].name]['尋人線索']}`;
 
-    // 5. 應期預測 (簡化示例)
+    // 應期預測 (簡化示例)
     let timingText = '應期可參考動爻所屬之卦、或與體用相剋之期。';
 
     return {
-        mainGua: `${upperGuaDetails.name}${lowerGuaDetails.name}`,
-        mainGuaSymbol: `${upperGuaDetails.symbol}<br>${lowerGuaDetails.symbol}`,
+        mainGuaName, mainGuaSymbol,
+        mutualGuaName, mutualGuaSymbol,
+        changingGuaName, changingGuaSymbol,
         summary: summaryText,
         direction: directionText,
-        locationClues: locationClues,
-        personClues: personClues,
+        locationClues,
+        personClues,
         timing: timingText
     };
 }
 
 function determineBodyUtility(upperGua, lowerGua, changingYao, isLostItem) {
-    if (changingYao % 3 === 1 || changingYao % 3 === 2 || changingYao % 3 === 0) {
-        // 動爻在下卦 (1, 2, 3)
-        // 這裡簡化為以下卦為用，上卦為體
+    if (changingYao <= 3) {
         return [upperGua, lowerGua];
     } else {
-        // 動爻在上卦 (4, 5, 6)
-        // 這裡簡化為以下卦為體，上卦為用
         return [lowerGua, upperGua];
     }
 }
@@ -278,17 +309,23 @@ function getFiveElementRelationship(bodyElement, utilityElement) {
 }
 
 function renderResult(result) {
-    document.getElementById('main-gua-name').textContent = result.mainGua;
+    document.getElementById('main-gua-name').textContent = result.mainGuaName;
     document.getElementById('main-gua-symbol').innerHTML = result.mainGuaSymbol;
-    document.getElementById('summary-text').textContent = result.summary;
-    document.getElementById('direction-text').textContent = result.direction;
-    document.getElementById('location-clues').textContent = result.locationClues;
+    document.getElementById('mutual-gua-name').textContent = result.mutualGuaName;
+    document.getElementById('mutual-gua-symbol').innerHTML = result.mutualGuaSymbol;
+    document.getElementById('changing-gua-name').textContent = result.changingGuaName;
+    document.getElementById('changing-gua-symbol').innerHTML = result.changingGuaSymbol;
 
+    document.getElementById('summary-text').innerHTML = result.summary;
+    document.getElementById('direction-text').innerHTML = result.direction;
+    
     const isLostItem = document.getElementById('btn-lost-item').classList.contains('active');
     document.getElementById('target-clues-title').textContent = isLostItem ? '物品特徵線索' : '人物特徵線索';
-    document.getElementById('target-clues-text').textContent = isLostItem ? result.itemClues : result.personClues;
+    document.getElementById('location-clues').innerHTML = result.locationClues;
+    document.getElementById('target-clues-text').innerHTML = isLostItem ? result.locationClues : result.personClues;
     
-    document.getElementById('timing-text').textContent = result.timing;
+    document.getElementById('timing-text').innerHTML = result.timing;
+    // ... 外應解讀等可在此處添加
 
     resultSection.classList.remove('hidden');
     resultSection.style.opacity = 1;
@@ -296,3 +333,4 @@ function renderResult(result) {
 
 // 啟動應用
 document.addEventListener('DOMContentLoaded', initializeApp);
+
