@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>梅花易數卜卦系統 - 尋找遺失物或人物</title>
+    <style>
+        /* CSS 樣式 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #4a4a4a;
+        }
+        section {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #5cb85c;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #4cae4c;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ffe9;
+            border: 1px solid #5cb85c;
+            border-radius: 4px;
+        }
+        .hexagram {
+            font-size: 2em;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>梅花易數卜卦系統 - 專為尋找遺失物或人物</h1>
+        
+        <!-- A. 卜卦起始：選擇占測目標 -->
+        <section id="target-selection">
+            <h2>您想要占測什麼？</h2>
+            <select id="target-type">
+                <option value="">請選擇</option>
+                <option value="lost-item">尋找遺失物</option>
+                <option value="lost-person">尋找人物</option>
+                <option value="other">其他</option>
+            </select>
+        </section>
+        
+        <!-- B. 步驟一：選擇起卦方式 -->
+        <section id="divination-method" class="hidden">
+            <h2>請選擇一種起卦方式</h2>
+            <select id="method">
+                <option value="">請選擇</option>
+                <option value="time">時間起卦</option>
+                <option value="number">數字起卦</option>
+                <option value="manual">手動輸入卦象</option>
+            </select>
+            
+            <!-- 時間起卦輸入 -->
+            <div id="time-input" class="hidden">
+                <p>請輸入農曆年月日時（簡化計算，假設輸入為農曆支數）</p>
+                <label>年支數 (子1-亥12):</label>
+                <input type="number" id="lunar-year" min="1" max="12" value="1">
+                <label>月數 (1-12):</label>
+                <input type="number" id="lunar-month" min="1" max="12" value="1">
+                <label>日數 (1-30):</label>
+                <input type="number" id="lunar-day" min="1" max="30" value="1">
+                <label>時支數 (子1-亥12):</label>
+                <input type="number" id="lunar-hour" min="1" max="12" value="1">
+            </div>
+            
+            <!-- 數字起卦輸入 -->
+            <div id="number-input" class="hidden">
+                <label>第一個數字 (任意):</label>
+                <input type="number" id="num1" value="0">
+                <label>第二個數字:</label>
+                <input type="number" id="num2" value="0">
+                <label>第三個數字:</label>
+                <input type="number" id="num3" value="0">
+            </div>
+            
+            <!-- 手動輸入卦象 -->
+            <div id="manual-input" class="hidden">
+                <label>上卦:</label>
+                <select id="upper-trigram">
+                    <option value="1">乾 (1)</option>
+                    <option value="2">兌 (2)</option>
+                    <option value="3">離 (3)</option>
+                    <option value="4">震 (4)</option>
+                    <option value="5">巽 (5)</option>
+                    <option value="6">坎 (6)</option>
+                    <option value="7">艮 (7)</option>
+                    <option value="8">坤 (8)</option>
+                </select>
+                <label>下卦:</label>
+                <select id="lower-trigram">
+                    <option value="1">乾 (1)</option>
+                    <option value="2">兌 (2)</option>
+                    <option value="3">離 (3)</option>
+                    <option value="4">震 (4)</option>
+                    <option value="5">巽 (5)</option>
+                    <option value="6">坎 (6)</option>
+                    <option value="7">艮 (7)</option>
+                    <option value="8">坤 (8)</option>
+                </select>
+                <label>動爻 (1-6):</label>
+                <input type="number" id="moving-line" min="1" max="6" value="1">
+            </div>
+        </section>
+        
+        <!-- C. 步驟二：輸入欲尋目標的詳細屬性 -->
+        <section id="target-details" class="hidden">
+            <h2>請提供更多關於您要尋找的細節</h2>
+            
+            <!-- 遺失物細節 -->
+            <div id="lost-item-details" class="hidden">
+                <label>物品類別:</label>
+                <select id="item-category" multiple>
+                    <option value="貴重物品">貴重物品 (金、玉等)</option>
+                    <option value="文書/電子產品">文書/電子產品</option>
+                    <option value="金屬製品">金屬製品</option>
+                    <option value="木製品">木製品</option>
+                    <option value="土器瓦器/陶瓷">土器瓦器/陶瓷</option>
+                    <option value="布料/衣物">布料/衣物</option>
+                    <option value="水相關物品">水相關物品</option>
+                    <option value="其他">其他</option>
+                </select>
+                <label>顏色:</label>
+                <select id="item-color">
+                    <option value="">無</option>
+                    <option value="紅">紅</option>
+                    <option value="黃">黃</option>
+                    <option value="藍">藍</option>
+                    <option value="綠">綠</option>
+                    <option value="白">白</option>
+                    <option value="黑">黑</option>
+                    <option value="紫">紫</option>
+                </select>
+                <label>形狀:</label>
+                <input type="text" id="item-shape" placeholder="圓形、方形等">
+                <label>材質:</label>
+                <input type="text" id="item-material" placeholder="金屬、木等">
+                <label>其他特徵:</label>
+                <textarea id="item-other" placeholder="大小、新舊等"></textarea>
+            </div>
+            
+            <!-- 人物細節 -->
+            <div id="lost-person-details" class="hidden">
+                <label>與占卜者的關係:</label>
+                <select id="person-relation">
+                    <option value="">無</option>
+                    <option value="家人">家人</option>
+                    <option value="朋友">朋友</option>
+                    <option value="同事">同事</option>
+                    <option value="陌生人">陌生人</option>
+                    <option value="嫌犯">嫌犯</option>
+                    <option value="被害人">被害人</option>
+                </select>
+                <label>性別:</label>
+                <select id="person-gender">
+                    <option value="">無</option>
+                    <option value="男">男</option>
+                    <option value="女">女</option>
+                </select>
+                <label>年齡範圍:</label>
+                <select id="person-age">
+                    <option value="">無</option>
+                    <option value="幼童">幼童</option>
+                    <option value="少年">少年</option>
+                    <option value="青年">青年</option>
+                    <option value="中年">中年</option>
+                    <option value="老年">老年</option>
+                </select>
+                <label>外貌特徵:</label>
+                <textarea id="person-appearance" placeholder="身高、體型等"></textarea>
+                <label>行為模式:</label>
+                <input type="text" id="person-behavior" placeholder="靜止、活躍等">
+                <label>職業/身份:</label>
+                <input type="text" id="person-occupation" placeholder="官貴、農夫等">
+                <label>失蹤前情況:</label>
+                <textarea id="person-situation"></textarea>
+            </div>
+        </section>
+        
+        <!-- D. 步驟三：占卜時外應記錄 -->
+        <section id="external-response" class="hidden">
+            <h2>占卜時外應記錄 (選填)</h2>
+            <textarea id="external-desc" placeholder="描述周遭特別事件，如狗叫、紅色物體等"></textarea>
+        </section>
+        
+        <button id="start-divination">開始卜卦</button>
+        
+        <!-- E. 卜卦結果顯示 -->
+        <section id="result" class="hidden">
+            <h2>卜卦結果</h2>
+            <div id="hexagram-display"></div>
+            <div id="interpretation"></div>
+        </section>
+        
+        <!-- F. 進階應用 -->
+        <section id="advanced" class="hidden">
+            <h2>進階功能</h2>
+            <button id="view-cases">查看卦例庫</button>
+            <div id="case-studies" class="hidden"></div>
+            <button id="view-basics">梅花易數基礎知識</button>
+            <div id="basics-info" class="hidden"></div>
+            <button id="save-record">儲存卜卦記錄</button>
+            <button id="load-record">載入卜卦記錄</button>
+        </section>
+    </div>
+
+    <script>
+        // JavaScript 核心邏輯
+
+        // 定義內嵌資料 (為了完整性，假設data/ 資料夾不存在時使用，實際應fetch)
+        const inlineData = {
+            trigrams: {
+                "1": {"name": "乾", "symbol": "☰", "five_element": "金", "先天數": 1, "binary": [1,1,1]},
+                "2": {"name": "兌", "symbol": "☱", "five_element": "金", "先天數": 2, "binary": [1,1,0]},
+                "3": {"name": "離", "symbol": "☲", "five_element": "火", "先天數": 3, "binary": [1,0,1]},
+                "4": {"name": "震", "symbol": "☳", "five_element": "木", "先天數": 4, "binary": [1,0,0]},
+                "5": {"name": "巽", "symbol": "☴", "five_element": "木", "先天數": 5, "binary": [0,1,1]},
+                "6": {"name": "坎", "symbol": "☵", "five_element": "水", "先天數": 6, "binary": [0,1,0]},
+                "7": {"name": "艮", "symbol": "☶", "five_element": "土", "先天數": 7, "binary": [0,0,1]},
+                "8": {"name": "坤", "symbol": "☷", "five_element": "土", "先天數": 8, "binary": [0,0,0]}
+            },
+            five_elements_relations: {
+                "相生": {"金": "水", "水": "木", "木": "火", "火": "土", "土": "金"},
+                "相剋": {"金": "木", "木": "土", "土": "水", "水": "火", "火": "金"}
+            },
+            trigram_properties: {
+                "乾": {
+                    "五行": "金", "方位": "西北", "人物": ["天", "父", "老父", "官貴", "頭", "大人", "長者"],
+                    "靜物": ["金玉", "寶珠", "圓物", "冠", "鏡"],
+                    "地理": ["西北方", "高亢之所"],
+                    "顏色": ["大赤色", "玄色"],
+                    "尋物線索": "西北方、高處、金屬旁、圓形物體中、乾燥之地。",
+                    "尋人線索": "西北方、官貴、長者、剛健之人、頭部有特徵。"
+                },
+                "坤": {
+                    "五行": "土", "方位": "西南", "人物": ["地", "母", "老婦", "農夫", "眾人", "大腹人"],
+                    "靜物": ["方物", "柔物", "布帛", "絲綿", "瓦器"],
+                    "地理": ["西南方", "田野", "平地", "倉庫"],
+                    "顏色": ["黃", "黑"],
+                    "尋物線索": "西南方、平坦處、田野、倉庫、泥土或瓦器中、方形物體。",
+                    "尋人線索": "西南方、母親、老婦、農夫、身材矮胖者、柔順之人。"
+                },
+                "震": {
+                    "五行": "木", "方位": "東", "人物": ["長子", "青年男子", "好動之人"],
+                    "靜物": ["足", "頭髮", "竹子", "蘆葦", "發音的物件"],
+                    "地理": ["東方", "道路", "山林"],
+                    "顏色": ["青", "綠"],
+                    "尋物線索": "東方、道路旁、竹林中、綠色植物附近、發聲物件旁。",
+                    "尋人線索": "東方、青年男子、好動之人、足部有特徵。"
+                },
+                "巽": {
+                    "五行": "木", "方位": "東南", "人物": ["長女", "僧道之人", "文人"],
+                    "靜物": ["繩子", "眼睛", "風扇", "帆"],
+                    "地理": ["東南方", "草木繁茂處", "高崗"],
+                    "顏色": ["青", "綠"],
+                    "尋物線索": "東南方、繩索旁、香味處、直形物體中、風動之地。",
+                    "尋人線索": "東南方、長女、文人、修行者、眼睛有特徵。"
+                },
+                "坎": {
+                    "五行": "水", "方位": "北", "人物": ["中年男子", "偷盜之人", "勞心者"],
+                    "靜物": ["冰凍物件", "輪船", "耳朵", "血", "月亮"],
+                    "地理": ["北方", "河流", "危險之地", "溝渠", "隱藏處"],
+                    "顏色": ["黑"],
+                    "尋物線索": "北方、水邊、黑色物件中、隱藏處、液體相關。",
+                    "尋人線索": "北方、中年男子、盜賊、陰險之人、耳部有特徵。"
+                },
+                "離": {
+                    "五行": "火", "方位": "南", "人物": ["中女", "文人", "美業相關人員", "軍人"],
+                    "靜物": ["眼睛", "文書", "爐灶", "乾燥物", "服裝"],
+                    "地理": ["南方", "爐灶", "乾燥地"],
+                    "顏色": ["紅", "紫"],
+                    "尋物線索": "南方、火旁、紅色物件中、乾燥處、文書附近。",
+                    "尋人線索": "南方、文人、美女、軍人、眼睛有特徵。"
+                },
+                "艮": {
+                    "五行": "土", "方位": "東北", "人物": ["少男", "閒人", "童子"],
+                    "靜物": ["手指", "門閥", "果蔬", "徑石"],
+                    "地理": ["東北方", "寺廟", "山峰", "徑路"],
+                    "顏色": ["黃"],
+                    "尋物線索": "東北方、山腳、石頭旁、門口、果蔬附近。",
+                    "尋人線索": "東北方、少年、閒人、手部有特徵。"
+                },
+                "兌": {
+                    "五行": "金", "方位": "西", "人物": ["少女", "巫師", "歌伎", "舌辯之人"],
+                    "靜物": ["口舌", "食物", "刀劍", "毀折物"],
+                    "地理": ["西方", "沼澤", "廢井", "缺口之地"],
+                    "顏色": ["白"],
+                    "尋物線索": "西方、澤邊、缺口處、食物旁、白色物件中。",
+                    "尋人線索": "西方、少女、歌手、口才好之人、口部有特徵。"
+                }
+            },
+            seasonal_strength: {
+                "春": {"旺": ["震", "巽"], "衰": ["坤", "艮"]},
+                "夏": {"旺": ["離"], "衰": ["乾", "兌"]},
+                "秋": {"旺": ["乾", "兌"], "衰": ["震", "巽"]},
+                "冬": {"旺": ["坎"], "衰": ["離"]},
+                "季月": {"旺": ["坤", "艮"], "衰": ["坎"]}
+            },
+            directions: {
+                "乾": "西北方", "坤": "西南方", "震": "東方", "巽": "東南方",
+                "坎": "北方", "離": "南方", "艮": "東北方", "兌": "西方"
+            },
+            gua_texts: {
+                "1": { "name": "乾為天", "gua_ci": "元亨利貞。" /* 簡化，添加更多如果需要 */ },
+                // 假設其他64卦，為了簡短只放一個示例，實際需完整
+                "64": { "name": "火水未濟", "gua_ci": "亨。小狐汔濟，濡其尾，無攸利。" }
+            },
+            case_studies: [
+                { "title": "觀梅占", "description": "辰年十二月十七日申時，康節先生偶觀梅，見二雀爭枝墜地，怪而占之。" /* 簡化 */ }
+                // 添加更多
+            ]
+        };
+
+        let data = inlineData; // 使用內嵌資料，實際可fetch
+
+        // A. 資料載入模組 (如果有外部JSON)
+        async function loadData() {
+            // 假設fetch失敗使用inline
+            console.log('使用內嵌資料');
+        }
+
+        // B. 起卦引擎
+        function generateHexagram(method) {
+            let upper, lower, moving;
+            if (method === 'time') {
+                const year = parseInt(document.getElementById('lunar-year').value);
+                const month = parseInt(document.getElementById('lunar-month').value);
+                const day = parseInt(document.getElementById('lunar-day').value);
+                const hour = parseInt(document.getElementById('lunar-hour').value);
+                const sum1 = year + month + day;
+                upper = sum1 % 8 || 8;
+                const sum2 = sum1 + hour;
+                lower = sum2 % 8 || 8;
+                moving = sum2 % 6 || 6;
+            } else if (method === 'number') {
+                let num1 = parseInt(document.getElementById('num1').value);
+                let num2 = parseInt(document.getElementById('num2').value);
+                let num3 = parseInt(document.getElementById('num3').value);
+                upper = num1 % 8 || 8;
+                lower = num2 % 8 || 8;
+                moving = num3 % 6 || 6;
+            } else if (method === 'manual') {
+                upper = parseInt(document.getElementById('upper-trigram').value);
+                lower = parseInt(document.getElementById('lower-trigram').value);
+                moving = parseInt(document.getElementById('moving-line').value);
+            }
+            return { upper, lower, moving };
+        }
+
+        // C. 卦象解析與轉換模組
+        function parseHexagram(upper, lower, moving) {
+            const upperBinary = data.trigrams[upper].binary;
+            const lowerBinary = data.trigrams[lower].binary;
+            const hexBinary = lowerBinary.concat(upperBinary); // 從下到上: 初爻到上爻
+
+            // 互卦: 二三四爻為下卦, 三四五爻為上卦
+            const mutualLowerBinary = [hexBinary[1], hexBinary[2], hexBinary[3]];
+            const mutualUpperBinary = [hexBinary[2], hexBinary[3], hexBinary[4]];
+            const mutualLower = binaryToTrigram(mutualLowerBinary);
+            const mutualUpper = binaryToTrigram(mutualUpperBinary);
+            const mutual = { upper: mutualUpper, lower: mutualLower };
+
+            // 變卦: 動爻變 (moving從1初到6上)
+            const changedBinary = [...hexBinary];
+            changedBinary[moving - 1] = 1 - changedBinary[moving - 1]; // 陰陽反轉
+            const changedLowerBinary = changedBinary.slice(0,3);
+            const changedUpperBinary = changedBinary.slice(3,6);
+            const changedLower = binaryToTrigram(changedLowerBinary);
+            const changedUpper = binaryToTrigram(changedUpperBinary);
+            const changed = { upper: changedUpper, lower: changedLower };
+
+            // 本卦卦名 (簡化，使用上+下)
+            const baseName = data.trigrams[upper].name + '為' + data.trigrams[lower].name;
+
+            return { base: {upper, lower, name: baseName, binary: hexBinary}, mutual, changed, moving };
+        }
+
+        // 輔助: binary to trigram number
+        function binaryToTrigram(bin) {
+            for (let i = 1; i <= 8; i++) {
+                if (arraysEqual(data.trigrams[i].binary, bin)) return i;
+            }
+            return 1; // default
+        }
+        function arraysEqual(a, b) {
+            return a.length === b.length && a.every((val, index) => val === b[index]);
+        }
+
+        // D. 梅花易數解卦引擎
+        function interpretHexagram(hexagram, targetType, targetDetails, external) {
+            const { base, mutual, changed, moving } = hexagram;
+            const bodyTrigram = base.lower; // 下卦為體
+            const useTrigram = base.upper; // 上卦為用
+
+            // 體用關係
+            const bodyElement = data.trigrams[bodyTrigram].five_element;
+            const useElement = data.trigrams[useTrigram].five_element;
+            let relation = '';
+            if (bodyElement === useElement) relation = '比和 (吉): 失物未丟只是放錯地方，人物未失只是在熟悉環境中。';
+            else if (data.five_elements_relations.相生[useElement] === bodyElement) relation = '用生體 (吉): 失物易尋，人物易尋得助。';
+            else if (data.five_elements_relations.相生[bodyElement] === useElement) relation = '體生用 (凶): 失物難尋，人物難尋且消耗精力。';
+            else if (data.five_elements_relations.相剋[useElement] === bodyElement) relation = '用剋體 (凶): 失物難尋，人物尋找困難重重。';
+            else if (data.five_elements_relations.相剋[bodyElement] === useElement) relation = '體剋用 (吉): 失物可尋回但需時日，人物可尋回但過程曲折。';
+
+            // 卦氣旺衰
+            const currentDate = new Date(); // 使用當前日期 September 06, 2025 是秋季
+            const season = getSeason(currentDate);
+            const strength = data.seasonal_strength[season] || {};
+            const bodyStrength = strength.旺.includes(data.trigrams[bodyTrigram].name) ? '旺' : (strength.衰.includes(data.trigrams[bodyTrigram].name) ? '衰' : '中');
+            const influence = `卦氣影響: 體卦${bodyStrength}，${bodyStrength === '旺' ? '有利尋找' : (bodyStrength === '衰' ? '尋找較難' : '中性')}.`;
+
+            // 萬物屬類匹配
+            let clues = '';
+            const changedProps = data.trigram_properties[data.trigrams[changed.upper].name] || {};
+            const mutualProps = data.trigram_properties[data.trigrams[mutual.upper].name] || {};
+            if (targetType === 'lost-item') {
+                clues = changedProps.尋物線索 || '無特定線索';
+                if (targetDetails.color && (changedProps.顏色 || []).includes(targetDetails.color)) clues += ` 匹配顏色: ${targetDetails.color}`;
+                // 添加更多匹配邏輯，如材質對應五行
+            } else if (targetType === 'lost-person') {
+                clues = changedProps.尋人線索 || '無特定線索';
+                if (targetDetails.age && changedProps.人物.some(p => p.includes(targetDetails.age))) clues += ` 匹配年齡: ${targetDetails.age}`;
+            }
+            clues += '<br>輔助線索 (互卦): ' + (mutualProps.尋物線索 || mutualProps.尋人線索 || '');
+
+            // 方位
+            const mainDirection = data.directions[data.trigrams[changed.upper].name] || '未知';
+            const auxDirection = data.directions[data.trigrams[mutual.upper].name] || '';
+
+            // 環境地點
+            const env = changedProps.地理.join(', ') + ' (變卦)； ' + mutualProps.地理.join(', ') + ' (互卦)';
+
+            // 人物特徵 (若尋人)
+            let personClues = '';
+            if (targetType === 'lost-person') {
+                personClues = changedProps.人物.join(', ') + ' (年齡/性別/職業等匹配用戶輸入)';
+            }
+
+            // 應期預測 (簡化基於動爻)
+            let period = '';
+            if (moving <= 3) period = '近期 (數日內)';
+            else period = '較遠 (數月後)';
+
+            // 外應
+            const externalInterp = external ? `外應解讀: ${external} 可能表示額外線索或吉凶調整。` : '無外應';
+
+            // 卦辭參考 (簡化，使用base upper + lower 作為鍵，假設"1"為乾乾)
+            const guaKey = base.upper; // 簡化
+            const guaCi = data.gua_texts[guaKey]?.gua_ci || '無卦辭';
+
+            // 綜合結果
+            let result = `
+                <h3>卦象顯示</h3>
+                <div class="hexagram">${data.trigrams[base.upper].symbol}</div>
+                <div class="hexagram">${data.trigrams[base.lower].symbol}</div>
+                <p>本卦: ${base.name}</p>
+                <p>互卦: ${data.trigrams[mutual.upper].name} 上, ${data.trigrams[mutual.lower].name} 下</p>
+                <p>變卦: ${data.trigrams[changed.upper].name} 上, ${data.trigrams[changed.lower].name} 下</p>
+                <p>動爻: 第${moving}爻</p>
+                <h3>尋物/尋人結果總論</h3>
+                <p>體用關係: ${relation}</p>
+                <p>${influence}</p>
+                <h3>方位指引</h3>
+                <p>主要方向 (變卦): ${mainDirection}</p>
+                <p>輔助方向 (互卦): ${auxDirection}</p>
+                <h3>環境與地點線索</h3>
+                <p>${env}</p>
+                <h3>${targetType === 'lost-person' ? '人物特徵線索' : '物品線索'}</h3>
+                <p>${clues}</p>
+                ${personClues ? `<p>${personClues}</p>` : ''}
+                <h3>應期預測</h3>
+                <p>${period}</p>
+                <h3>外應解讀</h3>
+                <p>${externalInterp}</p>
+                <h3>卦辭與爻辭原文參考</h3>
+                <p>${guaCi}</p>
+            `;
+            return result;
+        }
+
+        // 輔助函數：獲取季節
+        function getSeason(date) {
+            const month = date.getMonth() + 1;
+            if ([3,4,5].includes(month)) return '春';
+            if ([6,7,8].includes(month)) return '夏';
+            if ([9,10,11].includes(month)) return '秋';
+            if ([12,1,2].includes(month)) return '冬';
+            return '季月';
+        }
+
+        // 事件監聽
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+
+            const targetSelect = document.getElementById('target-type');
+            targetSelect.addEventListener('change', (e) => {
+                document.getElementById('divination-method').classList.remove('hidden');
+                const type = e.target.value;
+                if (type === 'lost-item') {
+                    document.getElementById('lost-item-details').classList.remove('hidden');
+                    document.getElementById('lost-person-details').classList.add('hidden');
+                } else if (type === 'lost-person') {
+                    document.getElementById('lost-person-details').classList.remove('hidden');
+                    document.getElementById('lost-item-details').classList.add('hidden');
+                } else {
+                    document.getElementById('lost-item-details').classList.add('hidden');
+                    document.getElementById('lost-person-details').classList.add('hidden');
+                }
+                document.getElementById('target-details').classList.remove('hidden');
+                document.getElementById('external-response').classList.remove('hidden');
+                document.getElementById('advanced').classList.remove('hidden');
+            });
+
+            const methodSelect = document.getElementById('method');
+            methodSelect.addEventListener('change', (e) => {
+                const method = e.target.value;
+                ['time', 'number', 'manual'].forEach(m => document.getElementById(`${m}-input`).classList.add('hidden'));
+                if (method) document.getElementById(`${method}-input`).classList.remove('hidden');
+            });
+
+            document.getElementById('start-divination').addEventListener('click', () => {
+                const method = document.getElementById('method').value;
+                if (!method) return alert('請選擇起卦方式');
+                const hex = generateHexagram(method);
+                const parsed = parseHexagram(hex.upper, hex.lower, hex.moving);
+                const targetType = document.getElementById('target-type').value;
+                let targetDetails = {};
+                if (targetType === 'lost-item') {
+                    targetDetails = {
+                        category: Array.from(document.getElementById('item-category').selectedOptions).map(o => o.value),
+                        color: document.getElementById('item-color').value,
+                        shape: document.getElementById('item-shape').value,
+                        material: document.getElementById('item-material').value,
+                        other: document.getElementById('item-other').value
+                    };
+                } else if (targetType === 'lost-person') {
+                    targetDetails = {
+                        relation: document.getElementById('person-relation').value,
+                        gender: document.getElementById('person-gender').value,
+                        age: document.getElementById('person-age').value,
+                        appearance: document.getElementById('person-appearance').value,
+                        behavior: document.getElementById('person-behavior').value,
+                        occupation: document.getElementById('person-occupation').value,
+                        situation: document.getElementById('person-situation').value
+                    };
+                }
+                const external = document.getElementById('external-desc').value;
+                const interp = interpretHexagram(parsed, targetType, targetDetails, external);
+                document.getElementById('interpretation').innerHTML = interp;
+                document.getElementById('result').classList.remove('hidden');
+            });
+
+            // F. 進階功能
+            document.getElementById('view-cases').addEventListener('click', () => {
+                let casesHtml = data.case_studies.map(cs => `<h4>${cs.title}</h4><p>${cs.description}</p>`).join('');
+                document.getElementById('case-studies').innerHTML = casesHtml;
+                document.getElementById('case-studies').classList.remove('hidden');
+            });
+
+            document.getElementById('view-basics').addEventListener('click', () => {
+                const basics = '梅花易數基礎: 八卦為乾兌離震巽坎艮坤，五行生剋: 金生水、水生木... (更多內容)';
+                document.getElementById('basics-info').innerHTML = basics;
+                document.getElementById('basics-info').classList.remove('hidden');
+            });
+
+            document.getElementById('save-record').addEventListener('click', () => {
+                const record = {
+                    targetType: document.getElementById('target-type').value,
+                    // 添加更多輸入
+                    interpretation: document.getElementById('interpretation').innerHTML
+                };
+                localStorage.setItem('divination-record', JSON.stringify(record));
+                alert('記錄已儲存');
+            });
+
+            document.getElementById('load-record').addEventListener('click', () => {
+                const record = JSON.parse(localStorage.getItem('divination-record'));
+                if (record) {
+                    document.getElementById('target-type').value = record.targetType;
+                    // 填充其他
+                    document.getElementById('interpretation').innerHTML = record.interpretation;
+                    document.getElementById('result').classList.remove('hidden');
+                    alert('記錄已載入');
+                } else {
+                    alert('無記錄');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
