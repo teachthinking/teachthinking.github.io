@@ -76,6 +76,7 @@
             transition: background-color 0.3s;
             display: flex;
             align-items: center;
+            margin-right: 10px;
         }
         button::before {
             content: '✨';
@@ -104,6 +105,16 @@
             margin-right: 10px;
             font-size: 1.2em;
         }
+        .history-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .history-item:hover {
+            background: #e0e0e0;
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600&display=swap" rel="stylesheet">
 </head>
@@ -114,6 +125,9 @@
         <!-- A. 卜卦起始：選擇占測目標 -->
         <section id="target-selection">
             <h2><span class="section-icon">🎯</span>您想要占測什麼？</h2>
+            <label>案件名稱:</label>
+            <input type="text" id="case-name" placeholder="請輸入案件名稱（如：尋找手錶）">
+            <label>占測目標:</label>
             <select id="target-type">
                 <option value="">請選擇</option>
                 <option value="lost-item">尋找遺失物</option>
@@ -173,7 +187,6 @@
                     <option value="4">初四</option>
                     <option value="5">初五</option>
                     <option value="6" selected>初六</option>
-                    <!-- 其他日期選項 -->
                     <option value="7">初七</option>
                     <option value="8">初八</option>
                     <option value="9">初九</option>
@@ -207,8 +220,8 @@
                     <option value="4">卯時 (05:00-07:00)</option>
                     <option value="5">辰時 (07:00-09:00)</option>
                     <option value="6">巳時 (09:00-11:00)</option>
-                    <option value="7">午時 (11:00-13:00)</option>
-                    <option value="8" selected>未時 (13:00-15:00)</option>
+                    <option value="7" selected>午時 (11:00-13:00)</option>
+                    <option value="8">未時 (13:00-15:00)</option>
                     <option value="9">申時 (15:00-17:00)</option>
                     <option value="10">酉時 (17:00-19:00)</option>
                     <option value="11">戌時 (19:00-21:00)</option>
@@ -386,12 +399,13 @@
         <!-- F. 進階應用 -->
         <section id="advanced" class="hidden">
             <h2><span class="section-icon">⚙️</span>進階功能</h2>
+            <button id="view-history">歷史紀錄</button>
+            <div id="history-records" class="hidden"></div>
             <button id="view-cases">查看卦例庫</button>
             <div id="case-studies" class="hidden"></div>
-            <button id="view-basics">梅花易數基礎知識</button>
-            <div id="basics-info" class="hidden"></div>
-            <button id="save-record">儲存卜卦記錄</button>
-            <button id="load-record">載入卜卦記錄</button>
+            <button id="view-notes"><a href="notes.html" style="color: white; text-decoration: none;">注意事項</a></button>
+            <div id="notes-info" class="hidden"></div>
+            <button id="view-help"><a href="help.html" style="color: white; text-decoration: none;">使用說明</a></button>
         </section>
     </div>
 
@@ -514,11 +528,11 @@
             const day = date.getDate();
             const hour = date.getHours();
             
-            // 2025年為巳年（年支6），時間14:07為未時（時支8）
+            // 2025年為巳年（年支6），時間14:22為午時（時支7）
             const lunarYear = 6; // 巳年
             const lunarMonth = month;
             const lunarDay = day > 30 ? 30 : day;
-            const lunarHour = Math.floor((hour + 1) / 2) + 1; // 未時 (13:00-15:00)
+            const lunarHour = Math.floor((hour + 1) / 2) + 1; // 午時 (11:00-13:00)
             
             return {
                 year: lunarYear,
@@ -592,7 +606,7 @@
         }
 
         // E. 梅花易數解卦引擎
-        function interpretHexagram(hexagram, targetType, targetDetails, external) {
+        function interpretHexagram(hexagram, targetType, targetDetails, external, caseName) {
             const { base, mutual, changed, moving } = hexagram;
             const bodyTrigram = base.lower; // 體卦
             const useTrigram = base.upper;  // 用卦
@@ -620,7 +634,7 @@
             }
 
             // 2. 卦氣旺衰
-            const currentDate = new Date('2025-09-06T14:07:00');
+            const currentDate = new Date('2025-09-06T14:22:00');
             const season = getSeason(currentDate); // 秋季
             const strength = data.seasonal_strength[season] || {};
             const bodyStrength = strength.旺.includes(data.trigrams[bodyTrigram].name) ? '旺' : 
@@ -729,6 +743,7 @@
 
             // 9. 綜合結果
             let result = `
+                <h3>案件名稱: ${caseName || '未命名案件'}</h3>
                 <h3>卦象顯示</h3>
                 <div class="hexagram">${data.trigrams[base.upper].symbol}</div>
                 <div class="hexagram">${data.trigrams[base.lower].symbol}</div>
@@ -779,6 +794,44 @@
             return '季月';
         }
 
+        // 輔助函數：儲存歷史紀錄
+        function saveHistory(caseName, targetType, interpretation) {
+            let history = JSON.parse(localStorage.getItem('divination-history') || '[]');
+            history.push({
+                caseName: caseName || '未命名案件',
+                targetType,
+                interpretation,
+                timestamp: new Date().toLocaleString('zh-TW')
+            });
+            localStorage.setItem('divination-history', JSON.stringify(history));
+        }
+
+        // 輔助函數：顯示歷史紀錄
+        function showHistory() {
+            const history = JSON.parse(localStorage.getItem('divination-history') || '[]');
+            let historyHtml = history.length ? history.map((record, index) => `
+                <div class="history-item" data-index="${index}">
+                    <strong>案件名稱:</strong> ${record.caseName}<br>
+                    <strong>目標類型:</strong> ${record.targetType === 'lost-item' ? '遺失物' : record.targetType === 'lost-person' ? '人物' : '其他'}<br>
+                    <strong>時間:</strong> ${record.timestamp}
+                </div>
+            `).join('') : '無歷史紀錄';
+            document.getElementById('history-records').innerHTML = historyHtml;
+            document.getElementById('history-records').classList.remove('hidden');
+
+            // 為每個歷史紀錄添加點擊事件
+            document.querySelectorAll('.history-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const index = item.getAttribute('data-index');
+                    const record = history[index];
+                    document.getElementById('target-type').value = record.targetType;
+                    document.getElementById('interpretation').innerHTML = record.interpretation;
+                    document.getElementById('result').classList.remove('hidden');
+                    document.getElementById('case-name').value = record.caseName;
+                });
+            });
+        }
+
         // 事件監聽
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
@@ -805,11 +858,13 @@
             const methodSelect = document.getElementById('method');
             methodSelect.addEventListener('change', (e) => {
                 const method = e.target.value;
-                ['time', 'number', 'manual'].forEach(m => document.getElementById(`${m}-input`).classList.add('hidden'));
+                ['time-input', 'number-input', 'manual-input'].forEach(m => {
+                    document.getElementById(m).classList.add('hidden');
+                });
                 if (method) {
-                    document.getElementById(`${m}-input`).classList.remove('hidden');
+                    document.getElementById(`${method}-input`).classList.remove('hidden');
                     if (method === 'time') {
-                        const lunar = getLunarDate(new Date('2025-09-06T14:07:00'));
+                        const lunar = getLunarDate(new Date('2025-09-06T14:22:00'));
                         document.getElementById('lunar-year').value = lunar.year;
                         document.getElementById('lunar-month').value = lunar.month;
                         document.getElementById('lunar-day').value = lunar.day;
@@ -819,7 +874,7 @@
             });
 
             document.getElementById('set-current-time').addEventListener('click', () => {
-                const lunar = getLunarDate(new Date('2025-09-06T14:07:00'));
+                const lunar = getLunarDate(new Date('2025-09-06T14:22:00'));
                 document.getElementById('lunar-year').value = lunar.year;
                 document.getElementById('lunar-month').value = lunar.month;
                 document.getElementById('lunar-day').value = lunar.day;
@@ -829,9 +884,11 @@
             document.getElementById('start-divination').addEventListener('click', () => {
                 const method = document.getElementById('method').value;
                 if (!method) return alert('請選擇起卦方式');
+                const caseName = document.getElementById('case-name').value;
+                const targetType = document.getElementById('target-type').value;
+                if (!targetType) return alert('請選擇占測目標');
                 const hex = generateHexagram(method);
                 const parsed = parseHexagram(hex.upper, hex.lower, hex.moving);
-                const targetType = document.getElementById('target-type').value;
                 let targetDetails = {};
                 if (targetType === 'lost-item') {
                     targetDetails = {
@@ -855,42 +912,22 @@
                     };
                 }
                 const external = document.getElementById('external-desc').value;
-                const interp = interpretHexagram(parsed, targetType, targetDetails, external);
+                const interp = interpretHexagram(parsed, targetType, targetDetails, external, caseName);
                 document.getElementById('interpretation').innerHTML = interp;
                 document.getElementById('result').classList.remove('hidden');
+                
+                // 自動儲存紀錄
+                saveHistory(caseName, targetType, interp);
+            });
+
+            document.getElementById('view-history').addEventListener('click', () => {
+                showHistory();
             });
 
             document.getElementById('view-cases').addEventListener('click', () => {
                 let casesHtml = data.case_studies.map(cs => `<h4>${cs.title}</h4><p>${cs.description}</p>`).join('');
                 document.getElementById('case-studies').innerHTML = casesHtml;
                 document.getElementById('case-studies').classList.remove('hidden');
-            });
-
-            document.getElementById('view-basics').addEventListener('click', () => {
-                const basics = '梅花易數基礎: 八卦為乾兌離震巽坎艮坤，五行生剋: 金生水、水生木... (更多內容)';
-                document.getElementById('basics-info').innerHTML = basics;
-                document.getElementById('basics-info').classList.remove('hidden');
-            });
-
-            document.getElementById('save-record').addEventListener('click', () => {
-                const record = {
-                    targetType: document.getElementById('target-type').value,
-                    interpretation: document.getElementById('interpretation').innerHTML
-                };
-                localStorage.setItem('divination-record', JSON.stringify(record));
-                alert('記錄已儲存');
-            });
-
-            document.getElementById('load-record').addEventListener('click', () => {
-                const record = JSON.parse(localStorage.getItem('divination-record'));
-                if (record) {
-                    document.getElementById('target-type').value = record.targetType;
-                    document.getElementById('interpretation').innerHTML = record.interpretation;
-                    document.getElementById('result').classList.remove('hidden');
-                    alert('記錄已載入');
-                } else {
-                    alert('無記錄');
-                }
             });
         });
     </script>
