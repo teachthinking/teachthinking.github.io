@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>專業梅花心五行卦系統</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    .hexagram-svg {
+      width: 100px;
+      height: 120px;
+      margin-bottom: 10px;
+    }
+    .tooltip {
+      position: relative;
+    }
+    .tooltip:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .advice {
+      background-color: #f4f8f6;
+      border-left: 6px solid #2c6f4e;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    @media (max-width: 640px) {
+      .hexagram-svg {
+        width: 80px;
+        height: 100px;
+      }
+      .hexagram-box {
+        min-width: 100px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 font-sans">
+  <header class="w-full max-w-3xl bg-white shadow-md rounded-lg p-6 mb-6">
+    <h2 class="text-2xl font-bold text-center text-gray-800">專業梅花心易五行分析系統</h2>
+    <p class="text-center text-gray-600 mt-2">選擇起卦模式，輸入資料後點擊開始卜卦</p>
+  </header>
+
+  <main class="w-full max-w-3xl bg-white shadow-md rounded-lg p-6">
+    <div class="mb-4">
+      <label for="questionInput" class="block text-sm font-medium text-gray-700 mb-2">
+        <i class="fas fa-question-circle mr-2"></i>卜卦問題
+      </label>
+      <input type="text" id="questionInput" placeholder="例如：明天適合出遊嗎？" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+
+    <div class="mb-4">
+      <label for="divinationMode" class="block text-sm font-medium text-gray-700 mb-2">
+        <i class="fas fa-list-ul mr-2 tooltip" data-tooltip="選擇起卦方式"></i>起卦模式
+      </label>
+      <select id="divinationMode" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option value="time"><i class="fas fa-clock"></i> 時間起卦（自動取當前時間）</option>
+        <option value="threeDigits"><i class="fas fa-calculator"></i> 三位數起卦（輸入三個三位數，如123, 456, 789）</option>
+        <option value="manual"><i class="fas fa-hand-pointer"></i> 手動指定（上卦1-8、下卦1-8、動爻1-6）</option>
+      </select>
+    </div>
+
+    <div id="inputFields" class="space-y-4"></div>
+
+    <button id="btnStart" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+      <i class="fas fa-play mr-2"></i>開始卜卦
+    </button>
+    <div class="mt-4 flex flex-col sm:flex-row gap-2">
+        <button id="btnViewRecords" class="w-full sm:w-1/3 bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200">
+            <i class="fas fa-list mr-2"></i>查詢記錄
+        </button>
+        <button id="btnExportRecords" class="w-full sm:w-1/3 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200">
+            <i class="fas fa-file-export mr-2"></i>匯出記錄
+        </button>
+        <button id="btnImportRecords" class="w-full sm:w-1/3 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition duration-200">
+            <i class="fas fa-file-import mr-2"></i>匯入記錄
+        </button>
+    </div>
+
+    <div id="result" class="mt-6"></div>
+  </main>
+    <div id="recordModal" class="hidden fixed inset-0 z-50 overflow-auto bg-gray-800 bg-opacity-75 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg p-6 max-w-lg w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">卜卦記錄</h3>
+                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div id="recordList" class="max-h-96 overflow-y-auto space-y-2"></div>
+        </div>
+    </div>
+  <input type="file" id="importFile" class="hidden" accept=".json">
+
+  <script>
+    const trigrams = [
+      {name:"乾", element:"金"},
+      {name:"兑", element:"金"},
+      {name:"離", element:"火"},
+      {name:"震", element:"木"},
+      {name:"巽", element:"木"},
+      {name:"坎", element:"水"},
+      {name:"艮", element:"土"},
+      {name:"坤", element:"土"}
+    ];
+
+    const fiveElementsOrder = ["火", "土", "金", "水", "木"];
+    const fiveRelations = [
+      {from:"木", to:"火", type:"生"},
+      {from:"火", to:"土", type:"生"},
+      {from:"土", to:"金", type:"生"},
+      {from:"金", to:"水", type:"生"},
+      {from:"水", to:"木", type:"生"},
+      {from:"木", to:"土", type:"剋"},
+      {from:"土", to:"水", type:"剋"},
+      {from:"水", to:"火", type:"剋"},
+      {from:"火", to:"金", type:"剋"},
+      {from:"金", to:"木", type:"剋"}
+    ];
+
+    const fiveElementColors = {
+      "金": "#ffd700",
+      "木": "#228b22",
+      "水": "#1e90ff",
+      "火": "#dc143c",
+      "土": "#a52a2a"
+    };
+
+    const wuxingStatus = {
+      "旺": {strokeWidth: 6, opacity:1},
+      "相": {strokeWidth: 4, opacity:0.8},
+      "休": {strokeWidth: 2, opacity:0.6},
+      "囚": {strokeWidth: 1, opacity:0.4},
+      "死": {strokeWidth: 1, opacity:0.3}
+    };
+
+    const colors = { "用生體": "green", "用剋體": "red", "比和": "orange", "體生用": "blue", "體剋用": "purple", "無": "gray" };
+
+    const baguaLines = {
+      0: ["—", "—", "—"],
+      1: ["—", "—", "--"],
+      2: ["—", "--", "—"],
+      3: ["—", "--", "--"],
+      4: ["--", "—", "—"],
+      5: ["--", "—", "--"],
+      6: ["--", "--", "—"],
+      7: ["--", "--", "--"]
+    };
+
+    const trigramsName = ["乾","兑","離","震","巽","坎","艮","坤"];
+    const trigramFiveElement = {
+      "乾": "金", "兑": "金", "離": "火",
+      "震": "木", "巽": "木", "坎": "水",
+      "艮": "土", "坤": "土"
+    };
+
+    const sixtyFourHexagrams = {
+      "00":"乾為天", "01":"天澤履", "02":"天火同人", "03":"天雷無妄",
+      "04":"天風姤", "05":"天水訟", "06":"天山遯", "07":"天地否",
+      "10":"澤天夬", "11":"兌為澤", "12":"澤火革", "13":"澤雷隨",
+      "14":"澤風大過", "15":"澤水困", "16":"澤山咸", "17":"澤地萃",
+      "20":"火天大有", "21":"火澤睽", "22":"離為火", "23":"火雷噬嗑",
+      "24":"火風鼎", "25":"火水未濟", "26":"火山旅", "27":"火地晉",
+      "30":"雷天大壯", "31":"雷澤歸妹", "32":"雷火豐", "33":"震為雷",
+      "34":"雷風恆", "35":"雷水解", "36":"雷山小過", "37":"雷地豫",
+      "40":"風天小畜", "41":"風澤中孚", "42":"風火家人", "43":"風雷益",
+      "44":"巽為風", "45":"風水渙", "46":"風山漸", "47":"風地觀",
+      "50":"水天需", "51":"水澤節", "52":"水火既濟", "53":"水雷屯",
+      "54":"水風井", "55":"坎為水",
+      "56":"水山蹇", "57":"水地比",
+      "60":"山天大畜", "61":"山澤損", "62":"山火賁", "63":"山雷頤",
+      "64":"山風蠱", "65":"山水蒙", "66":"艮為山", "67":"山地剝",
+      "70":"地天泰", "71":"地澤臨", "72":"地火明夷", "73":"地雷復",
+      "74":"地風升", "75":"地水師", "76":"地山謙", "77":"坤為地"
+    };
+    
+    // Five Elements Interacting Status Data from wuxing.json
+    const wuxingStatusMap = {
+      "WS,WS,WS": "初始吉利，過程中得到幫助，最終結果吉利。整體大吉。\n\n乾天坤地，祥瑞盈門\n陰陽和合，萬物生春\n順天應人，福壽康寧\n吉星高照，心想事成",
+      "WS,WS,WK": "初始吉利，過程中得到幫助，最終結果凶險。整體小吉。\n\n初陽普照，中得貴人\n末路崎嶇，謹慎前行\n雲開月明，自有天助\n守正持中，轉危為安",
+      "WS,WS,SS": "初始吉利，過程中得到幫助，最終付出多收穫少。整體小吉。\n\n春風送暖，夏雨滋苗\n秋實雖薄，冬藏有餘\n耕耘不輟，天道酬勤\n積善之家，必有餘慶",
+      "WS,WS,SK": "初始吉利，過程中得到幫助，最終通過努力成功。整體大吉。\n\n初陽普照，中得貴人\n末需自強，終成大業\n金石為開，精誠所至\n青雲直上，鵬程萬里",
+      "WS,WS,BH": "初始吉利，過程中得到幫助，最終平穩。整體大吉。\n\n紫氣東來，祥雲西至\n中正平和，安泰無憂\n穩如泰山，靜若秋水\n長久安康，福澤綿延",
+      "WS,WK,WS": "初始吉利，過程中遇到阻礙，最終結果吉利。整體小吉。\n\n初陽方升，中遇坎坷\n末路通達，否極泰來\n破繭成蝶，逆境奮起\n雨過天晴，見虹萬里",
+      "WS,WK,WK": "初始吉利，過程中遇到阻礙，最終結果凶險。整體小凶。\n\n初陽中阻，末路多艱\n暗流潛藏，謹言慎行\n韜光養晦，以待時機\n守得雲開，自見月明",
+      "WS,WK,SS": "初始吉利，過程中遇到阻礙，最終付出多收穫少。整體小凶。\n\n初陽中阻，末勞少獲\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "WS,WK,SK": "初始吉利，過程中遇到阻礙，最終通過努力成功。整體小吉。\n\n初陽中阻，末靠自強\n鐵杵磨針，功到自成\n逆水行舟，不進則退\n堅持不懈，終抵彼岸",
+      "WS,WK,BH": "初始吉利，過程中遇到阻礙，最終平穩。整體小吉。\n\n初陽普照，中遇風霜\n末歸平靜，穩如磐石\n以柔克剛，以靜制動\n平和處世，安康長久",
+      "WS,SS,WS": "初始吉利，過程中付出努力，最終結果吉利。整體小吉。\n\n初吉中勞，末得圓滿\n勤耕不輟，碩果累累\n天道酬勤，人道酬善\n春華秋實，福運綿長",
+      "WS,SS,WK": "初始吉利，過程中付出努力，最終結果凶險。整體小凶。\n\n初吉中奮，末路多艱\n勞而少功，時運未濟\n韜光養晦，靜待時機\n積蓄力量，東山再起",
+      "WS,SS,SS": "初始吉利，過程中付出努力，最終付出多收穫少。整體小凶。\n\n初吉中奮，末得薄收\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "WS,SS,SK": "初始吉利，過程中付出努力，最終通過努力成功。整體小吉。\n\n初吉中奮，末靠自強\n精衛填海，愚公移山\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "WS,SS,BH": "初始吉利，過程中付出努力，最終平穩。整體小吉。\n\n初吉中勞，末歸平靜\n平和安泰，穩健前行\n知足常樂，心安理得\n平淡是真，安康是福",
+      "WS,SK,WS": "初始吉利，過程中克服困難，最終結果吉利。整體大吉。\n\n初吉中克，末得大成\n披荆斩棘，終見坦途\n勇者無懼，智者無憂\n成就偉業，名揚四方",
+      "WS,SK,WK": "初始吉利，過程中克服困難，最終結果凶險。整體小吉。\n\n初吉中克，末路艱辛\n逆水行舟，不進則退\n堅守正道，不忘初心\n黑暗過後，必見曙光",
+      "WS,SK,SS": "初始吉利，過程中克服困難，最終付出多收穫少。整體小吉。\n\n初吉中克，末勞少獲\n耕耘雖苦，天道酬勤\n積少成多，聚沙成塔\n堅持不懈，終有回報",
+      "WS,SK,SK": "初始吉利，過程中克服困難，最終通過努力成功。整體大吉。\n\n初吉中克，末靠自強\n千錘百煉，終成利器\n風雨過後，見彩虹美\n成就非凡，福澤綿長",
+      "WS,SK,BH": "初始吉利，過程中克服困難，最終平穩。整體大吉。\n\n初吉中克，末歸平靜\n穩健前行，安泰無憂\n以剛克柔，以動制靜\n平衡陰陽，福壽安康",
+      "WS,BH,WS": "初始吉利，過程平穩，最終結果吉利。整體大吉。\n\n初陽中平，末得圓滿\n穩中求進，順水行舟\n平和安泰，福運自來\n吉祥如意，萬事順遂",
+      "WS,BH,WK": "初始吉利，過程平穩，最終結果凶險。整體小吉。\n\n初吉中平，末路多艱\n居安思危，未雨綢繆\n以靜制動，以守為攻\n轉危為安，化險為夷",
+      "WS,BH,SS": "初始吉利，過程平穩，最終付出多收穫少。整體小吉。\n\n初陽中平，末勞少獲\n知足常樂，隨遇而安\n勤儉持家，細水長流\n福雖遲來，終將降至",
+      "WS,BH,SK": "初始吉利，過程平穩，最終通過努力成功。整體大吉。\n\n初吉中平，末靠自強\n穩中求進，勤能補拙\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "WS,BH,BH": "初始吉利，過程平穩，最終平穩。整體大吉。\n\n初陽中平，末歸平靜\n四平八穩，安泰無憂\n平和處世，安康長久\n福澤綿延，吉祥如意",
+      "WK,WS,WS": "初始凶險，過程中得到幫助，最終結果吉利。整體小吉。\n\n初凶中助，末得吉慶\n遇難呈祥，轉危為安\n貴人相助，逢凶化吉\n雨過天晴，見虹萬里",
+      "WK,WS,WK": "初始凶險，過程中得到幫助，最終結果凶險。整體小凶。\n\n初凶中助，末路多艱\n外力難挽，內修自強\n韜光養晦，以待時機\n守得雲開，自見月明",
+      "WK,WS,SS": "初始凶險，過程中得到幫助，最終付出多收穫少。整體小凶。\n\n初凶中助，末勞少獲\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "WK,WS,SK": "初始凶險，過程中得到幫助，最終通過努力成功。整體小吉。\n\n初凶中助，末靠自強\n逆水行舟，不進則退\n堅持不懈，終抵彼岸\n功成名就，福壽雙全",
+      "WK,WS,BH": "初始凶險，過程中得到幫助，最終平穩。整體小吉。\n\n初凶中助，末歸平靜\n以柔克剛，以靜制動\n平和處世，安康長久\n轉危為安，化險為夷",
+      "WK,WK,WS": "初始凶險，過程中遇到阻礙，最終結果吉利。整體小凶。\n\n初凶中阻，末得吉慶\n逆水行舟，不進則退\n堅持不懈，終抵彼岸\n雨過天晴，見虹萬里",
+      "WK,WK,WK": "初始凶險，過程中遇到阻礙，最終結果凶險。整體大凶。\n\n初凶中阻，末路多艱\n暗流潛藏，謹言慎行\n韜光養晦，以待時機\n守得雲開，自見月明",
+      "WK,WK,SS": "初始凶險，過程中遇到阻礙，最終付出多收穫少。整體大凶。\n\n初凶中阻，末勞少獲\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "WK,WK,SK": "初始凶險，過程中遇到阻礙，最終通過努力成功。整體小凶。\n\n初凶中阻，末靠自強\n鐵杵磨針，功到自成\n逆水行舟，不進則退\n堅持不懈，終抵彼岸",
+      "WK,WK,BH": "初始凶險，過程中遇到阻礙，最終平穩。整體小凶。\n\n初凶中阻，末歸平靜\n穩如磐石，靜若處子\n以柔克剛，以靜制動\n平和處世，安康長久",
+      "WK,SS,WS": "初始凶險，過程中付出努力，最終結果吉利。整體小凶。\n\n初凶中勞，末得圓滿\n勤耕不輟，碩果累累\n天道酬勤，人道酬善\n春華秋實，福運綿長",
+      "WK,SS,WK": "初始凶險，過程中付出努力，最終結果凶險。整體大凶。\n\n初凶中勞，末路多艱\n勞而無功，時運不濟\n韜光養晦，靜待時機\n積蓄力量，東山再起",
+      "WK,SS,SS": "初始凶險，過程中付出努力，最終付出多收穫少。整體大凶。\n\n初凶中勞，末得薄收\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "WK,SS,SK": "初始凶險，過程中付出努力，最終通過努力成功。整體小凶。\n\n初凶中勞，末靠自強\n精衛填海，愚公移山\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "WK,SS,BH": "初始凶險，過程中付出努力，最終平穩。整體小凶。\n\n初凶中勞，末歸平靜\n平和安泰，穩健前行\n知足常樂，心安理得\n平淡是真，安康是福",
+      "WK,SK,WS": "初始凶險，過程中克服困難，最終結果吉利。整體小吉。\n\n初凶中克，末得大成\n披荆斩棘，終見坦途\n勇者無懼，智者無憂\n成就偉業，名揚四方",
+      "WK,SK,WK": "初始凶險，過程中克服困難，最終結果凶險。整體小凶。\n\n初凶中克，末路艱辛\n逆水行舟，不進則退\n堅守正道，不忘初心\n黑暗過後，必見曙光",
+      "WK,SK,SS": "初始凶險，過程中克服困難，最終付出多收穫少。整體小凶。\n\n初凶中克，末勞少獲\n耕耘雖苦，天道酬勤\n積少成多，聚沙成塔\n堅持不懈，終有回報",
+      "WK,SK,SK": "初始凶險，過程中克服困難，最終通過努力成功。整體小吉。\n\n初凶中克，末靠自強\n千錘百煉，終成利器\n風雨過後，見彩虹美\n成就非凡，福澤綿長",
+      "WK,SK,BH": "初始凶險，過程中克服困難，最終平穩。整體小吉。\n\n初凶中克，末歸平靜\n穩健前行，安泰無憂\n以剛克柔，以動制靜\n平衡陰陽，福壽安康",
+      "WK,BH,WS": "初始凶險，過程平穩，最終結果吉利。整體小凶。\n\n初凶中平，末得圓滿\n穩中求進，順水行舟\n平和安泰，福運自來\n吉祥如意，萬事順遂",
+      "WK,BH,WK": "初始凶險，過程平穩，最終結果凶險。整體大凶。\n\n初凶中平，末路多艱\n居安思危，未雨綢繆\n以靜制動，以守為攻\n轉危為安，化險為夷",
+      "WK,BH,SS": "初始凶險，過程平穩，最終付出多收穫少。整體大凶。\n\n初凶中平，末勞少獲\n知足常樂，隨遇而安\n勤儉持家，細水長流\n福雖遲來，終將降至",
+      "WK,BH,SK": "初始凶險，過程平穩，最終通過努力成功。整體小凶。\n\n初凶中平，末靠自強\n穩中求進，勤能補拙\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "WK,BH,BH": "初始凶險，過程平穩，最終平穩。整體大凶。\n\n初凶中平，末歸平靜\n四平八穩，安泰無憂\n平和處世，安康長久\n福澤綿延，吉祥如意",
+      "SS,WS,WS": "初始付出多收穫少，過程中得到幫助，最終結果吉利。整體小吉。\n\n初勞中助，末得圓滿\n勤耕不輟，天道酬勤\n積善之家，必有餘慶\n春華秋實，福運綿長",
+      "SS,WS,WK": "初始付出多收穫少，過程中得到幫助，最終結果凶險。整體小凶。\n\n初勞中助，末路多艱\n勞而無功，時運不濟\n韜光養晦，靜待時機\n積蓄力量，東山再起",
+      "SS,WS,SS": "初始付出多收穫少，過程中得到幫助，最終付出多收穫少。整體小凶。\n\n初勞中助，末得薄收\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "SS,WS,SK": "初始付出多收穫少，過程中得到幫助，最終通過努力成功。整體小吉。\n\n初勞中助，末靠自強\n精衛填海，愚公移山\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "SS,WS,BH": "初始付出多收穫少，過程中得到幫助，最終平穩。整體小吉。\n\n初勞中助，末歸平靜\n平和安泰，穩健前行\n知足常樂，心安理得\n平淡是真，安康是福",
+      "SS,WK,WS": "初始付出多收穫少，過程中遇到阻礙，最終結果吉利。整體小凶。\n\n初勞中阻，末得吉慶\n逆水行舟，不進則退\n堅持不懈，終抵彼岸\n雨過天晴，見虹萬里",
+      "SS,WK,WK": "初始付出多收穫少，過程中遇到阻礙，最終結果凶險。整體大凶。\n\n初勞中阻，末路多艱\n暗流潛藏，謹言慎行\n韜光養晦，以待時機\n守得雲開，自見月明",
+      "SS,WK,SS": "初始付出多收穫少，過程中遇到阻礙，最終付出多收穫少。整體大凶。\n\n初勞中阻，末得薄收\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "SS,WK,SK": "初始付出多收穫少，過程中遇到阻礙，最終通過努力成功。整體小凶。\n\n初勞中阻，末靠自強\n鐵杵磨針，功到自成\n逆水行舟，不進則退\n堅持不懈，終抵彼岸",
+      "SS,WK,BH": "初始付出多收穫少，過程中遇到阻礙，最終平穩。整體小凶。\n\n初勞中阻，末歸平靜\n穩如磐石，靜若處子\n以柔克剛，以靜制動\n平和處世，安康長久",
+      "SS,SS,WS": "初始付出多收穫少，過程中付出努力，最終結果吉利。整體小凶。\n\n初勞中勞，末得圓滿\n勤耕不輟，碩果累累\n天道酬勤，人道酬善\n春華秋實，福運綿長",
+      "SS,SS,WK": "初始付出多收穫少，過程中付出努力，最終結果凶險。整體大凶。\n\n初勞中勞，末路多艱\n勞而無功，時運不濟\n韜光養晦，靜待時機\n積蓄力量，東山再起",
+      "SS,SS,SS": "初始付出多收穫少，過程中付出努力，最終付出多收穫少。整體大凶。\n\n初勞中勞，末得薄收\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "SS,SS,SK": "初始付出多收穫少，過程中付出努力，最終通過努力成功。整體小凶。\n\n初勞中勞，末靠自強\n精衛填海，愚公移山\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "SS,SS,BH": "初始付出多收穫少，過程中付出努力，最終平穩。整體小凶。\n\n初勞中勞，末歸平靜\n平和安泰，穩健前行\n知足常樂，心安理得\n平淡是真，安康是福",
+      "SS,SK,WS": "初始付出多收穫少，過程中克服困難，最終結果吉利。整體小吉。\n\n初勞中克，末得大成\n披荆斩棘，終見坦途\n勇者無懼，智者無憂\n成就偉業，名揚四方",
+      "SS,SK,WK": "初始付出多收穫少，過程中克服困難，最終結果凶險。整體小凶。\n\n初勞中克，末路艱辛\n逆水行舟，不進則退\n堅守正道，不忘初心\n黑暗過後，必見曙光",
+      "SS,SK,SS": "初始付出多收穫少，過程中克服困難，最終付出多收穫少。整體小凶。\n\n初勞中克，末勞少獲\n耕耘雖苦，天道酬勤\n積少成多，聚沙成塔\n堅持不懈，終有回報",
+      "SS,SK,SK": "初始付出多收穫少，過程中克服困難，最終通過努力成功。整體小吉。\n\n初勞中克，末靠自強\n千錘百煉，終成利器\n風雨過後，見彩虹美\n成就非凡，福澤綿長",
+      "SS,SK,BH": "初始付出多收穫少，過程中克服困難，最終平穩。整體小吉。\n\n初勞中克，末歸平靜\n穩健前行，安泰無憂\n以剛克柔，以動制靜\n平衡陰陽，福壽安康",
+      "SS,BH,WS": "初始付出多收穫少，過程平穩，最終結果吉利。整體小吉。\n\n初勞中平，末得圓滿\n穩中求進，順水行舟\n平和安泰，福運自來\n吉祥如意，萬事順遂",
+      "SS,BH,WK": "初始付出多收穫少，過程平穩，最終結果凶險。整體小凶。\n\n初勞中平，末路多艱\n居安思危，未雨綢繆\n以靜制動，以守為攻\n轉危為安，化險為夷",
+      "SS,BH,SS": "初始付出多收穫少，過程平穩，最終付出多收穫少。整體小凶。\n\n初勞中平，末勞少獲\n知足常樂，隨遇而安\n勤儉持家，細水長流\n福雖遲來，終將降至",
+      "SS,BH,SK": "初始付出多收穫少，過程平穩，最終通過努力成功。整體小吉。\n\n初勞中平，末靠自強\n穩中求進，勤能補拙\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "SS,BH,BH": "初始付出多收穫少，過程平穩，最終平穩。整體小吉。\n\n初勞中平，末歸平靜\n四平八穩，安泰無憂\n平和處世，安康長久\n福澤綿延，吉祥如意",
+      "SK,WS,WS": "初始通過努力成功，過程中得到幫助，最終結果吉利。整體大吉。\n\n初克中助，末得圓滿\n披荆斩棘，終見坦途\n勇者無懼，智者無憂\n成就偉業，名揚四方",
+      "SK,WS,WK": "初始通過努力成功，過程中得到幫助，最終結果凶險。整體小吉。\n\n初克中助，末路艱辛\n逆水行舟，不進則退\n堅守正道，不忘初心\n黑暗過後，必見曙光",
+      "SK,WS,SS": "初始通過努力成功，過程中得到幫助，最終付出多收穫少。整體小吉。\n\n初克中助，末勞少獲\n耕耘雖苦，天道酬勤\n積少成多，聚沙成塔\n堅持不懈，終有回報",
+      "SK,WS,SK": "初始通過努力成功，過程中得到幫助，最終通過努力成功。整體大吉。\n\n初克中助，末靠自強\n千錘百煉，終成利器\n風雨過後，見彩虹美\n成就非凡，福澤綿長",
+      "SK,WS,BH": "初始通過努力成功，過程中得到幫助，最終平穩。整體大吉。\n\n初克中助，末歸平靜\n穩健前行，安泰無憂\n以剛克柔，以動制靜\n平衡陰陽，福壽安康",
+      "SK,WK,WS": "初始通過努力成功，過程中遇到阻礙，最終結果吉利。整體小吉。\n\n初克中阻，末得吉慶\n逆水行舟，不進則退\n堅持不懈，終抵彼岸\n雨過天晴，見虹萬里",
+      "SK,WK,WK": "初始通過努力成功，過程中遇到阻礙，最終結果凶險。整體小凶。\n\n初克中阻，末路多艱\n暗流潛藏，謹言慎行\n韜光養晦，以待時機\n守得雲開，自見月明",
+      "SK,WK,SS": "初始通過努力成功，過程中遇到阻礙，最終付出多收穫少。整體小凶。\n\n初克中阻，末勞少獲\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "SK,WK,SK": "初始通過努力成功，過程中遇到阻礙，最終通過努力成功。整體小吉。\n\n初克中阻，末靠自強\n鐵杵磨針，功到自成\n逆水行舟，不進則退\n堅持不懈，終抵彼岸",
+      "SK,WK,BH": "初始通過努力成功，過程中遇到阻礙，最終平穩。整體小吉。\n\n初克中阻，末歸平靜\n穩如磐石，靜若處子\n以柔克剛，以靜制動\n平和處世，安康長久",
+      "SK,SS,WS": "初始通過努力成功，過程中付出努力，最終結果吉利。整體小吉。\n\n初克中勞，末得圓滿\n勤耕不輟，碩果累累\n天道酬勤，人道酬善\n春華秋實，福運綿長",
+      "SK,SS,WK": "初始通過努力成功，過程中付出努力，最終結果凶險。整體小凶。\n\n初克中勞，末路多艱\n勞而無功，時運不濟\n韜光養晦，靜待時機\n積蓄力量，東山再起",
+      "SK,SS,SS": "初始通過努力成功，過程中付出努力，最終付出多收穫少。整體小凶。\n\n初克中勞，末得薄收\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "SK,SS,SK": "初始通過努力成功，過程中付出努力，最終通過努力成功。整體小吉。\n\n初克中勞，末靠自強\n精衛填海，愚公移山\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "SK,SS,BH": "初始通過努力成功，過程中付出努力，最終平穩。整體小吉。\n\n初克中勞，末歸平靜\n平和安泰，穩健前行\n知足常樂，心安理得\n平淡是真，安康是福",
+      "SK,SK,WS": "初始通過努力成功，過程中克服困難，最終結果吉利。整體大吉。\n\n初克中克，末得大成\n披荆斩棘，終見坦途\n勇者無懼，智者無憂\n成就偉業，名揚四方",
+      "SK,SK,WK": "初始通過努力成功，過程中克服困難，最終結果凶險。整體小吉。\n\n初克中克，末路艱辛\n逆水行舟，不進則退\n堅守正道，不忘初心\n黑暗過後，必見曙光",
+      "SK,SK,SS": "初始通過努力成功，過程中克服困難，最終付出多收穫少。整體小吉。\n\n初克中克，末勞少獲\n耕耘雖苦，天道酬勤\n積少成多，聚沙成塔\n堅持不懈，終有回報",
+      "SK,SK,SK": "初始通過努力成功，過程中克服困難，最終通過努力成功。整體大吉。\n\n初克中克，末靠自強\n千錘百煉，終成利器\n風雨過後，見彩虹美\n成就非凡，福澤綿長",
+      "SK,SK,BH": "初始通過努力成功，過程中克服困難，最終平穩。整體大吉。\n\n初克中克，末歸平靜\n穩健前行，安泰無憂\n以剛克柔，以動制靜\n平衡陰陽，福壽安康",
+      "SK,BH,WS": "初始通過努力成功，過程平穩，最終結果吉利。整體大吉。\n\n初克中平，末得圓滿\n穩中求進，順水行舟\n平和安泰，福運自來\n吉祥如意，萬事順遂",
+      "SK,BH,WK": "初始通過努力成功，過程平穩，最終結果凶險。整體小吉。\n\n初克中平，末路多艱\n居安思危，未雨綢繆\n以靜制動，以守為攻\n轉危為安，化險為夷",
+      "SK,BH,SS": "初始通過努力成功，過程平穩，最終付出多收穫少。整體小吉。\n\n初克中平，末勞少獲\n知足常樂，隨遇而安\n勤儉持家，細水長流\n福雖遲來，終將降至",
+      "SK,BH,SK": "初始通過努力成功，過程平穩，最終通過努力成功。整體大吉。\n\n初克中平，末靠自強\n穩中求進，勤能補拙\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "SK,BH,BH": "初始通過努力成功，過程平穩，最終平穩。整體大吉。\n\n初克中平，末歸平靜\n四平八穩，安泰無憂\n平和處世，安康長久\n福澤綿延，吉祥如意",
+      "BH,WS,WS": "初始平和，過程中得到幫助，最終結果吉利。整體大吉。\n\n初平中助，末得圓滿\n穩中求進，順水行舟\n平和安泰，福運自來\n吉祥如意，萬事順遂",
+      "BH,WS,WK": "初始平和，過程中得到幫助，最終結果凶險。整體小吉。\n\n初平中助，末路多艱\n居安思危，未雨綢繆\n以靜制動，以守為攻\n轉危為安，化險為夷",
+      "BH,WS,SS": "初始平和，過程中得到幫助，最終付出多收穫少。整體小吉。\n\n初平中助，末勞少獲\n知足常樂，隨遇而安\n勤儉持家，細水長流\n福雖遲來，終將降至",
+      "BH,WS,SK": "初始平和，過程中得到幫助，最終通過努力成功。整體大吉。\n\n初平中助，末靠自強\n穩中求進，勤能補拙\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "BH,WS,BH": "初始平和，過程中得到幫助，最終平穩。整體大吉。\n\n初平中助，末歸平靜\n四平八穩，安泰無憂\n平和處世，安康長久\n福澤綿延，吉祥如意",
+      "BH,WK,WS": "初始平和，過程中遇到阻礙，最終結果吉利。整體小吉。\n\n初平中阻，末得吉慶\n逆水行舟，不進則退\n堅持不懈，終抵彼岸\n雨過天晴，見虹萬里",
+      "BH,WK,WK": "初始平和，過程中遇到阻礙，最終結果凶險。整體小凶。\n\n初平中阻，末路多艱\n暗流潛藏，謹言慎行\n韜光養晦，以待時機\n守得雲開，自見月明",
+      "BH,WK,SS": "初始平和，過程中遇到阻礙，最終付出多收穫少。整體小凶。\n\n初平中阻，末勞少獲\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "BH,WK,SK": "初始平和，過程中遇到阻礙，最終通過努力成功。整體小吉。\n\n初平中阻，末靠自強\n鐵杵磨針，功到自成\n逆水行舟，不進則退\n堅持不懈，終抵彼岸",
+      "BH,WK,BH": "初始平和，過程中遇到阻礙，最終平穩。整體小吉。\n\n初平中阻，末歸平靜\n穩如磐石，靜若處子\n以柔克剛，以靜制動\n平和處世，安康長久",
+      "BH,SS,WS": "初始平和，過程中付出努力，最終結果吉利。整體小吉。\n\n初平中勞，末得圓滿\n勤耕不輟，碩果累累\n天道酬勤，人道酬善\n春華秋實，福運綿長",
+      "BH,SS,WK": "初始平和，過程中付出努力，最終結果凶險。整體小凶。\n\n初平中勞，末路多艱\n勞而無功，時運不濟\n韜光養晦，靜待時機\n積蓄力量，東山再起",
+      "BH,SS,SS": "初始平和，過程中付出努力，最終付出多收穫少。整體小凶。\n\n初平中勞，末得薄收\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "BH,SS,SK": "初始平和，過程中付出努力，最終通過努力成功。整體小吉。\n\n初平中勞，末靠自強\n精衛填海，愚公移山\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "BH,SS,BH": "初始平和，過程中付出努力，最終平穩。整體小吉。\n\n初平中勞，末歸平靜\n平和安泰，穩健前行\n知足常樂，心安理得\n平淡是真，安康是福",
+      "BH,SK,WS": "初始平和，過程中克服困難，最終結果吉利。整體大吉。\n\n初平中克，末得大成\n披荆斩棘，終見坦途\n勇者無懼，智者無憂\n成就偉業，名揚四方",
+      "BH,SK,WK": "初始平和，過程中克服困難，最終結果凶險。整體小吉。\n\n初平中克，末路艱辛\n逆水行舟，不進則退\n堅守正道，不忘初心\n黑暗過後，必見曙光",
+      "BH,SK,SS": "初始平和，過程中克服困難，最終付出多收穫少。整體小吉。\n\n初平中克，末勞少獲\n耕耘雖苦，天道酬勤\n積少成多，聚沙成塔\n堅持不懈，終有回報",
+      "BH,SK,SK": "初始平和，過程中克服困難，最終通過努力成功。整體大吉。\n\n初平中克，末靠自強\n千錘百煉，終成利器\n風雨過後，見彩虹美\n成就非凡，福澤綿長",
+      "BH,SK,BH": "初始平和，過程中克服困難，最終平穩。整體大吉。\n\n初平中克，末歸平靜\n穩健前行，安泰無憂\n以剛克柔，以動制靜\n平衡陰陽，福壽安康",
+      "BH,BH,WS": "初始平和，過程平穩，最終結果吉利。整體大吉。\n\n初平中平，末得圓滿\n四平八穩，安泰無憂\n平和處世，安康長久\n福澤綿延，吉祥如意",
+      "BH,BH,WK": "初始平和，過程平穩，最終結果凶險。整體小凶。\n\n初平中平，末路多艱\n居安思危，未雨綢繆\n以靜制動，以守為攻\n轉危為安，化險為夷",
+      "BH,BH,SS": "初始平和，過程平穩，最終付出多收穫少。整體小凶。\n\n初平中平，末勞少獲\n知足常樂，隨遇而安\n勤儉持家，細水長流\n福雖遲來，終將降至",
+      "BH,BH,SK": "初始平和，過程平穩，最終通過努力成功。整體大吉。\n\n初平中平，末靠自強\n穩中求進，勤能補拙\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "BH,BH,BH": "初始平和，過程平穩，最終平穩。整體大吉。\n\n初平中平，末歸平靜\n四平八穩，安泰無憂\n平和處世，安康長久\n福澤綿延，吉祥如意"
+    };
+
+    function calculateHexagramFromTime(year, month, day, hour) {
+      const sum = year + month + day + hour;
+      const upper = sum % 8;
+      const lower = (sum + 1) % 8;
+      const movingLine = ((sum + 2) % 6) + 1;
+      return { upper, lower, movingLine };
+    }
+
+    function calculateHexagramFromThreeDigits(num1, num2, num3) {
+      if (isNaN(num1) || isNaN(num2) || isNaN(num3) || num1 < 100 || num1 > 999 || num2 < 100 || num2 > 999 || num3 < 100 || num3 > 999) return null;
+      const upper = num1 % 8;
+      const lower = num2 % 8;
+      const movingLine = (num3 % 6) || 6;
+      return { upper, lower, movingLine };
+    }
+
+    function calculateHexagramFromManual(upper, lower, movingLine) {
+      upper = parseInt(upper);
+      lower = parseInt(lower);
+      movingLine = parseInt(movingLine);
+      if (isNaN(upper) || isNaN(lower) || isNaN(movingLine) || upper < 1 || upper > 8 || lower < 1 || lower > 8 || movingLine < 1 || movingLine > 6) return null;
+      upper = (upper - 1 + 8) % 8;
+      lower = (lower - 1 + 8) % 8;
+      return { upper, lower, movingLine };
+    }
+
+    function generateHexagram(upper, lower) {
+      return [...baguaLines[lower], ...baguaLines[upper]];
+    }
+
+    function generateMutualHexagram(hexagram) {
+      const lowerLines = [hexagram[1], hexagram[2], hexagram[3]];
+      const upperLines = [hexagram[2], hexagram[3], hexagram[4]];
+      const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
+      const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
+      return { upper, lower, hexagram: [...lowerLines, ...upperLines] };
+    }
+
+    function generateChangedHexagram(hexagram, movingLine) {
+      const changedHexagram = [...hexagram];
+      const index = movingLine - 1;
+      changedHexagram[index] = changedHexagram[index] === "—" ? "--" : "—";
+      const lowerLines = changedHexagram.slice(0, 3);
+      const upperLines = changedHexagram.slice(3, 6);
+      const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
+      const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
+      return { upper, lower, hexagram: changedHexagram };
+    }
+
+    function drawHexagramSVG(hexagram, movingLine = null) {
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("width", "100");
+      svg.setAttribute("height", "120");
+      svg.setAttribute("viewBox", "0 0 100 120");
+
+      const lineHeight = 20;
+      hexagram.forEach((line, index) => {
+        const y = (5 - index) * lineHeight + 10;
+        if (line === "—") {
+          const path = document.createElementNS(svgNS, "path");
+          path.setAttribute("d", `M 20 ${y} H 80`);
+          path.setAttribute("stroke", index + 1 === movingLine ? "red" : "black");
+          path.setAttribute("stroke-width", "4");
+          svg.appendChild(path);
+        } else {
+          const path1 = document.createElementNS(svgNS, "path");
+          path1.setAttribute("d", `M 20 ${y} H 45`);
+          path1.setAttribute("stroke", index + 1 === movingLine ? "red" : "black");
+          path1.setAttribute("stroke-width", "4");
+          svg.appendChild(path1);
+          const path2 = document.createElementNS(svgNS, "path");
+          path2.setAttribute("d", `M 55 ${y} H 80`);
+          path2.setAttribute("stroke", index + 1 === movingLine ? "red" : "black");
+          path2.setAttribute("stroke-width", "4");
+          svg.appendChild(path2);
+        }
+      });
+
+      return svg.outerHTML;
+    }
+
+    function displayHexagram(hexagram, movingLine = null) {
+      return drawHexagramSVG(hexagram, movingLine);
+    }
+
+    function determineWuxingStatus(element, timeElement) {
+      if (!element || !timeElement) return "死";
+      if (element === timeElement) return "旺";
+      if (fiveRelations.find(r => r.from === element && r.to === timeElement && r.type === "生")) return "相";
+      if (fiveRelations.find(r => r.from === timeElement && r.to === element && r.type === "生")) return "休";
+      if (fiveRelations.find(r => r.from === element && r.to === timeElement && r.type === "剋")) return "囚";
+      return "死";
+    }
+
+    function analyzeFiveElementRelations(bodyElement, useElement, timeElement) {
+      const statusBody = determineWuxingStatus(bodyElement, timeElement);
+      const statusUse = determineWuxingStatus(useElement, timeElement);
+
+      let relationType = "無";
+      if (useElement === bodyElement) relationType = "比和";
+      else if (fiveRelations.find(r => r.from === useElement && r.to === bodyElement && r.type === "生")) relationType = "用生體";
+      else if (fiveRelations.find(r => r.from === useElement && r.to === bodyElement && r.type === "剋")) relationType = "用剋體";
+      else if (fiveRelations.find(r => r.from === bodyElement && r.to === useElement && r.type === "生")) relationType = "體生用";
+      else if (fiveRelations.find(r => r.from === bodyElement && r.to === useElement && r.type === "剋")) relationType = "體剋用";
+
+      // Map relationType to Wuxing Code
+      let wuxingCode = "BH";
+      if (relationType === "用生體") wuxingCode = "WS";
+      if (relationType === "用剋體") wuxingCode = "WK";
+      if (relationType === "體生用") wuxingCode = "SS";
+      if (relationType === "體剋用") wuxingCode = "SK";
+
+      return {
+        statusBody,
+        statusUse,
+        relationType,
+        wuxingCode,
+        description: `體卦五行：${bodyElement || "未知"}（${statusBody}），用卦五行：${useElement || "未知"}（${statusUse}），關係：${relationType}`
+      };
+    }
+
+    function isGil(type) {
+      if (type === "用生體") return 3; //大吉
+      if (type === "比和") return 2; //中吉
+      if (type === "體剋用") return 1; //小吉
+      if (type === "體生用") return -1; //小凶
+      if (type === "用剋體") return -2; //中凶
+      return 0; //平/無
+    }
+
+    function getFinalVerdict(relations) {
+      const totalScore = relations.reduce((sum, rel) => sum + isGil(rel), 0);
+      
+      if (totalScore >= 5) return "大吉";
+      if (totalScore >= 2) return "中吉";
+      if (totalScore >= 1) return "小吉";
+      if (totalScore === 0) return "平";
+      if (totalScore <= -4) return "大凶";
+      if (totalScore <= -2) return "中凶";
+      if (totalScore <= -1) return "小凶";
+      return "平";
+    }
+
+    function getAdvice(relations) {
+      const type1 = relations[0], type2 = relations[1], type3 = relations[2];
+      const adviceMap = {
+        "用生體": "從開始到結束都對自身非常有利，一帆風順。",
+        "比和": "事事和諧，平順無阻，適合穩步前進。",
+        "體剋用": "事情有成功的潛力，但不是輕鬆得來，需要付出努力和智慧去克服。",
+        "體生用": "自身力量有所損耗，付出的多，收穫的少，需要注意消耗。",
+        "用剋體": "從頭到尾都處於被動或不利的局面，難以有所作為。"
+      };
+      
+      if (type1 === "用生體" && type2 === "用生體" && type3 === "用生體") return "三者皆為用生體，大吉大利，事半功倍，無往不利。";
+      if (type1 === "用剋體" && type2 === "用剋體" && type3 === "用剋體") return "三者皆為用剋體，大凶之象，阻礙重重，應小心應對。";
+      if (isGil(type1) > 0 && isGil(type2) > 0 && isGil(type3) < 0) return "先吉後凶，開始順利但最終有變故，需防範風險。";
+      if (isGil(type1) < 0 && isGil(type2) < 0 && isGil(type3) > 0) return "先凶後吉，起初困難但最終能克服，要有耐心。";
+      return "綜合分析，" + adviceMap[type1] + adviceMap[type2] + adviceMap[type3];
+    }
+
+    // New Function to get Wuxing Status Description
+    function getWuxingStatusDescription(wuxingCodes) {
+      const key = wuxingCodes.join(',');
+      const description = wuxingStatusMap[key];
+      if (description) {
+        return `<div class="advice mt-4">
+          <strong class="text-lg"><i class="fas fa-balance-scale mr-2"></i>五行生剋狀態</strong>
+          <pre class="whitespace-pre-wrap mt-2">${description}</pre>
+        </div>`;
+      }
+      return `<p class="mt-4 text-red-500">此組合 (${key}) 無相關五行生剋狀態資料。</p>`;
+    }
+
+    function getPointOnCircle(cx, cy, r, angleRad) {
+      return {
+        x: cx + r * Math.cos(angleRad),
+        y: cy + r * Math.sin(angleRad)
+      };
+    }
+
+    function drawRelationGraph(relationships, allTrigrams, timeElement, question) {
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("width", "800"); 
+      svg.setAttribute("height", "750"); 
+      svg.setAttribute("viewBox", "0 0 800 750"); 
+
+      const defs = document.createElementNS(svgNS, "defs");
+      const marker = document.createElementNS(svgNS, "marker");
+      marker.setAttribute("id", "arrow");
+      marker.setAttribute("markerWidth", "10");
+      marker.setAttribute("markerHeight", "7");
+      marker.setAttribute("refX", "9"); 
+      marker.setAttribute("refY", "3.5");
+      marker.setAttribute("orient", "auto");
+      const path = document.createElementNS(svgNS, "path");
+      path.setAttribute("d", "M 0 0 L 10 3.5 L 0 7 Z");
+      path.setAttribute("fill", "currentColor");
+      marker.appendChild(path);
+      defs.appendChild(marker);
+      svg.appendChild(defs);
+      
+      const background = document.createElementNS(svgNS, "rect");
+      background.setAttribute("width", "100%");
+      background.setAttribute("height", "100%");
+      background.setAttribute("fill", "#f0f0f0");
+      svg.appendChild(background);
+
+      const centerX = 400, centerY = 390, radius = 250, circleRadius = 40; 
+      const positions = [];
+      const elementNodeMap = new Map(); 
+      for (let i = 0; i < 5; i++) {
+        const angle = (i * 72 - 90) * Math.PI / 180;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        const pos = {x, y, element: fiveElementsOrder[i], angle};
+        positions.push(pos);
+        elementNodeMap.set(fiveElementsOrder[i], pos);
+      }
+
+      const elementTrigrams = { "火": [], "土": [], "金": [], "水": [], "木": [] };
+      allTrigrams.forEach(tri => {
+        const ele = trigramFiveElement[tri.name];
+        if (ele) elementTrigrams[ele].push(tri.label + tri.name);
+      });
+      const bodyElementFive = relationships[0].bodyElement; 
+
+      // 繪製五行生克箭頭 (固定箭頭，非體用關係)
+      fiveRelations.forEach(relation => {
+        const fromNode = elementNodeMap.get(relation.from);
+        const toNode = elementNodeMap.get(relation.to);
+
+        if (fromNode && toNode) {
+          let fromRadius = circleRadius;
+          let toRadius = circleRadius;
+          if (fromNode.element === bodyElementFive) fromRadius = 50;
+          if (toNode.element === bodyElementFive) toRadius = 50;
+
+          const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x);
+
+          const startPoint = getPointOnCircle(fromNode.x, fromNode.y, fromRadius, angle);
+          const endPoint = getPointOnCircle(toNode.x, toNode.y, toRadius, angle + Math.PI); 
+
+          const line = document.createElementNS(svgNS, "line");
+          line.setAttribute("x1", startPoint.x);
+          line.setAttribute("y1", startPoint.y);
+          line.setAttribute("x2", endPoint.x);
+          line.setAttribute("y2", endPoint.y);
+          line.setAttribute("stroke", relation.type === "生" ? "green" : "red");
+          line.setAttribute("stroke-width", "2");
+          line.setAttribute("marker-end", "url(#arrow)");
+          svg.appendChild(line);
+        }
+      });
+      
+      // 繪製五行圓圈和文字
+      positions.forEach(pos => {
+        const hasTrigram = elementTrigrams[pos.element].length > 0;
+        let currentRadius = circleRadius;
+        let currentStrokeWidth = wuxingStatus[determineWuxingStatus(pos.element, timeElement)].strokeWidth;
+
+        if (pos.element === bodyElementFive) {
+          currentRadius = 50; 
+          currentStrokeWidth = 6; 
+        }
+
+        const currentFontSize = hasTrigram ? 24 : 18;
+
+        const g = document.createElementNS(svgNS, "g");
+        const status = determineWuxingStatus(pos.element, timeElement);
+        const statusProps = wuxingStatus[status] || wuxingStatus["死"];
+
+        g.setAttribute("opacity", statusProps.opacity);
+        const circle = document.createElementNS(svgNS, "circle");
+        circle.setAttribute("cx", pos.x);
+        circle.setAttribute("cy", pos.y);
+        circle.setAttribute("r", currentRadius);
+        circle.setAttribute("stroke", "#444");
+        circle.setAttribute("stroke-width", currentStrokeWidth); 
+        circle.setAttribute("fill", fiveElementColors[pos.element] || "#eee");
+        g.appendChild(circle);
+
+        const elementText = document.createElementNS(svgNS, "text");
+        elementText.setAttribute("x", pos.x);
+        elementText.setAttribute("y", pos.y + currentFontSize / 4);
+        elementText.setAttribute("text-anchor", "middle");
+        elementText.setAttribute("font-size", `${currentFontSize}px`);
+        elementText.setAttribute("fill", "#000");
+        elementText.textContent = pos.element;
+        g.appendChild(elementText);
+        svg.appendChild(g);
+
+        const statusText = document.createElementNS(svgNS, "text");
+        statusText.setAttribute("x", pos.x);
+        statusText.setAttribute("y", pos.y + currentRadius + 20);
+        statusText.setAttribute("text-anchor", "middle");
+        statusText.setAttribute("font-size", "14px");
+        statusText.setAttribute("fill", "#000");
+        statusText.textContent = `(${status})`;
+        svg.appendChild(statusText);
+      });
+
+      // 繪製卦象名稱
+      positions.forEach((pos, i) => {
+        const trigList = elementTrigrams[pos.element];
+        const hasTrigram = trigList.length > 0;
+        if (hasTrigram) {
+          let textOffsetX = 0;
+          let textOffsetY = 0;
+          let textAnchor = "middle";
+
+          if (pos.element === "木" || pos.element === "水") {
+            textOffsetX = -80; 
+            textAnchor = "end";
+          }
+          else if (pos.element === "火" || pos.element === "金") {
+            textOffsetX = 80; 
+            textAnchor = "start";
+          }
+          else if (pos.element === "土") {
+            textOffsetY = (pos.y < centerY) ? -60 : 60; 
+            textAnchor = "middle";
+          }
+          
+          const trigText = document.createElementNS(svgNS, "text");
+          trigText.setAttribute("x", pos.x + textOffsetX);
+          trigText.setAttribute("y", pos.y + textOffsetY);
+          trigText.setAttribute("text-anchor", textAnchor);
+          trigText.setAttribute("font-size", "16px");
+          trigText.setAttribute("fill", "#000");
+          trigText.textContent = trigList.join(', ');
+          svg.appendChild(trigText);
+        }
+      });
+      
+      // 繪製體用關係箭頭與文字
+      relationships.forEach((rel, index) => {
+        const bodyNode = elementNodeMap.get(rel.bodyElement);
+        const useNode = elementNodeMap.get(rel.useElement);
+        // 調整偏移量讓多條關係線上的文字錯開
+        const textOffsetYOffset = (index - 1) * 20; 
+        
+        if (bodyNode && useNode && rel.relationType !== "比和") {
+            const relText = document.createElementNS(svgNS, "text");
+            relText.setAttribute("font-size", "14px");
+            relText.setAttribute("font-weight", "bold");
+            relText.setAttribute("fill", colors[rel.relationType] || "gray");
+            relText.textContent = rel.relationType;
+
+            const bodyLabel = document.createElementNS(svgNS, "text");
+            bodyLabel.setAttribute("font-size", "14px");
+            bodyLabel.setAttribute("font-weight", "bold");
+            bodyLabel.setAttribute("fill", "#000");
+            bodyLabel.textContent = "體";
+
+            const useLabel = document.createElementNS(svgNS, "text");
+            useLabel.setAttribute("font-size", "14px");
+            useLabel.setAttribute("font-weight", "bold");
+            useLabel.setAttribute("fill", "#000");
+            useLabel.textContent = (index === 0) ? "用 (本)" : (index === 1 ? "用 (互)" : "用 (變)");
+
+                const bodyRadius = (bodyNode.element === bodyElementFive) ? 50 : circleRadius;
+                const useRadius = (useNode.element === bodyElementFive) ? 50 : circleRadius;
+
+                const angle = Math.atan2(useNode.y - bodyNode.y, useNode.x - bodyNode.x);
+                const startPoint = getPointOnCircle(bodyNode.x, bodyNode.y, bodyRadius, angle);
+                const endPoint = getPointOnCircle(useNode.x, useNode.y, useRadius, angle + Math.PI);
+                
+                const line = document.createElementNS(svgNS, "line");
+                line.setAttribute("x1", startPoint.x);
+                line.setAttribute("y1", startPoint.y);
+                line.setAttribute("x2", endPoint.x);
+                line.setAttribute("y2", endPoint.y);
+                line.setAttribute("stroke", colors[rel.relationType] || "gray");
+                line.setAttribute("stroke-width", "4");
+                line.setAttribute("marker-end", "url(#arrow)");
+                svg.appendChild(line);
+
+                relText.setAttribute("x", (startPoint.x + endPoint.x) / 2);
+                relText.setAttribute("y", (startPoint.y + endPoint.y) / 2 - 10 + textOffsetYOffset);
+                relText.setAttribute("text-anchor", "middle");
+                svg.appendChild(relText);
+            
+                // 只在體卦處標註「體」字，所有用卦處標註帶括號的「用」字
+                if (index === 0) { 
+                    bodyLabel.setAttribute("x", bodyNode.x);
+                    bodyLabel.setAttribute("y", bodyNode.y - bodyRadius - 5);
+                    bodyLabel.setAttribute("text-anchor", "middle");
+                    svg.appendChild(bodyLabel);
+                }
+
+                useLabel.setAttribute("x", useNode.x);
+                useLabel.setAttribute("y", useNode.y - useRadius - 5 + textOffsetYOffset); // 調整用卦標籤位置
+                useLabel.setAttribute("text-anchor", "middle");
+                svg.appendChild(useLabel);
+
+        } else if (rel.relationType === "比和") { // 比和的情況
+            const nodeRadius = (bodyNode.element === bodyElementFive) ? 50 : circleRadius;
+            const relText = document.createElementNS(svgNS, "text");
+            relText.setAttribute("font-size", "14px");
+            relText.setAttribute("font-weight", "bold");
+            relText.setAttribute("fill", colors[rel.relationType] || "gray");
+            relText.textContent = rel.relationType;
+            relText.setAttribute("x", bodyNode.x);
+            relText.setAttribute("y", bodyNode.y - nodeRadius - 10 + textOffsetYOffset);
+            relText.setAttribute("text-anchor", "middle");
+            svg.appendChild(relText);
+            
+            // 比和時，體用在同一元素上
+            const bodyLabel = document.createElementNS(svgNS, "text");
+            bodyLabel.setAttribute("font-size", "14px");
+            bodyLabel.setAttribute("font-weight", "bold");
+            bodyLabel.setAttribute("fill", "#000");
+            bodyLabel.textContent = "體";
+            
+            const useLabel = document.createElementNS(svgNS, "text");
+            useLabel.setAttribute("font-size", "14px");
+            useLabel.setAttribute("font-weight", "bold");
+            useLabel.setAttribute("fill", "#000");
+            useLabel.textContent = (index === 0) ? "用 (本)" : (index === 1 ? "用 (互)" : "用 (變)");
+            
+            if (index === 0) {
+                bodyLabel.setAttribute("x", bodyNode.x);
+                bodyLabel.setAttribute("y", bodyNode.y + nodeRadius + 5); 
+                bodyLabel.setAttribute("text-anchor", "middle");
+                svg.appendChild(bodyLabel);
+            }
+            
+            useLabel.setAttribute("x", bodyNode.x + 20 + textOffsetYOffset); // 調整用卦標籤位置
+            useLabel.setAttribute("y", bodyNode.y + nodeRadius + 5);
+            useLabel.setAttribute("text-anchor", "middle");
+            svg.appendChild(useLabel);
+        }
+      });
+
+
+      const questionText = document.createElementNS(svgNS, "text");
+      questionText.setAttribute("x", centerX);
+      questionText.setAttribute("y", 40); 
+      questionText.setAttribute("text-anchor", "middle");
+      questionText.setAttribute("font-size", "28px"); 
+      questionText.setAttribute("font-weight", "bold"); 
+      questionText.setAttribute("fill", "#333");
+      questionText.textContent = `卜卦問題：${question || "無"}的五行生克圖`;
+      svg.appendChild(questionText);
+
+      return svg.outerHTML;
+    }
+
+    function downloadSvg(svgHtml, filename) {
+      const blob = new Blob([svgHtml], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function saveDivinationRecord(record) {
+        const records = JSON.parse(localStorage.getItem('divinationRecords')) || [];
+        records.unshift(record);
+        localStorage.setItem('divinationRecords', JSON.stringify(records));
+    }
+
+    function loadRecords() {
+        return JSON.parse(localStorage.getItem('divinationRecords')) || [];
+    }
+
+    function displayRecords(records) {
+        const recordList = document.getElementById("recordList");
+        recordList.innerHTML = '';
+        if (records.length === 0) {
+            recordList.innerHTML = '<p class="text-gray-500">尚無卜卦記錄。</p>';
+            return;
+        }
+        records.forEach((record, index) => {
+            const recordItem = document.createElement('div');
+            recordItem.className = 'p-3 border rounded-md cursor-pointer hover:bg-gray-50';
+            recordItem.innerHTML = `
+                <p class="font-bold text-gray-800">${record.question || '無問題'}</p>
+                <p class="text-sm text-gray-600">${new Date(record.timestamp).toLocaleString()}</p>
+            `;
+            recordItem.addEventListener('click', () => {
+                displayDivinationResult(record);
+                document.getElementById('recordModal').classList.add('hidden');
+            });
+            recordList.appendChild(recordItem);
+        });
+    }
+
+    function exportRecords() {
+        const records = loadRecords();
+        if (records.length === 0) {
+            alert('沒有記錄可以匯出！');
+            return;
+        }
+        const dataStr = JSON.stringify(records, null, 2);
+        const blob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'divination_records.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert('記錄已成功匯出！');
+    }
+
+    function importRecords() {
+        const fileInput = document.getElementById('importFile');
+        fileInput.click();
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedRecords = JSON.parse(event.target.result);
+                    if (!Array.isArray(importedRecords)) {
+                        throw new Error('檔案格式不正確，請選擇有效的JSON檔案。');
+                    }
+                    const currentRecords = loadRecords();
+                    const newRecords = [...importedRecords, ...currentRecords];
+                    localStorage.setItem('divinationRecords', JSON.stringify(newRecords));
+                    alert('記錄已成功匯入！');
+                    fileInput.value = ''; // Reset file input
+                } catch (error) {
+                    alert('匯入失敗：' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        };
+    }
+
+    function displayDivinationResult(resultData) {
+        const {
+            hexagramStr, mutualHexagramStr, changedHexagramStr,
+            hexagramName, mutualHexagramName, changedHexagramName,
+            upperName, lowerName, mutualUpperName, mutualLowerName,
+            changedUpperName, changedLowerName,
+            bodyTrigram, useTrigram, mutualUseTrigram, changedUseTrigram,
+            fiveRelAnalysis, mutualFiveRelAnalysis, changedFiveRelAnalysis,
+            finalVerdict, adviceText, graphHtml,
+            wuxingStatusHtml
+        } = resultData;
+
+        document.getElementById("result").innerHTML = `
+          <div class="flex flex-wrap justify-around gap-4">
+            <div class="hexagram-box bg-gray-50 p-4 rounded-md shadow-sm text-center">
+              <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-yin-yang mr-2"></i>本卦</h3>
+              ${hexagramStr}
+              <p class="text-gray-700">${hexagramName}</p>
+              <p class="text-gray-600"><i class="fas fa-arrow-up mr-1"></i>上卦: ${upperName} (${trigramFiveElement[upperName] || "未知"})</p>
+              <p class="text-gray-600"><i class="fas fa-arrow-down mr-1"></i>下卦: ${lowerName} (${trigramFiveElement[lowerName] || "未知"})</p>
+              <p class="text-gray-600"><i class="fas fa-shield-alt mr-1"></i>體卦: ${bodyTrigram} (${trigramFiveElement[bodyTrigram] || "未知"})</p>
+              <p class="text-gray-600"><i class="fas fa-balance-scale mr-1"></i>本卦體用生剋: ${fiveRelAnalysis.description}</p>
+            </div>
+            <div class="hexagram-box bg-gray-50 p-4 rounded-md shadow-sm text-center">
+              <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-yin-yang mr-2"></i>互卦</h3>
+              ${mutualHexagramStr}
+              <p class="text-gray-700">${mutualHexagramName}</p>
+              <p class="text-gray-600"><i class="fas fa-arrow-up mr-1"></i>上卦: ${mutualUpperName} (${trigramFiveElement[mutualUpperName] || "未知"})</p>
+              <p class="text-gray-600"><i class="fas fa-arrow-down mr-1"></i>下卦: ${mutualLowerName} (${trigramFiveElement[mutualLowerName] || "未知"})</p>
+              <p class="text-gray-600"><i class="fas fa-balance-scale mr-1"></i>互卦與體卦生剋: ${mutualFiveRelAnalysis.description}</p>
+            </div>
+            <div class="hexagram-box bg-gray-50 p-4 rounded-md shadow-sm text-center">
+              <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-yin-yang mr-2"></i>變卦</h3>
+              ${changedHexagramStr}
+              <p class="text-gray-700">${changedHexagramName}</p>
+              <p class="text-gray-600"><i class="fas fa-arrow-up mr-1"></i>上卦: ${changedUpperName} (${trigramFiveElement[changedUpperName] || "未知"})</p>
+              <p class="text-gray-600"><i class="fas fa-arrow-down mr-1"></i>下卦: ${changedLowerName} (${trigramFiveElement[changedLowerName] || "未知"})</p>
+              <p class="text-gray-600"><i class="fas fa-balance-scale mr-1"></i>變卦與體卦生剋: ${changedFiveRelAnalysis.description}</p>
+            </div>
+          </div>
+          <div class="advice mt-4">
+            <strong><i class="fas fa-star mr-2"></i>吉凶判斷：<span class="font-bold text-lg">${finalVerdict}</span></strong>
+            <p class="mt-2"><strong><i class="fas fa-lightbulb mr-2"></i>趨吉避凶建議：</strong>
+            <p>${adviceText}</p>
+          </div>
+          ${wuxingStatusHtml}
+          <button id="viewGraphBtn" class="mt-4 w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200">
+            <i class="fas fa-chart-pie mr-2"></i>查看五行生克圖
+          </button>
+          <button id="downloadGraphBtn" class="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+            <i class="fas fa-download mr-2"></i>下載五行生克圖 (SVG)
+          </button>
+        `;
+
+        document.getElementById("viewGraphBtn").addEventListener("click", () => {
+          const newWindow = window.open('', '_blank', 'width=800,height=750'); 
+          newWindow.document.write(`
+            <!DOCTYPE html>
+            <html lang="zh-Hant">
+            <head>
+              <meta charset="UTF-8">
+              <title>五行生克圖</title>
+            </head>
+            <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh; background:#f0f0f0;">
+              ${graphHtml}
+            </body>
+            </html>
+          `);
+          newWindow.document.close();
+        });
+        document.getElementById("downloadGraphBtn").addEventListener("click", () => downloadSvg(graphHtml, "五行生克圖.svg"));
+    }
+
+    function startDivination() {
+      try {
+        const mode = document.getElementById("divinationMode").value;
+        const question = document.getElementById("questionInput").value;
+        let upper, lower, movingLine;
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        let timeElement;
+        
+        const date = new Date();
+        const day = date.getDate();
+        const monthIndex = date.getMonth();
+
+        if (monthIndex >= 2 && monthIndex <= 4) {
+            timeElement = "木"; 
+        } else if (monthIndex >= 5 && monthIndex <= 7) {
+            timeElement = "火"; 
+        } else if (monthIndex >= 8 && monthIndex <= 10) {
+            timeElement = "金"; 
+        } else {
+            timeElement = "水"; 
+        }
+        
+        const isEarthDay = [2, 5, 8, 11].includes(monthIndex);
+        if (isEarthDay) {
+            const startOfEarthPeriod = new Date(date.getFullYear(), monthIndex, 18);
+            if (date.getTime() >= startOfEarthPeriod.getTime()) {
+                timeElement = "土";
+            }
+        }
+        
+        if (mode === "time") {
+          const y = now.getFullYear();
+          const m = now.getMonth() + 1;
+          const d = now.getDate();
+          const h = now.getHours();
+          ({ upper, lower, movingLine } = calculateHexagramFromTime(y, m, d, h));
+        } else if (mode === "threeDigits") {
+          const num1 = parseInt(document.getElementById("num1Input").value);
+          const num2 = parseInt(document.getElementById("num2Input").value);
+          const num3 = parseInt(document.getElementById("num3Input").value);
+          const result = calculateHexagramFromThreeDigits(num1, num2, num3);
+          if (!result) throw new Error("請輸入三個有效三位數 (100-999)");
+          ({ upper, lower, movingLine } = result);
+        } else if (mode === "manual") {
+          const upperInput = document.getElementById("upperInput").value;
+          const lowerInput = document.getElementById("lowerInput").value;
+          const movingInput = document.getElementById("movingInput").value;
+          const result = calculateHexagramFromManual(upperInput, lowerInput, movingInput);
+          if (!result) throw new Error("請輸入有效數字：上卦/下卦1-8，動爻1-6");
+          ({ upper, lower, movingLine } = result);
+        }
+
+        const upperName = trigramsName[upper] || "未知";
+        const lowerName = trigramsName[lower] || "未知";
+        const hexagramArr = generateHexagram(upper, lower);
+        const hexagramStr = displayHexagram(hexagramArr, movingLine);
+        const hexagramName = sixtyFourHexagrams[`${upper}${lower}`] || "未知卦";
+
+        const mutual = generateMutualHexagram(hexagramArr);
+        const mutualUpperName = trigramsName[mutual.upper] || "未知";
+        const mutualLowerName = trigramsName[mutual.lower] || "未知";
+        const mutualHexagramStr = displayHexagram(mutual.hexagram);
+        const mutualHexagramName = sixtyFourHexagrams[`${mutual.upper}${mutual.lower}`] || "未知卦";
+
+        const changed = generateChangedHexagram(hexagramArr, movingLine);
+        const changedUpperName = trigramsName[changed.upper] || "未知";
+        const changedLowerName = trigramsName[changed.lower] || "未知";
+        const changedHexagramStr = displayHexagram(changed.hexagram);
+        const changedHexagramName = sixtyFourHexagrams[`${changed.upper}${changed.lower}`] || "未知卦";
+
+        let bodyTrigram, useTrigram;
+        if (movingLine >= 4) { 
+          bodyTrigram = lowerName;
+          useTrigram = upperName;
+        } else { 
+          bodyTrigram = upperName;
+          useTrigram = lowerName;
+        }
+
+        const fiveRelAnalysis = analyzeFiveElementRelations(trigramFiveElement[bodyTrigram], trigramFiveElement[useTrigram], timeElement);
+        // 互卦的用卦
+        const mutualUseTrigram = (movingLine >= 4) ? mutualUpperName : mutualLowerName;
+        const mutualFiveRelAnalysis = analyzeFiveElementRelations(trigramFiveElement[bodyTrigram], trigramFiveElement[mutualUseTrigram], timeElement);
+        // 變卦的用卦
+        const changedUseTrigram = (movingLine >= 4) ? changedUpperName : changedLowerName;
+        const changedFiveRelAnalysis = analyzeFiveElementRelations(trigramFiveElement[bodyTrigram], trigramFiveElement[changedUseTrigram], timeElement);
+
+        const allRelations = [fiveRelAnalysis.relationType, mutualFiveRelAnalysis.relationType, changedFiveRelAnalysis.relationType];
+        const finalVerdict = getFinalVerdict(allRelations);
+        const adviceText = getAdvice(allRelations);
+
+        const wuxingCodes = [fiveRelAnalysis.wuxingCode, mutualFiveRelAnalysis.wuxingCode, changedFiveRelAnalysis.wuxingCode];
+        const wuxingStatusHtml = getWuxingStatusDescription(wuxingCodes);
+
+        const allTrigrams = [
+          {name: upperName, label: "本上:"},
+          {name: lowerName, label: "本下:"},
+          {name: mutualUpperName, label: "互上:"},
+          {name: mutualLowerName, label: "互下:"},
+          {name: changedUpperName, label: "變上:"},
+          {name: changedLowerName, label: "變下:"},
+          {name: bodyTrigram, label: "體:"},
+          {name: useTrigram, label: "用(本):"},
+          {name: mutualUseTrigram, label: "用(互):"},
+          {name: changedUseTrigram, label: "用(變):"}
+        ];
+        
+        const relationshipsToDraw = [
+          {bodyElement: trigramFiveElement[bodyTrigram], useElement: trigramFiveElement[useTrigram], relationType: fiveRelAnalysis.relationType},
+          {bodyElement: trigramFiveElement[bodyTrigram], useElement: trigramFiveElement[mutualUseTrigram], relationType: mutualFiveRelAnalysis.relationType},
+          {bodyElement: trigramFiveElement[bodyTrigram], useElement: trigramFiveElement[changedUseTrigram], relationType: changedFiveRelAnalysis.relationType},
+        ];
+
+        const graphHtml = drawRelationGraph(relationshipsToDraw, allTrigrams, timeElement, question);
+
+        // Save record
+        const record = {
+            id: Date.now(),
+            timestamp: now.toISOString(),
+            question: question,
+            hexagramName,
+            mutualHexagramName,
+            changedHexagramName,
+            upperName, lowerName, mutualUpperName, mutualLowerName, changedUpperName, changedLowerName,
+            bodyTrigram, useTrigram, mutualUseTrigram, changedUseTrigram,
+            fiveRelAnalysis, mutualFiveRelAnalysis, changedFiveRelAnalysis,
+            finalVerdict, adviceText, graphHtml,
+            hexagramStr, mutualHexagramStr, changedHexagramStr,
+            wuxingStatusHtml
+        };
+        saveDivinationRecord(record);
+
+        displayDivinationResult(record);
+
+      } catch (error) {
+        console.error("Error:", error);
+        document.getElementById("result").innerHTML = `<p class="text-red-500"><i class="fas fa-exclamation-circle mr-2"></i>錯誤：${error.message}</p>`;
+      }
+    }
+
+    const modeSelect = document.getElementById("divinationMode");
+    const inputFields = document.getElementById("inputFields");
+    modeSelect.addEventListener("change", () => {
+      inputFields.innerHTML = '';
+      const mode = modeSelect.value;
+      if (mode === "threeDigits") {
+        inputFields.innerHTML = `
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-sort-numeric-up mr-2 tooltip" data-tooltip="輸入100-999"></i>第一個三位數（上卦）
+            </label>
+            <input id="num1Input" type="number" min="100" max="999" value="" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-sort-numeric-up mr-2 tooltip" data-tooltip="輸入100-999"></i>第二個三位數（下卦）
+            </label>
+            <input id="num2Input" type="number" min="100" max="999" value="" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-sort-numeric-up mr-2 tooltip" data-tooltip="輸入100-999"></i>第三個三位數（動爻）
+            </label>
+            <input id="num3Input" type="number" min="100" max="999" value="" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        `;
+      } else if (mode === "manual") {
+        inputFields.innerHTML = `
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-arrow-up mr-2 tooltip" data-tooltip="輸入1-8"></i>上卦
+            </label>
+            <input id="upperInput" type="number" min="1" max="8" value="2" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-arrow-down mr-2 tooltip" data-tooltip="輸入1-8"></i>下卦
+            </label>
+            <input id="lowerInput" type="number" min="1" max="8" value="3" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-exchange-alt mr-2 tooltip" data-tooltip="輸入1-6"></i>動爻
+            </label>
+            <input id="movingInput" type="number" min="1" max="6" value="1" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        `;
+      }
+    });
+
+    document.getElementById("btnStart").addEventListener("click", startDivination);
+    document.getElementById("btnViewRecords").addEventListener("click", () => {
+        const records = loadRecords();
+        displayRecords(records);
+        document.getElementById('recordModal').classList.remove('hidden');
+    });
+    document.getElementById("closeModalBtn").addEventListener("click", () => {
+        document.getElementById('recordModal').classList.add('hidden');
+    });
+    document.getElementById("btnExportRecords").addEventListener("click", exportRecords);
+    document.getElementById("btnImportRecords").addEventListener("click", importRecords);
+
+    // Initial load to show default input fields
+    modeSelect.dispatchEvent(new Event('change'));
+  </script>
+</body>
+</html>
