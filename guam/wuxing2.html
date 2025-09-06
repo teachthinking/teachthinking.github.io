@@ -60,19 +60,6 @@
       <input type="text" id="questionInput" placeholder="例如：明天適合出遊嗎？" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
     </div>
 
-    <div class="mb-4">
-      <label for="divinationMode" class="block text-sm font-medium text-gray-700 mb-2">
-        <i class="fas fa-list-ul mr-2 tooltip" data-tooltip="選擇起卦方式"></i>起卦模式
-      </label>
-      <select id="divinationMode" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <option value="time"><i class="fas fa-clock"></i> 時間起卦（自動取當前時間）</option>
-        <option value="threeDigits"><i class="fas fa-calculator"></i> 三位數起卦（輸入三個三位數，如123, 456, 789）</option>
-        <option value="manual"><i class="fas fa-hand-pointer"></i> 手動指定（上卦1-8、下卦1-8、動爻1-6）</option>
-      </select>
-    </div>
-
-    <div id="inputFields" class="space-y-4"></div>
-
     <button id="btnPrepare" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
       <i class="fas fa-hands-praying mr-2"></i>準備取卦
     </button>
@@ -86,6 +73,23 @@
         <button id="btnImportRecords" class="w-full sm:w-1/3 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition duration-200">
             <i class="fas fa-file-import mr-2"></i>匯入記錄
         </button>
+    </div>
+
+    <div id="divinationControls" class="hidden mt-4">
+      <div class="mb-4">
+        <label for="divinationMode" class="block text-sm font-medium text-gray-700 mb-2">
+          <i class="fas fa-list-ul mr-2 tooltip" data-tooltip="選擇起卦方式"></i>起卦模式
+        </label>
+        <select id="divinationMode" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="time"><i class="fas fa-clock"></i> 時間起卦（自動取當前時間）</option>
+          <option value="threeDigits"><i class="fas fa-calculator"></i> 三位數起卦（輸入三個三位數，如123, 456, 789）</option>
+          <option value="manual"><i class="fas fa-hand-pointer"></i> 手動指定（上卦1-8、下卦1-8、動爻1-6）</option>
+        </select>
+      </div>
+      <div id="inputFields" class="space-y-4"></div>
+      <button id="btnStartDivination" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+        <i class="fas fa-hands-praying mr-2"></i>開始解卦
+      </button>
     </div>
 
     <div id="result" class="mt-6"></div>
@@ -104,7 +108,7 @@
   <div id="prayerModal" class="hidden fixed inset-0 z-50 overflow-auto bg-gray-800 bg-opacity-75 flex items-center justify-center p-4">
     <div class="bg-white rounded-lg p-6 max-w-md w-full text-center">
       <h3 class="text-xl font-bold mb-4">祝禱詞</h3>
-      <div id="prayerContent" class="text-gray-700 whitespace-pre-line text-left">
+      <div id="prayerContent" class="text-gray-700 whitespace-pre-line text-left text-xl font-bold">
         請淨心靜氣，正身端坐，口中誦：
         乾坤在上，日月為明；
         四時有序，萬物歸真。
@@ -117,8 +121,8 @@
         使心有所安，行有所依。
         謹以誠心正意，願得明示。
       </div>
-      <button id="btnConfirmStart" class="mt-6 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
-        開始卜卦
+      <button id="btnStartTaking" class="mt-6 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+        開始取卦
       </button>
     </div>
   </div>
@@ -1164,7 +1168,14 @@
       document.getElementById("prayerModal").classList.remove("hidden");
     });
     
-    document.getElementById("btnConfirmStart").addEventListener("click", startDivination);
+    document.getElementById("btnStartTaking").addEventListener("click", () => {
+      document.getElementById('prayerModal').classList.add('hidden');
+      document.getElementById('divinationControls').classList.remove('hidden');
+      // 確保一開始就顯示正確的輸入框
+      modeSelect.dispatchEvent(new Event('change'));
+    });
+
+    document.getElementById("btnStartDivination").addEventListener("click", startDivination);
 
     document.getElementById("btnViewRecords").addEventListener("click", () => {
         const records = loadRecords();
@@ -1177,8 +1188,6 @@
     document.getElementById("btnExportRecords").addEventListener("click", exportRecords);
     document.getElementById("btnImportRecords").addEventListener("click", importRecords);
 
-    // Initial load to show default input fields
-    modeSelect.dispatchEvent(new Event('change'));
   </script>
 </body>
 </html>
