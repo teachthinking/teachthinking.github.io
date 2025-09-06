@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>專業梅花心五行分析系統</title>
+  <title>專業梅花心易五行分析系統</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
   <style>
@@ -208,8 +208,7 @@
       "70":"地天泰", "71":"地澤臨", "72":"地火明夷", "73":"地雷復",
       "74":"地風升", "75":"地水師", "76":"地山謙", "77":"坤為地"
     };
-    
-    // Five Elements Interacting Status Data from wuxing.json
+
     const wuxingStatusMap = {
       "WS,WS,WS": "初始吉利，過程中得到幫助，最終結果吉利。整體大吉。\n\n乾天坤地，祥瑞盈門\n陰陽和合，萬物生春\n順天應人，福壽康寧\n吉星高照，心想事成",
       "WS,WS,WK": "初始吉利，過程中得到幫助，最終結果凶險。整體小吉。\n\n初陽普照，中得貴人\n末路崎嶇，謹慎前行\n雲開月明，自有天助\n守正持中，轉危為安",
@@ -471,7 +470,7 @@
 
     function getFinalVerdict(relations) {
       const totalScore = relations.reduce((sum, rel) => sum + isGil(rel), 0);
-      
+
       if (totalScore >= 5) return "大吉";
       if (totalScore >= 2) return "中吉";
       if (totalScore >= 1) return "小吉";
@@ -491,7 +490,7 @@
         "體生用": "自身力量有所損耗，付出的多，收穫的少，需要注意消耗。",
         "用剋體": "從頭到尾都處於被動或不利的局面，難以有所作為。"
       };
-      
+
       if (type1 === "用生體" && type2 === "用生體" && type3 === "用生體") return "三者皆為用生體，大吉大利，事半功倍，無往不利。";
       if (type1 === "用剋體" && type2 === "用剋體" && type3 === "用剋體") return "三者皆為用剋體，大凶之象，阻礙重重，應小心應對。";
       if (isGil(type1) > 0 && isGil(type2) > 0 && isGil(type3) < 0) return "先吉後凶，開始順利但最終有變故，需防範風險。";
@@ -522,16 +521,16 @@
     function drawRelationGraph(relationships, allTrigrams, timeElement, question) {
       const svgNS = "http://www.w3.org/2000/svg";
       const svg = document.createElementNS(svgNS, "svg");
-      svg.setAttribute("width", "800"); 
-      svg.setAttribute("height", "750"); 
-      svg.setAttribute("viewBox", "0 0 800 750"); 
+      svg.setAttribute("width", "800");
+      svg.setAttribute("height", "750");
+      svg.setAttribute("viewBox", "0 0 800 750");
 
       const defs = document.createElementNS(svgNS, "defs");
       const marker = document.createElementNS(svgNS, "marker");
       marker.setAttribute("id", "arrow");
       marker.setAttribute("markerWidth", "10");
       marker.setAttribute("markerHeight", "7");
-      marker.setAttribute("refX", "9"); 
+      marker.setAttribute("refX", "9");
       marker.setAttribute("refY", "3.5");
       marker.setAttribute("orient", "auto");
       const path = document.createElementNS(svgNS, "path");
@@ -540,16 +539,16 @@
       marker.appendChild(path);
       defs.appendChild(marker);
       svg.appendChild(defs);
-      
+
       const background = document.createElementNS(svgNS, "rect");
       background.setAttribute("width", "100%");
       background.setAttribute("height", "100%");
       background.setAttribute("fill", "#f0f0f0");
       svg.appendChild(background);
 
-      const centerX = 400, centerY = 390, radius = 250, circleRadius = 40; 
+      const centerX = 400, centerY = 390, radius = 250, circleRadius = 40;
       const positions = [];
-      const elementNodeMap = new Map(); 
+      const elementNodeMap = new Map();
       for (let i = 0; i < 5; i++) {
         const angle = (i * 72 - 90) * Math.PI / 180;
         const x = centerX + radius * Math.cos(angle);
@@ -564,7 +563,7 @@
         const ele = trigramFiveElement[tri.name];
         if (ele) elementTrigrams[ele].push(tri.label + tri.name);
       });
-      const bodyElementFive = relationships[0].bodyElement; 
+      const bodyElementFive = relationships[0].bodyElement;
 
       // 繪製五行生克箭頭 (固定箭頭，非體用關係)
       fiveRelations.forEach(relation => {
@@ -580,7 +579,7 @@
           const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x);
 
           const startPoint = getPointOnCircle(fromNode.x, fromNode.y, fromRadius, angle);
-          const endPoint = getPointOnCircle(toNode.x, toNode.y, toRadius, angle + Math.PI); 
+          const endPoint = getPointOnCircle(toNode.x, toNode.y, toRadius, angle + Math.PI);
 
           const line = document.createElementNS(svgNS, "line");
           line.setAttribute("x1", startPoint.x);
@@ -593,7 +592,7 @@
           svg.appendChild(line);
         }
       });
-      
+
       // 繪製五行圓圈和文字
       positions.forEach(pos => {
         const hasTrigram = elementTrigrams[pos.element].length > 0;
@@ -601,8 +600,8 @@
         let currentStrokeWidth = wuxingStatus[determineWuxingStatus(pos.element, timeElement)].strokeWidth;
 
         if (pos.element === bodyElementFive) {
-          currentRadius = 50; 
-          currentStrokeWidth = 6; 
+          currentRadius = 50;
+          currentStrokeWidth = 6;
         }
 
         const currentFontSize = hasTrigram ? 24 : 18;
@@ -617,7 +616,7 @@
         circle.setAttribute("cy", pos.y);
         circle.setAttribute("r", currentRadius);
         circle.setAttribute("stroke", "#444");
-        circle.setAttribute("stroke-width", currentStrokeWidth); 
+        circle.setAttribute("stroke-width", currentStrokeWidth);
         circle.setAttribute("fill", fiveElementColors[pos.element] || "#eee");
         g.appendChild(circle);
 
@@ -651,18 +650,18 @@
           let textAnchor = "middle";
 
           if (pos.element === "木" || pos.element === "水") {
-            textOffsetX = -80; 
+            textOffsetX = -80;
             textAnchor = "end";
           }
           else if (pos.element === "火" || pos.element === "金") {
-            textOffsetX = 80; 
+            textOffsetX = 80;
             textAnchor = "start";
           }
           else if (pos.element === "土") {
-            textOffsetY = (pos.y < centerY) ? -60 : 60; 
+            textOffsetY = (pos.y < centerY) ? -60 : 60;
             textAnchor = "middle";
           }
-          
+
           const trigText = document.createElementNS(svgNS, "text");
           trigText.setAttribute("x", pos.x + textOffsetX);
           trigText.setAttribute("y", pos.y + textOffsetY);
@@ -673,14 +672,14 @@
           svg.appendChild(trigText);
         }
       });
-      
+
       // 繪製體用關係箭頭與文字
       relationships.forEach((rel, index) => {
         const bodyNode = elementNodeMap.get(rel.bodyElement);
         const useNode = elementNodeMap.get(rel.useElement);
         // 調整偏移量讓多條關係線上的文字錯開
-        const textOffsetYOffset = (index - 1) * 20; 
-        
+        const textOffsetYOffset = (index - 1) * 20;
+
         if (bodyNode && useNode && rel.relationType !== "比和") {
             const relText = document.createElementNS(svgNS, "text");
             relText.setAttribute("font-size", "14px");
@@ -706,7 +705,7 @@
                 const angle = Math.atan2(useNode.y - bodyNode.y, useNode.x - bodyNode.x);
                 const startPoint = getPointOnCircle(bodyNode.x, bodyNode.y, bodyRadius, angle);
                 const endPoint = getPointOnCircle(useNode.x, useNode.y, useRadius, angle + Math.PI);
-                
+
                 const line = document.createElementNS(svgNS, "line");
                 line.setAttribute("x1", startPoint.x);
                 line.setAttribute("y1", startPoint.y);
@@ -721,9 +720,9 @@
                 relText.setAttribute("y", (startPoint.y + endPoint.y) / 2 - 10 + textOffsetYOffset);
                 relText.setAttribute("text-anchor", "middle");
                 svg.appendChild(relText);
-            
+
                 // 只在體卦處標註「體」字，所有用卦處標註帶括號的「用」字
-                if (index === 0) { 
+                if (index === 0) {
                     bodyLabel.setAttribute("x", bodyNode.x);
                     bodyLabel.setAttribute("y", bodyNode.y - bodyRadius - 5);
                     bodyLabel.setAttribute("text-anchor", "middle");
@@ -746,27 +745,27 @@
             relText.setAttribute("y", bodyNode.y - nodeRadius - 10 + textOffsetYOffset);
             relText.setAttribute("text-anchor", "middle");
             svg.appendChild(relText);
-            
+
             // 比和時，體用在同一元素上
             const bodyLabel = document.createElementNS(svgNS, "text");
             bodyLabel.setAttribute("font-size", "14px");
             bodyLabel.setAttribute("font-weight", "bold");
             bodyLabel.setAttribute("fill", "#000");
             bodyLabel.textContent = "體";
-            
+
             const useLabel = document.createElementNS(svgNS, "text");
             useLabel.setAttribute("font-size", "14px");
             useLabel.setAttribute("font-weight", "bold");
             useLabel.setAttribute("fill", "#000");
             useLabel.textContent = (index === 0) ? "用 (本)" : (index === 1 ? "用 (互)" : "用 (變)");
-            
+
             if (index === 0) {
                 bodyLabel.setAttribute("x", bodyNode.x);
-                bodyLabel.setAttribute("y", bodyNode.y + nodeRadius + 5); 
+                bodyLabel.setAttribute("y", bodyNode.y + nodeRadius + 5);
                 bodyLabel.setAttribute("text-anchor", "middle");
                 svg.appendChild(bodyLabel);
             }
-            
+
             useLabel.setAttribute("x", bodyNode.x + 20 + textOffsetYOffset); // 調整用卦標籤位置
             useLabel.setAttribute("y", bodyNode.y + nodeRadius + 5);
             useLabel.setAttribute("text-anchor", "middle");
@@ -777,10 +776,10 @@
 
       const questionText = document.createElementNS(svgNS, "text");
       questionText.setAttribute("x", centerX);
-      questionText.setAttribute("y", 40); 
+      questionText.setAttribute("y", 40);
       questionText.setAttribute("text-anchor", "middle");
-      questionText.setAttribute("font-size", "28px"); 
-      questionText.setAttribute("font-weight", "bold"); 
+      questionText.setAttribute("font-size", "28px");
+      questionText.setAttribute("font-weight", "bold");
       questionText.setAttribute("fill", "#333");
       questionText.textContent = `卜卦問題：${question || "無"}的五行生克圖`;
       svg.appendChild(questionText);
@@ -933,7 +932,7 @@
         `;
 
         document.getElementById("viewGraphBtn").addEventListener("click", () => {
-          const newWindow = window.open('', '_blank', 'width=800,height=750'); 
+          const newWindow = window.open('', '_blank', 'width=800,height=750');
           newWindow.document.write(`
             <!DOCTYPE html>
             <html lang="zh-Hant">
@@ -959,21 +958,21 @@
         const now = new Date();
         const month = now.getMonth() + 1;
         let timeElement;
-        
+
         const date = new Date();
         const day = date.getDate();
         const monthIndex = date.getMonth();
 
         if (monthIndex >= 2 && monthIndex <= 4) {
-            timeElement = "木"; 
+            timeElement = "木";
         } else if (monthIndex >= 5 && monthIndex <= 7) {
-            timeElement = "火"; 
+            timeElement = "火";
         } else if (monthIndex >= 8 && monthIndex <= 10) {
-            timeElement = "金"; 
+            timeElement = "金";
         } else {
-            timeElement = "水"; 
+            timeElement = "水";
         }
-        
+
         const isEarthDay = [2, 5, 8, 11].includes(monthIndex);
         if (isEarthDay) {
             const startOfEarthPeriod = new Date(date.getFullYear(), monthIndex, 18);
@@ -981,7 +980,7 @@
                 timeElement = "土";
             }
         }
-        
+
         if (mode === "time") {
           const y = now.getFullYear();
           const m = now.getMonth() + 1;
@@ -1023,10 +1022,10 @@
         const changedHexagramName = sixtyFourHexagrams[`${changed.upper}${changed.lower}`] || "未知卦";
 
         let bodyTrigram, useTrigram;
-        if (movingLine >= 4) { 
+        if (movingLine >= 4) {
           bodyTrigram = lowerName;
           useTrigram = upperName;
-        } else { 
+        } else {
           bodyTrigram = upperName;
           useTrigram = lowerName;
         }
@@ -1058,7 +1057,7 @@
           {name: mutualUseTrigram, label: "用(互):"},
           {name: changedUseTrigram, label: "用(變):"}
         ];
-        
+
         const relationshipsToDraw = [
           {bodyElement: trigramFiveElement[bodyTrigram], useElement: trigramFiveElement[useTrigram], relationType: fiveRelAnalysis.relationType},
           {bodyElement: trigramFiveElement[bodyTrigram], useElement: trigramFiveElement[mutualUseTrigram], relationType: mutualFiveRelAnalysis.relationType},
@@ -1167,7 +1166,7 @@
       document.getElementById("prayerContent").textContent = prayerText;
       document.getElementById("prayerModal").classList.remove("hidden");
     });
-    
+
     document.getElementById("btnStartTaking").addEventListener("click", () => {
       document.getElementById('prayerModal').classList.add('hidden');
       document.getElementById('divinationControls').classList.remove('hidden');
