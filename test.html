@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>梅花易數卜卦分析</title>
+  <style>
+    body {
+      font-family: "微軟正黑體", sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+    }
+    h1 {
+      color: #333;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    select, button {
+      font-size: 16px;
+      padding: 5px;
+      margin-top: 5px;
+    }
+    button {
+      background-color: #0078D7;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    .result {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🌿 梅花易數卜卦分析程式</h1>
+
+  <label>體卦：</label>
+  <select id="tiGua">
+    <option>乾</option><option>坤</option><option>震</option><option>巽</option>
+    <option>坎</option><option>離</option><option>艮</option><option>兌</option>
+  </select>
+
+  <label>用卦：</label>
+  <select id="yongGua">
+    <option>乾</option><option>坤</option><option>震</option><option>巽</option>
+    <option>坎</option><option>離</option><option>艮</option><option>兌</option>
+  </select>
+
+  <label>互卦：</label>
+  <select id="huGua">
+    <option>乾</option><option>坤</option><option>震</option><option>巽</option>
+    <option>坎</option><option>離</option><option>艮</option><option>兌</option>
+  </select>
+
+  <label>變卦：</label>
+  <select id="bianGua">
+    <option>乾</option><option>坤</option><option>震</option><option>巽</option>
+    <option>坎</option><option>離</option><option>艮</option><option>兌</option>
+  </select>
+
+  <label>動爻位置：</label>
+  <select id="dongYao">
+    <option value="1">初爻</option>
+    <option value="2">二爻</option>
+    <option value="3">三爻</option>
+    <option value="4">四爻</option>
+    <option value="5">五爻</option>
+    <option value="6">上爻</option>
+  </select>
+
+  <label>動爻卦象：</label>
+  <select id="dongGua">
+    <option>乾</option><option>坤</option><option>震</option><option>巽</option>
+    <option>坎</option><option>離</option><option>艮</option><option>兌</option>
+  </select>
+
+  <button onclick="analyze()">🔍 分析卦象</button>
+
+  <div class="result" id="output"></div>
+
+  <script>
+    const elements = {
+      '乾': '金', '坤': '土', '震': '木', '巽': '木',
+      '坎': '水', '離': '火', '艮': '土', '兌': '金'
+    };
+
+    const generate = {
+      '木': '火', '火': '土', '土': '金', '金': '水', '水': '木'
+    };
+
+    const overcome = {
+      '木': '土', '土': '水', '水': '火', '火': '金', '金': '木'
+    };
+
+    function getRelation(ti, other) {
+      if (generate[other] === ti) return '對方生體卦（吉）';
+      if (generate[ti] === other) return '體卦生對方（平或耗）';
+      if (overcome[other] === ti) return '對方克體卦（凶）';
+      if (overcome[ti] === other) return '體卦克對方（可成但需努力）';
+      if (ti === other) return '比和（吉）';
+      return '無明確關係';
+    }
+
+    function getYingQi(position) {
+      const map = {
+        1: '📅 應期極快，可能當日或當月即有應驗。',
+        2: '📅 應期偏快，約2日至2週內。',
+        3: '📅 應期中等，約3週或3月內。',
+        4: '📅 應期稍晚，約4週至4月。',
+        5: '📅 應期偏遲，約5週至5月。',
+        6: '📅 應期最遲，可能半年或更久。'
+      };
+      return map[position];
+    }
+
+    function getDongRelation(ti, dong) {
+      if (generate[dong] === ti) return '動爻生體卦 → 應期順利、可能提前';
+      if (generate[ti] === dong) return '體卦生動爻 → 應期可能延後或耗損';
+      if (overcome[dong] === ti) return '動爻克體卦 → 應期延遲或結果不佳';
+      if (overcome[ti] === dong) return '體卦克動爻 → 應期先難後易';
+      if (ti === dong) return '動爻與體卦比和 → 應期如期或略提前';
+      return '無明確關係';
+    }
+
+    function analyze() {
+      const tiGua = document.getElementById('tiGua').value;
+      const yongGua = document.getElementById('yongGua').value;
+      const huGua = document.getElementById('huGua').value;
+      const bianGua = document.getElementById('bianGua').value;
+      const dongYao = document.getElementById('dongYao').value;
+      const dongGua = document.getElementById('dongGua').value;
+
+      const ti = elements[tiGua];
+      const yong = elements[yongGua];
+      const hu = elements[huGua];
+      const bian = elements[bianGua];
+      const dong = elements[dongGua];
+
+      const relYong = getRelation(ti, yong);
+      const relHu = getRelation(ti, hu);
+      const relBian = getRelation(ti, bian);
+      const yingQi = getYingQi(dongYao);
+      const dongRelation = getDongRelation(ti, dong);
+
+      let summary = '';
+      if (relYong.includes('吉') && relHu.includes('吉') && relBian.includes('吉')) {
+        summary = '✨ 此卦顯示事物從開始到結束皆順利，吉祥如意，一帆風順。';
+      } else if (relYong.includes('吉') && relHu.includes('吉') && relBian.includes('凶')) {
+        summary = '⚠️ 此卦顯示初期順利，但最終可能遇阻，需謹慎應對。';
+      } else if (relYong.includes('凶') && relHu.includes('凶') && relBian.includes('吉')) {
+        summary = '🌈 此卦顯示初期艱難，但最終可望轉吉，屬「先凶後吉」之象。';
+      } else if (relYong.includes('凶') && relHu.includes('凶') && relBian.includes('凶')) {
+        summary = '💀 此卦顯示整體不利，事態發展困難重重，宜保守行事。';
+      }
+else {
+        summary = '🔄 此卦顯示吉凶交錯，需視具體情境與卦氣旺衰綜合判斷。';
+      }
+
+      document.getElementById('output').innerHTML = `
+        <h3>體卦：${tiGua}（${ti}）</h3>
+        <p>用卦：${yongGua}（${yong}） → ${relYong}</p>
+        <p>互卦：${huGua}（${hu}） → ${relHu}</p>
+        <p>變卦：${bianGua}（${bian}） → ${relBian}</p>
+        <hr>
+        <p><strong>動爻位置：</strong>第 ${dongYao} 爻</p>
+        <p><strong>應期推算：</strong>${yingQi}</p>
+        <p><strong>動爻卦象：</strong>${dongGua}（${dong}）</p>
+        <p><strong>動爻與體卦五行關係：</strong>${dongRelation}</p>
+        <hr>
+        <p><strong>綜合判斷：</strong>${summary}</p>
+      `;
+    }
+  </script>
+
+</body>
+</html>
