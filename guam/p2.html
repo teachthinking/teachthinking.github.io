@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>梅花易數卜卦系統 - 尋找遺失物或人物</title>
+    <title>梅花心易卜卦系統 - 尋找遺失物或人物</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -147,7 +147,7 @@
         
         <!-- C. 步驟二：輸入欲尋目標的詳細屬性 -->
         <section id="target-details" class="hidden">
-            <h2>請提供更多關於您要尋找的細節</h2>
+            <h2>請提供更多關於您要尋找的細節（屬性將影響線索精確度）</h2>
             
             <!-- 遺失物細節 -->
             <div id="lost-item-details" class="hidden">
@@ -259,7 +259,7 @@
         
         <!-- D. 步驟三：占卜時外應記錄 -->
         <section id="external-response" class="hidden">
-            <h2>占卜時外應記錄 (選填)</h2>
+            <h2>占卜時外應記錄 (選填，影響線索精確度)</h2>
             <textarea id="external-desc" placeholder="描述周遭特別事件，如狗叫、紅色物體等"></textarea>
         </section>
         
@@ -307,9 +307,9 @@
                 "乾": {
                     "五行": "金", "方位": "西北", "人物": ["天", "父", "老父", "官貴", "頭", "大人", "長者"],
                     "靜物": ["金玉", "寶珠", "圓物", "冠", "鏡"],
-                    "地理": ["西北方", "高亢之所"],
-                    "顏色": ["大赤色", "玄色"],
-                    "尋物線索": "西北方、高處、金屬旁、圓形物體中、乾燥之地。",
+                    "地理": ["西北方", "高亢之所", "公家機關", "高樓"],
+                    "顏色": ["大赤色", "玄色", "白"],
+                    "尋物線索": "西北方、高處、金屬旁、圓形物體中、乾燥之地、公家機關。",
                     "尋人線索": "西北方、官貴、長者、剛健之人、頭部有特徵。"
                 },
                 "坤": {
@@ -323,49 +323,49 @@
                 "震": {
                     "五行": "木", "方位": "東", "人物": ["長子", "青年男子", "好動之人"],
                     "靜物": ["足", "頭髮", "竹子", "蘆葦", "發音的物件"],
-                    "地理": ["東方", "道路", "山林"],
+                    "地理": ["東方", "道路", "山林", "市集"],
                     "顏色": ["青", "綠"],
-                    "尋物線索": "東方、道路旁、竹林中、綠色植物附近、發聲物件旁。",
+                    "尋物線索": "東方、道路旁、竹林中、綠色植物附近、發聲物件旁、熱鬧市集。",
                     "尋人線索": "東方、青年男子、好動之人、足部有特徵。"
                 },
                 "巽": {
                     "五行": "木", "方位": "東南", "人物": ["長女", "僧道之人", "文人"],
                     "靜物": ["繩子", "眼睛", "風扇", "帆"],
-                    "地理": ["東南方", "草木繁茂處", "高崗"],
+                    "地理": ["東南方", "草木繁茂處", "高崗", "寺廟", "菜園"],
                     "顏色": ["青", "綠"],
-                    "尋物線索": "東南方、繩索旁、香味處、直形物體中、風動之地。",
+                    "尋物線索": "東南方、繩索旁、香味處、直形物體中、風動之地、寺廟菜園。",
                     "尋人線索": "東南方、長女、文人、修行者、眼睛有特徵。"
                 },
                 "坎": {
                     "五行": "水", "方位": "北", "人物": ["中年男子", "偷盜之人", "勞心者"],
                     "靜物": ["冰凍物件", "輪船", "耳朵", "血", "月亮"],
-                    "地理": ["北方", "河流", "危險之地", "溝渠", "隱藏處"],
-                    "顏色": ["黑"],
-                    "尋物線索": "北方、水邊、黑色物件中、隱藏處、液體相關。",
+                    "地理": ["北方", "河流", "危險之地", "溝渠", "隱藏處", "井邊"],
+                    "顏色": ["黑", "藍"],
+                    "尋物線索": "北方、水邊、黑色物件中、隱藏處、液體相關、井邊或潮濕地。",
                     "尋人線索": "北方、中年男子、盜賊、陰險之人、耳部有特徵。"
                 },
                 "離": {
                     "五行": "火", "方位": "南", "人物": ["中女", "文人", "美業相關人員", "軍人"],
                     "靜物": ["眼睛", "文書", "爐灶", "乾燥物", "服裝"],
-                    "地理": ["南方", "爐灶", "乾燥地"],
+                    "地理": ["南方", "爐灶", "乾燥地", "明亮窗戶", "空置之地"],
                     "顏色": ["紅", "紫"],
-                    "尋物線索": "南方、火旁、紅色物件中、乾燥處、文書附近。",
+                    "尋物線索": "南方、火旁、紅色物件中、乾燥處、文書附近、廚房或明亮處。",
                     "尋人線索": "南方、文人、美女、軍人、眼睛有特徵。"
                 },
                 "艮": {
                     "五行": "土", "方位": "東北", "人物": ["少男", "閒人", "童子"],
                     "靜物": ["手指", "門閥", "果蔬", "徑石"],
-                    "地理": ["東北方", "寺廟", "山峰", "徑路"],
+                    "地理": ["東北方", "寺廟", "山峰", "徑路", "土穴"],
                     "顏色": ["黃"],
-                    "尋物線索": "東北方、山腳、石頭旁、門口、果蔬附近。",
+                    "尋物線索": "東北方、山腳、石頭旁、門口、果蔬附近、土穴中。",
                     "尋人線索": "東北方、少年、閒人、手部有特徵。"
                 },
                 "兌": {
                     "五行": "金", "方位": "西", "人物": ["少女", "巫師", "歌伎", "舌辯之人"],
                     "靜物": ["口舌", "食物", "刀劍", "毀折物"],
-                    "地理": ["西方", "沼澤", "廢井", "缺口之地"],
+                    "地理": ["西方", "沼澤", "廢井", "缺口之地", "破損池塘"],
                     "顏色": ["白"],
-                    "尋物線索": "西方、澤邊、缺口處、食物旁、白色物件中。",
+                    "尋物線索": "西方、澤邊、缺口處、食物旁、白色物件中、廢井或破損處。",
                     "尋人線索": "西方、少女、歌手、口才好之人、口部有特徵。"
                 }
             },
@@ -398,16 +398,14 @@
 
         // B. 農曆轉換模組 (簡化版，實際應用需完整農曆庫)
         function getLunarDate(date) {
-            // 模擬農曆轉換，實際應使用農曆庫
-            const gan = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
             const zhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
             const year = date.getFullYear();
             const month = date.getMonth() + 1;
             const day = date.getDate();
             const hour = date.getHours();
             
-            // 簡化邏輯：年支數基於年份模12，月/日直接使用，時辰按兩小時一單位
-            const lunarYear = (year - 4) % 12 + 1; // 假設2025年對應巳年
+            // 簡化邏輯：2025年對應巳年（蛇），年支數6
+            const lunarYear = 6; // 巳年
             const lunarMonth = month;
             const lunarDay = day > 30 ? 30 : day;
             const lunarHour = Math.floor((hour + 1) / 2) + 1; // 子時從23:00開始
@@ -486,58 +484,140 @@
         // E. 梅花易數解卦引擎
         function interpretHexagram(hexagram, targetType, targetDetails, external) {
             const { base, mutual, changed, moving } = hexagram;
-            const bodyTrigram = base.lower;
-            const useTrigram = base.upper;
+            const bodyTrigram = base.lower; // 體卦
+            const useTrigram = base.upper;  // 用卦
 
+            // 1. 體用關係：判斷能否找回
             const bodyElement = data.trigrams[bodyTrigram].five_element;
             const useElement = data.trigrams[useTrigram].five_element;
             let relation = '';
-            if (bodyElement === useElement) relation = '比和 (吉): 失物未丟只是放錯地方，人物未失只是在熟悉環境中。';
-            else if (data.five_elements_relations.相生[useElement] === bodyElement) relation = '用生體 (吉): 失物易尋，人物易尋得助。';
-            else if (data.five_elements_relations.相生[bodyElement] === useElement) relation = '體生用 (凶): 失物難尋，人物難尋且消耗精力。';
-            else if (data.five_elements_relations.相剋[useElement] === bodyElement) relation = '用剋體 (凶): 失物難尋，人物尋找困難重重。';
-            else if (data.five_elements_relations.相剋[bodyElement] === useElement) relation = '體剋用 (吉): 失物可尋回但需時日，人物可尋回但過程曲折。';
+            let findLikelihood = '';
+            if (bodyElement === useElement) {
+                relation = '比和 (吉)';
+                findLikelihood = '物品或人物未真正丟失，僅放錯地方或在熟悉環境中，極易找回。';
+            } else if (data.five_elements_relations.相生[useElement] === bodyElement) {
+                relation = '用生體 (吉)';
+                findLikelihood = '物品或人物極易找回，且可能有外力協助。';
+            } else if (data.five_elements_relations.相生[bodyElement] === useElement) {
+                relation = '體生用 (凶)';
+                findLikelihood = '物品或人物難以尋回，尋找過程耗費精力，成功率低。';
+            } else if (data.five_elements_relations.相剋[useElement] === bodyElement) {
+                relation = '用剋體 (凶)';
+                findLikelihood = '物品或人物極難尋回，即使找到也可能損壞或無用。';
+            } else if (data.five_elements_relations.相剋[bodyElement] === useElement) {
+                relation = '體剋用 (中)';
+                findLikelihood = '物品或人物可找回，但需時日或經歷周折。';
+            }
 
-            const currentDate = new Date();
-            const season = getSeason(currentDate);
+            // 2. 卦氣旺衰
+            const currentDate = new Date('2025-09-06T12:59:00');
+            const season = getSeason(currentDate); // 秋季
             const strength = data.seasonal_strength[season] || {};
-            const bodyStrength = strength.旺.includes(data.trigrams[bodyTrigram].name) ? '旺' : (strength.衰.includes(data.trigrams[bodyTrigram].name) ? '衰' : '中');
-            const influence = `卦氣影響: 體卦${bodyStrength}，${bodyStrength === '旺' ? '有利尋找' : (bodyStrength === '衰' ? '尋找較難' : '中性')}.`;
+            const bodyStrength = strength.旺.includes(data.trigrams[bodyTrigram].name) ? '旺' : 
+                                (strength.衰.includes(data.trigrams[bodyTrigram].name) ? '衰' : '中');
+            const useStrength = strength.旺.includes(data.trigrams[useTrigram].name) ? '旺' : 
+                               (strength.衰.includes(data.trigrams[useTrigram].name) ? '衰' : '中');
+            let strengthInfluence = `卦氣影響: 體卦${bodyStrength}，用卦${useStrength}。`;
+            if (relation === '用剋體' && useStrength === '衰' && bodyStrength === '旺') {
+                strengthInfluence += ' 因用卦衰弱而體卦旺盛，尋找難度略減，但仍需努力。';
+            } else if (relation === '用剋體' && useStrength === '旺') {
+                strengthInfluence += ' 因用卦旺盛，尋找極為困難。';
+            } else if (relation === '體剋用' && bodyStrength === '旺') {
+                strengthInfluence += ' 體卦旺盛，有利尋回，但仍需耐心。';
+            } else {
+                strengthInfluence += bodyStrength === '旺' ? ' 體卦旺盛，有利尋找。' : 
+                                    (bodyStrength === '衰' ? ' 體卦衰弱，尋找較難。' : ' 卦氣中性，無明顯影響。');
+            }
 
-            let clues = '';
+            // 3. 方位與地點線索（變卦主導，互卦輔助）
             const changedProps = data.trigram_properties[data.trigrams[changed.upper].name] || {};
             const mutualProps = data.trigram_properties[data.trigrams[mutual.upper].name] || {};
-            if (targetType === 'lost-item' && targetDetails.attributesRelevant) {
-                clues = changedProps.尋物線索 || '無特定線索';
-                if (targetDetails.color && (changedProps.顏色 || []).includes(targetDetails.color)) clues += ` 匹配顏色: ${targetDetails.color}`;
-                if (targetDetails.shape && changedProps.靜物.some(s => s.includes(targetDetails.shape))) clues += ` 匹配形狀: ${targetDetails.shape}`;
-                if (targetDetails.material && changedProps.靜物.some(s => s.includes(targetDetails.material))) clues += ` 匹配材質: ${targetDetails.material}`;
-                if (targetDetails.category && targetDetails.category.some(cat => changedProps.靜物.includes(cat))) clues += ` 匹配類別: ${targetDetails.category.join(', ')}`;
-            } else if (targetType === 'lost-person' && targetDetails.attributesRelevant) {
-                clues = changedProps.尋人線索 || '無特定線索';
-                if (targetDetails.age && changedProps.人物.some(p => p.includes(targetDetails.age))) clues += ` 匹配年齡: ${targetDetails.age}`;
-                if (targetDetails.appearance && changedProps.人物.some(p => p.includes(targetDetails.appearance))) clues += ` 匹配外貌: ${targetDetails.appearance}`;
-                if (targetDetails.behavior && changedProps.人物.some(p => p.includes(targetDetails.behavior))) clues += ` 匹配行為: ${targetDetails.behavior}`;
-                if (targetDetails.occupation && changedProps.人物.includes(targetDetails.occupation)) clues += ` 匹配職業: ${targetDetails.occupation}`;
-            } else {
-                clues = targetType === 'lost-person' ? changedProps.尋人線索 : changedProps.尋物線索 || '無特定線索';
-            }
-            clues += '<br>輔助線索 (互卦): ' + (mutualProps.尋物線索 || mutualProps.尋人線索 || '');
-
             const mainDirection = data.directions[data.trigrams[changed.upper].name] || '未知';
             const auxDirection = data.directions[data.trigrams[mutual.upper].name] || '';
-            const env = changedProps.地理.join(', ') + ' (變卦)； ' + mutualProps.地理.join(', ') + ' (互卦)';
+            const mainLocation = changedProps.地理.join('、');
+            const auxLocation = mutualProps.地理.join('、');
 
-            let personClues = '';
-            if (targetType === 'lost-person' && targetDetails.attributesRelevant) {
-                personClues = changedProps.人物.join(', ') + ' (年齡/性別/職業等匹配用戶輸入)';
+            // 4. 屬性匹配與線索生成
+            let clues = '';
+            let attributeMatches = [];
+            let attributeNote = '';
+            if (targetType === 'lost-item' && targetDetails.attributesRelevant) {
+                clues = changedProps.尋物線索 || '無特定線索';
+                // 匹配物品屬性
+                if (targetDetails.color && changedProps.顏色.includes(targetDetails.color)) {
+                    attributeMatches.push(`顏色匹配: ${targetDetails.color}`);
+                }
+                if (targetDetails.shape && changedProps.靜物.some(s => s.includes(targetDetails.shape))) {
+                    attributeMatches.push(`形狀匹配: ${targetDetails.shape}`);
+                }
+                if (targetDetails.material && changedProps.靜物.some(s => s.includes(targetDetails.material))) {
+                    attributeMatches.push(`材質匹配: ${targetDetails.material}`);
+                }
+                if (targetDetails.category && targetDetails.category.some(cat => changedProps.靜物.includes(cat))) {
+                    attributeMatches.push(`類別匹配: ${targetDetails.category.join('、')}`);
+                }
+                // 五行匹配
+                const itemElement = getItemElement(targetDetails);
+                if (itemElement && itemElement === changedProps.五行) {
+                    attributeMatches.push(`五行匹配: ${itemElement}`);
+                }
+                if (attributeMatches.length === 0 && targetDetails.category.length > 0) {
+                    attributeNote = '注意：提供的物品屬性與變卦特徵無明顯匹配，可能需參考外應或重新審視屬性。';
+                }
+            } else if (targetType === 'lost-person' && targetDetails.attributesRelevant) {
+                clues = changedProps.尋人線索 || '無特定線索';
+                // 匹配人物屬性
+                if (targetDetails.age && changedProps.人物.some(p => p.includes(targetDetails.age))) {
+                    attributeMatches.push(`年齡匹配: ${targetDetails.age}`);
+                }
+                if (targetDetails.appearance && changedProps.人物.some(p => p.includes(targetDetails.appearance))) {
+                    attributeMatches.push(`外貌匹配: ${targetDetails.appearance}`);
+                }
+                if (targetDetails.behavior && changedProps.人物.some(p => p.includes(targetDetails.behavior))) {
+                    attributeMatches.push(`行為匹配: ${targetDetails.behavior}`);
+                }
+                if (targetDetails.occupation && changedProps.人物.includes(targetDetails.occupation)) {
+                    attributeMatches.push(`職業匹配: ${targetDetails.occupation}`);
+                }
+                if (attributeMatches.length === 0 && (targetDetails.age || targetDetails.appearance || targetDetails.behavior || targetDetails.occupation)) {
+                    attributeNote = '注意：提供的人物屬性與變卦特徵無明顯匹配，可能需參考外應或重新審視屬性。';
+                }
+            } else {
+                clues = targetType === 'lost-person' ? changedProps.尋人線索 : changedProps.尋物線索 || '無特定線索';
+                attributeNote = '未使用詳細屬性進行匹配，線索基於卦象通用特徵。';
+            }
+            clues += `<br>輔助線索 (互卦): ${mutualProps.尋物線索 || mutualProps.尋人線索 || '無'}`;
+            if (attributeMatches.length > 0) {
+                clues += `<br>屬性匹配: ${attributeMatches.join('；')}`;
+            }
+            if (attributeNote) {
+                clues += `<br>${attributeNote}`;
             }
 
+            // 5. 人物特徵（僅限尋人）
+            let personClues = '';
+            if (targetType === 'lost-person' && targetDetails.attributesRelevant) {
+                personClues = changedProps.人物.join('、') + ' (年齡/性別/職業等匹配用戶輸入)';
+            }
+
+            // 6. 應期預測
             let period = moving <= 3 ? '近期 (數日內)' : '較遠 (數月後)';
-            const externalInterp = external ? `外應解讀: ${external} 可能表示額外線索或吉凶調整。` : '無外應';
+            if (bodyStrength === '旺') {
+                period += ' (體卦旺盛，可能加快尋回)';
+            } else if (bodyStrength === '衰') {
+                period += ' (體卦衰弱，可能延遲尋回)';
+            }
+
+            // 7. 外應解讀
+            const externalInterp = external ? 
+                `外應解讀: ${external} 可能提供額外線索，請注意占卜時的環境徵兆（如聲音、顏色、事件）以進一步確認方向或地點。` : 
+                '無外應，請留意占卜後的環境徵兆以輔助判斷。';
+
+            // 8. 卦辭參考
             const guaKey = base.upper;
             const guaCi = data.gua_texts[guaKey]?.gua_ci || '無卦辭';
 
+            // 9. 綜合結果
             let result = `
                 <h3>卦象顯示</h3>
                 <div class="hexagram">${data.trigrams[base.upper].symbol}</div>
@@ -546,17 +626,19 @@
                 <p>互卦: ${data.trigrams[mutual.upper].name} 上, ${data.trigrams[mutual.lower].name} 下</p>
                 <p>變卦: ${data.trigrams[changed.upper].name} 上, ${data.trigrams[changed.lower].name} 下</p>
                 <p>動爻: 第${moving}爻</p>
-                <h3>尋物/尋人結果總論</h3>
+                <h3>尋${targetType === 'lost-person' ? '人' : '物'}結果總論</h3>
                 <p>體用關係: ${relation}</p>
-                <p>${influence}</p>
+                <p>尋回可能性: ${findLikelihood}</p>
+                <p>${strengthInfluence}</p>
                 <h3>方位指引</h3>
                 <p>主要方向 (變卦): ${mainDirection}</p>
                 <p>輔助方向 (互卦): ${auxDirection}</p>
                 <h3>環境與地點線索</h3>
-                <p>${env}</p>
+                <p>主要地點 (變卦): ${mainLocation}</p>
+                <p>輔助地點 (互卦): ${auxLocation}</p>
                 <h3>${targetType === 'lost-person' ? '人物特徵線索' : '物品線索'}</h3>
                 <p>${clues}</p>
-                ${personClues ? `<p>${personClues}</p>` : ''}
+                ${personClues ? `<p>人物特徵: ${personClues}</p>` : ''}
                 <h3>應期預測</h3>
                 <p>${period}</p>
                 <h3>外應解讀</h3>
@@ -567,6 +649,17 @@
             return result;
         }
 
+        // 輔助函數：獲取物品五行
+        function getItemElement(details) {
+            if (details.material === '金屬' || details.category.includes('貴重物品') || details.category.includes('金屬製品')) return '金';
+            if (details.material === '木' || details.category.includes('木製品')) return '木';
+            if (details.material === '陶瓷' || details.category.includes('土器瓦器/陶瓷')) return '土';
+            if (details.category.includes('水相關物品')) return '水';
+            if (details.material === '布料' || details.category.includes('布料/衣物')) return '火'; // 布料偏火
+            return null;
+        }
+
+        // 輔助函數：獲取季節
         function getSeason(date) {
             const month = date.getMonth() + 1;
             if ([3,4,5].includes(month)) return '春';
@@ -606,7 +699,7 @@
                 if (method) {
                     document.getElementById(`${method}-input`).classList.remove('hidden');
                     if (method === 'time') {
-                        const lunar = getLunarDate(new Date());
+                        const lunar = getLunarDate(new Date('2025-09-06T12:59:00'));
                         document.getElementById('lunar-year').value = lunar.year;
                         document.getElementById('lunar-month').value = lunar.month;
                         document.getElementById('lunar-day').value = lunar.day;
@@ -616,7 +709,7 @@
             });
 
             document.getElementById('set-current-time').addEventListener('click', () => {
-                const lunar = getLunarDate(new Date());
+                const lunar = getLunarDate(new Date('2025-09-06T12:59:00'));
                 document.getElementById('lunar-year').value = lunar.year;
                 document.getElementById('lunar-month').value = lunar.month;
                 document.getElementById('lunar-day').value = lunar.day;
