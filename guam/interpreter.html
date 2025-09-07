@@ -35,30 +35,37 @@
         };
         const generation = {'木': '火', '火': '土', '土': '金', '金': '水', '水': '木'};
         const destruction = {'木': '土', '火': '金', '土': '水', '金': '木', '水': '火'};
-        // 簡化爻辭（模擬，實際需64卦爻辭資料庫）
+        // 簡化爻辭（模擬乾卦，實際需64卦384爻資料庫）
         const yaoDict = {
-            1: ['初爻：潛龍勿用，謀事需謹慎，宜靜待時機。',
+            1: ['初爻：潛龍勿用，時機未至，宜靜待。',
                 '二爻：見龍在田，時機漸熟，宜穩健行事。',
-                '三爻：君子終日乾乾，需防小人阻礙。',
+                '三爻：君子終日乾乾，謹防小人，宜守正。',
                 '四爻：或躍在淵，進退自如，謀事可成。',
                 '五爻：飛龍在天，大吉大利，宜積極進取。',
-                '六爻：亢龍有悔，物極必反，宜謹防過盛。'],
-            // 其他卦可擴展，這裡簡化為相同爻辭
+                '六爻：亢龍有悔，物極必反，宜謹慎收斂。'],
+            // 其他卦簡化為通用爻辭
+            default: ['初爻：起初謹慎，宜觀察形勢。',
+                      '二爻：時機初現，宜穩中求進。',
+                      '三爻：小有波折，宜守正待時。',
+                      '四爻：運勢漸開，宜謀定後動。',
+                      '五爻：大吉之象，宜果斷行動。',
+                      '六爻：過盛則衰，宜謹防風險。']
         };
-        // 簡單的64卦名稱（部分示例，實際需完整映射）
+        // 簡單64卦名稱（部分示例）
         const hexagramNames = {
             '11': '乾為天', '12': '天澤履', '13': '天火同人', '14': '天雷無妄',
-            '81': '地天泰', '82': '地澤臨', '83': '地火明夷', '84': '地雷復'
+            '81': '地天泰', '82': '地澤臨', '83': '地火明夷', '84': '地雷復',
+            '36': '火水未濟', '63': '水火既濟'
             // 需補充完整64卦
         };
 
         function getRelation(body, use) {
-            if (body === use) return '比和：兩卦五行相合，運勢穩定，宜穩中求進。';
-            if (generation[body] === use) return '體生用：主卦耗力，付出較多，需量力而行。';
-            if (generation[use] === body) return '用生體：得外力相助，運勢順暢，宜把握機會。';
-            if (destruction[body] === use) return '體克用：主卦掌控局面，易獲成功，但需防驕傲。';
-            if (destruction[use] === body) return '用克體：主卦受制，運勢受阻，宜謹慎行事。';
-            return '無直接生克關係，宜觀察卦象變化。';
+            if (body === use) return {text: '比和：五行相同，力量均衡，穩定有利。', luck: '吉'};
+            if (generation[body] === use) return {text: '體生用：主卦耗力，付出較多，需謹慎用力。', luck: '平'};
+            if (generation[use] === body) return {text: '用生體：得外力相助，運勢順暢。', luck: '吉'};
+            if (destruction[body] === use) return {text: '體克用：主卦掌控局面，易獲成功。', luck: '吉'};
+            if (destruction[use] === body) return {text: '用克體：主卦受制，運勢受阻，需防風險。', luck: '凶'};
+            return {text: '無直接生克：五行無強烈交互，宜觀察卦象變化。', luck: '平'};
         }
 
         function getHexagram(upper, lower) {
@@ -85,7 +92,7 @@
             const upperLines = [...trigramLines[upper]];
             const lowerLines = [...trigramLines[lower]];
             const lines = [...lowerLines, ...upperLines];
-            lines[moving - 1] = 1 - lines[moving - 1]; // 動爻陰陽互換
+            lines[moving - 1] = 1 - lines[moving - 1];
             const changedLower = lines.slice(0, 3);
             const changedUpper = lines.slice(3, 6);
             const findTrigram = lines => Object.keys(trigramLines).find(k => 
@@ -97,6 +104,27 @@
             };
         }
 
+        function getLuckJudgment(relationLuck, moving, changedUpper, changedLower) {
+            let luck = relationLuck;
+            // 動爻影響：初爻偏凶，五爻偏吉
+            if (moving === 1 || moving === 6) luck = luck === '吉' ? '平' : '凶';
+            if (moving === 5) luck = luck === '凶' ? '平' : '吉';
+            // 變卦影響：乾（1）、泰（81）等偏吉，否（18）、未濟（36）偏凶
+            const changedKey = `${changedUpper}${changedLower}`;
+            if (['11', '81'].includes(changedKey)) luck = luck === '平' ? '吉' : luck;
+            if (['18', '36'].includes(changedKey)) luck = luck === '平' ? '凶' : luck;
+            return luck;
+        }
+
+        function getAdvice(relation, luck, moving, question) {
+            const actions = {
+                '吉': `宜積極進取，把握當前機會，結合問題「${question}」，可果斷行動，但注意動爻${moving}的提示，避免過於激進。`,
+                '平': `運勢平穩，宜穩中求進，針對「${question}」，建議謹慎規劃，參考動爻${moving}的時機指引。`,
+                '凶': `運勢不利，宜謹慎行事，針對「${question}」，建議暫緩行動，觀察形勢，依動爻${moving}尋求化解之道。`
+            };
+            return actions[luck] || `針對「${question}」，宜審慎觀察，結合動爻${moving}與五行${relation.text}，靈活應對。`;
+        }
+
         function generateAnalysis(upper, lower, moving, question) {
             const elemBody = elements[lower];
             const elemUse = elements[upper];
@@ -104,24 +132,14 @@
             const hexagram = getHexagram(upper, lower);
             const mutual = getMutualHexagram(upper, lower);
             const changed = getChangedHexagram(upper, lower, moving);
-            const yao = yaoDict[1]?.[moving - 1] || `第${moving}爻動：宜審慎行事，參考卦象變化。`;
+            const yao = yaoDict[upper] || yaoDict['default'];
+            const yaoText = yao[moving - 1];
             const upperMeaning = trigramMeanings[upper];
             const lowerMeaning = trigramMeanings[lower];
             const mutualHexagram = getHexagram(mutual.upper, mutual.lower);
             const changedHexagram = getHexagram(changed.upper, changed.lower);
-            // 綜合建議（模擬梅花心易斷卦）
-            let advice = '';
-            if (relation.includes('比和') || relation.includes('用生體')) {
-                advice = '運勢較順，宜把握時機，結合問題背景積極行動，但需注意動爻變化。';
-            } else if (relation.includes('用克體')) {
-                advice = '運勢受阻，宜謹慎決策，觀察互卦與變卦，尋求化解之道。';
-            } else if (relation.includes('體生用')) {
-                advice = '需付出較多努力，宜穩紮穩打，參考變卦趨勢調整策略。';
-            } else if (relation.includes('體克用')) {
-                advice = '局面有利，宜積極進取，但動爻提示需防過於激進。';
-            } else {
-                advice = '運勢平穩，宜觀察情勢變化，參考互卦與變卦尋求方向。';
-            }
+            const luck = getLuckJudgment(relation.luck, moving, changed.upper, changed.lower);
+            const advice = getAdvice(relation, luck, moving, question);
             return `問題：${question}\n` +
                    `本卦：${hexagram}\n` +
                    `上卦：${trigramNames[upper]}（${upperMeaning}）\n` +
@@ -130,35 +148,41 @@
                    `五行分析：\n` +
                    `  體（下卦）：${elemBody}\n` +
                    `  用（上卦）：${elemUse}\n` +
-                   `  生克關係：${relation}\n` +
+                   `  生克狀態：${relation.text}\n` +
                    `互卦：${mutualHexagram}\n` +
                    `變卦：${changedHexagram}\n` +
-                   `爻辭參考：${yao}\n` +
-                   `解卦建議：${advice}\n` +
-                   `綜合分析：本卦反映當前情勢，互卦揭示中間過程，變卦預示最終趨勢。請結合問題背景，參考五行生克與爻辭，謹慎決策。`;
+                   `爻辭參考：${yaoText}\n` +
+                   `吉凶判斷：${luck}\n` +
+                   `趨吉避凶建議：${advice}\n` +
+                   `綜合分析：本卦反映當前情勢，互卦揭示過程變化，變卦預示未來趨勢。結合五行生克與動爻，針對「${question}」，宜依建議行動。`;
         }
 
         function generateSVG(body, use) {
             const pos = {'木': '50 10', '火': '90 35', '土': '75 80', '金': '25 80', '水': '10 35'};
             const fill = el => (el === body || el === use) ? 'red' : 'black';
-            return `<svg width="100" height="100" viewBox="0 0 100 100">
+            const strokeGen = (from, to) => generation[from] === to ? 'green' : 'transparent';
+            const strokeDes = (from, to) => destruction[from] === to ? 'red' : 'transparent';
+            return `<svg width="120" height="120" viewBox="0 0 120 120">
+                <!-- 五行節點 -->
                 <circle cx="50" cy="10" r="5" fill="${fill('木')}"/><text x="50" y="5">木</text>
                 <circle cx="90" cy="35" r="5" fill="${fill('火')}"/><text x="90" y="30">火</text>
                 <circle cx="75" cy="80" r="5" fill="${fill('土')}"/><text x="75" y="75">土</text>
                 <circle cx="25" cy="80" r="5" fill="${fill('金')}"/><text x="25" y="75">金</text>
                 <circle cx="10" cy="35" r="5" fill="${fill('水')}"/><text x="10" y="30">水</text>
-                <!-- 生箭頭 (綠) -->
-                <line x1="50" y1="10" x2="90" y2="35" stroke="green"/>
-                <line x1="90" y1="35" x2="75" y2="80" stroke="green"/>
-                <line x1="75" y1="80" x2="25" y2="80" stroke="green"/>
-                <line x1="25" y1="80" x2="10" y2="35" stroke="green"/>
-                <line x1="10" y1="35" x2="50" y2="10" stroke="green"/>
-                <!-- 克箭頭 (紅虛線) -->
-                <line x1="50" y1="10" x2="75" y2="80" stroke="red" stroke-dasharray="5"/>
-                <line x1="90" y1="35" x2="25" y2="80" stroke="red" stroke-dasharray="5"/>
-                <line x1="75" y1="80" x2="10" y2="35" stroke="red" stroke-dasharray="5"/>
-                <line x1="25" y1="80" x2="50" y2="10" stroke="red" stroke-dasharray="5"/>
-                <line x1="10" y1="35" x2="90" y2="35" stroke="red" stroke-dasharray="5"/>
+                <!-- 生箭頭（僅顯示與體用相關） -->
+                <line x1="50" y1="10" x2="90" y2="35" stroke="${strokeGen(body, '火') || strokeGen(use, '火')}" stroke-width="2"/>
+                <line x1="90" y1="35" x2="75" y2="80" stroke="${strokeGen(body, '土') || strokeGen(use, '土')}" stroke-width="2"/>
+                <line x1="75" y1="80" x2="25" y2="80" stroke="${strokeGen(body, '金') || strokeGen(use, '金')}" stroke-width="2"/>
+                <line x1="25" y1="80" x2="10" y2="35" stroke="${strokeGen(body, '水') || strokeGen(use, '水')}" stroke-width="2"/>
+                <line x1="10" y1="35" x2="50" y2="10" stroke="${strokeGen(body, '木') || strokeGen(use, '木')}" stroke-width="2"/>
+                <!-- 克箭頭（僅顯示與體用相關） -->
+                <line x1="50" y1="10" x2="75" y2="80" stroke="${strokeDes(body, '土') || strokeDes(use, '土')}" stroke-width="2" stroke-dasharray="5"/>
+                <line x1="90" y1="35" x2="25" y2="80" stroke="${strokeDes(body, '金') || strokeDes(use, '金')}" stroke-width="2" stroke-dasharray="5"/>
+                <line x1="75" y1="80" x2="10" y2="35" stroke="${strokeDes(body, '水') || strokeDes(use, '水')}" stroke-width="2" stroke-dasharray="5"/>
+                <line x1="25" y1="80" x2="50" y2="10" stroke="${strokeDes(body, '木') || strokeDes(use, '木')}" stroke-width="2" stroke-dasharray="5"/>
+                <line x1="10" y1="35" x2="90" y2="35" stroke="${strokeDes(body, '火') || strokeDes(use, '火')}" stroke-width="2" stroke-dasharray="5"/>
+                <!-- 圖例 -->
+                <text x="10" y="110">圖例：紅色=體/用，綠色實線=生，紅色虛線=克</text>
             </svg>`;
         }
 
