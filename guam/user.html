@@ -152,7 +152,7 @@
     function calculateHexagramFromTime(y, m, d, h) {
       const upper = (y + m + d) % 8;
       const lower = (y + m + d + h) % 8;
-      const movingLine = (y + m + d + h + now.getMinutes()) % 6;
+      const movingLine = (y + m + d + h + new Date().getMinutes()) % 6; // Use new Date() to get current minute
       return { upper, lower, movingLine };
     }
 
@@ -236,6 +236,10 @@
 
     function saveDivinationRecord(data) {
       const records = JSON.parse(localStorage.getItem('divinationRecords') || '[]');
+      // Add timestamp if not present (for backward compatibility if needed)
+      if (!data.timestamp) {
+        data.timestamp = new Date().toISOString();
+      }
       records.push(data);
       localStorage.setItem('divinationRecords', JSON.stringify(records));
     }
@@ -288,7 +292,14 @@
             if (!Array.isArray(importedRecords)) {
                 throw new Error("Invalid JSON format. Expected an array.");
             }
-            localStorage.setItem('divinationRecords', JSON.stringify(importedRecords));
+            // Add timestamp to imported records if missing
+            const processedRecords = importedRecords.map(rec => {
+                if (!rec.timestamp) {
+                    rec.timestamp = new Date().toISOString(); // Assign current date if missing
+                }
+                return rec;
+            });
+            localStorage.setItem('divinationRecords', JSON.stringify(processedRecords));
             alert("匯入成功！");
           } catch (error) {
             alert("匯入失敗: " + error.message);
@@ -324,7 +335,7 @@
     document.getElementById("btnStartTaking").addEventListener("click", () => {
       document.getElementById('prayerModal').classList.add('hidden');
       document.getElementById('divinationControls').classList.remove('hidden');
-      modeSelect.dispatchEvent(new Event('change'));
+      modeSelect.dispatchEvent(new Event('change')); // Trigger update of input fields
     });
 
     const modeSelect = document.getElementById("divinationMode");
@@ -377,10 +388,11 @@
       }
     });
 
-    document.getElementById("btnStartDivination").addEventListener("click", () => {
+    function startDivination() {
       const question = document.getElementById("questionInput").value;
       const mode = document.getElementById("divinationMode").value;
       let upper, lower, movingLine;
+      
       if (mode === "time") {
         const now = new Date();
         const y = now.getFullYear();
@@ -389,9 +401,19 @@
         const h = now.getHours();
         ({ upper, lower, movingLine } = calculateHexagramFromTime(y, m, d, h));
       } else if (mode === "threeDigits") {
-        const num1 = parseInt(document.getElementById("num1Input").value);
-        const num2 = parseInt(document.getElementById("num2Input").value);
-        const num3 = parseInt(document.getElementById("num3Input").value);
+        const num1Input = document.getElementById("num1Input");
+        const num2Input = document.getElementById("num2Input");
+        const num3Input = document.getElementById("num3Input");
+
+        if (!num1Input || !num2Input || !num3Input) {
+             alert("請確認所有三位數輸入欄位已正確載入。");
+             return;
+        }
+
+        const num1 = parseInt(num1Input.value);
+        const num2 = parseInt(num2Input.value);
+        const num3 = parseInt(num3Input.value);
+        
         const result = calculateHexagramFromThreeDigits(num1, num2, num3);
         if (!result) {
           alert("請輸入三個有效三位數 (100-999)");
@@ -399,10 +421,16 @@
         }
         ({ upper, lower, movingLine } = result);
       } else if (mode === "manual") {
-        const upperInput = document.getElementById("upperInput").value;
-        const lowerInput = document.getElementById("lowerInput").value;
-        const movingInput = document.getElementById("movingInput").value;
-        const result = calculateHexagramFromManual(upperInput, lowerInput, movingInput);
+        const upperInput = document.getElementById("upperInput");
+        const lowerInput = document.getElementById("lowerInput");
+        const movingInput = document.getElementById("movingInput");
+
+        if (!upperInput || !lowerInput || !movingInput) {
+             alert("請確認所有手動輸入欄位已正確載入。");
+             return;
+        }
+
+        const result = calculateHexagramFromManual(upperInput.value, lowerInput.value, movingInput.value);
         if (!result) {
           alert("請輸入有效數字：上卦/下卦1-8，動爻1-6");
           return;
@@ -410,44 +438,154 @@
         ({ upper, lower, movingLine } = result);
       }
 
+      // Generate a unique ID for this divination
       const letters = Array.from({length: 3}, () => String.fromCharCode(97 + Math.floor(Math.random() * 26))).join('');
       const digits = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
       const id = letters + digits;
-      const code = '' + upper + lower + movingLine;
-      const topic = `mhxingyi/${id}/${code}`;
+      const code = '' + upper + lower + movingLine; // Combine to form the hexagram code string
+      const topic = `mhxingyi/${id}/${code}`; // Publish topic format
       const brokerUrl = document.getElementById("brokerInput").value;
       const client = mqtt.connect(brokerUrl);
 
       const statusEl = document.getElementById("connectionStatus");
       statusEl.textContent = "連線中...";
+      
       client.on('connect', () => {
         statusEl.textContent = "已連線";
-        client.publish(topic, question);
-        client.subscribe(`mhxingyi/${id}/result`);
+        client.publish(topic, question, { qos: 1 }, (err) => { // Added QoS for reliability
+          if (err) {
+            console.error("Publish error:", err);
+            statusEl.textContent = "發佈失敗";
+          } else {
+            console.log(`Published to ${topic}: ${question}`);
+            statusEl.textContent = "已發佈，等待解卦...";
+            // Subscribe to the result topic *after* successful publish and connection
+            client.subscribe(`mhxingyi/${id}/result`, { qos: 1 }, (err) => { // Added QoS
+              if (err) {
+                console.error("Subscription error:", err);
+                statusEl.textContent = "訂閱結果失敗";
+              } else {
+                console.log(`Subscribed to mhxingyi/${id}/result`);
+              }
+            });
+          }
+        });
       });
 
       client.on('message', (topic, message) => {
         if (topic.endsWith('/result')) {
-          const resultData = JSON.parse(message.toString());
-          displayDivinationResult(resultData);
-          saveDivinationRecord(resultData);
-          statusEl.textContent = "已接收解卦";
-          client.end();
+          try {
+            const resultData = JSON.parse(message.toString());
+            resultData.question = question; // Ensure question is in the saved record
+            resultData.timestamp = new Date().toISOString(); // Ensure timestamp is set
+            
+            displayDivinationResult(resultData);
+            saveDivinationRecord(resultData);
+            statusEl.textContent = "解卦完成！";
+            client.end(); // End connection after receiving the result
+          } catch (e) {
+            console.error("Error processing message:", e);
+            statusEl.textContent = "接收訊息出錯";
+            client.end();
+          }
         }
       });
-    });
+      
+      client.on('error', (err) => {
+        console.error("MQTT connection error:", err);
+        statusEl.textContent = "連線失敗，請檢查網路或 Broker URL";
+        client.end();
+      });
+      
+      // Add a timeout for connection or message receipt
+      const connectionTimeout = setTimeout(() => {
+          if (client.connected) {
+              // If connected but no message received, it might be a problem with interpreter
+              if (statusEl.textContent === "已連線" || statusEl.textContent === "已發佈，等待解卦...") {
+                  statusEl.textContent = "等待結果超時，請檢查解卦端是否正常運作。";
+              }
+          } else {
+              statusEl.textContent = "連線超時";
+          }
+          if (client && client.disconnected === false) {
+             client.end(); // Ensure client is ended on timeout
+          }
+      }, 30000); // 30 seconds timeout
 
-    document.getElementById("btnViewRecords").addEventListener("click", () => {
-        const records = loadRecords();
-        displayRecords(records);
-        document.getElementById('recordModal').classList.remove('hidden');
-    });
-    document.getElementById("closeModalBtn").addEventListener("click", () => {
-        document.getElementById('recordModal').classList.add('hidden');
-    });
-    document.getElementById("btnExportRecords").addEventListener("click", exportRecords);
-    document.getElementById("btnImportRecords").addEventListener("click", importRecords);
+      client.on('end', () => {
+          console.log("MQTT client disconnected");
+          clearTimeout(connectionTimeout); // Clear timeout if client disconnects
+      });
+    }
 
+    // Initial setup when DOM is loaded
+    document.addEventListener("DOMContentLoaded", () => {
+        modeSelect.addEventListener("change", () => {
+            inputFields.innerHTML = '';
+            const mode = modeSelect.value;
+            if (mode === "threeDigits") {
+                inputFields.innerHTML = `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="fas fa-sort-numeric-up mr-2 tooltip" data-tooltip="輸入100-999"></i>第一個三位數（上卦）
+                        </label>
+                        <input id="num1Input" type="number" min="100" max="999" value="" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="fas fa-sort-numeric-up mr-2 tooltip" data-tooltip="輸入100-999"></i>第二個三位數（下卦）
+                        </label>
+                        <input id="num2Input" type="number" min="100" max="999" value="" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="fas fa-sort-numeric-up mr-2 tooltip" data-tooltip="輸入100-999"></i>第三個三位數（動爻）
+                        </label>
+                        <input id="num3Input" type="number" min="100" max="999" value="" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                `;
+            } else if (mode === "manual") {
+                inputFields.innerHTML = `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="fas fa-arrow-up mr-2 tooltip" data-tooltip="輸入1-8"></i>上卦
+                        </label>
+                        <input id="upperInput" type="number" min="1" max="8" value="2" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="fas fa-arrow-down mr-2 tooltip" data-tooltip="輸入1-8"></i>下卦
+                        </label>
+                        <input id="lowerInput" type="number" min="1" max="8" value="3" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="fas fa-exchange-alt mr-2 tooltip" data-tooltip="輸入1-6"></i>動爻
+                        </label>
+                        <input id="movingInput" type="number" min="1" max="6" value="1" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                `;
+            }
+        });
+
+        // Trigger initial rendering of input fields based on default selection
+        modeSelect.dispatchEvent(new Event('change'));
+
+        // Event listener for the start divination button
+        document.getElementById("btnStartDivination").addEventListener("click", startDivination);
+
+        // Event listeners for record management buttons
+        document.getElementById("btnViewRecords").addEventListener("click", () => {
+            const records = loadRecords();
+            displayRecords(records);
+            document.getElementById('recordModal').classList.remove('hidden');
+        });
+        document.getElementById("closeModalBtn").addEventListener("click", () => {
+            document.getElementById('recordModal').classList.add('hidden');
+        });
+        document.getElementById("btnExportRecords").addEventListener("click", exportRecords);
+        document.getElementById("btnImportRecords").addEventListener("click", importRecords);
+    });
   </script>
 </body>
 </html>
