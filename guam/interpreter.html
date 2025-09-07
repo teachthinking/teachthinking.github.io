@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>專業梅花心易五行分析系統 - 解卦端</title>
+</head>
+<body>
+    <h1>解卦端：監聽MQTT訊息</h1>
+    <div id="status">連線狀態...</div>
+
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script>
+        const broker = 'wss://broker.mqttgo.io:8084/mqtt'; // 固定，無需編輯
+        const elements = {1: '金', 2: '金', 3: '火', 4: '木', 5: '木', 6: '水', 7: '土', 8: '土'};
+        const trigramNames = {1: '乾', 2: '兌', 3: '離', 4: '震', 5: '巽', 6: '坎', 7: '艮', 8: '坤'};
+        const generation = {'木': '火', '火': '土', '土': '金', '金': '水', '水': '木'};
+        const destruction = {'木': '土', '火': '金', '土': '水', '金': '木', '水': '火'};
+
+        function getRelation(body, use) {
+            if (body === use) return '比和（相合）';
+            if (generation[body] === use) return '體生用（耗力）';
+            if (generation[use] === body) return '用生體（得助）';
+            if (destruction[body] === use) return '體克用（掌控）';
+            if (destruction[use] === body) return '用克體（受損）';
+            return '無關';
+        }
+
+        function generateAnalysis(upper, lower, moving, question) {
+            const elemBody = elements[lower];
+            const elemUse = elements[upper];
+            const relation = getRelation(elemBody, elemUse);
+            return `問題：${question}\n本卦：上${trigramNames[upper]} 下${trigramNames[lower]} 動爻${moving}\n體元素：${elemBody}\n用元素：${elemUse}\n生克關係：${relation}`;
+        }
+
+        function generateSVG(body, use) {
+            const pos = {'木': '50 10', '火': '90 35', '土': '75 80', '金': '25 80', '水': '10 35'};
+            const fill = el => (el === body || el === use) ? 'red' : 'black';
+            return `<svg width="100" height="100" viewBox="0 0 100 100">
+                <circle cx="50" cy="10" r="5" fill="${fill('木')}"/><text x="50" y="5">木</text>
+                <circle cx="90" cy="35" r="5" fill="${fill('火')}"/><text x="90" y="30">火</text>
+                <circle cx="75" cy="80" r="5" fill="${fill('土')}"/><text x="75" y="75">土</text>
+                <circle cx="25" cy="80" r="5" fill="${fill('金')}"/><text x="25" y="75">金</text>
+                <circle cx="10" cy="35" r="5" fill="${fill('水')}"/><text x="10" y="30">水</text>
+                <!-- 生箭頭 (綠) -->
+                <line x1="50" y1="10" x2="90" y2="35" stroke="green"/>
+                <line x1="90" y1="35" x2="75" y2="80" stroke="green"/>
+                <line x1="75" y1="80" x2="25" y2="80" stroke="green"/>
+                <line x1="25" y1="80" x2="10" y2="35" stroke="green"/>
+                <line x1="10" y1="35" x2="50" y2="10" stroke="green"/>
+                <!-- 克箭頭 (紅虛線) -->
+                <line x1="50" y1="10" x2="75" y2="80" stroke="red" stroke-dasharray="5"/>
+                <line x1="90" y1="35" x2="25" y2="80" stroke="red" stroke-dasharray="5"/>
+                <line x1="75" y1="80" x2="10" y2="35" stroke="red" stroke-dasharray="5"/>
+                <line x1="25" y1="80" x2="50" y2="10" stroke="red" stroke-dasharray="5"/>
+                <line x1="10" y1="35" x2="90" y2="35" stroke="red" stroke-dasharray="5"/>
+            </svg>`;
+        }
+
+        const client = mqtt.connect(broker);
+        const status = document.getElementById('status');
+        client.on('connect', () => {
+            status.innerText = '已連線，監聽中...';
+            client.subscribe('mhxingyi/#');
+        });
+        client.on('message', (topic, message) => {
+            const parts = topic.split('/');
+            if (parts.length !== 3 || parts[0] !== 'mhxingyi') return;
+            const id = parts[1];
+            const code = parts[2];
+            if (code.length !== 3) return;
+            const upper = parseInt(code[0]);
+            const lower = parseInt(code[1]);
+            const moving = parseInt(code[2]);
+            const question = message.toString();
+            const analysis = generateAnalysis(upper, lower, moving, question);
+            const svg = generateSVG(elements[lower], elements[upper]);
+            const payload = JSON.stringify({analysis, svg});
+            client.publish(`mhxingyi/${id}/result`, payload);
+            status.innerText = `已處理並回傳: ${topic}`;
+        });
+    </script>
+</body>
+</html>
