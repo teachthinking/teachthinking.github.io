@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>解卦端 - 專業梅花心易五行分析系統</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    .hexagram-svg {
+      width: 100px;
+      height: 120px;
+      margin-bottom: 10px;
+    }
+    .tooltip {
+      position: relative;
+    }
+    .tooltip:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .advice {
+      background-color: #f4f8f6;
+      border-left: 6px solid #2c6f4e;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    @media (max-width: 640px) {
+      .hexagram-svg {
+        width: 80px;
+        height: 100px;
+      }
+      .hexagram-box {
+        min-width: 100px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 font-sans">
+  <header class="w-full max-w-3xl bg-white shadow-md rounded-lg p-6 mb-6">
+    <h2 class="text-2xl font-bold text-center text-gray-800">解卦端 - 專業梅花心易五行分析系統</h2>
+    <p class="text-center text-gray-600 mt-2">監聽MQTT訊息並進行解卦分析</p>
+  </header>
+
+  <main class="w-full max-w-3xl bg-white shadow-md rounded-lg p-6">
+    <button id="connectBtn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+      <i class="fas fa-plug mr-2"></i>連接 MQTT Broker
+    </button>
+    <div id="mqttStatusInterpreter" class="mt-4 p-2 bg-gray-100 rounded-md text-center">
+      MQTT Status: 未連線
+    </div>
+    <div id="log" class="mt-4 p-4 bg-gray-50 rounded-md max-h-64 overflow-y-auto">
+      <p>處理記錄將顯示在此...</p>
+    </div>
+    <div id="result" class="mt-6"></div>
+  </main>
+
+  <script>
+    let client = null;
+
+    const trigrams = [
+      {name:"乾", element:"金"},
+      {name:"兌", element:"金"},
+      {name:"離", element:"火"},
+      {name:"震", element:"木"},
+      {name:"巽", element:"木"},
+      {name:"坎", element:"水"},
+      {name:"艮", element:"土"},
+      {name:"坤", element:"土"}
+    ];
+
+    const fiveElementsOrder = ["火", "土", "金", "水", "木"];
+    const fiveRelations = [
+      {from:"木", to:"火", type:"生"},
+      {from:"火", to:"土", type:"生"},
+      {from:"土", to:"金", type:"生"},
+      {from:"金", to:"水", type:"生"},
+      {from:"水", to:"木", type:"生"},
+      {from:"木", to:"土", type:"剋"},
+      {from:"土", to:"水", type:"剋"},
+      {from:"水", to:"火", type:"剋"},
+      {from:"火", to:"金", type:"剋"},
+      {from:"金", to:"木", type:"剋"}
+    ];
+
+    const fiveElementColors = {
+      "金": "#ffd700",
+      "木": "#228b22",
+      "水": "#1e90ff",
+      "火": "#dc143c",
+      "土": "#a52a2a"
+    };
+
+    const wuxingStatus = {
+      "旺": {strokeWidth: 6, opacity:1},
+      "相": {strokeWidth: 4, opacity:0.8},
+      "休": {strokeWidth: 2, opacity:0.6},
+      "囚": {strokeWidth: 1, opacity:0.4},
+      "死": {strokeWidth: 1, opacity:0.3}
+    };
+
+    const colors = { "用生體": "green", "用剋體": "red", "比和": "orange", "體生用": "blue", "體剋用": "purple", "無": "gray" };
+
+    const baguaLines = {
+      0: ["—", "—", "—"],
+      1: ["—", "—", "--"],
+      2: ["—", "--", "—"],
+      3: ["—", "--", "--"],
+      4: ["--", "—", "—"],
+      5: ["--", "—", "--"],
+      6: ["--", "--", "—"],
+      7: ["--", "--", "--"]
+    };
+
+    const trigramsName = ["乾","兌","離","震","巽","坎","艮","坤"];
+    const trigramFiveElement = {
+      "乾": "金", "兌": "金", "離": "火",
+      "震": "木", "巽": "木", "坎": "水",
+      "艮": "土", "坤": "土"
+    };
+
+    const sixtyFourHexagrams = {
+      "00":"乾為天", "01":"天澤履", "02":"天火同人", "03":"天雷無妄",
+      "04":"天風姤", "05":"天水訟", "06":"天山遯", "07":"天地否",
+      "10":"澤天夬", "11":"兌為澤", "12":"澤火革", "13":"澤雷隨",
+      "14":"澤風大過", "15":"澤水困", "16":"澤山鹹", "17":"澤地萃",
+      "20":"火天大有", "21":"火澤睽", "22":"離為火", "23":"火雷噬嗑",
+      "24":"火風鼎", "25":"火水未濟", "26":"火山旅", "27":"火地晉",
+      "30":"雷天大壯", "31":"雷澤歸妹", "32":"雷火豐", "33":"震為雷",
+      "34":"雷風恆", "35":"雷水解", "36":"雷山小過", "37":"雷地豫",
+      "40":"風天小畜", "41":"風澤中孚", "42":"風火家人", "43":"風雷益",
+      "44":"巽為風", "45":"風水渙", "46":"風山漸", "47":"風地觀",
+      "50":"水天需", "51":"水澤節", "52":"水火既濟", "53":"水雷屯",
+      "54":"水風井", "55":"坎為水",
+      "56":"水山蹇", "57":"水地比",
+      "60":"山天大畜", "61":"山澤損", "62":"山火賁", "63":"山雷頤",
+      "64":"山風蠱", "65":"山水蒙", "66":"艮為山", "67":"山地剝",
+      "70":"地天泰", "71":"地澤臨", "72":"地火明夷", "73":"地雷復",
+      "74":"地風升", "75":"地水師", "76":"地山謙", "77":"坤為地"
+    };
+
+    const wuxingStatusMap = {
+      "WS,WS,WS": "初始吉利，過程中得到幫助，最終結果吉利。整體大吉。\n\n乾天坤地，祥瑞盈門\n陰陽和合，萬物生春\n順天應人，福壽康寧\n吉星高照，心想事成",
+      "WS,WS,WK": "初始吉利，過程中得到幫助，最終結果兇險。整體小吉。\n\n初陽普照，中得貴人\n末路崎嶇，謹慎前行\n雲開月明，自有天助\n守正持中，轉危為安",
+      "WS,WS,SS": "初始吉利，過程中得到幫助，最終付出多收穫少。整體小吉。\n\n春風送暖，夏雨滋苗\n秋實雖薄，冬藏有餘\n耕耘不輟，天道酬勤\n積善之家，必有餘慶",
+      "WS,WS,SK": "初始吉利，過程中得到幫助，最終通過努力成功。整體大吉。\n\n初陽普照，中得貴人\n末需自強，終成大業\n金石為開，精誠所至\n青雲直上，鵬程萬里",
+      "WS,WS,BH": "初始吉利，過程中得到幫助，最終平穩。整體大吉。\n\n紫氣東來，祥雲西至\n中正平和，安泰無憂\n穩如泰山，靜若秋水\n長久安康，福澤綿延",
+      "WS,WK,WS": "初始吉利，過程中遇到阻礙，最終結果吉利。整體小吉。\n\n初陽方升，中遇坎坷\n末路通達，否極泰來\n破繭成蝶，逆境奮起\n雨過天晴，見虹萬里",
+      "WS,WK,WK": "初始吉利，過程中遇到阻礙，最終結果兇險。整體小兇。\n\n初陽中阻，末路多艱\n暗流潛藏，謹言慎行\n韜光養晦，以待時機\n守得雲開，自見月明",
+      "WS,WK,SS": "初始吉利，過程中遇到阻礙，最終付出多收穫少。整體小兇。\n\n初陽中阻，末勞少獲\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "WS,WK,SK": "初始吉利，過程中遇到阻礙，最終通過努力成功。整體小吉。\n\n初陽中阻，末靠自強\n鐵杵磨針，功到自成\n逆水行舟，不進則退\n堅持不懈，終抵彼岸",
+      "WS,WK,BH": "初始吉利，過程中遇到阻礙，最終平穩。整體小吉。\n\n初陽普照，中遇風霜\n末歸平靜，穩如磐石\n以柔克剛，以靜制動\n平和處世，安康長久",
+      "WS,SS,WS": "初始吉利，過程中付出努力，最終結果吉利。整體小吉。\n\n初吉中勞，末得圓滿\n勤耕不輟，碩果累累\n天道酬勤，人道酬善\n春華秋實，福運綿長",
+      "WS,SS,WK": "初始吉利，過程中付出努力，最終結果兇險。整體小兇。\n\n初吉中奮，末路多艱\n勞而少功，時運未濟\n韜光養晦，靜待時機\n積蓄力量，東山再起",
+      "WS,SS,SS": "初始吉利，過程中付出努力，最終付出多收穫少。整體小兇。\n\n初吉中奮，末得薄收\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "WS,SS,SK": "初始吉利，過程中付出努力，最終通過努力成功。整體小吉。\n\n初吉中奮，末靠自強\n精衛填海，愚公移山\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "WS,SS,BH": "初始吉利，過程中付出努力，最終平穩。整體小吉。\n\n初吉中勞，末歸平靜\n平和安泰，穩健前行\n知足常樂，心安理得\n平淡是真，安康是福",
+      "WS,SK,WS": "初始吉利，過程中克服困難，最終結果吉利。整體大吉。\n\n初克中克，末得大成\n披荊斬棘，終見坦途\n勇者無懼，智者無憂\n成就偉業，名揚四方",
+      "WS,SK,WK": "初始吉利，過程中克服困難，最終結果兇險。整體小吉。\n\n初克中克，末路艱辛\n逆水行舟，不進則退\n堅守正道，不忘初心\n黑暗過後，必見曙光",
+      "WS,SK,SS": "初始吉利，過程中克服困難，最終付出多收穫少。整體小吉。\n\n初克中克，末勞少獲\n耕耘雖苦，天道酬勤\n積少成多，聚沙成塔\n堅持不懈，終有回報",
+      "WS,SK,SK": "初始吉利，過程中克服困難，最終通過努力成功。整體大吉。\n\n初克中克，末靠自強\n千錘百煉，終成利器\n風雨過後，見彩虹美\n成就非凡，福澤綿長",
+      "WS,SK,BH": "初始吉利，過程中克服困難，最終平穩。整體大吉。\n\n初克中克，末歸平靜\n穩健前行，安泰無憂\n以剛克柔，以動制靜\n平衡陰陽，福壽安康",
+      "WS,BH,WS": "初始吉利，過程平穩，最終結果吉利。整體大吉。\n\n初陽中平，末得圓滿\n穩中求進，順水行舟\n平和安泰，福運自來\n吉祥如意，萬事順遂",
+      "WS,BH,WK": "初始吉利，過程平穩，最終結果兇險。整體小吉。\n\n初吉中平，末路多艱\n居安思危，未雨綢繆\n以靜制動，以守為攻\n轉危為安，化險為夷",
+      "WS,BH,SS": "初始吉利，過程平穩，最終付出多收穫少。整體小吉。\n\n初陽中平，末勞少獲\n知足常樂，隨遇而安\n勤儉持家，細水長流\n福雖遲來，終將降至",
+      "WS,BH,SK": "初始吉利，過程平穩，最終通過努力成功。整體大吉。\n\n初吉中平，末靠自強\n穩中求進，勤能補拙\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "WS,BH,BH": "初始吉利，過程平穩，最終平穩。整體大吉。\n\n初陽中平，末歸平靜\n四平八穩，安泰無憂\n平和處世，安康長久\n福澤綿延，吉祥如意",
+      "WK,WS,WS": "初始兇險，過程中得到幫助，最終結果吉利。整體小吉。\n\n初兇中助，末得吉慶\n遇難呈祥，轉危為安\n貴人相助，逢兇化吉\n雨過天晴，見虹萬里",
+      "WK,WS,WK": "初始兇險，過程中得到幫助，最終結果兇險。整體小兇。\n\n初兇中助，末路多艱\n外力難挽，內修自強\n韜光養晦，以待時機\n守得雲開，自見月明",
+      "WK,WS,SS": "初始兇險，過程中得到幫助，最終付出多收穫少。整體小兇。\n\n初兇中助，末勞少獲\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "WK,WS,SK": "初始兇險，過程中得到幫助，最終通過努力成功。整體小吉。\n\n初兇中助，末靠自強\n逆水行舟，不進則退\n堅持不懈，終抵彼岸\n功成名就，福壽雙全",
+      "WK,WS,BH": "初始兇險，過程中得到幫助，最終平穩。整體小吉。\n\n初兇中助，末歸平靜\n以柔克剛，以靜制動\n平和處世，安康長久\n轉危為安，化險為夷",
+      "WK,WK,WS": "初始兇險，過程中遇到阻礙，最終結果吉利。整體小兇。\n\n初兇中阻，末得吉慶\n逆水行舟，不進則退\n堅持不懈，終抵彼岸\n雨過天晴，見虹萬里",
+      "WK,WK,WK": "初始兇險，過程中遇到阻礙，最終結果兇險。整體大兇。\n\n初兇中阻，末路多艱\n暗流潛藏，謹言慎行\n韜光養晦，以待時機\n守得雲開，自見月明",
+      "WK,WK,SS": "初始兇險，過程中遇到阻礙，最終付出多收穫少。整體大兇。\n\n初兇中阻，末勞少獲\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "WK,WK,SK": "初始兇險，過程中遇到阻礙，最終通過努力成功。整體小兇。\n\n初兇中阻，末靠自強\n鐵杵磨針，功到自成\n逆水行舟，不進則退\n堅持不懈，終抵彼岸",
+      "WK,WK,BH": "初始兇險，過程中遇到阻礙，最終平穩。整體小兇。\n\n初兇中阻，末歸平靜\n穩如磐石，靜若處子\n以柔克剛，以靜制動\n平和處世，安康長久",
+      "WK,SS,WS": "初始兇險，過程中付出努力，最終結果吉利。整體小兇。\n\n初兇中勞，末得圓滿\n勤耕不輟，碩果累累\n天道酬勤，人道酬善\n春華秋實，福運綿長",
+      "WK,SS,WK": "初始兇險，過程中付出努力，最終結果兇險。整體大兇。\n\n初兇中勞，末路多艱\n勞而無功，時運不濟\n韜光養晦，靜待時機\n積蓄力量，東山再起",
+      "WK,SS,SS": "初始兇險，過程中付出努力，最終付出多收穫少。整體大兇。\n\n初兇中勞，末得薄收\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "WK,SS,SK": "初始兇險，過程中付出努力，最終通過努力成功。整體小兇。\n\n初兇中勞，末靠自強\n精衛填海，愚公移山\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "WK,SS,BH": "初始兇險，過程中付出努力，最終平穩。整體小兇。\n\n初兇中勞，末歸平靜\n平和安泰，穩健前行\n知足常樂，心安理得\n平淡是真，安康是福",
+      "WK,SK,WS": "初始兇險，過程中克服困難，最終結果吉利。整體小吉。\n\n初兇中克，末得大成\n披荊斬棘，終見坦途\n勇者無懼，智者無憂\n成就偉業，名揚四方",
+      "WK,SK,WK": "初始兇險，過程中克服困難，最終結果兇險。整體小兇。\n\n初兇中克，末路艱辛\n逆水行舟，不進則退\n堅守正道，不忘初心\n黑暗過後，必見曙光",
+      "WK,SK,SS": "初始兇險，過程中克服困難，最終付出多收穫少。整體小兇。\n\n初兇中克，末勞少獲\n耕耘雖苦，天道酬勤\n積少成多，聚沙成塔\n堅持不懈，終有回報",
+      "WK,SK,SK": "初始兇險，過程中克服困難，最終通過努力成功。整體小吉。\n\n初兇中克，末靠自強\n千錘百煉，終成利器\n風雨過後，見彩虹美\n成就非凡，福澤綿長",
+      "WK,SK,BH": "初始兇險，過程中克服困難，最終平穩。整體小吉。\n\n初兇中克，末歸平靜\n穩健前行，安泰無憂\n以剛克柔，以動制靜\n平衡陰陽，福壽安康",
+      "WK,BH,WS": "初始兇險，過程平穩，最終結果吉利。整體小兇。\n\n初兇中平，末得圓滿\n穩中求進，順水行舟\n平和安泰，福運自來\n吉祥如意，萬事順遂",
+      "WK,BH,WK": "初始兇險，過程平穩，最終結果兇險。整體大兇。\n\n初兇中平，末路多艱\n居安思危，未雨綢繆\n以靜制動，以守為攻\n轉危為安，化險為夷",
+      "WK,BH,SS": "初始兇險，過程平穩，最終付出多收穫少。整體大兇。\n\n初兇中平，末勞少獲\n知足常樂，隨遇而安\n勤儉持家，細水長流\n福雖遲來，終將降至",
+      "WK,BH,SK": "初始兇險，過程平穩，最終通過努力成功。整體小兇。\n\n初兇中平，末靠自強\n穩中求進，勤能補拙\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "WK,BH,BH": "初始兇險，過程平穩，最終平穩。整體大兇。\n\n初兇中平，末歸平靜\n四平八穩，安泰無憂\n平和處世，安康長久\n福澤綿延，吉祥如意",
+      "SS,WS,WS": "初始付出多收穫少，過程中得到幫助，最終結果吉利。整體小吉。\n\n初勞中助，末得圓滿\n勤耕不輟，天道酬勤\n積善之家，必有餘慶\n春華秋實，福運綿長",
+      "SS,WS,WK": "初始付出多收穫少，過程中得到幫助，最終結果兇險。整體小兇。\n\n初勞中助，末路多艱\n勞而無功，時運不濟\n韜光養晦，靜待時機\n積蓄力量，東山再起",
+      "SS,WS,SS": "初始付出多收穫少，過程中得到幫助，最終付出多收穫少。整體小兇。\n\n初勞中助，末得薄收\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "SS,WS,SK": "初始付出多收穫少，過程中得到幫助，最終通過努力成功。整體小吉。\n\n初勞中助，末靠自強\n精衛填海，愚公移山\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "SS,WS,BH": "初始付出多收穫少，過程中得到幫助，最終平穩。整體小吉。\n\n初勞中助，末歸平靜\n平和安泰，穩健前行\n知足常樂，心安理得\n平淡是真，安康是福",
+      "SS,WK,WS": "初始付出多收穫少，過程中遇到阻礙，最終結果吉利。整體小兇。\n\n初勞中阻，末得吉慶\n逆水行舟，不進則退\n堅持不懈，終抵彼岸\n雨過天晴，見虹萬里",
+      "SS,WK,WK": "初始付出多收穫少，過程中遇到阻礙，最終結果兇險。整體大兇。\n\n初勞中阻，末路多艱\n暗流潛藏，謹言慎行\n韜光養晦，以待時機\n守得雲開，自見月明",
+      "SS,WK,SS": "初始付出多收穫少，過程中遇到阻礙，最終付出多收穫少。整體大兇。\n\n初勞中阻，末得薄收\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "SS,WK,SK": "初始付出多收穫少，過程中遇到阻礙，最終通過努力成功。整體小兇。\n\n初勞中阻，末靠自強\n鐵杵磨針，功到自成\n逆水行舟，不進則退\n堅持不懈，終抵彼岸",
+      "SS,WK,BH": "初始付出多收穫少，過程中遇到阻礙，最終平穩。整體小兇。\n\n初勞中阻，末歸平靜\n穩如磐石，靜若處子\n以柔克剛，以靜制動\n平和處世，安康長久",
+      "SS,SS,WS": "初始付出多收穫少，過程中付出努力，最終結果吉利。整體小兇。\n\n初勞中勞，末得圓滿\n勤耕不輟，碩果累累\n天道酬勤，人道酬善\n春華秋實，福運綿長",
+      "SS,SS,WK": "初始付出多收穫少，過程中付出努力，最終結果兇險。整體大兇。\n\n初勞中勞，末路多艱\n勞而無功，時運不濟\n韜光養晦，靜待時機\n積蓄力量，東山再起",
+      "SS,SS,SS": "初始付出多收穫少，過程中付出努力，最終付出多收穫少。整體大兇。\n\n初勞中勞，末得薄收\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "SS,SS,SK": "初始付出多收穫少，過程中付出努力，最終通過努力成功。整體小兇。\n\n初勞中勞，末靠自強\n精衛填海，愚公移山\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "SS,SS,BH": "初始付出多收穫少，過程中付出努力，最終平穩。整體小兇。\n\n初勞中勞，末歸平靜\n平和安泰，穩健前行\n知足常樂，心安理得\n平淡是真，安康是福",
+      "SS,SK,WS": "初始付出多收穫少，過程中克服困難，最終結果吉利。整體小吉。\n\n初勞中克，末得大成\n披荊斬棘，終見坦途\n勇者無懼，智者無憂\n成就偉業，名揚四方",
+      "SS,SK,WK": "初始付出多收穫少，過程中克服困難，最終結果兇險。整體小兇。\n\n初勞中克，末路艱辛\n逆水行舟，不進則退\n堅守正道，不忘初心\n黑暗過後，必見曙光",
+      "SS,SK,SS": "初始付出多收穫少，過程中克服困難，最終付出多收穫少。整體小兇。\n\n初勞中克，末勞少獲\n耕耘雖苦，天道酬勤\n積少成多，聚沙成塔\n堅持不懈，終有回報",
+      "SS,SK,SK": "初始付出多收穫少，過程中克服困難，最終通過努力成功。整體小吉。\n\n初勞中克，末靠自強\n千錘百煉，終成利器\n風雨過後，見彩虹美\n成就非凡，福澤綿長",
+      "SS,SK,BH": "初始付出多收穫少，過程中克服困難，最終平穩。整體小吉。\n\n初勞中克，末歸平靜\n穩健前行，安泰無憂\n以剛克柔，以動制靜\n平衡陰陽，福壽安康",
+      "SS,BH,WS": "初始付出多收穫少，過程平穩，最終結果吉利。整體小吉。\n\n初勞中平，末得圓滿\n穩中求進，順水行舟\n平和安泰，福運自來\n吉祥如意，萬事順遂",
+      "SS,BH,WK": "初始付出多收穫少，過程平穩，最終結果兇險。整體小兇。\n\n初勞中平，末路多艱\n居安思危，未雨綢繆\n以靜制動，以守為攻\n轉危為安，化險為夷",
+      "SS,BH,SS": "初始付出多收穫少，過程平穩，最終付出多收穫少。整體小兇。\n\n初勞中平，末勞少獲\n知足常樂，隨遇而安\n勤儉持家，細水長流\n福雖遲來，終將降至",
+      "SS,BH,SK": "初始付出多收穫少，過程平穩，最終通過努力成功。整體小吉。\n\n初勞中平，末靠自強\n穩中求進，勤能補拙\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "SS,BH,BH": "初始付出多收穫少，過程平穩，最終平穩。整體小吉。\n\n初勞中平，末歸平靜\n四平八穩，安泰無憂\n平和處世，安康長久\n福澤綿延，吉祥如意",
+      "SK,WS,WS": "初始通過努力成功，過程中得到幫助，最終結果吉利。整體大吉。\n\n初克中助，末得圓滿\n披荊斬棘，終見坦途\n勇者無懼，智者無憂\n成就偉業，名揚四方",
+      "SK,WS,WK": "初始通過努力成功，過程中得到幫助，最終結果兇險。整體小吉。\n\n初克中助，末路艱辛\n逆水行舟，不進則退\n堅守正道，不忘初心\n黑暗過後，必見曙光",
+      "SK,WS,SS": "初始通過努力成功，過程中得到幫助，最終付出多收穫少。整體小吉。\n\n初克中助，末勞少獲\n耕耘雖苦，天道酬勤\n積少成多，聚沙成塔\n堅持不懈，終有回報",
+      "SK,WS,SK": "初始通過努力成功，過程中得到幫助，最終通過努力成功。整體大吉。\n\n初克中助，末靠自強\n千錘百煉，終成利器\n風雨過後，見彩虹美\n成就非凡，福澤綿長",
+      "SK,WS,BH": "初始通過努力成功，過程中得到幫助，最終平穩。整體大吉。\n\n初克中助，末歸平靜\n穩健前行，安泰無憂\n以剛克柔，以動制靜\n平衡陰陽，福壽安康",
+      "SK,WK,WS": "初始通過努力成功，過程中遇到阻礙，最終結果吉利。整體小吉。\n\n初克中阻，末得吉慶\n逆水行舟，不進則退\n堅持不懈，終抵彼岸\n雨過天晴，見虹萬里",
+      "SK,WK,WK": "初始通過努力成功，過程中遇到阻礙，最終結果兇險。整體小兇。\n\n初克中阻，末路多艱\n暗流潛藏，謹言慎行\n韜光養晦，以待時機\n守得雲開，自見月明",
+      "SK,WK,SS": "初始通過努力成功，過程中遇到阻礙，最終付出多收穫少。整體小兇。\n\n初克中阻，末勞少獲\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "SK,WK,SK": "初始通過努力成功，過程中遇到阻礙，最終通過努力成功。整體小吉。\n\n初克中阻，末靠自強\n鐵杵磨針，功到自成\n逆水行舟，不進則退\n堅持不懈，終抵彼岸",
+      "SK,WK,BH": "初始通過努力成功，過程中遇到阻礙，最終平穩。整體小吉。\n\n初克中阻，末歸平靜\n穩如磐石，靜若處子\n以柔克剛，以靜制動\n平和處世，安康長久",
+      "SK,SS,WS": "初始通過努力成功，過程中付出努力，最終結果吉利。整體小吉。\n\n初克中勞，末得圓滿\n勤耕不輟，碩果累累\n天道酬勤，人道酬善\n春華秋實，福運綿長",
+      "SK,SS,WK": "初始通過努力成功，過程中付出努力，最終結果兇險。整體小兇。\n\n初克中勞，末路多艱\n勞而無功，時運不濟\n韜光養晦，靜待時機\n積蓄力量，東山再起",
+      "SK,SS,SS": "初始通過努力成功，過程中付出努力，最終付出多收穫少。整體小兇。\n\n初克中勞，末得薄收\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "SK,SS,SK": "初始通過努力成功，過程中付出努力，最終通過努力成功。整體小吉。\n\n初克中勞，末靠自強\n精衛填海，愚公移山\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "SK,SS,BH": "初始通過努力成功，過程中付出努力，最終平穩。整體小吉。\n\n初克中勞，末歸平靜\n平和安泰，穩健前行\n知足常樂，心安理得\n平淡是真，安康是福",
+      "SK,SK,WS": "初始通過努力成功，過程中克服困難，最終結果吉利。整體大吉。\n\n初克中克，末得大成\n披荊斬棘，終見坦途\n勇者無懼，智者無憂\n成就偉業，名揚四方",
+      "SK,SK,WK": "初始通過努力成功，過程中克服困難，最終結果兇險。整體小吉。\n\n初克中克，末路艱辛\n逆水行舟，不進則退\n堅守正道，不忘初心\n黑暗過後，必見曙光",
+      "SK,SK,SS": "初始通過努力成功，過程中克服困難，最終付出多收穫少。整體小吉。\n\n初克中克，末勞少獲\n耕耘雖苦，天道酬勤\n積少成多，聚沙成塔\n堅持不懈，終有回報",
+      "SK,SK,SK": "初始通過努力成功，過程中克服困難，最終通過努力成功。整體大吉。\n\n初克中克，末靠自強\n千錘百煉，終成利器\n風雨過後，見彩虹美\n成就非凡，福澤綿長",
+      "SK,SK,BH": "初始通過努力成功，過程中克服困難，最終平穩。整體大吉。\n\n初克中克，末歸平靜\n穩健前行，安泰無憂\n以剛克柔，以動制靜\n平衡陰陽，福壽安康",
+      "SK,BH,WS": "初始通過努力成功，過程平穩，最終結果吉利。整體大吉。\n\n初克中平，末得圓滿\n穩中求進，順水行舟\n平和安泰，福運自來\n吉祥如意，萬事順遂",
+      "SK,BH,WK": "初始通過努力成功，過程平穩，最終結果兇險。整體小吉。\n\n初克中平，末路多艱\n居安思危，未雨綢繆\n以靜制動，以守為攻\n轉危為安，化險為夷",
+      "SK,BH,SS": "初始通過努力成功，過程平穩，最終付出多收穫少。整體小吉。\n\n初克中平，末勞少獲\n知足常樂，隨遇而安\n勤儉持家，細水長流\n福雖遲來，終將降至",
+      "SK,BH,SK": "初始通過努力成功，過程平穩，最終通過努力成功。整體大吉。\n\n初克中平，末靠自強\n穩中求進，勤能補拙\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "SK,BH,BH": "初始通過努力成功，過程平穩，最終平穩。整體大吉。\n\n初克中平，末歸平靜\n四平八穩，安泰無憂\n平和處世，安康長久\n福澤綿延，吉祥如意",
+      "BH,WS,WS": "初始平和，過程中得到幫助，最終結果吉利。整體大吉。\n\n初平中助，末得圓滿\n穩中求進，順水行舟\n平和安泰，福運自來\n吉祥如意，萬事順遂",
+      "BH,WS,WK": "初始平和，過程中得到幫助，最終結果兇險。整體小吉。\n\n初平中助，末路多艱\n居安思危，未雨綢繆\n以靜制動，以守為攻\n轉危為安，化險為夷",
+      "BH,WS,SS": "初始平和，過程中得到幫助，最終付出多收穫少。整體小吉。\n\n初平中助，末勞少獲\n知足常樂，隨遇而安\n勤儉持家，細水長流\n福雖遲來，終將降至",
+      "BH,WS,SK": "初始平和，過程中得到幫助，最終通過努力成功。整體大吉。\n\n初平中助，末靠自強\n穩中求進，勤能補拙\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "BH,WS,BH": "初始平和，過程中得到幫助，最終平穩。整體大吉。\n\n初平中助，末歸平靜\n四平八穩，安泰無憂\n平和處世，安康長久\n福澤綿延，吉祥如意",
+      "BH,WK,WS": "初始平和，過程中遇到阻礙，最終結果吉利。整體小吉。\n\n初平中阻，末得吉慶\n逆水行舟，不進則退\n堅持不懈，終抵彼岸\n雨過天晴，見虹萬里",
+      "BH,WK,WK": "初始平和，過程中遇到阻礮，最終結果兇險。整體小兇。\n\n初平中阻，末路多艱\n暗流潛藏，謹言慎行\n韜光養晦，以待時機\n守得雲開，自見月明",
+      "BH,WK,SS": "初始平和，過程中遇到阻礙，最終付出多收穫少。整體小兇。\n\n初平中阻，末勞少獲\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "BH,WK,SK": "初始平和，過程中遇到阻礙，最終通過努力成功。整體小吉。\n\n初平中阻，末靠自強\n鐵杵磨針，功到自成\n逆水行舟，不進則退\n堅持不懈，終抵彼岸",
+      "BH,WK,BH": "初始平和，過程中遇到阻礙，最終平穩。整體小吉。\n\n初平中阻，末歸平靜\n穩如磐石，靜若處子\n以柔克剛，以靜制動\n平和處世，安康長久",
+      "BH,SS,WS": "初始平和，過程中付出努力，最終結果吉利。整體小吉。\n\n初平中勞，末得圓滿\n勤耕不輟，碩果累累\n天道酬勤，人道酬善\n春華秋實，福運綿長",
+      "BH,SS,WK": "初始平和，過程中付出努力，最終結果兇險。整體小兇。\n\n初平中勞，末路多艱\n勞而無功，時運不濟\n韜光養晦，靜待時機\n積蓄力量，東山再起",
+      "BH,SS,SS": "初始平和，過程中付出努力，最終付出多收穫少。整體小兇。\n\n初平中勞，末得薄收\n勤儉持家，細水長流\n知足常樂，隨遇而安\n福雖遲來，終將降至",
+      "BH,SS,SK": "初始平和，過程中付出努力，最終通過努力成功。整體小吉。\n\n初平中勞，末靠自強\n精衛填海，愚公移山\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "BH,SS,BH": "初始平和，過程中付出努力，最終平穩。整體小吉。\n\n初平中勞，末歸平靜\n平和安泰，穩健前行\n知足常樂，心安理得\n平淡是真，安康是福",
+      "BH,SK,WS": "初始平和，過程中克服困難，最終結果吉利。整體大吉。\n\n初平中克，末得大成\n披荊斬棘，終見坦途\n勇者無懼，智者無憂\n成就偉業，名揚四方",
+      "BH,SK,WK": "初始平和，過程中克服困難，最終結果兇險。整體小吉。\n\n初平中克，末路艱辛\n逆水行舟，不進則退\n堅守正道，不忘初心\n黑暗過後，必見曙光",
+      "BH,SK,SS": "初始平和，過程中克服困難，最終付出多收穫少。整體小吉。\n\n初平中克，末勞少獲\n耕耘雖苦，天道酬勤\n積少成多，聚沙成塔\n堅持不懈，終有回報",
+      "BH,SK,SK": "初始平和，過程中克服困難，最終通過努力成功。整體大吉。\n\n初平中克，末靠自強\n千錘百煉，終成利器\n風雨過後，見彩虹美\n成就非凡，福澤綿長",
+      "BH,SK,BH": "初始平和，過程中克服困難，最終平穩。整體大吉。\n\n初平中克，末歸平靜\n穩健前行，安泰無憂\n以剛克柔，以動制靜\n平衡陰陽，福壽安康",
+      "BH,BH,WS": "初始平和，過程平穩，最終結果吉利。整體大吉。\n\n初平中平，末得圓滿\n四平八穩，安泰無憂\n平和處世，安康長久\n福澤綿延，吉祥如意",
+      "BH,BH,WK": "初始平和，過程平穩，最終結果兇險。整體小兇。\n\n初平中平，末路多艱\n居安思危，未雨綢繆\n以靜制動，以守為攻\n轉危為安，化險為夷",
+      "BH,BH,SS": "初始平和，過程平穩，最終付出多收穫少。整體小兇。\n\n初平中平，末勞少獲\n知足常樂，隨遇而安\n勤儉持家，細水長流\n福雖遲來，終將降至",
+      "BH,BH,SK": "初始平和，過程平穩，最終通過努力成功。整體大吉。\n\n初平中平，末靠自強\n穩中求進，勤能補拙\n堅持不懈，終有所成\n功成名就，福壽雙全",
+      "BH,BH,BH": "初始平和，過程平穩，最終平穩。整體大吉。\n\n初平中平，末歸平靜\n四平八穩，安泰無憂\n平和處世，安康長久\n福澤綿延，吉祥如意"
+    };
+
+    function generateHexagram(upper, lower) {
+      return [...baguaLines[lower], ...baguaLines[upper]];
+    }
+
+    function generateMutualHexagram(hexagram) {
+      const lowerLines = [hexagram[1], hexagram[2], hexagram[3]];
+      const upperLines = [hexagram[2], hexagram[3], hexagram[4]];
+      const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
+      const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
+      return { upper, lower, hexagram: [...lowerLines, ...upperLines] };
+    }
+
+    function generateChangedHexagram(hexagram, movingLine) {
+      const changedHexagram = [...hexagram];
+      const index = movingLine - 1;
+      changedHexagram[index] = changedHexagram[index] === "—" ? "--" : "—";
+      const lowerLines = changedHexagram.slice(0, 3);
+      const upperLines = changedHexagram.slice(3, 6);
+      const lower = Object.keys(baguaLines).find(key => baguaLines[key].join('') === lowerLines.join('')) || 0;
+      const upper = Object.keys(baguaLines).find(key => baguaLines[key].join('') === upperLines.join('')) || 0;
+      return { upper, lower, hexagram: changedHexagram };
+    }
+
+    function drawHexagramSVG(hexagram, movingLine = null) {
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("width", "100");
+      svg.setAttribute("height", "120");
+      svg.setAttribute("viewBox", "0 0 100 120");
+
+      const lineHeight = 20;
+      hexagram.forEach((line, index) => {
+        const y = (5 - index) * lineHeight + 10;
+        if (line === "—") {
+          const path = document.createElementNS(svgNS, "path");
+          path.setAttribute("d", `M 20 ${y} H 80`);
+          path.setAttribute("stroke", index + 1 === movingLine ? "red" : "black");
+          path.setAttribute("stroke-width", "4");
+          svg.appendChild(path);
+        } else {
+          const path1 = document.createElementNS(svgNS, "path");
+          path1.setAttribute("d", `M 20 ${y} H 45`);
+          path1.setAttribute("stroke", index + 1 === movingLine ? "red" : "black");
+          path1.setAttribute("stroke-width", "4");
+          svg.appendChild(path1);
+          const path2 = document.createElementNS(svgNS, "path");
+          path2.setAttribute("d", `M 55 ${y} H 80`);
+          path2.setAttribute("stroke", index + 1 === movingLine ? "red" : "black");
+          path2.setAttribute("stroke-width", "4");
+          svg.appendChild(path2);
+        }
+      });
+
+      return svg.outerHTML;
+    }
+
+    function getFiveElementRelation(fromElement, toElement) {
+      if (fromElement === toElement) return { type: "比和", description: "比和：雙方五行相同，力量均衡，無明顯生剋關係，平穩合作。" };
+      const relation = fiveRelations.find(r => r.from === fromElement && r.to === toElement);
+      if (relation) {
+        return {
+          type: relation.type,
+          description: relation.type === "生" ? `${fromElement}生${toElement}：用卦生體卦，助益強大，利於發展。` : `${fromElement}剋${toElement}：用卦剋體卦，阻力較大，需謹慎行事。`
+        };
+      }
+      return { type: "無", description: "無直接生剋關係，影響中性，需視具體情況判斷。" };
+    }
+
+    function determineFiveElementStatus(element, month) {
+      const seasonMap = {
+        1: "木", 2: "木", 3: "土", 4: "火", 5: "火", 6: "土",
+        7: "金", 8: "金", 9: "土", 10: "水", 11: "水", 12: "土"
+      };
+      const seasonElement = seasonMap[month] || "土";
+      if (element === seasonElement) return "旺";
+      if (fiveRelations.some(r => r.from === seasonElement && r.to === element && r.type === "生")) return "相";
+      if (fiveRelations.some(r => r.from === element && r.to === seasonElement && r.type === "生")) return "休";
+      if (fiveRelations.some(r => r.from === seasonElement && r.to === element && r.type === "剋")) return "囚";
+      return "死";
+    }
+
+    function generateFiveElementGraph(bodyElement, useElement, mutualUseElement, changedUseElement, month) {
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("width", "500");
+      svg.setAttribute("height", "500");
+      svg.setAttribute("viewBox", "0 0 500 500");
+
+      const centerX = 250, centerY = 250, radius = 100;
+      const elements = ["金", "木", "水", "火", "土"];
+      elements.forEach((el, i) => {
+        const angle = (i * 72 - 90) * Math.PI / 180;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        const circle = document.createElementNS(svgNS, "circle");
+        circle.setAttribute("cx", x);
+        circle.setAttribute("cy", y);
+        circle.setAttribute("r", "30");
+        circle.setAttribute("fill", fiveElementColors[el]);
+        circle.setAttribute("stroke", "black");
+        circle.setAttribute("stroke-width", wuxingStatus[determineFiveElementStatus(el, month)].strokeWidth);
+        circle.setAttribute("opacity", wuxingStatus[determineFiveElementStatus(el, month)].opacity);
+        svg.appendChild(circle);
+        const text = document.createElementNS(svgNS, "text");
+        text.setAttribute("x", x);
+        text.setAttribute("y", y + 5);
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("fill", "white");
+        text.setAttribute("font-size", "20");
+        text.textContent = el;
+        svg.appendChild(text);
+      });
+
+      fiveRelations.forEach(rel => {
+        const fromIdx = elements.indexOf(rel.from);
+        const toIdx = elements.indexOf(rel.to);
+        const fromAngle = (fromIdx * 72 - 90) * Math.PI / 180;
+        const toAngle = (toIdx * 72 - 90) * Math.PI / 180;
+        const fromX = centerX + (radius - 30) * Math.cos(fromAngle);
+        const fromY = centerY + (radius - 30) * Math.sin(fromAngle);
+        const toX = centerX + (radius - 30) * Math.cos(toAngle);
+        const toY = centerY + (radius - 30) * Math.sin(toAngle);
+        const path = document.createElementNS(svgNS, "path");
+        const midX = (fromX + toX) / 2;
+        const midY = (fromY + toY) / 2;
+        const cpX = midX + 50 * Math.cos((fromAngle + toAngle) / 2 + Math.PI / 2);
+        const cpY = midY + 50 * Math.sin((fromAngle + toAngle) / 2 + Math.PI / 2);
+        path.setAttribute("d", `M ${fromX} ${fromY} Q ${cpX} ${cpY} ${toX} ${toY}`);
+        path.setAttribute("stroke", rel.type === "生" ? "green" : "red");
+        path.setAttribute("stroke-width", "2");
+        path.setAttribute("fill", "none");
+        const arrow = document.createElementNS(svgNS, "polygon");
+        const arrowSize = 10;
+        const arrowAngle = Math.atan2(toY - cpY, toX - cpX);
+        const arrowX1 = toX - arrowSize * Math.cos(arrowAngle - Math.PI / 6);
+        const arrowY1 = toY - arrowSize * Math.sin(arrowAngle - Math.PI / 6);
+        const arrowX2 = toX - arrowSize * Math.cos(arrowAngle + Math.PI / 6);
+        const arrowY2 = toY - arrowSize * Math.sin(arrowAngle + Math.PI / 6);
+        arrow.setAttribute("points", `${toX},${toY} ${arrowX1},${arrowY1} ${arrowX2},${arrowY2}`);
+        arrow.setAttribute("fill", rel.type === "生" ? "green" : "red");
+        svg.appendChild(path);
+        svg.appendChild(arrow);
+      });
+
+      const bodyIdx = elements.indexOf(bodyElement);
+      const bodyAngle = (bodyIdx * 72 - 90) * Math.PI / 180;
+      const bodyX = centerX + radius * 1.5 * Math.cos(bodyAngle);
+      const bodyY = centerY + radius * 1.5 * Math.sin(bodyAngle);
+      const bodyCircle = document.createElementNS(svgNS, "circle");
+      bodyCircle.setAttribute("cx", bodyX);
+      bodyCircle.setAttribute("cy", bodyY);
+      bodyCircle.setAttribute("r", "20");
+      bodyCircle.setAttribute("fill", fiveElementColors[bodyElement]);
+      bodyCircle.setAttribute("stroke", "black");
+      bodyCircle.setAttribute("stroke-width", "2");
+      svg.appendChild(bodyCircle);
+      const bodyText = document.createElementNS(svgNS, "text");
+      bodyText.setAttribute("x", bodyX);
+      bodyText.setAttribute("y", bodyY + 5);
+      bodyText.setAttribute("text-anchor", "middle");
+      bodyText.setAttribute("fill", "white");
+      bodyText.setAttribute("font-size", "16");
+      bodyText.textContent = `體:${bodyElement}`;
+      svg.appendChild(bodyText);
+
+      [useElement, mutualUseElement, changedUseElement].forEach((el, i) => {
+        if (el) {
+          const offsetAngle = (bodyIdx * 72 - 90 + (i + 1) * 15) * Math.PI / 180;
+          const useX = centerX + radius * 1.8 * Math.cos(offsetAngle);
+          const useY = centerY + radius * 1.8 * Math.sin(offsetAngle);
+          const useCircle = document.createElementNS(svgNS, "circle");
+          useCircle.setAttribute("cx", useX);
+          useCircle.setAttribute("cy", useY);
+          useCircle.setAttribute("r", "20");
+          useCircle.setAttribute("fill", fiveElementColors[el]);
+          useCircle.setAttribute("stroke", "black");
+          useCircle.setAttribute("stroke-width", "2");
+          svg.appendChild(useCircle);
+          const useText = document.createElementNS(svgNS, "text");
+          useText.setAttribute("x", useX);
+          useText.setAttribute("y", useY + 5);
+          useText.setAttribute("text-anchor", "middle");
+          useText.setAttribute("fill", "white");
+          useText.setAttribute("font-size", "16");
+          useText.textContent = `${i === 0 ? '本用' : i === 1 ? '互用' : '變用'}:${el}`;
+          svg.appendChild(useText);
+          const path = document.createElementNS(svgNS, "path");
+          path.setAttribute("d", `M ${bodyX} ${bodyY} L ${useX} ${useY}`);
+          path.setAttribute("stroke", colors[getFiveElementRelation(el, bodyElement).type]);
+          path.setAttribute("stroke-width", "2");
+          svg.appendChild(path);
+        }
+      });
+
+      return svg.outerHTML;
+    }
+
+    function generateWuxingStatusHtml(bodyElement, useElement, mutualUseElement, changedUseElement, month) {
+      const elements = [bodyElement, useElement, mutualUseElement, changedUseElement];
+      const labels = ["體卦", "本卦用卦", "互卦用卦", "變卦用卦"];
+      let html = '<div class="mt-4"><h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-balance-scale mr-2"></i>五行狀態分析（當前月份：' + month + '月）</h3><table class="w-full mt-2 border-collapse border border-gray-300"><thead><tr class="bg-gray-100"><th class="border border-gray-300 p-2">卦象</th><th class="border border-gray-300 p-2">五行</th><th class="border border-gray-300 p-2">狀態</th></tr></thead><tbody>';
+      elements.forEach((el, i) => {
+        if (el) {
+          const status = determineFiveElementStatus(el, month);
+          html += `<tr><td class="border border-gray-300 p-2">${labels[i]}</td><td class="border border-gray-300 p-2">${el}</td><td class="border border-gray-300 p-2">${status}</td></tr>`;
+        }
+      });
+      html += '</tbody></table></div>';
+      return html;
+    }
+
+    function analyzeHexagram(upper, lower, movingLine, question, month) {
+      const hexagram = generateHexagram(upper, lower);
+      const hexagramStr = drawHexagramSVG(hexagram, movingLine);
+      const hexagramName = sixtyFourHexagrams[`${upper}${lower}`] || "未知卦";
+      const upperName = trigramsName[upper];
+      const lowerName = trigramsName[lower];
+
+      const mutual = generateMutualHexagram(hexagram);
+      const mutualHexagramStr = drawHexagramSVG(mutual.hexagram);
+      const mutualHexagramName = sixtyFourHexagrams[`${mutual.upper}${mutual.lower}`] || "未知卦";
+      const mutualUpperName = trigramsName[mutual.upper];
+      const mutualLowerName = trigramsName[mutual.lower];
+
+      const changed = generateChangedHexagram(hexagram, movingLine);
+      const changedHexagramStr = drawHexagramSVG(changed.hexagram);
+      const changedHexagramName = sixtyFourHexagrams[`${changed.upper}${changed.lower}`] || "未知卦";
+      const changedUpperName = trigramsName[changed.upper];
+      const changedLowerName = trigramsName[changed.lower];
+
+      const bodyTrigram = movingLine <= 3 ? lowerName : upperName;
+      const useTrigram = movingLine <= 3 ? upperName : lowerName;
+      const mutualUseTrigram = mutual.hexagram[4] === "—" ? mutualUpperName : mutualLowerName;
+      const changedUseTrigram = changed.hexagram[movingLine - 1] === "—" ? changedUpperName : changedLowerName;
+
+      const bodyElement = trigramFiveElement[bodyTrigram];
+      const useElement = trigramFiveElement[useTrigram];
+      const mutualUseElement = trigramFiveElement[mutualUseTrigram];
+      const changedUseElement = trigramFiveElement[changedUseTrigram];
+
+      const fiveRelAnalysis = getFiveElementRelation(useElement, bodyElement);
+      const mutualFiveRelAnalysis = getFiveElementRelation(mutualUseElement, bodyElement);
+      const changedFiveRelAnalysis = getFiveElementRelation(changedUseElement, bodyElement);
+
+      const statusKey = [
+        determineFiveElementStatus(bodyElement, month),
+        determineFiveElementStatus(useElement, month),
+        determineFiveElementStatus(changedUseElement, month)
+      ].map(s => {
+        if (s === "旺" || s === "相") return "WS";
+        if (s === "休" || s === "囚") return "SS";
+        if (s === "死") return "WK";
+        return "BH";
+      }).join(",");
+
+      const adviceText = wuxingStatusMap[statusKey] || "平穩進行，謹慎行事，靜待時機。";
+      const finalVerdict = adviceText.includes("大吉") ? "大吉" : adviceText.includes("小吉") ? "小吉" : adviceText.includes("大兇") ? "大兇" : "小兇";
+
+      const graphHtml = generateFiveElementGraph(bodyElement, useElement, mutualUseElement, changedUseElement, month);
+      const wuxingStatusHtml = generateWuxingStatusHtml(bodyElement, useElement, mutualUseElement, changedUseElement, month);
+
+      return {
+        hexagramStr, mutualHexagramStr, changedHexagramStr,
+        hexagramName, mutualHexagramName, changedHexagramName,
+        upperName, lowerName, mutualUpperName, mutualLowerName,
+        changedUpperName, changedLowerName,
+        bodyTrigram, useTrigram, mutualUseTrigram, changedUseTrigram,
+        fiveRelAnalysis, mutualFiveRelAnalysis, changedFiveRelAnalysis,
+        finalVerdict, adviceText, graphHtml, wuxingStatusHtml
+      };
+    }
+
+    function logMessage(message) {
+      const logDiv = document.getElementById("log");
+      const p = document.createElement("p");
+      p.innerHTML = `<i class="fas fa-info-circle mr-2"></i>${message}`;
+      logDiv.appendChild(p);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    document.getElementById("connectBtn").addEventListener("click", () => {
+      if (client && client.connected) {
+        document.getElementById("mqttStatusInterpreter").innerHTML = 'MQTT Status: 已連線';
+        return;
+      }
+
+      client = mqtt.connect('wss://broker.mqttgo.io:8084/mqtt');
+      client.on('connect', function () {
+        document.getElementById("mqttStatusInterpreter").innerHTML = 'MQTT Status: 已連線，訂閱取卦請求...';
+        client.subscribe('mhxingyi/#');
+        logMessage('已連線至 MQTT Broker，開始監聽取卦請求...');
+      });
+
+      client.on('error', function (err) {
+        document.getElementById("mqttStatusInterpreter").innerHTML = 'MQTT Status: 連線錯誤 - ' + err.toString();
+        logMessage('連線錯誤：' + err.toString());
+      });
+
+      client.on('close', function () {
+        document.getElementById("mqttStatusInterpreter").innerHTML = 'MQTT Status: 連線關閉';
+        logMessage('連線關閉');
+      });
+
+      client.on('message', function (topic, message) {
+        const match = topic.match(/mhxingyi\/([a-z0-9]+)(\d)(\d)(\d)/);
+        if (match) {
+          const id = match[1];
+          const upper = parseInt(match[2]);
+          const lower = parseInt(match[3]);
+          const movingLine = parseInt(match[4]);
+          const question = message.toString();
+          logMessage(`收到取卦請求：ID=${id}, 上卦=${trigramsName[upper]}, 下卦=${trigramsName[lower]}, 動爻=${movingLine}, 問題=${question}`);
+
+          const now = new Date();
+          const month = now.getMonth() + 1;
+          const result = analyzeHexagram(upper, lower, movingLine, question, month);
+
+          client.publish(`mhxingyi/${id}/解卦`, JSON.stringify(result));
+          logMessage(`已發送解卦結果：ID=${id}`);
+
+          document.getElementById("result").innerHTML = `
+            <div class="mt-4">
+              <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-yin-yang mr-2"></i>最新解卦結果</h3>
+              <p><strong>問題：</strong>${question}</p>
+              <div class="flex flex-wrap justify-around gap-4 mt-4">
+                <div class="hexagram-box bg-gray-50 p-4 rounded-md shadow-sm text-center">
+                  <h4 class="text-md font-semibold text-gray-800">本卦</h4>
+                  ${result.hexagramStr}
+                  <p class="text-gray-700">${result.hexagramName}</p>
+                  <p class="text-gray-600"><i class="fas fa-arrow-up mr-1"></i>上卦: ${result.upperName}</p>
+                  <p class="text-gray-600"><i class="fas fa-arrow-down mr-1"></i>下卦: ${result.lowerName}</p>
+                  <p class="text-gray-600"><i class="fas fa-shield-alt mr-1"></i>體卦: ${result.bodyTrigram}</p>
+                  <p class="text-gray-600"><i class="fas fa-balance-scale mr-1"></i>本卦體用生剋: ${result.fiveRelAnalysis.description}</p>
+                </div>
+                <div class="hexagram-box bg-gray-50 p-4 rounded-md shadow-sm text-center">
+                  <h4 class="text-md font-semibold text-gray-800">互卦</h4>
+                  ${result.mutualHexagramStr}
+                  <p class="text-gray-700">${result.mutualHexagramName}</p>
+                  <p class="text-gray-600"><i class="fas fa-arrow-up mr-1"></i>上卦: ${result.mutualUpperName}</p>
+                  <p class="text-gray-600"><i class="fas fa-arrow-down mr-1"></i>下卦: ${result.mutualLowerName}</p>
+                  <p class="text-gray-600"><i class="fas fa-balance-scale mr-1"></i>互卦與體卦生剋: ${result.mutualFiveRelAnalysis.description}</p>
+                </div>
+                <div class="hexagram-box bg-gray-50 p-4 rounded-md shadow-sm text-center">
+                  <h4 class="text-md font-semibold text-gray-800">變卦</h4>
+                  ${result.changedHexagramStr}
+                  <p class="text-gray-700">${result.changedHexagramName}</p>
+                  <p class="text-gray-600"><i class="fas fa-arrow-up mr-1"></i>上卦: ${result.changedUpperName}</p>
+                  <p class="text-gray-600"><i class="fas fa-arrow-down mr-1"></i>下卦: ${result.changedLowerName}</p>
+                  <p class="text-gray-600"><i class="fas fa-balance-scale mr-1"></i>變卦與體卦生剋: ${result.changedFiveRelAnalysis.description}</p>
+                </div>
+              </div>
+              <div class="advice mt-4">
+                <strong><i class="fas fa-star mr-2"></i>吉兇判斷：<span class="font-bold text-lg">${result.finalVerdict}</span></strong>
+                <p class="mt-2"><strong><i class="fas fa-lightbulb mr-2"></i>趨吉避兇建議：</strong>${result.adviceText}</p>
+              </div>
+              ${result.wuxingStatusHtml}
+            </div>
+          `;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
