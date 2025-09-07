@@ -157,7 +157,7 @@
           console.log(`內容: ${payload}`);
           mqttStatus.textContent = "卦象已傳送，等待解卦結果...";
           
-          const resultTopic = `hxingyi/${uniqueId}/#`;
+          const resultTopic = `mhxingyi/${uniqueId}/result`;
           client.subscribe(resultTopic, (err) => {
             if (!err) {
               console.log(`已訂閱結果主題: ${resultTopic}`);
@@ -179,10 +179,15 @@
               <h3 class="text-xl font-bold mb-2">解卦結果</h3>
               <p><strong>辨識碼:</strong> ${uniqueId}</p>
               <p><strong>卜卦問題:</strong> ${result.question}</p>
-              <p><strong>五行分析:</strong> ${result.analysis}</p>
+              <p><strong>本卦名:</strong> ${result.hexagramName} (${result.upperName}${result.lowerName})</p>
+              <p><strong>最終判斷:</strong> ${result.finalVerdict}</p>
               <div class="mt-4">
                 <h4 class="font-bold">五行生克圖:</h4>
-                ${result.svg}
+                ${result.graphHtml || result.svg}
+              </div>
+              <div class="mt-4 advice p-3 bg-white border-l-4 border-blue-500">
+                <h4 class="font-bold">參考建議:</h4>
+                <p>${result.adviceText}</p>
               </div>
             </div>
           `;
