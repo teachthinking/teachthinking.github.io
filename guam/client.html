@@ -6,9 +6,6 @@
   <title>專業梅花心易 - 取卦介面</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-  <style>
-    /* 這裡可以保留一些基本的 CSS 樣式，例如按鈕樣式 */
-  </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 font-sans">
   <header class="w-full max-w-3xl bg-white shadow-md rounded-lg p-6 mb-6">
@@ -66,30 +63,35 @@
     function getDivinationInputs() {
       const mode = document.getElementById("divinationMode").value;
       let upper, lower, moving;
-
-      if (mode === "time") {
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        const hour = date.getHours();
-        const minute = date.getMinutes();
-        upper = (year + month + day) % 8;
-        lower = (year + month + day + hour) % 8;
-        moving = (year + month + day + hour + minute) % 6;
-      } else if (mode === "threeDigits") {
-        const num1 = parseInt(document.getElementById("num1").value);
-        const num2 = parseInt(document.getElementById("num2").value);
-        const num3 = parseInt(document.getElementById("num3").value);
-        upper = num1 % 8;
-        lower = num2 % 8;
-        moving = num3 % 6;
-      } else if (mode === "manual") {
-        upper = parseInt(document.getElementById("upperTrigram").value) - 1;
-        lower = parseInt(document.getElementById("lowerTrigram").value) - 1;
-        moving = parseInt(document.getElementById("movingLine").value) - 1;
+      
+      try {
+        if (mode === "time") {
+          const date = new Date();
+          const year = date.getFullYear();
+          const month = date.getMonth() + 1;
+          const day = date.getDate();
+          const hour = date.getHours();
+          const minute = date.getMinutes();
+          upper = (year + month + day) % 8;
+          lower = (year + month + day + hour) % 8;
+          moving = (year + month + day + hour + minute) % 6;
+        } else if (mode === "threeDigits") {
+          const num1 = parseInt(document.getElementById("num1").value);
+          const num2 = parseInt(document.getElementById("num2").value);
+          const num3 = parseInt(document.getElementById("num3").value);
+          upper = num1 % 8;
+          lower = num2 % 8;
+          moving = num3 % 6;
+        } else if (mode === "manual") {
+          upper = parseInt(document.getElementById("upperTrigram").value) - 1;
+          lower = parseInt(document.getElementById("lowerTrigram").value) - 1;
+          moving = parseInt(document.getElementById("movingLine").value) - 1;
+        }
+        return { upper, lower, moving };
+      } catch (e) {
+        console.error("Failed to get divination inputs:", e);
+        return { upper: -1, lower: -1, moving: -1 };
       }
-      return { upper, lower, moving };
     }
 
     function updateInputFields() {
@@ -123,13 +125,13 @@
       }
 
       const { upper, lower, moving } = getDivinationInputs();
-      const upperName = trigramsName[upper];
-      const lowerName = trigramsName[lower];
-      const movingLine = moving + 1;
-      const hexagramCode = `${upper}${lower}${moving}`;
+      if (upper < 0 || lower < 0 || moving < 0) {
+        alert("請輸入有效的卦象數值！");
+        return;
+      }
       
       const uniqueId = generateRandomId();
-      const topic = `mhxingyi/${uniqueId}/${upperName}${lowerName}${movingLine}`;
+      const topic = `mhxingyi/${uniqueId}/${upper}${lower}${moving}`;
       const payload = JSON.stringify({
         question: question,
         upper: upper,
@@ -139,22 +141,28 @@
       
       const broker = "wss://broker.mqttgo.io:8084/mqtt";
       const mqttStatus = document.getElementById("mqttStatus");
+      
+      // 清空舊結果和狀態
+      document.getElementById('result').innerHTML = '';
       mqttStatus.textContent = "連線中...";
       
       const client = mqtt.connect(broker);
 
       client.on('connect', () => {
         mqttStatus.textContent = "已連線，正在傳送卦象...";
-        console.log("MQTT Connected!");
+        console.log("MQTT 已連線！");
         
         client.publish(topic, payload, () => {
-          console.log(`Published to topic: ${topic} with payload: ${payload}`);
+          console.log(`已發佈到主題: ${topic}`);
+          console.log(`內容: ${payload}`);
           mqttStatus.textContent = "卦象已傳送，等待解卦結果...";
           
           const resultTopic = `hxingyi/${uniqueId}/#`;
           client.subscribe(resultTopic, (err) => {
             if (!err) {
-              console.log(`Subscribed to result topic: ${resultTopic}`);
+              console.log(`已訂閱結果主題: ${resultTopic}`);
+            } else {
+              console.error("訂閱失敗:", err);
             }
           });
         });
@@ -162,6 +170,9 @@
 
       client.on('message', (topic, message) => {
         try {
+          console.log(`接收到訊息，主題: ${topic}`);
+          console.log(`訊息內容: ${message.toString()}`);
+          
           const result = JSON.parse(message.toString());
           document.getElementById('result').innerHTML = `
             <div class="p-4 bg-gray-200 rounded-lg shadow-inner">
@@ -178,12 +189,13 @@
           mqttStatus.textContent = "解卦完成！";
           client.end(); // 接收到結果後關閉連線
         } catch (e) {
-          console.error("Failed to parse message:", e);
+          console.error("解析訊息失敗:", e);
+          mqttStatus.textContent = "接收到錯誤格式的解卦訊息。";
         }
       });
 
       client.on('error', (err) => {
-        console.error("MQTT Error:", err);
+        console.error("MQTT 連線錯誤:", err);
         mqttStatus.textContent = "連線失敗，請檢查網路或代理程式設定。";
       });
     });
