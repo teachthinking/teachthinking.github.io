@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>取卦端 - 專業梅花心易五行分析系統</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    .hexagram-svg {
+      width: 100px;
+      height: 120px;
+      margin-bottom: 10px;
+    }
+    .tooltip {
+      position: relative;
+    }
+    .tooltip:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .advice {
+      background-color: #f4f8f6;
+      border-left: 6px solid #2c6f4e;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .select-container {
+      position: relative;
+    }
+    .select-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      z-index: 1;
+    }
+    select {
+      padding-left: 40px !important;
+    }
+    .graph-container {
+      max-width: 100%;
+      overflow: auto;
+      margin: 10px 0;
+    }
+    .graph-container svg {
+      width: 100%;
+      height: auto;
+      max-height: 500px;
+    }
+    @media (max-width: 640px) {
+      .hexagram-svg {
+        width: 80px;
+        height: 100px;
+      }
+      .hexagram-box {
+        min-width: 100px;
+      }
+      .graph-container svg {
+        max-height: 300px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 font-sans">
+  <header class="w-full max-w-3xl bg-white shadow-md rounded-lg p-6 mb-6">
+    <h2 class="text-2xl font-bold text-center text-gray-800">取卦端 - 專業梅花心易五行分析系統</h2>
+    <p class="text-center text-gray-600 mt-2">輸入問題並選擇起卦模式以進行卜卦</p>
+  </header>
+
+  <main class="w-full max-w-3xl bg-white shadow-md rounded-lg p-6">
+    <div class="mb-4">
+      <label for="questionInput" class="block text-sm font-medium text-gray-700 mb-2">
+        <i class="fas fa-question-circle mr-2"></i>卜卦問題
+      </label>
+      <input type="text" id="questionInput" placeholder="例如：明天適合出遊嗎？" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+
+    <div class="mb-4">
+      <label for="divinationMode" class="block text-sm font-medium text-gray-700 mb-2">
+        <i class="fas fa-list-ul mr-2 tooltip" data-tooltip="選擇起卦方式"></i>起卦模式
+      </label>
+      <div class="select-container">
+        <select id="divinationMode" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="time">時間起卦（自動取當前時間）</option>
+          <option value="threeDigits">三位數起卦（輸入三個三位數，如123, 456, 789）</option>
+          <option value="manual">手動指定（上卦1-8、下卦1-8、動爻1-6）</option>
+        </select>
+        <i id="modeIcon" class="fas fa-clock select-icon text-gray-500"></i>
+      </div>
+    </div>
+
+    <div id="inputFields" class="space-y-4 mb-4"></div>
+
+    <button id="btnStartDivination" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+      <i class="fas fa-hands-praying mr-2"></i>開始解卦
+    </button>
+
+    <div id="mqttStatus" class="hidden mt-4 p-2 bg-blue-100 rounded-md text-center">
+      MQTT Status: 
+    </div>
+
+    <div id="result" class="mt-6"></div>
+  </main>
+
+  <script>
+    let client = null;
+    let myCurrentId = null;
+
+    function calculateHexagramFromTime(year, month, day, hour) {
+      const sum = year + month + day + hour;
+      const upper = sum % 8;
+      const lower = (sum + 1) % 8;
+      const movingLine = ((sum + 2) % 6) + 1;
+      return { upper, lower, movingLine };
+    }
+
+    function calculateHexagramFromThreeDigits(num1, num2, num3) {
+      if (isNaN(num1) || isNaN(num2) || isNaN(num3) || num1 < 100 || num1 > 999 || num2 < 100 || num2 > 999 || num3 < 100 || num3 > 999) return null;
+      const upper = num1 % 8;
+      const lower = num2 % 8;
+      const movingLine = (num3 % 6) || 6;
+      return { upper, lower, movingLine };
+    }
+
+    function calculateHexagramFromManual(upper, lower, movingLine) {
+      upper = parseInt(upper);
+      lower = parseInt(lower);
+      movingLine = parseInt(movingLine);
+      if (isNaN(upper) || isNaN(lower) || isNaN(movingLine) || upper < 1 || upper > 8 || lower < 1 || lower > 8 || movingLine < 1 || movingLine > 6) return null;
+      upper = (upper - 1 + 8) % 8;
+      lower = (lower - 1 + 8) % 8;
+      return { upper, lower, movingLine };
+    }
+
+    function displayDivinationResult(resultData) {
+      const {
+        hexagramStr, mutualHexagramStr, changedHexagramStr,
+        hexagramName, mutualHexagramName, changedHexagramName,
+        upperName, lowerName, mutualUpperName, mutualLowerName,
+        changedUpperName, changedLowerName,
+        bodyTrigram, useTrigram, mutualUseTrigram, changedUseTrigram,
+        fiveRelAnalysis, mutualFiveRelAnalysis, changedFiveRelAnalysis,
+        finalVerdict, adviceText, graphUrl
+      } = resultData;
+
+      document.getElementById("result").innerHTML = `
+        <div class="flex flex-wrap justify-around gap-4">
+          <div class="hexagram-box bg-gray-50 p-4 rounded-md shadow-sm text-center">
+            <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-yin-yang mr-2"></i>本卦</h3>
+            ${hexagramStr}
+            <p class="text-gray-700">${hexagramName}</p>
+            <p class="text-gray-600"><i class="fas fa-arrow-up mr-1"></i>上卦: ${upperName}</p>
+            <p class="text-gray-600"><i class="fas fa-arrow-down mr-1"></i>下卦: ${lowerName}</p>
+            <p class="text-gray-600"><i class="fas fa-shield-alt mr-1"></i>體卦: ${bodyTrigram}</p>
+            <p class="text-gray-600"><i class="fas fa-balance-scale mr-1"></i>本卦體用生剋: ${fiveRelAnalysis.description}</p>
+          </div>
+          <div class="hexagram-box bg-gray-50 p-4 rounded-md shadow-sm text-center">
+            <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-yin-yang mr-2"></i>互卦</h3>
+            ${mutualHexagramStr}
+            <p class="text-gray-700">${mutualHexagramName}</p>
+            <p class="text-gray-600"><i class="fas fa-arrow-up mr-1"></i>上卦: ${mutualUpperName}</p>
+            <p class="text-gray-600"><i class="fas fa-arrow-down mr-1"></i>下卦: ${mutualLowerName}</p>
+            <p class="text-gray-600"><i class="fas fa-balance-scale mr-1"></i>互卦與體卦生剋: ${mutualFiveRelAnalysis.description}</p>
+          </div>
+          <div class="hexagram-box bg-gray-50 p-4 rounded-md shadow-sm text-center">
+            <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-yin-yang mr-2"></i>變卦</h3>
+            ${changedHexagramStr}
+            <p class="text-gray-700">${changedHexagramName}</p>
+            <p class="text-gray-600"><i class="fas fa-arrow-up mr-1"></i>上卦: ${changedUpperName}</p>
+            <p class="text-gray-600"><i class="fas fa-arrow-down mr-1"></i>下卦: ${changedLowerName}</p>
+            <p class="text-gray-600"><i class="fas fa-balance-scale mr-1"></i>變卦與體卦生剋: ${changedFiveRelAnalysis.description}</p>
+          </div>
+        </div>
+        <div class="advice mt-4">
+          <strong><i class="fas fa-star mr-2"></i>吉兇判斷：<span class="font-bold text-lg">${finalVerdict}</span></strong>
+          <p class="mt-2"><strong><i class="fas fa-lightbulb mr-2"></i>趨吉避兇建議：</strong>${adviceText}</p>
+        </div>
+        <div class="mt-4">
+          <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-chart-pie mr-2"></i>五行生克圖</h3>
+          <div class="graph-container" id="graphPlaceholder">
+            <p>圖形數據已分離，請點擊下載按鈕獲取五行生克圖。</p>
+          </div>
+          <button id="downloadGraphBtn" class="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+            <i class="fas fa-download mr-2"></i>下載五行生克圖 (SVG)
+          </button>
+        </div>
+      `;
+
+      // 處理圖形下載
+      const downloadBtn = document.getElementById("downloadGraphBtn");
+      if (graphUrl) {
+        downloadBtn.addEventListener("click", () => {
+          const a = document.createElement("a");
+          a.href = graphUrl;
+          a.download = "五行生克圖.svg";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        });
+      } else {
+        downloadBtn.disabled = true;
+        downloadBtn.textContent = "無圖形可下載";
+      }
+    }
+
+    const modeSelect = document.getElementById("divinationMode");
+    const inputFields = document.getElementById("inputFields");
+    modeSelect.addEventListener("change", () => {
+      inputFields.innerHTML = '';
+      const mode = modeSelect.value;
+      if (mode === "threeDigits") {
+        inputFields.innerHTML = `
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-sort-numeric-up mr-2 tooltip" data-tooltip="輸入100-999"></i>第一個三位數（上卦）
+            </label>
+            <input id="num1Input" type="number" min="100" max="999" value="" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-sort-numeric-up mr-2 tooltip" data-tooltip="輸入100-999"></i>第二個三位數（下卦）
+            </label>
+            <input id="num2Input" type="number" min="100" max="999" value="" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-sort-numeric-up mr-2 tooltip" data-tooltip="輸入100-999"></i>第三個三位數（動爻）
+            </label>
+            <input id="num3Input" type="number" min="100" max="999" value="" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        `;
+      } else if (mode === "manual") {
+        inputFields.innerHTML = `
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-arrow-up mr-2 tooltip" data-tooltip="輸入1-8"></i>上卦
+            </label>
+            <input id="upperInput" type="number" min="1" max="8" value="2" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-arrow-down mr-2 tooltip" data-tooltip="輸入1-8"></i>下卦
+            </label>
+            <input id="lowerInput" type="number" min="1" max="8" value="3" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-exchange-alt mr-2 tooltip" data-tooltip="輸入1-6"></i>動爻
+            </label>
+            <input id="movingInput" type="number" min="1" max="6" value="1" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        `;
+      }
+      // Update icon based on selected mode
+      const modeIcon = document.getElementById("modeIcon");
+      if (mode === "time") {
+        modeIcon.className = "fas fa-clock select-icon text-gray-500";
+      } else if (mode === "threeDigits") {
+        modeIcon.className = "fas fa-calculator select-icon text-gray-500";
+      } else if (mode === "manual") {
+        modeIcon.className = "fas fa-hand-pointer select-icon text-gray-500";
+      }
+    });
+
+    document.getElementById("btnStartDivination").addEventListener("click", () => {
+      try {
+        const question = document.getElementById("questionInput").value.trim();
+        if (!question) {
+          throw new Error("請輸入卜卦問題！");
+        }
+
+        const mode = document.getElementById("divinationMode").value;
+        let upper, lower, movingLine;
+
+        if (mode === "time") {
+          const now = new Date();
+          const y = now.getFullYear();
+          const m = now.getMonth() + 1;
+          const d = now.getDate();
+          const h = now.getHours();
+          ({ upper, lower, movingLine } = calculateHexagramFromTime(y, m, d, h));
+        } else if (mode === "threeDigits") {
+          const num1 = parseInt(document.getElementById("num1Input").value);
+          const num2 = parseInt(document.getElementById("num2Input").value);
+          const num3 = parseInt(document.getElementById("num3Input").value);
+          const result = calculateHexagramFromThreeDigits(num1, num2, num3);
+          if (!result) throw new Error("請輸入三個有效三位數 (100-999)");
+          ({ upper, lower, movingLine } = result);
+        } else if (mode === "manual") {
+          const upperInput = document.getElementById("upperInput").value;
+          const lowerInput = document.getElementById("lowerInput").value;
+          const movingInput = document.getElementById("movingInput").value;
+          const result = calculateHexagramFromManual(upperInput, lowerInput, movingInput);
+          if (!result) throw new Error("請輸入有效數字：上卦/下卦1-8，動爻1-6");
+          ({ upper, lower, movingLine } = result);
+        }
+
+        // Generate ID
+        let id = '';
+        const letters = 'abcdefghijklmnopqrstuvwxyz';
+        for (let i = 0; i < 3; i++) {
+          id += letters.charAt(Math.floor(Math.random() * 26));
+        }
+        for (let i = 0; i < 4; i++) {
+          id += Math.floor(Math.random() * 10).toString();
+        }
+        myCurrentId = id;
+
+        const hexcode = upper.toString() + lower.toString() + movingLine.toString();
+        const topic = 'mhxingyi/' + id + hexcode;
+        const payload = question;
+
+        document.getElementById("mqttStatus").classList.remove('hidden');
+        document.getElementById("mqttStatus").innerHTML = `MQTT Status: 產生識別碼 ${id}，連線中...`;
+
+        if (client === null) {
+          client = mqtt.connect('wss://broker.mqttgo.io:8084/mqtt');
+          client.on('connect', function () {
+            document.getElementById("mqttStatus").innerHTML = 'MQTT Status: 已連線，訂閱回應並發送請求...';
+            client.subscribe('mhxingyi/' + id + '/解卦');
+            client.publish(topic, payload);
+            document.getElementById("mqttStatus").innerHTML = 'MQTT Status: 已發送請求，等待解卦...';
+          });
+          client.on('error', function (err) {
+            document.getElementById("mqttStatus").innerHTML = 'MQTT Status: 連線錯誤 - ' + err.toString();
+          });
+          client.on('close', function () {
+            document.getElementById("mqttStatus").innerHTML = 'MQTT Status: 連線關閉';
+          });
+          client.on('message', function (topic, message) {
+            if (myCurrentId && topic === 'mhxingyi/' + myCurrentId + '/解卦') {
+              try {
+                const resultData = JSON.parse(message.toString());
+                displayDivinationResult(resultData);
+                document.getElementById("mqttStatus").innerHTML = 'MQTT Status: 已接收解卦分析';
+              } catch (e) {
+                console.error(e);
+                document.getElementById("mqttStatus").innerHTML = 'MQTT Status: 解析回應錯誤';
+              }
+            }
+          });
+        } else if (client.connected) {
+          document.getElementById("mqttStatus").innerHTML = 'MQTT Status: 已連線，訂閱回應並發送請求...';
+          client.subscribe('mhxingyi/' + id + '/解卦');
+          client.publish(topic, payload);
+          document.getElementById("mqttStatus").innerHTML = 'MQTT Status: 已發送請求，等待解卦...';
+        } else {
+          document.getElementById("mqttStatus").innerHTML = 'MQTT Status: 連線中，請稍候...';
+        }
+      } catch (error) {
+        document.getElementById("result").innerHTML = `<p class="text-red-500"><i class="fas fa-exclamation-circle mr-2"></i>錯誤：${error.message}</p>`;
+      }
+    });
+
+    // Trigger initial mode change to set up input fields
+    modeSelect.dispatchEvent(new Event('change'));
+  </script>
+</body>
+</html>
