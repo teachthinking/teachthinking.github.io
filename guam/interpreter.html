@@ -14,14 +14,14 @@
         const elements = {1: '金', 2: '金', 3: '火', 4: '木', 5: '木', 6: '水', 7: '土', 8: '土'};
         const trigramNames = {1: '乾', 2: '兌', 3: '離', 4: '震', 5: '巽', 6: '坎', 7: '艮', 8: '坤'};
         const trigramMeanings = {
-            1: '剛健、領導、積極進取',
-            2: '喜悅、交流、和諧',
-            3: '光明、熱情、依附',
-            4: '行動、振奮、開創',
-            5: '柔順、靈活、潛入',
-            6: '危險、深沉、內斂',
-            7: '止息、穩重、堅守',
-            8: '柔順、包容、大地'
+            1: '剛健、領導、積極進取，象徵天與創造力',
+            2: '喜悅、交流、和諧，象徵湖泊與溝通',
+            3: '光明、熱情、依附，象徵火與文明',
+            4: '行動、振奮、開創，象徵雷與動力',
+            5: '柔順、靈活、潛入，象徵風與適應',
+            6: '危險、深沉、內斂，象徵水與智慧',
+            7: '止息、穩重、堅守，象徵山與靜定',
+            8: '柔順、包容、大地，象徵地與承載'
         };
         const trigramLines = {
             1: [1,1,1], // 乾 ☰
@@ -35,37 +35,75 @@
         };
         const generation = {'木': '火', '火': '土', '土': '金', '金': '水', '水': '木'};
         const destruction = {'木': '土', '火': '金', '土': '水', '金': '木', '水': '火'};
-        // 簡化爻辭（模擬乾卦，實際需64卦384爻資料庫）
+        // 爻辭（模擬乾卦，通用爻辭作為備用）
         const yaoDict = {
-            1: ['初爻：潛龍勿用，時機未至，宜靜待。',
-                '二爻：見龍在田，時機漸熟，宜穩健行事。',
-                '三爻：君子終日乾乾，謹防小人，宜守正。',
-                '四爻：或躍在淵，進退自如，謀事可成。',
-                '五爻：飛龍在天，大吉大利，宜積極進取。',
-                '六爻：亢龍有悔，物極必反，宜謹慎收斂。'],
-            // 其他卦簡化為通用爻辭
-            default: ['初爻：起初謹慎，宜觀察形勢。',
-                      '二爻：時機初現，宜穩中求進。',
-                      '三爻：小有波折，宜守正待時。',
-                      '四爻：運勢漸開，宜謀定後動。',
-                      '五爻：大吉之象，宜果斷行動。',
-                      '六爻：過盛則衰，宜謹防風險。']
+            1: [
+                '初爻：潛龍勿用，時機未至，宜靜待時機，謹慎為上。',
+                '二爻：見龍在田，時機漸熟，宜穩健行事，廣結善緣。',
+                '三爻：君子終日乾乾，謹防小人阻礙，宜守正不阿。',
+                '四爻：或躍在淵，進退自如，謀事可成，宜果斷行動。',
+                '五爻：飛龍在天，大吉大利，宜積極進取，乘勢而上。',
+                '六爻：亢龍有悔，物極必反，宜謹慎收斂，防過猶不及。'
+            ],
+            default: [
+                '初爻：起初謹慎，宜觀察形勢，穩固根基以待時機。',
+                '二爻：時機初現，宜穩中求進，循序漸進為佳。',
+                '三爻：小有波折，宜守正待時，謹慎應對挑戰。',
+                '四爻：運勢漸開，宜謀定後動，把握時機行動。',
+                '五爻：大吉之象，宜果斷行動，乘勢而為以求成功。',
+                '六爻：過盛則衰，宜謹防風險，低調行事以保平安。'
+            ]
         };
-        // 簡單64卦名稱（部分示例）
+        // 64卦名稱（部分示例，實際需完整映射）
         const hexagramNames = {
             '11': '乾為天', '12': '天澤履', '13': '天火同人', '14': '天雷無妄',
+            '15': '天風姤', '16': '天水訟', '17': '天山遁', '18': '天地否',
             '81': '地天泰', '82': '地澤臨', '83': '地火明夷', '84': '地雷復',
-            '36': '火水未濟', '63': '水火既濟'
-            // 需補充完整64卦
+            '85': '地風升', '86': '地水師', '87': '地山謙', '88': '坤為地',
+            '33': '離為離', '36': '火水未濟', '63': '水火既濟', '66': '坎為水'
         };
 
         function getRelation(body, use) {
-            if (body === use) return {text: '比和：五行相同，力量均衡，穩定有利。', luck: '吉'};
-            if (generation[body] === use) return {text: '體生用：主卦耗力，付出較多，需謹慎用力。', luck: '平'};
-            if (generation[use] === body) return {text: '用生體：得外力相助，運勢順暢。', luck: '吉'};
-            if (destruction[body] === use) return {text: '體克用：主卦掌控局面，易獲成功。', luck: '吉'};
-            if (destruction[use] === body) return {text: '用克體：主卦受制，運勢受阻，需防風險。', luck: '凶'};
-            return {text: '無直接生克：五行無強烈交互，宜觀察卦象變化。', luck: '平'};
+            if (body === use) {
+                return {
+                    text: '比和：五行相同，力量均衡，運勢穩定，利於合作與穩固發展。',
+                    luck: '吉',
+                    impact: '體用五行一致，無強烈衝突，顯示當前局勢和諧，適合穩健推進事業或計劃。'
+                };
+            }
+            if (generation[body] === use) {
+                return {
+                    text: '體生用：主卦耗力，付出較多，需謹慎用力以免過度損耗。',
+                    luck: '平',
+                    impact: '體生用表示自身能量外流，付出多於回報，需量力而行，注意資源分配與長期規劃。'
+                };
+            }
+            if (generation[use] === body) {
+                return {
+                    text: '用生體：得外力相助，運勢順暢，利於借助外部資源。',
+                    luck: '吉',
+                    impact: '用生體顯示外部環境有利，助力強大，宜把握機會，積極拓展人脈或資源。'
+                };
+            }
+            if (destruction[body] === use) {
+                return {
+                    text: '體克用：主卦掌控局面，易獲成功，但需防驕傲自滿。',
+                    luck: '吉',
+                    impact: '體克用表示自身處於優勢，能掌控外部環境，利於主動出擊，但需保持謙虛。'
+                };
+            }
+            if (destruction[use] === body) {
+                return {
+                    text: '用克體：主卦受制，運勢受阻，需謹慎行事以防損失。',
+                    luck: '凶',
+                    impact: '用克體顯示外部環境對自身形成壓制，局勢不利，需小心應對，避免衝動決策。'
+                };
+            }
+            return {
+                text: '無直接生克：五行無強烈交互，運勢平穩，宜觀察卦象變化。',
+                luck: '平',
+                impact: '無明顯生克關係，局勢不明顯，需結合動爻與變卦進一步判斷方向。'
+            };
         }
 
         function getHexagram(upper, lower) {
@@ -106,10 +144,10 @@
 
         function getLuckJudgment(relationLuck, moving, changedUpper, changedLower) {
             let luck = relationLuck;
-            // 動爻影響：初爻偏凶，五爻偏吉
+            // 動爻影響：初爻（1）、上爻（6）偏凶，五爻（5）偏吉
             if (moving === 1 || moving === 6) luck = luck === '吉' ? '平' : '凶';
             if (moving === 5) luck = luck === '凶' ? '平' : '吉';
-            // 變卦影響：乾（1）、泰（81）等偏吉，否（18）、未濟（36）偏凶
+            // 變卦影響：乾（11）、泰（81）偏吉，否（18）、未濟（36）偏凶
             const changedKey = `${changedUpper}${changedLower}`;
             if (['11', '81'].includes(changedKey)) luck = luck === '平' ? '吉' : luck;
             if (['18', '36'].includes(changedKey)) luck = luck === '平' ? '凶' : luck;
@@ -118,11 +156,11 @@
 
         function getAdvice(relation, luck, moving, question) {
             const actions = {
-                '吉': `宜積極進取，把握當前機會，結合問題「${question}」，可果斷行動，但注意動爻${moving}的提示，避免過於激進。`,
-                '平': `運勢平穩，宜穩中求進，針對「${question}」，建議謹慎規劃，參考動爻${moving}的時機指引。`,
-                '凶': `運勢不利，宜謹慎行事，針對「${question}」，建議暫緩行動，觀察形勢，依動爻${moving}尋求化解之道。`
+                '吉': `宜積極進取，把握當前機會。針對「${question}」，建議果斷行動，依動爻${moving}（${yaoDict[1]?.[moving-1] || yaoDict.default[moving-1]}）指引，注意避免過於激進。`,
+                '平': `運勢平穩，宜穩中求進。針對「${question}」，建議謹慎規劃，依動爻${moving}（${yaoDict[1]?.[moving-1] || yaoDict.default[moving-1]}）指引，循序漸進為佳。`,
+                '凶': `運勢不利，宜謹慎行事。針對「${question}」，建議暫緩行動，觀察形勢，依動爻${moving}（${yaoDict[1]?.[moving-1] || yaoDict.default[moving-1]}）尋求化解之道，注意防範風險。`
             };
-            return actions[luck] || `針對「${question}」，宜審慎觀察，結合動爻${moving}與五行${relation.text}，靈活應對。`;
+            return actions[luck] || `針對「${question}」，宜審慎觀察，結合動爻${moving}與五行${relation.text}，靈活應對局勢變化。`;
         }
 
         function generateAnalysis(upper, lower, moving, question) {
@@ -132,7 +170,7 @@
             const hexagram = getHexagram(upper, lower);
             const mutual = getMutualHexagram(upper, lower);
             const changed = getChangedHexagram(upper, lower, moving);
-            const yao = yaoDict[upper] || yaoDict['default'];
+            const yao = yaoDict[upper] || yaoDict.default;
             const yaoText = yao[moving - 1];
             const upperMeaning = trigramMeanings[upper];
             const lowerMeaning = trigramMeanings[lower];
@@ -149,40 +187,59 @@
                    `  體（下卦）：${elemBody}\n` +
                    `  用（上卦）：${elemUse}\n` +
                    `  生克狀態：${relation.text}\n` +
+                   `  對運勢影響：${relation.impact}\n` +
                    `互卦：${mutualHexagram}\n` +
                    `變卦：${changedHexagram}\n` +
                    `爻辭參考：${yaoText}\n` +
                    `吉凶判斷：${luck}\n` +
                    `趨吉避凶建議：${advice}\n` +
-                   `綜合分析：本卦反映當前情勢，互卦揭示過程變化，變卦預示未來趨勢。結合五行生克與動爻，針對「${question}」，宜依建議行動。`;
+                   `綜合分析：\n` +
+                   `  本卦（${hexagram}）反映當前情勢，顯示${lowerMeaning}的基礎與${upperMeaning}的外部環境。\n` +
+                   `  互卦（${mutualHexagram}）揭示事情發展的過程與潛在變化，提示中間階段的動態。\n` +
+                   `  變卦（${changedHexagram}）預示最終趨勢，指引未來可能的方向。\n` +
+                   `  針對「${question}」，結合五行生克（${relation.text}）與動爻（${yaoText}），宜依建議行動，謹慎決策以趨吉避凶。`;
         }
 
         function generateSVG(body, use) {
-            const pos = {'木': '50 10', '火': '90 35', '土': '75 80', '金': '25 80', '水': '10 35'};
+            const pos = {'木': '50 20', '火': '100 50', '土': '80 100', '金': '20 100', '水': '0 50'};
             const fill = el => (el === body || el === use) ? 'red' : 'black';
-            const strokeGen = (from, to) => generation[from] === to ? 'green' : 'transparent';
-            const strokeDes = (from, to) => destruction[from] === to ? 'red' : 'transparent';
-            return `<svg width="120" height="120" viewBox="0 0 120 120">
+            const strokeGen = (from, to) => (from === body || from === use) && generation[from] === to ? 'green' : 'transparent';
+            const strokeDes = (from, to) => (from === body || from === use) && destruction[from] === to ? 'red' : 'transparent';
+            const labelGen = (from, to) => strokeGen(from, to) !== 'transparent' ? `<text x="${(parseInt(pos[from].split(' ')[0]) + parseInt(pos[to].split(' ')[0]))/2}" y="${(parseInt(pos[from].split(' ')[1]) + parseInt(pos[to].split(' ')[1]))/2}" font-size="8">生</text>` : '';
+            const labelDes = (from, to) => strokeDes(from, to) !== 'transparent' ? `<text x="${(parseInt(pos[from].split(' ')[0]) + parseInt(pos[to].split(' ')[0]))/2}" y="${(parseInt(pos[from].split(' ')[1]) + parseInt(pos[to].split(' ')[1]))/2}" font-size="8">克</text>` : '';
+            return `<svg width="150" height="150" viewBox="0 0 150 150">
                 <!-- 五行節點 -->
-                <circle cx="50" cy="10" r="5" fill="${fill('木')}"/><text x="50" y="5">木</text>
-                <circle cx="90" cy="35" r="5" fill="${fill('火')}"/><text x="90" y="30">火</text>
-                <circle cx="75" cy="80" r="5" fill="${fill('土')}"/><text x="75" y="75">土</text>
-                <circle cx="25" cy="80" r="5" fill="${fill('金')}"/><text x="25" y="75">金</text>
-                <circle cx="10" cy="35" r="5" fill="${fill('水')}"/><text x="10" y="30">水</text>
-                <!-- 生箭頭（僅顯示與體用相關） -->
-                <line x1="50" y1="10" x2="90" y2="35" stroke="${strokeGen(body, '火') || strokeGen(use, '火')}" stroke-width="2"/>
-                <line x1="90" y1="35" x2="75" y2="80" stroke="${strokeGen(body, '土') || strokeGen(use, '土')}" stroke-width="2"/>
-                <line x1="75" y1="80" x2="25" y2="80" stroke="${strokeGen(body, '金') || strokeGen(use, '金')}" stroke-width="2"/>
-                <line x1="25" y1="80" x2="10" y2="35" stroke="${strokeGen(body, '水') || strokeGen(use, '水')}" stroke-width="2"/>
-                <line x1="10" y1="35" x2="50" y2="10" stroke="${strokeGen(body, '木') || strokeGen(use, '木')}" stroke-width="2"/>
-                <!-- 克箭頭（僅顯示與體用相關） -->
-                <line x1="50" y1="10" x2="75" y2="80" stroke="${strokeDes(body, '土') || strokeDes(use, '土')}" stroke-width="2" stroke-dasharray="5"/>
-                <line x1="90" y1="35" x2="25" y2="80" stroke="${strokeDes(body, '金') || strokeDes(use, '金')}" stroke-width="2" stroke-dasharray="5"/>
-                <line x1="75" y1="80" x2="10" y2="35" stroke="${strokeDes(body, '水') || strokeDes(use, '水')}" stroke-width="2" stroke-dasharray="5"/>
-                <line x1="25" y1="80" x2="50" y2="10" stroke="${strokeDes(body, '木') || strokeDes(use, '木')}" stroke-width="2" stroke-dasharray="5"/>
-                <line x1="10" y1="35" x2="90" y2="35" stroke="${strokeDes(body, '火') || strokeDes(use, '火')}" stroke-width="2" stroke-dasharray="5"/>
+                <circle cx="50" cy="20" r="6" fill="${fill('木')}"/><text x="50" y="15" font-size="10">木</text>
+                <circle cx="100" cy="50" r="6" fill="${fill('火')}"/><text x="100" y="45" font-size="10">火</text>
+                <circle cx="80" cy="100" r="6" fill="${fill('土')}"/><text x="80" y="95" font-size="10">土</text>
+                <circle cx="20" cy="100" r="6" fill="${fill('金')}"/><text x="20" y="95" font-size="10">金</text>
+                <circle cx="0" cy="50" r="6" fill="${fill('水')}"/><text x="0" y="45" font-size="10">水</text>
+                <!-- 生箭頭（僅體/用相關） -->
+                <line x1="50" y1="20" x2="100" y2="50" stroke="${strokeGen(body, '火') || strokeGen(use, '火')}" stroke-width="2"/>
+                ${labelGen(body, '火') || labelGen(use, '火')}
+                <line x1="100" y1="50" x2="80" y2="100" stroke="${strokeGen(body, '土') || strokeGen(use, '土')}" stroke-width="2"/>
+                ${labelGen(body, '土') || labelGen(use, '土')}
+                <line x1="80" y1="100" x2="20" y2="100" stroke="${strokeGen(body, '金') || strokeGen(use, '金')}" stroke-width="2"/>
+                ${labelGen(body, '金') || labelGen(use, '金')}
+                <line x1="20" y1="100" x2="0" y2="50" stroke="${strokeGen(body, '水') || strokeGen(use, '水')}" stroke-width="2"/>
+                ${labelGen(body, '水') || labelGen(use, '水')}
+                <line x1="0" y1="50" x2="50" y2="20" stroke="${strokeGen(body, '木') || strokeGen(use, '木')}" stroke-width="2"/>
+                ${labelGen(body, '木') || labelGen(use, '木')}
+                <!-- 克箭頭（僅體/用相關） -->
+                <line x1="50" y1="20" x2="80" y2="100" stroke="${strokeDes(body, '土') || strokeDes(use, '土')}" stroke-width="2" stroke-dasharray="5"/>
+                ${labelDes(body, '土') || labelDes(use, '土')}
+                <line x1="100" y1="50" x2="20" y2="100" stroke="${strokeDes(body, '金') || strokeDes(use, '金')}" stroke-width="2" stroke-dasharray="5"/>
+                ${labelDes(body, '金') || labelDes(use, '金')}
+                <line x1="80" y1="100" x2="0" y2="50" stroke="${strokeDes(body, '水') || strokeDes(use, '水')}" stroke-width="2" stroke-dasharray="5"/>
+                ${labelDes(body, '水') || labelDes(use, '水')}
+                <line x1="20" y1="100" x2="50" y2="20" stroke="${strokeDes(body, '木') || strokeDes(use, '木')}" stroke-width="2" stroke-dasharray="5"/>
+                ${labelDes(body, '木') || labelDes(use, '木')}
+                <line x1="0" y1="50" x2="100" y2="50" stroke="${strokeDes(body, '火') || strokeDes(use, '火')}" stroke-width="2" stroke-dasharray="5"/>
+                ${labelDes(body, '火') || labelDes(use, '火')}
                 <!-- 圖例 -->
-                <text x="10" y="110">圖例：紅色=體/用，綠色實線=生，紅色虛線=克</text>
+                <rect x="0" y="120" width="150" height="30" fill="white"/>
+                <text x="10" y="130" font-size="10">圖例：紅色=體/用，綠色實線=生，紅色虛線=克</text>
+                <text x="10" y="140" font-size="10">體=${body}，用=${use}</text>
             </svg>`;
         }
 
