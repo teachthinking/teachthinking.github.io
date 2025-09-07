@@ -3,14 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <title>專業梅花心易五行分析系統 - 使用者端</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; }
-        .hidden { display: none; }
-        button { margin: 5px; }
-        input, select { margin: 5px; }
-        #recordsModal { position: fixed; top: 20%; left: 20%; background: white; border: 1px solid #000; padding: 20px; }
-        #recordsList { max-height: 300px; overflow-y: auto; }
-    </style>
+      <style>
+    .hexagram-svg {
+      width: 100px;
+      height: 120px;
+      margin-bottom: 10px;
+    }
+    .tooltip {
+      position: relative;
+    }
+    .tooltip:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .advice {
+      background-color: #f4f8f6;
+      border-left: 6px solid #2c6f4e;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    @media (max-width: 640px) {
+      .hexagram-svg {
+        width: 80px;
+        height: 100px;
+      }
+      .hexagram-box {
+        min-width: 100px;
+      }
+    }
+  </style>
 </head>
 <body>
     <h1>專業梅花心易五行分析系統</h1>
