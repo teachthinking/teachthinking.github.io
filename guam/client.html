@@ -81,9 +81,9 @@
           <i class="fas fa-list-ul mr-2 tooltip" data-tooltip="選擇起卦方式"></i>起卦模式
         </label>
         <select id="divinationMode" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="time"><i class="fas fa-clock"></i> 時間起卦（自動取當前時間）</option>
-          <option value="threeDigits"><i class="fas fa-calculator"></i> 三位數起卦（輸入三個三位數，如123, 456, 789）</option>
-          <option value="manual"><i class="fas fa-hand-pointer"></i> 手動指定（上卦1-8、下卦1-8、動爻1-6）</option>
+          <option value="time">時間起卦（自動取當前時間）</option>
+          <option value="threeDigits">三位數起卦（輸入三個三位數，如123, 456, 789）</option>
+          <option value="manual">手動指定（上卦1-8、下卦1-8、動爻1-6）</option>
         </select>
       </div>
       <div id="inputFields" class="space-y-4"></div>
@@ -201,11 +201,17 @@
 
       client.on("message", (topic, message) => {
         if (topic === `mhxingyi/${id}/result`) {
-          const resultData = JSON.parse(message.toString());
-          displayDivinationResult(resultData);
-          saveDivinationRecord(resultData);
-          client.end();
-          statusEl.textContent = "已接收結果並斷開連線。";
+          try {
+            const resultData = JSON.parse(message.toString());
+            displayDivinationResult(resultData);
+            saveDivinationRecord(resultData);
+            client.end();
+            statusEl.textContent = "已接收結果並斷開連線。";
+          } catch (e) {
+            statusEl.textContent = "解卦結果解析錯誤。";
+            console.error("Failed to parse result data:", e);
+            client.end();
+          }
         }
       });
 
@@ -222,78 +228,78 @@
 
     function displayDivinationResult(result) {
       const resultDiv = document.getElementById("result");
+      const hexagramsHtml = `
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+          <div class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center">
+            <h4 class="text-lg font-bold">本卦</h4>
+            <p class="text-md font-semibold">${result.hexagramName || ''}</p>
+            <p>${result.upperName || ''} (${trigramsElement[result.data.upper] || ''})</p>
+            <p>${result.lowerName || ''} (${trigramsElement[result.data.lower] || ''})</p>
+            <div class="mt-2" style="font-family: monospace;">
+              ${baguaLines[result.data.upper] ? baguaLines[result.data.upper].join('') : ''}<br>
+              ${baguaLines[result.data.lower] ? baguaLines[result.data.lower].join('') : ''}
+            </div>
+            <p class="mt-2 text-sm text-gray-600">
+              <span class="font-bold">${result.bodyTrigram || ''}</span>為體，
+              <span class="font-bold">${result.useTrigram || ''}</span>為用。
+            </p>
+            <p class="mt-1 text-sm text-${result.fiveRelAnalysis.relationColor || 'gray'}-600 font-bold">${result.fiveRelAnalysis.relationStr || ''}</p>
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center">
+            <h4 class="text-lg font-bold">互卦</h4>
+            <p class="text-md font-semibold">${result.mutualHexagramName || ''}</p>
+            <p>${result.mutualUpperName || ''} (${trigramsElement[result.data.mutualUpper] || ''})</p>
+            <p>${result.mutualLowerName || ''} (${trigramsElement[result.data.mutualLower] || ''})</p>
+            <div class="mt-2" style="font-family: monospace;">
+              ${baguaLines[result.data.mutualUpper] ? baguaLines[result.data.mutualUpper].join('') : ''}<br>
+              ${baguaLines[result.data.mutualLower] ? baguaLines[result.data.mutualLower].join('') : ''}
+            </div>
+            <p class="mt-2 text-sm text-gray-600">
+              <span class="font-bold">${result.bodyTrigram || ''}</span>為體，
+              <span class="font-bold">${result.mutualUseTrigram || ''}</span>為用。
+            </p>
+            <p class="mt-1 text-sm text-${result.mutualFiveRelAnalysis.relationColor || 'gray'}-600 font-bold">${result.mutualFiveRelAnalysis.relationStr || ''}</p>
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center">
+            <h4 class="text-lg font-bold">變卦</h4>
+            <p class="text-md font-semibold">${result.changedHexagramName || ''}</p>
+            <p>${result.changedUpperName || ''} (${trigramsElement[result.data.changedUpper] || ''})</p>
+            <p>${result.changedLowerName || ''} (${trigramsElement[result.data.changedLower] || ''})</p>
+            <div class="mt-2" style="font-family: monospace;">
+              ${baguaLines[result.data.changedUpper] ? baguaLines[result.data.changedUpper].join('') : ''}<br>
+              ${baguaLines[result.data.changedLower] ? baguaLines[result.data.changedLower].join('') : ''}
+            </div>
+            <p class="mt-2 text-sm text-gray-600">
+              <span class="font-bold">${result.bodyTrigram || ''}</span>為體，
+              <span class="font-bold">${result.changedUseTrigram || ''}</span>為用。
+            </p>
+            <p class="mt-1 text-sm text-${result.changedFiveRelAnalysis.relationColor || 'gray'}-600 font-bold">${result.changedFiveRelAnalysis.relationStr || ''}</p>
+          </div>
+        </div>
+      `;
+
       resultDiv.innerHTML = `
         <div class="bg-gray-200 p-4 rounded-lg mt-4 shadow-inner">
           <p class="text-xl font-bold text-center mb-2">卜卦結果</p>
           <div class="border-t border-gray-400 my-2"></div>
-          <p><strong><i class="fas fa-question-circle text-gray-700 mr-2"></i>問題：</strong>${result.question}</p>
-          <p><strong><i class="fas fa-calendar-alt text-gray-700 mr-2"></i>時間：</strong>${new Date(result.timestamp).toLocaleString()}</p>
+          <p><strong><i class="fas fa-question-circle text-gray-700 mr-2"></i>問題：</strong>${result.question || ''}</p>
+          <p><strong><i class="fas fa-calendar-alt text-gray-700 mr-2"></i>時間：</strong>${new Date(result.timestamp).toLocaleString() || ''}</p>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-          <div class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center">
-            <h4 class="text-lg font-bold">本卦</h4>
-            <p class="text-md font-semibold">${result.hexagramName}</p>
-            <p>${result.upperName} (${trigramsElement[result.data.upper]})</p>
-            <p>${result.lowerName} (${trigramsElement[result.data.lower]})</p>
-            <div class="mt-2" style="font-family: monospace;">
-              ${baguaLines[result.data.upper].join('')}<br>
-              ${baguaLines[result.data.lower].join('')}
-            </div>
-            <p class="mt-2 text-sm text-gray-600">
-              <span class="font-bold">${result.bodyTrigram}</span>為體，
-              <span class="font-bold">${result.useTrigram}</span>為用。
-            </p>
-            <p class="mt-1 text-sm text-${result.fiveRelAnalysis.relationColor}-600 font-bold">${result.fiveRelAnalysis.relationStr}</p>
-          </div>
-          <div class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center">
-            <h4 class="text-lg font-bold">互卦</h4>
-            <p class="text-md font-semibold">${result.mutualHexagramName}</p>
-            <p>${result.mutualUpperName} (${trigramsElement[result.data.mutualUpper]})</p>
-            <p>${result.mutualLowerName} (${trigramsElement[result.data.mutualLower]})</p>
-            <div class="mt-2" style="font-family: monospace;">
-              ${baguaLines[result.data.mutualUpper].join('')}<br>
-              ${baguaLines[result.data.mutualLower].join('')}
-            </div>
-            <p class="mt-2 text-sm text-gray-600">
-              <span class="font-bold">${result.bodyTrigram}</span>為體，
-              <span class="font-bold">${result.mutualUseTrigram}</span>為用。
-            </p>
-            <p class="mt-1 text-sm text-${result.mutualFiveRelAnalysis.relationColor}-600 font-bold">${result.mutualFiveRelAnalysis.relationStr}</p>
-          </div>
-          <div class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center">
-            <h4 class="text-lg font-bold">變卦</h4>
-            <p class="text-md font-semibold">${result.changedHexagramName}</p>
-            <p>${result.changedUpperName} (${trigramsElement[result.data.changedUpper]})</p>
-            <p>${result.changedLowerName} (${trigramsElement[result.data.changedLower]})</p>
-            <div class="mt-2" style="font-family: monospace;">
-              ${baguaLines[result.data.changedUpper].join('')}<br>
-              ${baguaLines[result.data.changedLower].join('')}
-            </div>
-            <p class="mt-2 text-sm text-gray-600">
-              <span class="font-bold">${result.bodyTrigram}</span>為體，
-              <span class="font-bold">${result.changedUseTrigram}</span>為用。
-            </p>
-            <p class="mt-1 text-sm text-${result.changedFiveRelAnalysis.relationColor}-600 font-bold">${result.changedFiveRelAnalysis.relationStr}</p>
-          </div>
-        </div>
-
+        ${hexagramsHtml}
         <div class="mt-6">
-          ${result.graphHtml}
+          ${result.graphHtml || ''}
         </div>
-        
         <div class="advice mt-6">
           <h4 class="text-lg font-bold text-center mb-2">五行狀態分析</h4>
-          ${result.wuxingStatusHtml}
+          ${result.wuxingStatusHtml || ''}
         </div>
-
         <div class="advice mt-4">
           <h4 class="text-lg font-bold mb-2">綜合判斷</h4>
-          <p>${result.finalVerdict}</p>
+          <p>${result.finalVerdict || ''}</p>
         </div>
-        
         <div class="advice mt-4">
           <h4 class="text-lg font-bold mb-2">籤詩建議</h4>
-          <p class="whitespace-pre-line">${result.adviceText}</p>
+          <p class="whitespace-pre-line">${result.adviceText || ''}</p>
         </div>
       `;
     }
