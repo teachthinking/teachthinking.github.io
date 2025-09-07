@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>專業梅花心易五行分析系統 - 使用者端</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    .hexagram-svg {
+      width: 100px;
+      height: 120px;
+      margin-bottom: 10px;
+    }
+    .tooltip {
+      position: relative;
+    }
+    .tooltip:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .advice {
+      background-color: #f4f8f6;
+      border-left: 6px solid #2c6f4e;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    @media (max-width: 640px) {
+      .hexagram-svg {
+        width: 80px;
+        height: 100px;
+      }
+      .hexagram-box {
+        min-width: 100px;
+      }
+    }
+  </style>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 font-sans">
+  <header class="w-full max-w-3xl bg-white shadow-md rounded-lg p-6 mb-6">
+    <h2 class="text-2xl font-bold text-center text-gray-800">專業梅花心易五行分析系統</h2>
+    <p class="text-center text-gray-600 mt-2">選擇起卦模式，輸入資料後點擊開始卜卦</p>
+  </header>
+
+  <main class="w-full max-w-3xl bg-white shadow-md rounded-lg p-6">
+    <div class="mb-4">
+      <label for="questionInput" class="block text-sm font-medium text-gray-700 mb-2">
+        <i class="fas fa-question-circle mr-2"></i>卜卦問題
+      </label>
+      <input type="text" id="questionInput" placeholder="例如：明天適合出遊嗎？" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+
+    <button id="btnPrepare" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+      <i class="fas fa-hands-praying mr-2"></i>準備取卦
+    </button>
+    <div class="mt-4 flex flex-col sm:flex-row gap-2">
+      <button id="btnViewRecords" class="w-full sm:w-1/3 bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200">
+        <i class="fas fa-list mr-2"></i>查詢記錄
+      </button>
+      <button id="btnExportRecords" class="w-full sm:w-1/3 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200">
+        <i class="fas fa-file-export mr-2"></i>匯出記錄
+      </button>
+      <button id="btnImportRecords" class="w-full sm:w-1/3 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition duration-200">
+        <i class="fas fa-file-import mr-2"></i>匯入記錄
+      </button>
+    </div>
+
+    <div id="divinationControls" class="hidden mt-4">
+      <div class="mb-4">
+        <label for="divinationMode" class="block text-sm font-medium text-gray-700 mb-2">
+          <i class="fas fa-list-ul mr-2 tooltip" data-tooltip="選擇起卦方式"></i>起卦模式
+        </label>
+        <select id="divinationMode" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="time">時間起卦（自動取當前時間）</option>
+          <option value="threeDigits">三位數起卦（輸入三個三位數，如123, 456, 789）</option>
+          <option value="manual">手動指定（上卦1-8、下卦1-8、動爻1-6）</option>
+        </select>
+      </div>
+      <div id="inputFields" class="space-y-4"></div>
+      <button id="btnStartDivination" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+        <i class="fas fa-hands-praying mr-2"></i>開始解卦
+      </button>
+    </div>
+
+    <div id="result" class="mt-6"></div>
+    <p id="mqttStatus" class="text-center text-gray-600 mt-4"></p>
+  </main>
+  <div id="recordModal" class="hidden fixed inset-0 z-50 overflow-auto bg-gray-800 bg-opacity-75 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg p-6 max-w-lg w-full">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold">卜卦記錄</h3>
+        <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+      </div>
+      <div id="recordList" class="max-h-96 overflow-y-auto space-y-2"></div>
+    </div>
+  </div>
+  <input type="file" id="importFile" class="hidden" accept=".json">
+
+  <div id="prayerModal" class="hidden fixed inset-0 z-50 overflow-auto bg-gray-800 bg-opacity-75 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full text-center">
+      <h3 class="text-xl font-bold mb-4">祝禱詞</h3>
+      <div id="prayerContent" class="text-gray-700 whitespace-pre-line text-left text-xl font-bold">
+        請平心靜氣，正身端坐，心中默念或口誦：
+        乾坤在上，日月為明；
+        四時有序，萬物歸真。
+        弟子（或某某人）誠心一念，今以梅花心易，
+        參天地之象，觀陰陽之機。
+        伏願天地神靈、列聖賢哲，
+        垂鑒此心，默垂庇佑。
+        所占之事，〔填入問題欄位資料〕
+        得吉兇之應，明示毫釐；
+        使心有所安，行有所依。
+        謹以誠心正意，願得明示。
+      </div>
+      <button id="btnStartTaking" class="mt-6 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+        開始取卦
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // MQTT 客戶端初始化
+    const client = mqtt.connect('wss://broker.mqttgo.io:8084/mqtt', { clean: true });
+
+    client.on('connect', () => {
+      document.getElementById("mqttStatus").textContent = "已連接至 MQTT Broker";
+    });
+
+    client.on('error', (err) => {
+      document.getElementById("mqttStatus").textContent = "MQTT 連線錯誤: " + err;
+    });
+
+    const trigramFiveElement = {
+      "乾": "金", "兌": "金", "離": "火",
+      "震": "木", "巽": "木", "坎": "水",
+      "艮": "土", "坤": "土"
+    };
+
+    function calculateHexagramFromTime(year, month, day, hour) {
+      const sum = year + month + day + hour;
+      const upper = sum % 8;
+      const lower = (sum + 1) % 8;
+      const movingLine = ((sum + 2) % 6) + 1;
+      return { upper, lower, movingLine };
+    }
+
+    function calculateHexagramFromThreeDigits(num1, num2, num3) {
+      if (isNaN(num1) || isNaN(num2) || isNaN(num3) || num1 < 100 || num1 > 999 || num2 < 100 || num2 > 999 || num3 < 100 || num3 > 999) return null;
+      const upper = num1 % 8;
+      const lower = num2 % 8;
+      const movingLine = (num3 % 6) || 6;
+      return { upper, lower, movingLine };
+    }
+
+    function calculateHexagramFromManual(upper, lower, movingLine) {
+      upper = parseInt(upper);
+      lower = parseInt(lower);
+      movingLine = parseInt(movingLine);
+      if (isNaN(upper) || isNaN(lower) || isNaN(movingLine) || upper < 1 || upper > 8 || lower < 1 || lower > 8 || movingLine < 1 || movingLine > 6) return null;
+      upper = (upper - 1 + 8) % 8;
+      lower = (lower - 1 + 8) % 8;
+      return { upper, lower, movingLine };
+    }
+
+    function generateIdentifier() {
+      const letters = 'abcdefghijklmnopqrstuvwxyz';
+      let id = '';
+      for (let i = 0; i < 3; i++) {
+        id += letters[Math.floor(Math.random() * 26)];
+      }
+      for (let i = 0; i < 4; i++) {
+        id += Math.floor(Math.random() * 10);
+      }
+      return id;
+    }
+
+    function downloadSvg(svgHtml, filename) {
+      const blob = new Blob([svgHtml], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function saveDivinationRecord(record) {
+      const records = JSON.parse(localStorage.getItem('divinationRecords')) || [];
+      records.unshift(record);
+      localStorage.setItem('divinationRecords', JSON.stringify(records));
+    }
+
+    function loadRecords() {
+      return JSON.parse(localStorage.getItem('divinationRecords')) || [];
+    }
+
+    function displayRecords(records) {
+      const recordList = document.getElementById("recordList");
+      recordList.innerHTML = '';
+      if (records.length === 0) {
+        recordList.innerHTML = '<p class="text-gray-500">尚無卜卦記錄。</p>';
+        return;
+      }
+      records.forEach((record, index) => {
+        const recordItem = document.createElement('div');
+        recordItem.className = 'p-3 border rounded-md cursor-pointer hover:bg-gray-50';
+        recordItem.innerHTML = `
+          <p class="font-bold text-gray-800">${record.question || '無問題'}</p>
+          <p class="text-sm text-gray-600">${new Date(record.timestamp).toLocaleString()}</p>
+        `;
+        recordItem.addEventListener('click', () => {
+          displayDivinationResult(record);
+          document.getElementById('recordModal').classList.add('hidden');
+        });
+        recordList.appendChild(recordItem);
+      });
+    }
+
+    function exportRecords() {
+      const records = loadRecords();
+      if (records.length === 0) {
+        alert('沒有記錄可以匯出！');
+        return;
+      }
+      const dataStr = JSON.stringify(records, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'divination_records.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      alert('記錄已成功匯出！');
+    }
+
+    function importRecords() {
+      const fileInput = document.getElementById('importFile');
+      fileInput.click();
+      fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const importedRecords = JSON.parse(event.target.result);
+            if (!Array.isArray(importedRecords)) {
+              throw new Error('檔案格式不正確，請選擇有效的JSON檔案。');
+            }
+            const currentRecords = loadRecords();
+            const newRecords = [...importedRecords, ...currentRecords];
+            localStorage.setItem('divinationRecords', JSON.stringify(newRecords));
+            alert('記錄已成功匯入！');
+            fileInput.value = ''; // Reset file input
+          } catch (error) {
+            alert('匯入失敗：' + error.message);
+          }
+        };
+        reader.readAsText(file);
+      };
+    }
+
+    function displayDivinationResult(resultData) {
+      const {
+        hexagramStr, mutualHexagramStr, changedHexagramStr,
+        hexagramName, mutualHexagramName, changedHexagramName,
+        upperName, lowerName, mutualUpperName, mutualLowerName,
+        changedUpperName, changedLowerName,
+        bodyTrigram, useTrigram, mutualUseTrigram, changedUseTrigram,
+        fiveRelAnalysis, mutualFiveRelAnalysis, changedFiveRelAnalysis,
+        finalVerdict, adviceText, graphHtml,
+        wuxingStatusHtml
+      } = resultData;
+
+      document.getElementById("result").innerHTML = `
+        <div class="flex flex-wrap justify-around gap-4">
+          <div class="hexagram-box bg-gray-50 p-4 rounded-md shadow-sm text-center">
+            <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-yin-yang mr-2"></i>本卦</h3>
+            ${hexagramStr}
+            <p class="text-gray-700">${hexagramName}</p>
+            <p class="text-gray-600"><i class="fas fa-arrow-up mr-1"></i>上卦: ${upperName} (${trigramFiveElement[upperName] || "未知"})</p>
+            <p class="text-gray-600"><i class="fas fa-arrow-down mr-1"></i>下卦: ${lowerName} (${trigramFiveElement[lowerName] || "未知"})</p>
+            <p class="text-gray-600"><i class="fas fa-shield-alt mr-1"></i>體卦: ${bodyTrigram} (${trigramFiveElement[bodyTrigram] || "未知"})</p>
+            <p class="text-gray-600"><i class="fas fa-balance-scale mr-1"></i>本卦體用生剋: ${fiveRelAnalysis.description}</p>
+          </div>
+          <div class="hexagram-box bg-gray-50 p-4 rounded-md shadow-sm text-center">
+            <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-yin-yang mr-2"></i>互卦</h3>
+            ${mutualHexagramStr}
+            <p class="text-gray-700">${mutualHexagramName}</p>
+            <p class="text-gray-600"><i class="fas fa-arrow-up mr-1"></i>上卦: ${mutualUpperName} (${trigramFiveElement[mutualUpperName] || "未知"})</p>
+            <p class="text-gray-600"><i class="fas fa-arrow-down mr-1"></i>下卦: ${mutualLowerName} (${trigramFiveElement[mutualLowerName] || "未知"})</p>
+            <p class="text-gray-600"><i class="fas fa-balance-scale mr-1"></i>互卦與體卦生剋: ${mutualFiveRelAnalysis.description}</p>
+          </div>
+          <div class="hexagram-box bg-gray-50 p-4 rounded-md shadow-sm text-center">
+            <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-yin-yang mr-2"></i>變卦</h3>
+            ${changedHexagramStr}
+            <p class="text-gray-700">${changedHexagramName}</p>
+            <p class="text-gray-600"><i class="fas fa-arrow-up mr-1"></i>上卦: ${changedUpperName} (${trigramFiveElement[changedUpperName] || "未知"})</p>
+            <p class="text-gray-600"><i class="fas fa-arrow-down mr-1"></i>下卦: ${changedLowerName} (${trigramFiveElement[changedLowerName] || "未知"})</p>
+            <p class="text-gray-600"><i class="fas fa-balance-scale mr-1"></i>變卦與體卦生尅: ${changedFiveRelAnalysis.description}</p>
+          </div>
+        </div>
+        <div class="advice mt-4">
+          <strong><i class="fas fa-star mr-2"></i>吉兇判斷：<span class="font-bold text-lg">${finalVerdict}</span></strong>
+          <p class="mt-2"><strong><i class="fas fa-lightbulb mr-2"></i>趨吉避兇建議：</strong>
+          <p>${adviceText}</p>
+        </div>
+        ${wuxingStatusHtml}
+        <button id="viewGraphBtn" class="mt-4 w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200">
+          <i class="fas fa-chart-pie mr-2"></i>查看五行生尅圖
+        </button>
+        <button id="downloadGraphBtn" class="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+          <i class="fas fa-download mr-2"></i>下載五行生尅圖 (SVG)
+        </button>
+      `;
+
+      document.getElementById("viewGraphBtn").addEventListener("click", () => {
+        const newWindow = window.open('', '_blank', 'width=800,height=750');
+        newWindow.document.write(`
+          <!DOCTYPE html>
+          <html lang="zh-Hant">
+          <head>
+            <meta charset="UTF-8">
+            <title>五行生尅圖</title>
+          </head>
+          <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh; background:#f0f0f0;">
+            ${graphHtml}
+          </body>
+          </html>
+        `);
+        newWindow.document.close();
+      });
+      document.getElementById("downloadGraphBtn").addEventListener("click", () => downloadSvg(graphHtml, "五行生尅圖.svg"));
+    }
+
+    function startDivination() {
+      const mode = document.getElementById("divinationMode").value;
+      const question = document.getElementById("questionInput").value.trim();
+      if (!question) {
+        alert("請先填寫卜卦問題！");
+        return;
+      }
+
+      let upper, lower, movingLine;
+      const now = new Date();
+      const timeElement = ["木", "火", "土", "金", "水"][Math.floor((now.getMonth() % 12) / 2)];
+
+      if (mode === "time") {
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        const day = now.getDate();
+        const hour = now.getHours();
+        const result = calculateHexagramFromTime(year, month, day, hour);
+        upper = result.upper;
+        lower = result.lower;
+        movingLine = result.movingLine;
+      } else if (mode === "threeDigits") {
+        const num1 = parseInt(document.getElementById("num1Input").value);
+        const num2 = parseInt(document.getElementById("num2Input").value);
+        const num3 = parseInt(document.getElementById("num3Input").value);
+        const result = calculateHexagramFromThreeDigits(num1, num2, num3);
+        if (!result) {
+          alert("請輸入有效的三位數（100-999）！");
+          return;
+        }
+        upper = result.upper;
+        lower = result.lower;
+        movingLine = result.movingLine;
+      } else if (mode === "manual") {
+        const upperInput = document.getElementById("upperInput").value;
+        const lowerInput = document.getElementById("lowerInput").value;
+        const movingInput = document.getElementById("movingInput").value;
+        const result = calculateHexagramFromManual(upperInput, lowerInput, movingInput);
+        if (!result) {
+          alert("請輸入有效的上卦（1-8）、下卦（1-8）和動爻（1-6）！");
+          return;
+        }
+        upper = result.upper;
+        lower = result.lower;
+        movingLine = result.movingLine;
+      }
+
+      const identifier = generateIdentifier();
+      const topic = `mhxingyi/${identifier}/${upper + 1}${lower + 1}${movingLine}`;
+      const payload = JSON.stringify({ question, timeElement });
+
+      client.publish(topic, payload, { qos: 1 }, (err) => {
+        if (err) {
+          document.getElementById("mqttStatus").textContent = "MQTT 發送失敗: " + err;
+          return;
+        }
+        document.getElementById("mqttStatus").textContent = "已發送卜卦請求，等待解卦...";
+      });
+
+      client.subscribe(`mhxingyi/${identifier}/interpretation`, (err) => {
+        if (err) {
+          document.getElementById("mqttStatus").textContent = "訂閱失敗: " + err;
+          return;
+        }
+      });
+
+      client.on('message', (topic, message) => {
+        if (topic === `mhxingyi/${identifier}/interpretation`) {
+          try {
+            const resultData = JSON.parse(message.toString());
+            displayDivinationResult(resultData);
+
+            const record = {
+              timestamp: new Date().toISOString(),
+              question,
+              ...resultData
+            };
+            saveDivinationRecord(record);
+
+            document.getElementById("mqttStatus").textContent = "解卦完成！";
+            client.unsubscribe(`mhxingyi/${identifier}/interpretation`);
+          } catch (error) {
+            document.getElementById("mqttStatus").textContent = "解析結果失敗: " + error.message;
+          }
+        }
+      });
+    }
+
+    const modeSelect = document.getElementById("divinationMode");
+    const inputFields = document.getElementById("inputFields");
+    modeSelect.addEventListener("change", () => {
+      inputFields.innerHTML = '';
+      const mode = modeSelect.value;
+      if (mode === "threeDigits") {
+        inputFields.innerHTML = `
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-sort-numeric-up mr-2 tooltip" data-tooltip="輸入100-999"></i>第一個三位數（上卦）
+            </label>
+            <input id="num1Input" type="number" min="100" max="999" value="" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-sort-numeric-up mr-2 tooltip" data-tooltip="輸入100-999"></i>第二個三位數（下卦）
+            </label>
+            <input id="num2Input" type="number" min="100" max="999" value="" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-sort-numeric-up mr-2 tooltip" data-tooltip="輸入100-999"></i>第三個三位數（動爻）
+            </label>
+            <input id="num3Input" type="number" min="100" max="999" value="" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        `;
+      } else if (mode === "manual") {
+        inputFields.innerHTML = `
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-arrow-up mr-2 tooltip" data-tooltip="輸入1-8"></i>上卦
+            </label>
+            <input id="upperInput" type="number" min="1" max="8" value="2" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-arrow-down m const prayerText =  const prayerText = r-2 tooltip" data-tooltip="輸入1-8"></i>下卦
+            </label>
+            <input id="lowerInput" type="number" min="1" max="8" value="3" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-exchange-alt mr-2 tooltip" data-tooltip="輸入1-6"></i>動爻
+            </label>
+            <input id="movingInput" type="number" min="1" max="6" value="1" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        `;
+      }
+    });
+
+    document.getElementById("btnPrepare").addEventListener("click", () => {
+      const question = document.getElementById("questionInput").value.trim();
+      if (!question) {
+        alert("請先填寫卜卦問題！");
+        return;
+      }
+      const prayerText = `
+        請平心靜氣，正身端坐，心中默念或口誦：
+        乾坤在上，日月為明；
+        四時有序，萬物歸真。
+        弟子（或某某人）誠心一念，今以梅花心易，
+        參天地之象，觀陰陽之機。
+        伏願天地神靈、列聖賢哲，
+        垂鑒此心，默垂庇佑。
+        所占之事，${question}
+        得吉兇之應，明示毫釐；
+        使心有所安，行有所依。
+        謹以誠心正意，願得明示。
+      `;
+      document.getElementById("prayerContent").textContent = prayerText;
+      document.getElementById("prayerModal").classList.remove("hidden");
+    });
+
+    document.getElementById("btnStartTaking").addEventListener("click", () => {
+      document.getElementById('prayerModal').classList.add('hidden');
+      document.getElementById('divinationControls').classList.remove('hidden');
+      modeSelect.dispatchEvent(new Event('change'));
+    });
+
+    document.getElementById("btnStartDivination").addEventListener("click", startDivination);
+
+    document.getElementById("btnViewRecords").addEventListener("click", () => {
+      const records = loadRecords();
+      displayRecords(records);
+      document.getElementById('recordModal').classList.remove('hidden');
+    });
+
+    document.getElementById("closeModalBtn").addEventListener("click", () => {
+      document.getElementById('recordModal').classList.add('hidden');
+    });
+
+    document.getElementById("btnExportRecords").addEventListener("click", exportRecords);
+    document.getElementById("btnImportRecords").addEventListener("click", importRecords);
+  </script>
+</body>
+</html>
