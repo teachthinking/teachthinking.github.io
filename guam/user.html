@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>專業梅花心易五行分析系統 - 使用者端</title>
+    <style>
+        /* 簡單樣式，基於原附件 */
+        body { font-family: sans-serif; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1>專業梅花心易五行分析系統</h1>
+    <p>選擇起卦模式，輸入資料後點擊開始卜卦</p>
+
+    <label>卜卦問題：</label>
+    <input type="text" id="question" placeholder="輸入您的問題">
+
+    <h2>準備取卦</h2>
+    <button id="viewRecords">查詢記錄</button>
+    <button id="exportRecords">匯出記錄</button>
+    <button id="importRecords">匯入記錄</button>
+
+    <h3>起卦模式</h3>
+    <label><input type="radio" name="mode" value="time" checked> 時間起卦（自動取當前時間）</label><br>
+    <label><input type="radio" name="mode" value="three"> 三位數起卦（輸入三個三位數，如123, 456, 789）</label><br>
+    <div id="three_input" class="hidden"><input type="text" id="numbers" placeholder="123,456,789"></div>
+    <label><input type="radio" name="mode" value="manual"> 手動指定（上卦1-8、下卦1-8、動爻1-6）</label><br>
+    <div id="manual_input" class="hidden">
+        上卦: <select id="upper">
+            <option value="1">1 - 乾</option><option value="2">2 - 兌</option><option value="3">3 - 離</option><option value="4">4 - 震</option>
+            <option value="5">5 - 巽</option><option value="6">6 - 坎</option><option value="7">7 - 艮</option><option value="8">8 - 坤</option>
+        </select>
+        下卦: <select id="lower">
+            <option value="1">1 - 乾</option><option value="2">2 - 兌</option><option value="3">3 - 離</option><option value="4">4 - 震</option>
+            <option value="5">5 - 巽</option><option value="6">6 - 坎</option><option value="7">7 - 艮</option><option value="8">8 - 坤</option>
+        </select>
+        動爻: <select id="moving">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option>
+        </select>
+    </div>
+
+    <button id="start">開始解卦</button>
+
+    <div id="status"></div>
+    <div id="result"></div>
+    <div id="graph"></div>
+
+    <h2>祝禱詞</h2>
+    <p>請淨心靜氣，正身端坐，口中誦：<br>
+    乾坤在上，日月為明；<br>
+    四時有序，萬物歸真。<br>
+    弟子（或某某人）誠心一念，今以梅花心易，<br>
+    參天地之象，觀陰陽之機。<br>
+    伏願天地神靈、列聖賢哲，<br>
+    垂鑒此心，默垂庇佑。<br>
+    所占之事，〔填入問題欄位資料〕<br>
+    得吉凶之應，明示毫釐；<br>
+    使心有所安，行有所依。<br>
+    謹以誠心正意，願得明示。</p>
+    <button>開始取卦</button> <!-- 可選，無額外綁定 -->
+
+    <label>Broker URL（可編輯）：</label>
+    <input type="text" id="broker" value="wss://broker.mqttgo.io:8084/mqtt">
+
+    <!-- 記錄模態（簡化） -->
+    <div id="recordsModal" class="hidden">
+        <h2>卜卦記錄</h2>
+        <div id="recordsList"></div>
+        <button id="closeModal">×</button>
+    </div>
+
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script>
+        // 模式切換
+        document.querySelectorAll('input[name="mode"]').forEach(r => {
+            r.addEventListener('change', () => {
+                document.getElementById('three_input').style.display = r.value === 'three' ? 'block' : 'none';
+                document.getElementById('manual_input').style.display = r.value === 'manual' ? 'block' : 'none';
+            });
+        });
+
+        // 開始解卦
+        document.getElementById('start').addEventListener('click', () => {
+            const question = document.getElementById('question').value;
+            if (!question) return alert('請輸入問題');
+            const mode = document.querySelector('input[name="mode"]:checked').value;
+            let upper, lower, moving;
+            if (mode === 'time') {
+                const now = new Date();
+                const month = now.getMonth() + 1;
+                const day = now.getDate();
+                const hour = now.getHours();
+                const minute = now.getMinutes();
+                const second = now.getSeconds();
+                let sum1 = month + day + hour;
+                upper = sum1 % 8 || 8;
+                let sum2 = sum1 + Math.floor(minute / 10);
+                lower = sum2 % 8 || 8;
+                let sum3 = sum2 + Math.floor(second / 10);
+                moving = sum3 % 6 || 6;
+            } else if (mode === 'three') {
+                const input = document.getElementById('numbers').value;
+                if (!input) return alert('請輸入三位數');
+                const nums = input.split(',').map(s => parseInt(s.trim()));
+                if (nums.length !== 3 || nums.some(isNaN)) return alert('格式錯誤');
+                upper = nums[0] % 8 || 8;
+                lower = nums[1] % 8 || 8;
+                moving = nums[2] % 6 || 6;
+            } else {
+                upper = parseInt(document.getElementById('upper').value);
+                lower = parseInt(document.getElementById('lower').value);
+                moving = parseInt(document.getElementById('moving').value);
+            }
+            const code = '' + upper + lower + moving;
+            const letters = Array.from({length: 3}, () => String.fromCharCode(97 + Math.floor(Math.random() * 26))).join('');
+            const digits = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            const id = letters + digits;
+            const broker = document.getElementById('broker').value;
+            const client = mqtt.connect(broker);
+            const status = document.getElementById('status');
+            status.innerText = '連線中...';
+            client.on('connect', () => {
+                status.innerText = '已連線';
+                const topic = `mhxingyi/${id}/${code}`;
+                client.publish(topic, question);
+                client.subscribe(`mhxingyi/${id}/result`);
+                // 儲存記錄
+                const records = JSON.parse(localStorage.getItem('records') || '[]');
+                records.push({question, upper, lower, moving, date: new Date().toLocaleString()});
+                localStorage.setItem('records', JSON.stringify(records));
+            });
+            client.on('message', (topic, message) => {
+                if (topic.endsWith('/result')) {
+                    const data = JSON.parse(message.toString());
+                    document.getElementById('result').innerText = data.analysis;
+                    document.getElementById('graph').innerHTML = data.svg;
+                    status.innerText = '已接收解卦';
+                    client.end();
+                }
+            });
+        });
+
+        // 記錄功能
+        const modal = document.getElementById('recordsModal');
+        const list = document.getElementById('recordsList');
+        document.getElementById('viewRecords').addEventListener('click', () => {
+            const records = JSON.parse(localStorage.getItem('records') || '[]');
+            list.innerHTML = records.map(r => `<p>${r.date}: ${r.question} (上${r.upper} 下${r.lower} 動${r.moving})</p>`).join('');
+            modal.classList.remove('hidden');
+        });
+        document.getElementById('closeModal').addEventListener('click', () => modal.classList.add('hidden'));
+        document.getElementById('exportRecords').addEventListener('click', () => {
+            const records = localStorage.getItem('records');
+            const blob = new Blob([records], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'records.json';
+            a.click();
+        });
+        document.getElementById('importRecords').addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = ev => localStorage.setItem('records', ev.target.result);
+                reader.readAsText(file);
+            };
+            input.click();
+        });
+    </script>
+</body>
+</html>
