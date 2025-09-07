@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>專業梅花心易 - 解卦介面</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    /* 這裡可以放一些基本樣式，以顯示接收到的訊息 */
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 font-sans">
+  <header class="w-full max-w-3xl mx-auto bg-white shadow-md rounded-lg p-6 mb-6">
+    <h2 class="text-2xl font-bold text-center text-gray-800">專業梅花心易 - 解卦介面</h2>
+    <p class="text-center text-gray-600 mt-2">正在監聽 MQTT 訊息...</p>
+  </header>
+  <main class="w-full max-w-3xl mx-auto bg-white shadow-md rounded-lg p-6">
+    <div id="log" class="space-y-4"></div>
+  </main>
+
+  <script>
+    // 卦象與五行資料 (從 wuxing.html 複製而來)
+    const trigrams = [
+      {name:"乾", element:"金"}, {name:"兑", element:"金"}, {name:"離", element:"火"},
+      {name:"震", element:"木"}, {name:"巽", element:"木"}, {name:"坎", element:"水"},
+      {name:"艮", element:"土"}, {name:"坤", element:"土"}
+    ];
+    const fiveElementsOrder = ["火", "土", "金", "水", "木"];
+    const fiveRelations = [
+      {from:"木", to:"火", type:"生"}, {from:"火", to:"土", type:"生"}, {from:"土", to:"金", type:"生"},
+      {from:"金", to:"水", type:"生"}, {from:"水", to:"木", type:"生"},
+      {from:"木", to:"土", type:"剋"}, {from:"土", to:"水", type:"剋"}, {from:"水", to:"火", type:"剋"},
+      {from:"火", to:"金", type:"剋"}, {from:"金", to:"木", type:"剋"}
+    ];
+    const fiveElementColors = {
+      "金": "#ffd700", "木": "#228b22", "水": "#1e90ff", "火": "#dc143c", "土": "#a52a2a"
+    };
+    const wuxingStatusMap = { ... }; // 此處請將您原始檔案中的 wuxingStatusMap 完整複製過來
+
+    function calculateWuxingRelations(baseElement, changingElement) {
+        const relations = fiveRelations.filter(rel => rel.from === baseElement && rel.to === changingElement);
+        if (relations.length > 0) {
+            return {
+                type: relations[0].type === "生" ? "體生用" : "體剋用",
+                description: `${baseElement} ${relations[0].type} ${changingElement}`
+            };
+        }
+        const inverseRelations = fiveRelations.filter(rel => rel.from === changingElement && rel.to === baseElement);
+        if (inverseRelations.length > 0) {
+            return {
+                type: inverseRelations[0].type === "生" ? "用生體" : "用剋體",
+                description: `${changingElement} ${inverseRelations[0].type} ${baseElement}`
+            };
+        }
+        return { type: "比和", description: "比和" };
+    }
+
+    function createWuxingSvg(baseElement, changingElement) {
+      const elements = fiveElementsOrder.concat(fiveElementsOrder[0]);
+      const angleStep = 360 / 5;
+      const radius = 100;
+      const cx = 120, cy = 120;
+      let svgContent = `<svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">`;
+      const elementPositions = {};
+      elements.forEach((el, i) => {
+        if (i < 5) {
+          const angle = (i * angleStep - 90) * Math.PI / 180;
+          const x = cx + radius * Math.cos(angle);
+          const y = cy + radius * Math.sin(angle);
+          elementPositions[el] = {x, y};
+          svgContent += `<circle cx="${x}" cy="${y}" r="25" fill="${fiveElementColors[el]}" stroke="black" stroke-width="2" />`;
+          svgContent += `<text x="${x}" y="${y + 5}" font-size="18" text-anchor="middle" fill="white" font-weight="bold">${el}</text>`;
+        }
+      });
+      const relations = fiveRelations.map(rel => ({
+        ...rel,
+        startPos: elementPositions[rel.from],
+        endPos: elementPositions[rel.to],
+        color: rel.type === "生" ? "green" : "red"
+      }));
+      relations.forEach(rel => {
+        if (rel.startPos && rel.endPos) {
+          svgContent += `<line x1="${rel.startPos.x}" y1="${rel.startPos.y}" x2="${rel.endPos.x}" y2="${rel.endPos.y}" stroke="${rel.color}" stroke-width="2" />`;
+          const arrowLength = 10;
+          const angle = Math.atan2(rel.endPos.y - rel.startPos.y, rel.endPos.x - rel.startPos.x);
+          const x2 = rel.endPos.x;
+          const y2 = rel.endPos.y;
+          svgContent += `<path d="M${x2},${y2} L${x2 - arrowLength * Math.cos(angle - Math.PI / 6)},${y2 - arrowLength * Math.sin(angle - Math.PI / 6)} L${x2 - arrowLength * Math.cos(angle + Math.PI / 6)},${y2 - arrowLength * Math.sin(angle + Math.PI / 6)} Z" fill="${rel.color}" />`;
+        }
+      });
+      const basePos = elementPositions[baseElement];
+      const changingPos = elementPositions[changingElement];
+      if (basePos && changingPos) {
+        svgContent += `<line x1="${basePos.x}" y1="${basePos.y}" x2="${changingPos.x}" y2="${changingPos.y}" stroke="blue" stroke-width="4" stroke-dasharray="5,5" />`;
+        const arrowLength = 15;
+        const angle = Math.atan2(changingPos.y - basePos.y, changingPos.x - basePos.x);
+        const x2 = changingPos.x;
+        const y2 = changingPos.y;
+        svgContent += `<path d="M${x2},${y2} L${x2 - arrowLength * Math.cos(angle - Math.PI / 6)},${y2 - arrowLength * Math.sin(angle - Math.PI / 6)} L${x2 - arrowLength * Math.cos(angle + Math.PI / 6)},${y2 - arrowLength * Math.sin(angle + Math.PI / 6)} Z" fill="blue" />`;
+      }
+      svgContent += `</svg>`;
+      return svgContent;
+    }
+
+    const broker = "wss://broker.mqttgo.io:8084/mqtt";
+    const client = mqtt.connect(broker);
+    const logDiv = document.getElementById("log");
+    
+    client.on('connect', () => {
+      logDiv.innerHTML += `<div class="text-green-600 font-bold">已連線到 MQTT Broker。正在監聽「mhxingyi」主題...</div>`;
+      client.subscribe("mhxingyi/#", (err) => {
+        if (!err) {
+          console.log("Subscribed to mhxingyi/#");
+        }
+      });
+    });
+
+    client.on('message', (topic, message) => {
+      logDiv.innerHTML += `<div class="mt-4 p-4 bg-gray-200 rounded-lg shadow-inner">
+                            <h3 class="font-bold">接收到訊息：</h3>
+                            <p><strong>主題:</strong> ${topic}</p>
+                            <p><strong>內容:</strong> ${message.toString()}</p>
+                           </div>`;
+      console.log(`Received message on topic: ${topic}`);
+
+      try {
+        const payload = JSON.parse(message.toString());
+        const topicParts = topic.split('/');
+        const uniqueId = topicParts[1];
+        const { upper, lower, moving } = payload;
+        
+        // 核心解卦邏輯 (從 wuxing.html 複製並調整)
+        const bodyTrigram = trigrams[lower];
+        const useTrigram = trigrams[upper];
+        const baseElement = bodyTrigram.element;
+        const changingElement = useTrigram.element;
+        const analysis = calculateWuxingRelations(baseElement, changingElement);
+        
+        // 生成 SVG 圖形
+        const svgContent = createWuxingSvg(baseElement, changingElement);
+        
+        const responsePayload = {
+          question: payload.question,
+          analysis: analysis.description,
+          svg: svgContent
+        };
+
+        const responseTopic = `hxingyi/${uniqueId}/result`;
+        client.publish(responseTopic, JSON.stringify(responsePayload), () => {
+          logDiv.innerHTML += `<div class="mt-2 text-blue-600">已傳送結果到主題: ${responseTopic}</div>`;
+          console.log(`Published result to topic: ${responseTopic}`);
+        });
+        
+      } catch (e) {
+        logDiv.innerHTML += `<div class="mt-2 text-red-600">解析訊息錯誤：${e.message}</div>`;
+        console.error("Failed to process message:", e);
+      }
+    });
+
+    client.on('error', (err) => {
+      logDiv.innerHTML += `<div class="mt-2 text-red-600 font-bold">MQTT 連線錯誤：${err.message}</div>`;
+      console.error("MQTT Error:", err);
+    });
+  </script>
+</body>
+</html>
