@@ -10,26 +10,89 @@
 
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script>
-        const broker = 'wss://broker.mqttgo.io:8084/mqtt'; // 固定，無需編輯
+        const broker = 'wss://broker.mqttgo.io:8084/mqtt';
         const elements = {1: '金', 2: '金', 3: '火', 4: '木', 5: '木', 6: '水', 7: '土', 8: '土'};
         const trigramNames = {1: '乾', 2: '兌', 3: '離', 4: '震', 5: '巽', 6: '坎', 7: '艮', 8: '坤'};
+        const trigramLines = {
+            1: [1,1,1], // 乾 ☰
+            2: [0,1,1], // 兌 ☱
+            3: [1,0,1], // 離 ☲
+            4: [0,0,1], // 震 ☳
+            5: [1,1,0], // 巽 ☴
+            6: [0,1,0], // 坎 ☵
+            7: [1,0,0], // 艮 ☶
+            8: [0,0,0]  // 坤 ☷
+        };
         const generation = {'木': '火', '火': '土', '土': '金', '金': '水', '水': '木'};
         const destruction = {'木': '土', '火': '金', '土': '水', '金': '木', '水': '火'};
+        // 簡化爻辭（實際需64卦每爻的詳細資料庫，這裡用模擬）
+        const yaoDict = {
+            1: ['初爻動：謀事需謹慎，宜守不宜進。', '二爻動：時機未熟，耐心等待。', '三爻動：小有阻礙，宜穩中求進。', 
+                '四爻動：運勢漸開，謀事可成。', '五爻動：大吉大利，宜積極進取。', '六爻動：物極必反，謹防過猶不及。'],
+            // 其他卦的爻辭可擴展，這裡簡化假設相同
+        };
 
         function getRelation(body, use) {
-            if (body === use) return '比和（相合）';
-            if (generation[body] === use) return '體生用（耗力）';
-            if (generation[use] === body) return '用生體（得助）';
-            if (destruction[body] === use) return '體克用（掌控）';
-            if (destruction[use] === body) return '用克體（受損）';
-            return '無關';
+            if (body === use) return '比和（相合，運勢穩定）';
+            if (generation[body] === use) return '體生用（耗力，付出較多）';
+            if (generation[use] === body) return '用生體（得助，助力較強）';
+            if (destruction[body] === use) return '體克用（掌控，易成功）';
+            if (destruction[use] === body) return '用克體（受損，需謹慎）';
+            return '無直接生克關係';
+        }
+
+        function getHexagram(upper, lower) {
+            // 簡單映射，實際需64卦表，這裡假設上卦=下卦時為乾（1）等
+            return `${trigramNames[upper]}為上，${trigramNames[lower]}為下`;
+        }
+
+        function getMutualHexagram(upper, lower) {
+            const upperLines = trigramLines[upper];
+            const lowerLines = trigramLines[lower];
+            const lines = [...lowerLines, ...upperLines]; // 六爻：下卦+上卦
+            const mutualLower = [lines[1], lines[2], lines[3]]; // 二三四爻
+            const mutualUpper = [lines[2], lines[3], lines[4]]; // 三四五爻
+            const findTrigram = lines => Object.keys(trigramLines).find(k => 
+                trigramLines[k].every((v, i) => v === lines[i])
+            );
+            return {
+                upper: parseInt(findTrigram(mutualUpper) || 8),
+                lower: parseInt(findTrigram(mutualLower) || 8)
+            };
+        }
+
+        function getChangedHexagram(upper, lower, moving) {
+            const upperLines = [...trigramLines[upper]];
+            const lowerLines = [...trigramLines[lower]];
+            const lines = [...lowerLines, ...upperLines];
+            lines[moving - 1] = 1 - lines[moving - 1]; // 動爻陰陽互換
+            const changedLower = lines.slice(0, 3);
+            const changedUpper = lines.slice(3, 6);
+            const findTrigram = lines => Object.keys(trigramLines).find(k => 
+                trigramLines[k].every((v, i) => v === lines[i])
+            );
+            return {
+                upper: parseInt(findTrigram(changedUpper) || 8),
+                lower: parseInt(findTrigram(changedLower) || 8)
+            };
         }
 
         function generateAnalysis(upper, lower, moving, question) {
             const elemBody = elements[lower];
             const elemUse = elements[upper];
             const relation = getRelation(elemBody, elemUse);
-            return `問題：${question}\n本卦：上${trigramNames[upper]} 下${trigramNames[lower]} 動爻${moving}\n體元素：${elemBody}\n用元素：${elemUse}\n生克關係：${relation}`;
+            const hexagram = getHexagram(upper, lower);
+            const mutual = getMutualHexagram(upper, lower);
+            const changed = getChangedHexagram(upper, lower, moving);
+            const yao = yaoDict[1]?.[moving - 1] || `第${moving}爻動：宜審慎行事。`; // 簡化爻辭
+            return `問題：${question}\n` +
+                   `本卦：${hexagram}，動爻第${moving}爻\n` +
+                   `體元素（下卦）：${elemBody}，用元素（上卦）：${elemUse}\n` +
+                   `五行生克：${relation}\n` +
+                   `互卦：上${trigramNames[mutual.upper]} 下${trigramNames[mutual.lower]}\n` +
+                   `變卦：上${trigramNames[changed.upper]} 下${trigramNames[changed.lower]}\n` +
+                   `爻辭參考：${yao}\n` +
+                   `解卦建議：依據五行${relation}，動爻位於${moving}，宜參考爻辭與互變卦象，審慎決策。`;
         }
 
         function generateSVG(body, use) {
