@@ -837,14 +837,4 @@
     });
   </script>
 </body>
-</html>        console.error("Failed to process message:", e);
-      }
-    });
-
-    client.on('error', (err) => {
-      logDiv.innerHTML += `<div class="mt-2 text-red-600 font-bold">MQTT 連線錯誤：${err.message}</div>`;
-      console.error("MQTT Error:", err);
-    });
-  </script>
-</body>
 </html>
