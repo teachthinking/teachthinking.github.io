@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>智慧卜卦系統</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+    select, button { padding: 8px; margin: 5px; font-size: 16px; }
+    #chart { width: 600px; height: 600px; background: #f9f9f9; margin-top: 20px; }
+    .log { background: #eee; padding: 10px; margin-top: 10px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h2>🌿 智慧卜卦系統</h2>
+
+  <p><strong>MQTT Broker：</strong> wss://broker.mqttgo.io:8084/mqtt</p>
+  <button onclick="connectMQTT()">連線 MQTT</button>
+
+  <div>
+    <label>上卦：</label>
+    <select id="upper">
+      <option value="1">乾</option><option value="2">兌</option><option value="3">離</option>
+      <option value="4">震</option><option value="5">巽</option><option value="6">坎</option>
+      <option value="7">艮</option><option value="8">坤</option>
+    </select>
+
+    <label>下卦：</label>
+    <select id="lower">
+      <option value="1">乾</option><option value="2">兌</option><option value="3">離</option>
+      <option value="4">震</option><option value="5">巽</option><option value="6">坎</option>
+      <option value="7">艮</option><option value="8">坤</option>
+    </select>
+
+    <label>動爻：</label>
+    <select id="yao">
+      <option value="1">初爻</option><option value="2">二爻</option><option value="3">三爻</option>
+      <option value="4">四爻</option><option value="5">五爻</option><option value="6">上爻</option>
+    </select>
+
+    <button onclick="sendGua()">送出卦象</button>
+  </div>
+
+  <div class="log" id="log"></div>
+  <svg id="chart"></svg>
+
+  <script>
+    let client;
+    const brokerURL = "wss://broker.mqttgo.io:8084/mqtt";
+
+    const guaMap = ['乾','兌','離','震','巽','坎','艮','坤'];
+    const elements = {
+      '乾': '金', '坤': '土', '震': '木', '巽': '木',
+      '坎': '水', '離': '火', '艮': '土', '兌': '金'
+    };
+    const colors = {
+      '木': '#4CAF50', '火': '#F44336', '土': '#FFEB3B',
+      '金': '#9E9E9E', '水': '#2196F3'
+    };
+    const generate = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' };
+    const overcome = { 木: '土', 土: '水', 水: '火', 火: '金', 金: '木' };
+
+    function connectMQTT() {
+      client = mqtt.connect(brokerURL);
+      client.on('connect', () => log('✅ 已連線至 MQTT Broker'));
+      client.subscribe('JUSTIN/Q1');
+      client.on('message', (topic, message) => {
+        log(📩 收到訊息：${topic} → ${message});
+        if (topic === 'JUSTIN/Q1') {
+          const parts = message.toString().split('/');
+          const guaInfo = parseGua(parts);
+          const analysis = analyzeGua(guaInfo);
+          drawChart(analysis);
+        }
+      });
+    }
+
+    function sendGua() {
+      const upper = document.getElementById('upper').value;
+      const lower = document.getElementById('lower').value;
+      const yao = document.getElementById('yao').value;
+      const msg = JUSTIN/Q1/${upper}/${lower}/${yao};
+      client.publish('JUSTIN/Q1', msg);
+      log(🚀 發送卦象：${msg});
+    }
+
+    function parseGua(parts) {
+      const upperGua = guaMap[parseInt(parts[2]) - 1];
+      const lowerGua = guaMap[parseInt(parts[3]) - 1];
+      const movingYao = parseInt(parts[4]);
+      return { upperGua, lowerGua, movingYao };
+    }
+
+    function analyzeGua({ upperGua, lowerGua }) {
+      const ti = elements[lowerGua];
+      const yong = elements[upperGua];
+      const hu = '木';   // 模擬互卦五行
+      const bian = '火'; // 模擬變卦五行
+      return {
+        ti, yong, hu, bian,
+        relations: [
+          { from: yong, to: ti },
+          { from: hu, to: ti },
+          { from: bian, to: ti }
+        ]
+      };
+    }
+
+    function drawChart({ ti, relations }) {
+      const svg = document.getElementById('chart');
+      svg.innerHTML = '';
+      const pos = {
+        木: [300, 100], 火: [450, 250], 土: [300, 400],
+        金: [150, 250], 水: [300, 250]
+      };
+
+      for (let key in pos) {
+        const [x, y] = pos[key];
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", x);
+        circle.setAttribute("cy", y);
+        circle.setAttribute("r", 40);
+        circle.setAttribute("fill", colors[key]);
+        svg.appendChild(circle);
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", x);
+        text.setAttribute("y", y);
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("dominant-baseline", "middle");
+        text.setAttribute("font-size", "20");
+        text.textContent = key;
+        svg.appendChild(text);
+      }
+
+      relations.forEach(rel => {
+        const [x1, y1] = pos[rel.from];
+        const [x2, y2] = pos[rel.to];
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+
+        const type = getRelationType(rel.from, rel.to, ti);
+        line.setAttribute("stroke", type === '生' ? 'green' : type === '克' ? 'red' : 'gray');
+        line.setAttribute("stroke-width", type === '生' ? 4 : type === '克' ? 2 : 3);
+        svg.appendChild(line);
+      });
+    }
+
+    function getRelationType(from, to, ti) {
+      if (generate[from] === to) return '生';
+      if (overcome[from] === to) return '克';
+      if (from === to) return '比和';
+      return '無';
+    }
+
+    function log(msg) {
+      document.getElementById('log').textContent += msg + '\n';
+    }
+  </script>
+</body>
+</html>
