@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>班級座位分組表現管理工具</title>
+  <title>國小班級座位表管理工具 (全功能備份版)</title>
   <style>
     body { 
       font-family: "Microsoft JhengHei", Arial, sans-serif; 
@@ -204,7 +204,7 @@
         line-height: 1.6;
     }
     .modal-content h3 { color: #ff6f91; border-bottom: 2px solid #ffe6eb; padding-bottom: 10px;}
-    .modal-content h4 { color: #845ec2; }
+    .modal-content h4 { color: #845ec2; margin-top: 20px;}
     .modal-content table { width: 100%; margin-top: 10px; }
     .modal-content th, .modal-content td { border: 1px solid #ddd; padding: 8px; text-align: left;}
     .modal-content th { background-color: #f2f2f2;}
@@ -292,7 +292,7 @@
 </head>
 <body>
 
-  <h1 id="main-title">班級座位分組表現管理工具</h1>
+  <h1 id="main-title">國小班級座位表管理工具</h1>
 
   <div id="main-container">
     
@@ -360,16 +360,64 @@
     <div class="modal-content">
         <span id="close-help-btn" class="close-btn">&times;</span>
         <h3>國小班級座位表管理工具 - 使用說明書</h3>
-        </div>
+        <p>老師您好！為了讓班級經營與課堂互動更加輕鬆高效，我們開發了這款多功能的座位表管理工具。它不僅僅是一個座位表，更是一個整合了分組、計分、排行與互動回饋的教學好幫手。</p>
+        
+        <h4>✨ 核心功能總覽</h4>
+        <ul>
+            <li><strong>📊 分數即時排行</strong>：個人與分組總分排行榜，動態更新，激發學習動機。</li>
+            <li><strong>🖱️ 直覺拖曳換位</strong>：用滑鼠直接拖曳學生即可交換座位，並能自動更換組別。</li>
+            <li><strong>🎨 智慧分組管理</strong>：提供多種分組方式（隨機、同組同行），並以顏色區分。</li>
+            <li><strong>🔊 互動即時回饋</strong>：點擊加減分時，有數字動畫與提示音效，操作確認更清晰。</li>
+            <li><strong>💾 檔案與瀏覽器存取</strong>：可透過 Excel 檔案或瀏覽器內建功能，輕鬆存取、備份與還原資料。</li>
+            <li><strong>📄 專業列印排版</strong>：專為列印設計的版面，可將計分板與座位表清晰地分頁列印。</li>
+            <li><strong>🛡️ 防呆存檔提醒</strong>：在您離開網頁前，若有未儲存的修改，系統會貼心提醒。</li>
+        </ul>
+
+        <h4>🚀 第一步：準備您的班級名單 (Excel 檔案)</h4>
+        <p>本工具現在透過匯入 <strong>Excel (.xlsx, .xls)</strong> 檔案來建立班級名單，可完全避免中文亂碼問題。</p>
+        <ol>
+            <li><strong>建立檔案</strong>：用 Excel 或 Google Sheets 建立一個試算表。</li>
+            <li><strong>設定欄位標題</strong>：在檔案的<strong>第一個工作表</strong>中，其<strong>第一列</strong>必須是以下標題（順序不拘，但名稱需完全相符）：
+                <table>
+                    <thead><tr><th>標題</th><th>說明</th><th>範例</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>科目</code></td><td>目前的課程科目</td><td>國語</td></tr>
+                        <tr><td><code>班級</code></td><td>您的班級名稱</td><td>三年二班</td></tr>
+                        <tr><td><code>座號</code></td><td>學生的座號</td><td>1</td></tr>
+                        <tr><td><code>姓名</code></td><td>學生的姓名</td><td>王小明</td></tr>
+                        <tr><td><code>分組</code></td><td>學生所屬組別（可先留白）</td><td>第1組</td></tr>
+                        <tr><td><code>組長</code></td><td>是否為組長（填 <code>是</code> 或 <code>否</code>）</td><td>否</td></tr>
+                        <tr><td><code>分數</code></td><td>學生的起始分數（可填 <code>0</code>）</td><td>0</td></tr>
+                    </tbody>
+                </table>
+            </li>
+        </ol>
+
+        <h4>💾 第二步：資料管理 (匯入、匯出、存取)</h4>
+        <ul>
+            <li><strong>匯入 Excel 名單</strong>：從您的電腦選擇準備好的 Excel 檔，即可載入單一班級的座位表。程式會自動計算並調整所需列數。</li>
+            <li><strong>匯出 Excel</strong>：將<strong>目前畫面上的座位表</strong>（包含所有學生、分數、組別與空位）完整匯出成一個 Excel 檔。適合用來備份單一課程的狀態。</li>
+            <li><strong>儲存到瀏覽器</strong>：將<strong>目前畫面上的狀態</strong>，用一個自訂名稱（例如：三年二班-國語）儲存在您這台電腦的瀏覽器中。</li>
+            <li><strong>從瀏覽器讀取</strong>：彈出列表，顯示所有已儲存的紀錄，您可以快速讀取或刪除。</li>
+            <li><strong>匯出所有存檔</strong>：將您存在瀏覽器中的**所有紀錄**，一次全部打包成一個 <code>.json</code> 備份檔，方便您轉移到另一台電腦。</li>
+            <li><strong>匯入所有存檔</strong>：選擇 <code>.json</code> 備份檔，可將所有紀錄一次還原到新的電腦瀏覽器中（同名紀錄會被覆蓋）。</li>
+        </ul>
+
+        <h4>🎨 第三步：座位與分組管理</h4>
+        <ul>
+            <li><strong>拖曳座位</strong>：直接用滑鼠拖曳學生即可交換位置。學生會自動加入新位置所在行的組別。</li>
+            <li><strong>指定組長</strong>：點擊座位上的 <strong>星號(⭐)</strong> 即可指定或取消該組的組長。</li>
+            <li><strong>[同組坐同行]</strong>：點擊後，系統會將所有學生<strong>依照組別編號</strong>重新排列，並用空位補滿該行。</li>
+            <li><strong>[隨機分組]</strong>：點擊後，系統會根據您設定的<strong>「每組人數(行)」</strong>，將所有學生隨機打亂並分配到新的組別中。</li>
+            <li><strong>[重置座位表]</strong>：當您手動修改「組數」或「人數」後，點此按鈕套用變更。若您縮小版面，多出的學生會被保留並移至下方「未分組」區域。</li>
+        </ul>
+        
+        <hr>
+        <p><strong>💡 溫馨提示</strong>：建議的工作流程是：建立好 Excel 名單 → 匯入 → 使用分組功能 → 課堂中計分 → 使用「儲存到瀏覽器」快速存檔。若要換電腦，再使用「匯出/匯入所有存檔」功能。</p>
+        <p>若有意見回饋，請連繫張老師：<a href="mailto:changhtjh@chc.edu.tw">changhtjh@chc.edu.tw</a></p>
+    </div>
   </div>
 
-  <div id="load-modal" class="modal">
-      <div class="modal-content">
-          <span id="close-load-btn" class="close-btn">&times;</span>
-          <h3>從瀏覽器讀取班級資料</h3>
-          <div id="saved-lists-container"></div>
-      </div>
-  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script>
@@ -612,13 +660,15 @@
             const workbook = XLSX.read(data, { type: 'array' });
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" }); // Treat empty cells as empty strings
-            const importedStudents = jsonData.map(row => ({
-                科目: String(row['科目'] || ''), 班級: String(row['班級'] || ''),
-                座號: String(row['座號'] || ''), 姓名: String(row['姓名'] || ''),
-                分組: String(row['分組'] || ''), 組長: String(row['組長'] || '否'),
-                score: parseInt(row['分數']) || 0
-            })).filter(s => s.姓名); // Only import rows that have a student name
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+            const importedStudents = jsonData
+                .map(row => ({
+                    科目: String(row['科目'] || ''), 班級: String(row['班級'] || ''),
+                    座號: String(row['座號'] || ''), 姓名: String(row['姓名'] || ''),
+                    分組: String(row['分組'] || ''), 組長: String(row['組長'] || '否'),
+                    score: parseInt(row['分數']) || 0
+                }))
+                .filter(s => s.姓名 || s.座號); // 匯入有姓名或座號的列
 
             const numStudents = importedStudents.length;
             const cols = parseInt(document.getElementById('cols').value) || 5;
@@ -633,20 +683,12 @@
         reader.readAsArrayBuffer(file);
     }
     
-    // 改為匯出 Excel
     function exportExcel() {
-        if (students.length === 0) {
-            alert('沒有資料可匯出。');
-            return;
-        }
+        if (students.length === 0) { alert('沒有資料可匯出。'); return; }
         const dataToExport = students.map(s => {
-            if (s) { // If it's a student object
-                return {
-                    科目: s.科目 || '', 班級: s.班級 || '', 座號: s.座號 || '',
-                    姓名: s.姓名 || '', 分組: s.分組 || '', 組長: s.組長 || '否',
-                    分數: s.score !== undefined ? s.score : ''
-                };
-            } else { // If it's an empty seat (null)
+            if (s) {
+                return { 科目: s.科目 || '', 班級: s.班級 || '', 座號: s.座號 || '', 姓名: s.姓名 || '', 分組: s.分組 || '', 組長: s.組長 || '否', 分數: s.score !== undefined ? s.score : '' };
+            } else {
                 return { 科目: '', 班級: '', 座號: '', 姓名: '', 分組: '', 組長: '', 分數: '' };
             }
         });
@@ -708,7 +750,6 @@
             students = saves[name];
             document.getElementById('load-modal').style.display = 'none';
             isDataDirty = false;
-            // 讀取後，根據讀取的學生人數和現有行數，自動調整列數
             const cols = parseInt(document.getElementById('cols').value) || 5;
             const requiredRows = Math.ceil(students.length / cols);
             document.getElementById('rows').value = requiredRows;
@@ -768,8 +809,6 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-        // ... Modal and custom sound setup code ...
-        // (The code is lengthy, so it's referenced here for brevity)
         const helpModal = document.getElementById("help-modal");
         const loadModal = document.getElementById("load-modal");
         const helpBtn = document.getElementById("show-help-btn");
@@ -782,6 +821,7 @@
             if (event.target == helpModal) { helpModal.style.display = "none"; }
             if (event.target == loadModal) { loadModal.style.display = "none"; }
         }
+
         for (let i = 1; i <= 3; i++) {
             const soundBtn = document.getElementById(`sound-btn-${i}`);
             const soundInput = document.getElementById(`sound-input-${i}`);
