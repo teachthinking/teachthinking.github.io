@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>國小班級座位表管理工具 (全功能備份版)</title>
+  <title>國小班級座位表管理工具 (功能修正版)</title>
   <style>
     body { 
       font-family: "Microsoft JhengHei", Arial, sans-serif; 
@@ -392,7 +392,7 @@
                 </table>
             </li>
         </ol>
-
+        
         <h4>💾 第二步：資料管理 (匯入、匯出、存取)</h4>
         <ul>
             <li><strong>匯入 Excel 名單</strong>：從您的電腦選擇準備好的 Excel 檔，即可載入單一班級的座位表。程式會自動計算並調整所需列數。</li>
@@ -416,6 +416,14 @@
         <p><strong>💡 溫馨提示</strong>：建議的工作流程是：建立好 Excel 名單 → 匯入 → 使用分組功能 → 課堂中計分 → 使用「儲存到瀏覽器」快速存檔。若要換電腦，再使用「匯出/匯入所有存檔」功能。</p>
         <p>若有意見回饋，請連繫張老師：<a href="mailto:changhtjh@chc.edu.tw">changhtjh@chc.edu.tw</a></p>
     </div>
+  </div>
+
+  <div id="load-modal" class="modal">
+      <div class="modal-content">
+          <span id="close-load-btn" class="close-btn">&times;</span>
+          <h3>從瀏覽器讀取班級資料</h3>
+          <div id="saved-lists-container"></div>
+      </div>
   </div>
 
 
@@ -668,7 +676,7 @@
                     分組: String(row['分組'] || ''), 組長: String(row['組長'] || '否'),
                     score: parseInt(row['分數']) || 0
                 }))
-                .filter(s => s.姓名 || s.座號); // 匯入有姓名或座號的列
+                .filter(s => s.姓名 || s.座號);
 
             const numStudents = importedStudents.length;
             const cols = parseInt(document.getElementById('cols').value) || 5;
