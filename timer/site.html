@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>班級座位分組表現管理工具 (全功能備份版)</title>
+  <title>班級座位分組表現管理工具</title>
   <style>
     body { 
       font-family: "Microsoft JhengHei", Arial, sans-serif; 
@@ -321,7 +321,7 @@
         <button onclick="groupStudentsByColumn()">同組坐同行</button>
         <button onclick="randomlyAssignGroups()">隨機分組</button>
         <br>
-        <button onclick="exportCSV()">匯出 CSV</button>
+        <button onclick="exportExcel()">匯出 Excel</button>
         <button onclick="saveToBrowser()">儲存到瀏覽器</button>
         <button onclick="showLoadDialog()">從瀏覽器讀取</button>
         <button onclick="exportAllSaves()">匯出所有存檔</button>
@@ -366,7 +366,7 @@
   <div id="load-modal" class="modal">
       <div class="modal-content">
           <span id="close-load-btn" class="close-btn">&times;</span>
-          <h3>讀取記錄</h3>
+          <h3>從瀏覽器讀取班級資料</h3>
           <div id="saved-lists-container"></div>
       </div>
   </div>
@@ -379,8 +379,8 @@
     const groupColors = ['#e0f7fa', '#fff9c4', '#f3e5f5', '#e8f5e9', '#ffe0b2', '#e3f2fd', '#ffcdd2', '#d1c4e9'];
     const LOCAL_STORAGE_KEY = 'classroomSeatingChartSaves';
 
-    const soundAddScore = 'https://taira-komori.net/sound_os2/playing01/pianoC2.mp3';
-    const soundSubtractScore = 'https://taira-komori.net/sound_os2/playing01/guitar7.mp3';
+    const soundAddScore = 'https://cdn.jsdelivr.net/gh/kristopolous/music/button-3.mp3';
+    const soundSubtractScore = 'https://cdn.jsdelivr.net/gh/kristopolous/music/button-2.mp3';
     function playSound(soundUrl) {
       if (!soundUrl) return;
       try { new Audio(soundUrl).play(); } 
@@ -612,13 +612,14 @@
             const workbook = XLSX.read(data, { type: 'array' });
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" }); // Treat empty cells as empty strings
             const importedStudents = jsonData.map(row => ({
                 科目: String(row['科目'] || ''), 班級: String(row['班級'] || ''),
                 座號: String(row['座號'] || ''), 姓名: String(row['姓名'] || ''),
                 分組: String(row['分組'] || ''), 組長: String(row['組長'] || '否'),
                 score: parseInt(row['分數']) || 0
-            }));
+            })).filter(s => s.姓名); // Only import rows that have a student name
+
             const numStudents = importedStudents.length;
             const cols = parseInt(document.getElementById('cols').value) || 5;
             const requiredRows = Math.ceil(numStudents / cols);
@@ -631,27 +632,38 @@
         };
         reader.readAsArrayBuffer(file);
     }
-
-    function exportCSV() {
-      const dataToExport = students.filter(s => s);
-      if (!dataToExport.length) { alert('目前沒有資料可匯出'); return; }
-      const formattedData = dataToExport.map(s => ({
-          科目: s.科目 || '', 班級: s.班級 || '',座號: s.座號 || '', 姓名: s.姓名 || '',
-          分組: s.分組 || '', 組長: s.組長 || '否',分數: s.score || 0
-      }));
-      const worksheet = XLSX.utils.json_to_sheet(formattedData);
-      const csvString = XLSX.utils.sheet_to_csv(worksheet);
-      const blob = new Blob(["\uFEFF" + csvString], { type: 'text/csv;charset=utf-8;' }); 
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = '座位表存檔.csv';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      isDataDirty = false;
+    
+    // 改為匯出 Excel
+    function exportExcel() {
+        if (students.length === 0) {
+            alert('沒有資料可匯出。');
+            return;
+        }
+        const dataToExport = students.map(s => {
+            if (s) { // If it's a student object
+                return {
+                    科目: s.科目 || '', 班級: s.班級 || '', 座號: s.座號 || '',
+                    姓名: s.姓名 || '', 分組: s.分組 || '', 組長: s.組長 || '否',
+                    分數: s.score !== undefined ? s.score : ''
+                };
+            } else { // If it's an empty seat (null)
+                return { 科目: '', 班級: '', 座號: '', 姓名: '', 分組: '', 組長: '', 分數: '' };
+            }
+        });
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "座位表");
+        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '座位表存檔.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        isDataDirty = false;
     }
 
-    // --- 瀏覽器存取 & 備份功能 ---
     function getSavedData() { return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}'); }
     function saveToBrowser() {
         const firstStudent = students.find(s => s);
@@ -676,20 +688,15 @@
             saveNames.forEach(name => {
                 const item = document.createElement('div');
                 item.className = 'saved-item';
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = name;
+                const nameSpan = document.createElement('span'); nameSpan.textContent = name;
                 const buttonsDiv = document.createElement('div');
-                const loadBtn = document.createElement('button');
-                loadBtn.textContent = '讀取';
+                const loadBtn = document.createElement('button'); loadBtn.textContent = '讀取';
                 loadBtn.onclick = () => loadFromBrowser(name);
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = '刪除';
+                const deleteBtn = document.createElement('button'); deleteBtn.textContent = '刪除';
                 deleteBtn.style.background = '#ffcdd2';
                 deleteBtn.onclick = () => deleteFromBrowser(name);
-                buttonsDiv.appendChild(loadBtn);
-                buttonsDiv.appendChild(deleteBtn);
-                item.appendChild(nameSpan);
-                item.appendChild(buttonsDiv);
+                buttonsDiv.appendChild(loadBtn); buttonsDiv.appendChild(deleteBtn);
+                item.appendChild(nameSpan); item.appendChild(buttonsDiv);
                 container.appendChild(item);
             });
         }
@@ -701,6 +708,10 @@
             students = saves[name];
             document.getElementById('load-modal').style.display = 'none';
             isDataDirty = false;
+            // 讀取後，根據讀取的學生人數和現有行數，自動調整列數
+            const cols = parseInt(document.getElementById('cols').value) || 5;
+            const requiredRows = Math.ceil(students.length / cols);
+            document.getElementById('rows').value = requiredRows;
             updateAllDisplays();
         }
     }
@@ -715,8 +726,7 @@
     function exportAllSaves() {
         const allSaves = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (!allSaves || allSaves === '{}') {
-            alert('瀏覽器中沒有任何已儲存的資料可匯出。');
-            return;
+            alert('瀏覽器中沒有任何已儲存的資料可匯出。'); return;
         }
         const blob = new Blob([allSaves], { type: 'application/json;charset=utf-8;' });
         const link = document.createElement('a');
@@ -744,7 +754,7 @@
             } catch (error) {
                 alert('匯入失敗！請確認檔案是否為正確的備份檔 (.json)。');
             } finally {
-                event.target.value = null; // 清空input，確保下次選擇同檔案仍會觸發
+                event.target.value = null;
             }
         };
         reader.readAsText(file);
@@ -758,21 +768,20 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
+        // ... Modal and custom sound setup code ...
+        // (The code is lengthy, so it's referenced here for brevity)
         const helpModal = document.getElementById("help-modal");
         const loadModal = document.getElementById("load-modal");
         const helpBtn = document.getElementById("show-help-btn");
         const closeHelpBtn = document.getElementById("close-help-btn");
         const closeLoadBtn = document.getElementById("close-load-btn");
-
         helpBtn.onclick = () => { helpModal.style.display = "block"; }
         closeHelpBtn.onclick = () => { helpModal.style.display = "none"; }
         closeLoadBtn.onclick = () => { loadModal.style.display = "none"; }
-        
         window.onclick = (event) => {
             if (event.target == helpModal) { helpModal.style.display = "none"; }
             if (event.target == loadModal) { loadModal.style.display = "none"; }
         }
-
         for (let i = 1; i <= 3; i++) {
             const soundBtn = document.getElementById(`sound-btn-${i}`);
             const soundInput = document.getElementById(`sound-input-${i}`);
@@ -791,7 +800,7 @@
             });
         }
         
-        handleResize(); // 初始載入
+        handleResize();
     });
   </script>
 </body>
