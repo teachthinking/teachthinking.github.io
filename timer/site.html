@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>班級座位分組表現管理工具 (全功能備份版)</title>
+  <style>
+    body { 
+      font-family: "Microsoft JhengHei", Arial, sans-serif; 
+      background: #fdf6f0; 
+      margin: 0;
+      padding: 15px;
+    }
+    h1, h2 { text-align: center; }
+    h1 { color: #ff6f91; }
+    h2 { color: #845ec2; }
+
+    #main-container {
+      display: flex;
+      gap: 20px;
+    }
+
+    #scoreboards-container {
+      flex: 1; 
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    #seating-chart-container {
+      flex: 2;
+    }
+
+    #controls { 
+      margin-bottom: 20px; 
+      text-align: center; 
+      background: #fff;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    #controls label { margin: 0 5px; }
+    #controls button { margin: 4px; }
+
+    .custom-sound-wrapper {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 10px;
+        vertical-align: middle;
+    }
+    .sound-btn {
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding-right: 8px;
+        padding-left: 8px;
+    }
+    .sound-label {
+        cursor: pointer;
+        padding: 5px 8px;
+        background-color: #e0e0e0;
+        border-radius: 4px;
+        margin-left: -5px;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        z-index: 10;
+        font-size: 1.2em;
+    }
+    .sound-label:hover {
+        background-color: #ccc;
+    }
+    .sound-btn:disabled {
+        background-color: #f5f5f5;
+        color: #aaa;
+    }
+
+
+    .grid { 
+      display: grid; 
+      gap: 12px; 
+      justify-content: center; 
+      padding-top: 10px;
+    }
+
+    .seat {
+      width: 120px;
+      height: 90px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border: 2px solid #ffb3c6;
+      position: relative;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+      cursor: grab;
+      transition: all 0.2s ease-in-out;
+    }
+    .seat.dragging {
+      opacity: 0.5;
+      transform: scale(1.05);
+      border-style: dashed;
+      cursor: grabbing;
+    }
+
+    .seat .score {
+      position: absolute;
+      top: 4px;
+      right: 8px;
+      font-size: 14px;
+      color: #ff9800;
+      font-weight: bold;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 1px 4px;
+      border-radius: 5px;
+    }
+    .seat .buttons {
+      margin-top: 8px;
+      display: flex;
+      gap: 8px;
+    }
+    .seat button {
+      font-size: 14px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      padding: 4px 10px;
+      width: 40px;
+      cursor: pointer;
+    }
+    .add-btn { background: #c8e6c9; }
+    .add-btn:hover { background: #a5d6a7; }
+    .sub-btn { background: #ffcdd2; }
+    .sub-btn:hover { background: #ef9a9a; }
+    
+    @keyframes score-pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.6); color: #d63384; }
+      100% { transform: scale(1); }
+    }
+    .score-popup {
+      animation: score-pop 0.4s ease-in-out;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    th {
+      background: #a0e7e5;
+      color: #333;
+      padding: 8px 12px;
+    }
+    td {
+      border: 1px solid #ddd;
+      padding: 8px 12px;
+      text-align: center;
+    }
+    tr:nth-child(even) { background: #fce1e4; }
+    tr:nth-child(odd) { background: #fff; }
+
+    .leader-icon {
+        cursor: pointer;
+        font-size: 1.2em;
+        opacity: 0.3; 
+    }
+    .is-leader {
+        color: #d63384; 
+        opacity: 1;
+        font-weight: bold;
+    }
+    
+    .print-only {
+        display: none;
+    }
+    
+    .modal {
+        display: none; 
+        position: fixed; 
+        z-index: 1000; 
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto; 
+        background-color: rgba(0,0,0,0.6);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px 30px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 800px;
+        border-radius: 10px;
+        max-height: 85vh;
+        overflow-y: auto;
+        line-height: 1.6;
+    }
+    .modal-content h3 { color: #ff6f91; border-bottom: 2px solid #ffe6eb; padding-bottom: 10px;}
+    .modal-content h4 { color: #845ec2; }
+    .modal-content table { width: 100%; margin-top: 10px; }
+    .modal-content th, .modal-content td { border: 1px solid #ddd; padding: 8px; text-align: left;}
+    .modal-content th { background-color: #f2f2f2;}
+    .modal-content code { background-color: #eee; border-radius: 3px; padding: 2px 4px; font-family: consolas, monospace;}
+    .close-btn {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .close-btn:hover,
+    .close-btn:focus {
+        color: black;
+        text-decoration: none;
+    }
+
+    #saved-lists-container .saved-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    #saved-lists-container .saved-item:last-child {
+        border-bottom: none;
+    }
+    #saved-lists-container .saved-item button {
+        margin-left: 10px;
+    }
+
+
+    @media print {
+      body {
+        background: #fff;
+        padding: 10px;
+        margin: 0;
+        font-size: 10pt;
+      }
+      h1, #controls, .modal {
+        display: none;
+      }
+      .print-only {
+        display: block;
+        text-align: center;
+        font-size: 1.5em;
+        margin-bottom: 20px;
+        font-weight: bold;
+      }
+      #main-container {
+        display: block;
+      }
+      #scoreboards-container {
+        width: 100%;
+        flex: none;
+        page-break-inside: avoid;
+      }
+      #seating-chart-container {
+        width: 100%;
+        page-break-before: always;
+      }
+      .seat {
+        box-shadow: none;
+        border: 1px solid #999;
+        height: 80px;
+        width: 110px;
+      }
+      .grid {
+        gap: 8px;
+      }
+      table {
+        box-shadow: none;
+        border: 1px solid #999;
+      }
+      th, td {
+        padding: 4px;
+      }
+      h2 {
+        font-size: 1.2em;
+        margin: 10px 0 5px 0;
+        page-break-after: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1 id="main-title">班級座位分組表現管理工具</h1>
+
+  <div id="main-container">
+    
+    <div id="scoreboards-container">
+      <div id="group-scoreboard">
+        <h2>🏆 分組總分排行榜 🏆</h2>
+        <table id="groupScoreTable">
+          <thead><tr><th>排名</th><th>組別</th><th>總分</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="scoreboard">
+        <h2>🌟 個人加分排行榜 🌟</h2>
+        <table id="scoreTable">
+          <thead><tr><th>姓名</th><th>分組</th><th>分數</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="seating-chart-container">
+      <div id="controls">
+        <label>組數(列): <input type="number" id="rows" value="4" min="1" max="20"></label>
+        <label>每組人數(行): <input type="number" id="cols" value="5" min="1" max="10"></label>
+        <button onclick="handleResize()">重置座位表</button>
+        <button onclick="groupStudentsByColumn()">同組坐同行</button>
+        <button onclick="randomlyAssignGroups()">隨機分組</button>
+        <br>
+        <button onclick="exportCSV()">匯出 CSV</button>
+        <button onclick="saveToBrowser()">儲存到瀏覽器</button>
+        <button onclick="showLoadDialog()">從瀏覽器讀取</button>
+        <button onclick="exportAllSaves()">匯出所有存檔</button>
+        <button onclick="triggerImportAllSaves()">匯入所有存檔</button>
+        <button onclick="window.print()">列印</button>
+        <button id="show-help-btn">說明</button>
+        <br><br>
+        <input type="file" id="excelFile" accept=".xlsx, .xls">
+        <button onclick="importExcel()">匯入 Excel 名單</button>
+        <input type="file" id="importSavesFile" accept=".json" style="display: none;" onchange="importAllSaves(event)">
+
+        <div class="custom-sound-wrapper">
+            <button id="sound-btn-1" class="sound-btn" disabled>自訂音效 1</button>
+            <label for="sound-input-1" class="sound-label" title="載入音效">📤</label>
+            <input type="file" id="sound-input-1" class="sound-input" accept="audio/*" style="display: none;">
+        </div>
+        <div class="custom-sound-wrapper">
+            <button id="sound-btn-2" class="sound-btn" disabled>自訂音效 2</button>
+            <label for="sound-input-2" class="sound-label" title="載入音效">📤</label>
+            <input type="file" id="sound-input-2" class="sound-input" accept="audio/*" style="display: none;">
+        </div>
+        <div class="custom-sound-wrapper">
+            <button id="sound-btn-3" class="sound-btn" disabled>自訂音效 3</button>
+            <label for="sound-input-3" class="sound-label" title="載入音效">📤</label>
+            <input type="file" id="sound-input-3" class="sound-input" accept="audio/*" style="display: none;">
+        </div>
+
+      </div>
+      <div id="print-header" class="print-only"></div>
+      <div id="grid" class="grid"></div>
+    </div>
+
+  </div>
+
+  <div id="help-modal" class="modal">
+    <div class="modal-content">
+        <span id="close-help-btn" class="close-btn">&times;</span>
+        <h3>國小班級座位表管理工具 - 使用說明書</h3>
+        </div>
+  </div>
+
+  <div id="load-modal" class="modal">
+      <div class="modal-content">
+          <span id="close-load-btn" class="close-btn">&times;</span>
+          <h3>從瀏覽器讀取班級資料</h3>
+          <div id="saved-lists-container"></div>
+      </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+    let students = [];
+    let isDataDirty = false;
+    let customSoundURLs = [null, null, null];
+    const groupColors = ['#e0f7fa', '#fff9c4', '#f3e5f5', '#e8f5e9', '#ffe0b2', '#e3f2fd', '#ffcdd2', '#d1c4e9'];
+    const LOCAL_STORAGE_KEY = 'classroomSeatingChartSaves';
+
+    const soundAddScore = 'https://cdn.jsdelivr.net/gh/kristopolous/music/button-3.mp3';
+    const soundSubtractScore = 'https://cdn.jsdelivr.net/gh/kristopolous/music/button-2.mp3';
+    function playSound(soundUrl) {
+      if (!soundUrl) return;
+      try { new Audio(soundUrl).play(); } 
+      catch (error) { console.error("無法播放音效:", error); }
+    }
+
+    function updateAllDisplays() {
+        updateTitles();
+        generateGrid();
+        updateScoreboards();
+    }
+    
+    function handleResize() {
+        const rowsInput = document.getElementById('rows');
+        const colsInput = document.getElementById('cols');
+        let desiredRows = parseInt(rowsInput.value);
+        let cols = parseInt(colsInput.value);
+        const allActualStudents = students.filter(s => s);
+        const desiredSeats = desiredRows * cols;
+        allActualStudents.forEach((student, index) => {
+            if (index >= desiredSeats) {
+                student.分組 = '未分組';
+                student.組長 = '否';
+            }
+        });
+        const requiredRows = Math.ceil(allActualStudents.length / cols);
+        if (requiredRows > desiredRows) {
+            rowsInput.value = requiredRows;
+        }
+        const totalSeats = requiredRows > 0 ? requiredRows * cols : desiredRows * cols;
+        students = Array(totalSeats).fill(null);
+        allActualStudents.forEach((student, i) => {
+            if(i < totalSeats) students[i] = student;
+        });
+        isDataDirty = true;
+        updateAllDisplays();
+    }
+
+
+    function generateGrid() {
+      const cols = parseInt(document.getElementById('cols').value);
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      grid.style.gridTemplateColumns = `repeat(${cols}, 120px)`;
+      const groupColorMap = {};
+      const uniqueGroups = [...new Set(students.filter(s => s && s.分組).map(s => s.分組))];
+      uniqueGroups.forEach((group, index) => {
+          groupColorMap[group] = groupColors[index % groupColors.length];
+      });
+      for (let i = 0; i < students.length; i++) {
+        const seat = document.createElement('div');
+        seat.className = 'seat';
+        seat.dataset.index = i;
+        const s = students[i];
+        if (s && s.分組) { seat.style.backgroundColor = groupColorMap[s.分組] || '#ffffff'; } 
+        else { seat.style.backgroundColor = '#f0f0f0'; }
+        if (s) {
+          const isLeader = s.組長 === '是';
+          seat.innerHTML = `<div>${s.座號} ${s.姓名}</div><div>${s.分組} <span class="leader-icon ${isLeader ? 'is-leader' : ''}" onclick="toggleGroupLeader('${s.座號}')">⭐</span></div><div class="score">${s.score || 0}</div><div class="buttons"><button class="add-btn" onclick="modifyScore('${s.座號}', 1, this)">+1</button><button class="sub-btn" onclick="modifyScore('${s.座號}', -1, this)">-1</button></div>`;
+        } else { seat.innerHTML = `<div>空位</div>`; }
+        seat.draggable = true;
+        seat.addEventListener('dragstart', handleDragStart);
+        seat.addEventListener('dragover', handleDragOver);
+        seat.addEventListener('drop', handleDrop);
+        seat.addEventListener('dragend', handleDragEnd);
+        grid.appendChild(seat);
+      }
+    }
+    
+    function updateTitles() {
+        const firstStudent = students.find(s => s);
+        const mainTitle = document.getElementById('main-title');
+        const printHeader = document.getElementById('print-header');
+        if (firstStudent && firstStudent.班級 && firstStudent.科目) {
+            const titleText = `${firstStudent.班級} - ${firstStudent.科目}`;
+            mainTitle.textContent = titleText;
+            printHeader.textContent = `${titleText} 座位表`;
+        } else {
+            mainTitle.textContent = '國小班級座位表管理工具';
+            printHeader.textContent = '班級座位表';
+        }
+    }
+
+    function modifyScore(seatNo, amount, btnElement) {
+      const s = students.find(s => s && s.座號 == seatNo);
+      if (s) {
+        s.score = (s.score || 0) + amount;
+        isDataDirty = true;
+        if (amount > 0) { playSound(soundAddScore); } 
+        else { playSound(soundSubtractScore); }
+        const scoreElement = btnElement.closest('.seat').querySelector('.score');
+        scoreElement.textContent = s.score;
+        scoreElement.classList.add('score-popup');
+        setTimeout(() => { scoreElement.classList.remove('score-popup'); }, 400);
+        updateScoreboards();
+      }
+    }
+
+    function toggleGroupLeader(seatNo) {
+        const targetStudent = students.find(s => s && s.座號 == seatNo);
+        if (!targetStudent) return;
+        if (targetStudent.組長 === '是') { targetStudent.組長 = '否'; } 
+        else {
+            students.forEach(s => { if (s && s.分組 === targetStudent.分組) { s.組長 = '否'; }});
+            targetStudent.組長 = '是';
+        }
+        isDataDirty = true;
+        updateAllDisplays();
+    }
+
+    function updateScoreboards() {
+      const validStudents = students.filter(s => s);
+      const personalTbody = document.querySelector('#scoreTable tbody');
+      personalTbody.innerHTML = '';
+      [...validStudents].sort((a, b) => (b.score || 0) - (a.score || 0)).forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${s.姓名}</td><td>${s.分組}</td><td>${s.score || 0}</td>`;
+        personalTbody.appendChild(tr);
+      });
+      const groupScores = {};
+      validStudents.forEach(s => {
+          if(s.分組) {
+              if(!groupScores[s.分組]) groupScores[s.分組] = 0;
+              groupScores[s.分組] += (s.score || 0);
+          }
+      });
+      const sortedGroups = Object.entries(groupScores).sort(([,scoreA], [,scoreB]) => scoreB - scoreA);
+      const groupTbody = document.querySelector('#groupScoreTable tbody');
+      groupTbody.innerHTML = '';
+      sortedGroups.forEach(([groupName, totalScore], index) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${index + 1}</td><td>${groupName}</td><td>${totalScore}</td>`;
+          groupTbody.appendChild(tr);
+      });
+    }
+
+    let draggedIndex = null;
+    function handleDragStart(e) {
+      draggedIndex = this.dataset.index;
+      setTimeout(() => this.classList.add('dragging'), 0);
+    }
+    function handleDragOver(e) { e.preventDefault(); }
+    function handleDragEnd(e) { this.classList.remove('dragging'); }
+    
+    function handleDrop(e) {
+      e.preventDefault();
+      const targetSeat = e.target.closest('.seat');
+      if (!targetSeat) return;
+      const targetIndex = parseInt(targetSeat.dataset.index);
+      const parsedDraggedIndex = parseInt(draggedIndex);
+      if (draggedIndex !== null && targetIndex !== parsedDraggedIndex) {
+          const cols = parseInt(document.getElementById('cols').value);
+          const targetRow = Math.floor(targetIndex / cols);
+          let targetGroupName = `第${targetRow + 1}組`;
+          for (let i = targetRow * cols; i < (targetRow + 1) * cols; i++) {
+              if (students[i] && students[i].分組) { targetGroupName = students[i].分組; break; }
+          }
+          const draggedRow = Math.floor(parsedDraggedIndex / cols);
+          let draggedGroupName = `第${draggedRow + 1}組`;
+          for (let i = draggedRow * cols; i < (draggedRow + 1) * cols; i++) {
+              if (students[i] && students[i].分組) { draggedGroupName = students[i].分組; break; }
+          }
+          [students[parsedDraggedIndex], students[targetIndex]] = [students[targetIndex], students[parsedDraggedIndex]];
+          const studentNowAtTarget = students[targetIndex];
+          if (studentNowAtTarget) { studentNowAtTarget.分組 = targetGroupName; }
+          const studentNowAtDragged = students[parsedDraggedIndex];
+          if (studentNowAtDragged) { studentNowAtDragged.分組 = draggedGroupName; }
+          isDataDirty = true;
+          updateAllDisplays();
+      }
+      draggedIndex = null;
+    }
+
+    function groupStudentsByColumn() {
+        const cols = parseInt(document.getElementById('cols').value);
+        const actualStudents = students.filter(s => s);
+        const groups = {};
+        actualStudents.forEach(s => {
+            const groupName = s.分組 || '未分組';
+            if (!groups[groupName]) groups[groupName] = [];
+            groups[groupName].push(s);
+        });
+        const groupNames = Object.keys(groups);
+        groupNames.sort((a, b) => {
+            if (a === '未分組') return 1; if (b === '未分組') return -1;
+            const numA = parseInt(a.replace(/[^0-9]/g, '')) || 0;
+            const numB = parseInt(b.replace(/[^0-9]/g, '')) || 0;
+            return numA - numB;
+        });
+        const newStudentArray = [];
+        groupNames.forEach(groupName => {
+            const members = groups[groupName];
+            newStudentArray.push(...members);
+            const remainder = newStudentArray.length % cols;
+            if (remainder !== 0) {
+                const padding = cols - remainder;
+                for (let i = 0; i < padding; i++) { newStudentArray.push(null); }
+            }
+        });
+        students = newStudentArray;
+        isDataDirty = true;
+        updateAllDisplays();
+    }
+
+    function randomlyAssignGroups() {
+        const studentsPerGroup = parseInt(document.getElementById('cols').value);
+        if (studentsPerGroup < 1) { alert('每組人數至少為 1'); return; }
+        let actualStudents = students.filter(s => s);
+        for (let i = actualStudents.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [actualStudents[i], actualStudents[j]] = [actualStudents[j], actualStudents[i]];
+        }
+        actualStudents.forEach((s, i) => {
+            const groupNumber = Math.floor(i / studentsPerGroup) + 1;
+            s.分組 = `第${groupNumber}組`;
+            s.組長 = '否';
+        });
+        isDataDirty = true;
+        updateAllDisplays();
+    }
+
+    function importExcel() {
+        const fileInput = document.getElementById('excelFile');
+        const file = fileInput.files[0];
+        if (!file) { alert('請選擇 Excel 檔案'); return; }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+            const importedStudents = jsonData.map(row => ({
+                科目: String(row['科目'] || ''), 班級: String(row['班級'] || ''),
+                座號: String(row['座號'] || ''), 姓名: String(row['姓名'] || ''),
+                分組: String(row['分組'] || ''), 組長: String(row['組長'] || '否'),
+                score: parseInt(row['分數']) || 0
+            }));
+            const numStudents = importedStudents.length;
+            const cols = parseInt(document.getElementById('cols').value) || 5;
+            const requiredRows = Math.ceil(numStudents / cols);
+            document.getElementById('rows').value = requiredRows;
+            const totalSeats = requiredRows * cols;
+            students = Array(totalSeats).fill(null);
+            importedStudents.forEach((student, i) => { students[i] = student; });
+            isDataDirty = true;
+            updateAllDisplays();
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function exportCSV() {
+      const dataToExport = students.filter(s => s);
+      if (!dataToExport.length) { alert('目前沒有資料可匯出'); return; }
+      const formattedData = dataToExport.map(s => ({
+          科目: s.科目 || '', 班級: s.班級 || '',座號: s.座號 || '', 姓名: s.姓名 || '',
+          分組: s.分組 || '', 組長: s.組長 || '否',分數: s.score || 0
+      }));
+      const worksheet = XLSX.utils.json_to_sheet(formattedData);
+      const csvString = XLSX.utils.sheet_to_csv(worksheet);
+      const blob = new Blob(["\uFEFF" + csvString], { type: 'text/csv;charset=utf-8;' }); 
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = '座位表存檔.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      isDataDirty = false;
+    }
+
+    // --- 瀏覽器存取 & 備份功能 ---
+    function getSavedData() { return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}'); }
+    function saveToBrowser() {
+        const firstStudent = students.find(s => s);
+        const defaultName = firstStudent ? `${firstStudent.班級}-${firstStudent.科目}` : `我的存檔-${new Date().toLocaleDateString()}`;
+        const saveName = prompt("請為這次的存檔命名：", defaultName);
+        if (saveName) {
+            const saves = getSavedData();
+            saves[saveName] = students;
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(saves));
+            alert(`「${saveName}」已成功儲存到瀏覽器！`);
+            isDataDirty = false;
+        }
+    }
+    function showLoadDialog() {
+        const saves = getSavedData();
+        const container = document.getElementById('saved-lists-container');
+        container.innerHTML = '';
+        const saveNames = Object.keys(saves);
+        if (saveNames.length === 0) {
+            container.innerHTML = '<p style="text-align:center;">沒有已儲存的資料。</p>';
+        } else {
+            saveNames.forEach(name => {
+                const item = document.createElement('div');
+                item.className = 'saved-item';
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = name;
+                const buttonsDiv = document.createElement('div');
+                const loadBtn = document.createElement('button');
+                loadBtn.textContent = '讀取';
+                loadBtn.onclick = () => loadFromBrowser(name);
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = '刪除';
+                deleteBtn.style.background = '#ffcdd2';
+                deleteBtn.onclick = () => deleteFromBrowser(name);
+                buttonsDiv.appendChild(loadBtn);
+                buttonsDiv.appendChild(deleteBtn);
+                item.appendChild(nameSpan);
+                item.appendChild(buttonsDiv);
+                container.appendChild(item);
+            });
+        }
+        document.getElementById('load-modal').style.display = 'block';
+    }
+    function loadFromBrowser(name) {
+        const saves = getSavedData();
+        if (saves[name]) {
+            students = saves[name];
+            document.getElementById('load-modal').style.display = 'none';
+            isDataDirty = false;
+            updateAllDisplays();
+        }
+    }
+    function deleteFromBrowser(name) {
+        if (confirm(`確定要從瀏覽器刪除「${name}」嗎？此操作無法復原。`)) {
+            const saves = getSavedData();
+            delete saves[name];
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(saves));
+            showLoadDialog();
+        }
+    }
+    function exportAllSaves() {
+        const allSaves = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (!allSaves || allSaves === '{}') {
+            alert('瀏覽器中沒有任何已儲存的資料可匯出。');
+            return;
+        }
+        const blob = new Blob([allSaves], { type: 'application/json;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '座位表全校資料備份.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    function triggerImportAllSaves() { document.getElementById('importSavesFile').click(); }
+    function importAllSaves(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedSaves = JSON.parse(e.target.result);
+                if (typeof importedSaves !== 'object' || importedSaves === null) { throw new Error('檔案格式不符'); }
+                if (confirm('這將會匯入所有班級資料，同名的存檔將會被覆蓋，確定要繼續嗎？')) {
+                    let existingSaves = getSavedData();
+                    const mergedSaves = { ...existingSaves, ...importedSaves };
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedSaves));
+                    alert('已成功匯入所有存檔！');
+                }
+            } catch (error) {
+                alert('匯入失敗！請確認檔案是否為正確的備份檔 (.json)。');
+            } finally {
+                event.target.value = null; // 清空input，確保下次選擇同檔案仍會觸發
+            }
+        };
+        reader.readAsText(file);
+    }
+    
+    window.addEventListener('beforeunload', (e) => {
+      if (isDataDirty) {
+        const msg = '您有未儲存的變更，確定要離開嗎？';
+        e.returnValue = msg; return msg;
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const helpModal = document.getElementById("help-modal");
+        const loadModal = document.getElementById("load-modal");
+        const helpBtn = document.getElementById("show-help-btn");
+        const closeHelpBtn = document.getElementById("close-help-btn");
+        const closeLoadBtn = document.getElementById("close-load-btn");
+
+        helpBtn.onclick = () => { helpModal.style.display = "block"; }
+        closeHelpBtn.onclick = () => { helpModal.style.display = "none"; }
+        closeLoadBtn.onclick = () => { loadModal.style.display = "none"; }
+        
+        window.onclick = (event) => {
+            if (event.target == helpModal) { helpModal.style.display = "none"; }
+            if (event.target == loadModal) { loadModal.style.display = "none"; }
+        }
+
+        for (let i = 1; i <= 3; i++) {
+            const soundBtn = document.getElementById(`sound-btn-${i}`);
+            const soundInput = document.getElementById(`sound-input-${i}`);
+            soundBtn.addEventListener('click', () => { playSound(customSoundURLs[i-1]); });
+            soundInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    if (customSoundURLs[i-1]) { URL.revokeObjectURL(customSoundURLs[i-1]); }
+                    const soundURL = URL.createObjectURL(file);
+                    customSoundURLs[i-1] = soundURL;
+                    const fileName = file.name;
+                    soundBtn.textContent = fileName.length > 12 ? fileName.substring(0, 10) + '...' : fileName;
+                    soundBtn.title = fileName;
+                    soundBtn.disabled = false;
+                }
+            });
+        }
+        
+        handleResize(); // 初始載入
+    });
+  </script>
+</body>
+</html>
