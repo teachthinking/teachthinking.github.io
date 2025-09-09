@@ -1,0 +1,13 @@
+web-builder/
+├── index.html          # 主入口文件
+├── css/
+│   ├── style.css       # 主樣式文件
+│   └── components/     # 組件樣式
+├── js/
+│   ├── app.js         # 主應用邏輯
+│   ├── components/    # 功能模塊
+│   ├── utils/         # 工具函數
+│   └── libs/          # 第三方庫
+└── assets/
+    ├── icons/         # 圖標資源
+    └── templates/     # 預設模板
