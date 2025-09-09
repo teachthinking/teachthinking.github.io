@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網頁編輯器</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 頂部工具欄 -->
+        <header class="toolbar">
+            <div class="device-preview">
+                <button data-mode="desktop">桌面</button>
+                <button data-mode="tablet">平板</button>
+                <button data-mode="mobile">手機</button>
+            </div>
+            <div class="actions">
+                <button id="save-btn">儲存</button>
+                <button id="preview-btn">預覽</button>
+                <button id="undo-btn">復原</button>
+                <button id="redo-btn">重做</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- 左側組件庫 -->
+            <aside class="components-panel">
+                <h3>組件庫</h3>
+                <div class="component-list">
+                    <div class="component-item" data-type="text">文字</div>
+                    <div class="component-item" data-type="image">圖片</div>
+                    <div class="component-item" data-type="button">按鈕</div>
+                    <div class="component-item" data-type="container">容器</div>
+                </div>
+            </aside>
+
+            <!-- 中央畫布 -->
+            <main class="canvas-container">
+                <div id="canvas" class="canvas"></div>
+                <div class="viewport-indicator" id="viewport-indicator">
+                    桌面 100% × 100%
+                </div>
+            </main>
+
+            <!-- 右側屬性面板 -->
+            <aside class="property-panel" id="property-panel">
+                <div class="panel-placeholder">
+                    <p>選擇組件以編輯屬性</p>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script src="js/libs/sortable.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/components/dragDrop.js"></script>
+    <script src="js/components/componentSystem.js"></script>
+    <script src="js/components/propertyPanel.js"></script>
+    <script src="js/components/responsivePreview.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
