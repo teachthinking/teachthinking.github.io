@@ -1,0 +1,59 @@
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --canvas-bg: #f8f9fa;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.main-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.canvas {
+    background: var(--canvas-bg);
+    position: relative;
+    min-height: 800px;
+    margin: 20px;
+    border: 2px dashed #ddd;
+    transition: all 0.3s ease;
+}
+
+.canvas.preview-mode {
+    margin: 0 auto;
+    border: none;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+.component {
+    position: absolute;
+    cursor: move;
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease;
+}
+
+.component.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 10px rgba(0,123,255,0.3);
+}
+
+.component:hover {
+    border-color: #ccc;
+}
+
+/* 響應式設計 */
+@media (max-width: 1200px) {
+    .components-panel {
+        width: 200px;
+    }
+    .property-panel {
+        width: 250px;
+    }
+}
