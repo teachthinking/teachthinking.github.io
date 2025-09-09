@@ -5,59 +5,131 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>網頁編輯器</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="app-container">
         <!-- 頂部工具欄 -->
         <header class="toolbar">
-            <div class="device-preview">
-                <button data-mode="desktop">桌面</button>
-                <button data-mode="tablet">平板</button>
-                <button data-mode="mobile">手機</button>
+            <div class="toolbar-section">
+                <h1 class="logo">網頁編輯器</h1>
             </div>
-            <div class="actions">
-                <button id="save-btn">儲存</button>
-                <button id="preview-btn">預覽</button>
-                <button id="undo-btn">復原</button>
-                <button id="redo-btn">重做</button>
+            
+            <div class="toolbar-section">
+                <div class="device-preview">
+                    <button class="device-btn active" data-mode="desktop" title="桌面預覽">
+                        <i class="fas fa-desktop"></i>
+                    </button>
+                    <button class="device-btn" data-mode="tablet" title="平板預覽">
+                        <i class="fas fa-tablet-alt"></i>
+                    </button>
+                    <button class="device-btn" data-mode="mobile" title="手機預覽">
+                        <i class="fas fa-mobile-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="toolbar-section">
+                <div class="actions">
+                    <button id="undo-btn" class="action-btn" title="復原 (Ctrl+Z)">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button id="redo-btn" class="action-btn" title="重做 (Ctrl+Y)">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                    <button id="preview-btn" class="action-btn preview" title="預覽">
+                        <i class="fas fa-eye"></i> 預覽
+                    </button>
+                    <button id="download-btn" class="action-btn download" title="下載HTML">
+                        <i class="fas fa-download"></i> 下載
+                    </button>
+                    <button id="copy-btn" class="action-btn" title="複製代碼">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
             </div>
         </header>
 
         <div class="main-content">
             <!-- 左側組件庫 -->
             <aside class="components-panel">
-                <h3>組件庫</h3>
+                <div class="panel-header">
+                    <h3><i class="fas fa-th"></i> 組件庫</h3>
+                </div>
                 <div class="component-list">
-                    <div class="component-item" data-type="text">文字</div>
-                    <div class="component-item" data-type="image">圖片</div>
-                    <div class="component-item" data-type="button">按鈕</div>
-                    <div class="component-item" data-type="container">容器</div>
+                    <div class="component-item" data-type="text">
+                        <i class="fas fa-font"></i>
+                        <span>文字</span>
+                    </div>
+                    <div class="component-item" data-type="image">
+                        <i class="fas fa-image"></i>
+                        <span>圖片</span>
+                    </div>
+                    <div class="component-item" data-type="button">
+                        <i class="fas fa-square"></i>
+                        <span>按鈕</span>
+                    </div>
+                    <div class="component-item" data-type="container">
+                        <i class="fas fa-border-all"></i>
+                        <span>容器</span>
+                    </div>
+                    <div class="component-item" data-type="divider">
+                        <i class="fas fa-grip-lines"></i>
+                        <span>分隔線</span>
+                    </div>
                 </div>
             </aside>
 
             <!-- 中央畫布 -->
             <main class="canvas-container">
+                <div class="canvas-toolbar">
+                    <span class="viewport-indicator" id="viewport-indicator">
+                        <i class="fas fa-desktop"></i> 桌面模式 (100% × 100%)
+                    </span>
+                    <button id="clear-canvas" class="clear-btn" title="清空畫布">
+                        <i class="fas fa-trash"></i> 清空
+                    </button>
+                </div>
                 <div id="canvas" class="canvas"></div>
-                <div class="viewport-indicator" id="viewport-indicator">
-                    桌面 100% × 100%
+                <div class="canvas-placeholder" id="canvas-placeholder">
+                    <i class="fas fa-magic"></i>
+                    <p>從左側拖放組件開始創作</p>
                 </div>
             </main>
 
             <!-- 右側屬性面板 -->
-            <aside class="property-panel" id="property-panel">
-                <div class="panel-placeholder">
-                    <p>選擇組件以編輯屬性</p>
+            <aside class="property-panel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-sliders-h"></i> 屬性面板</h3>
+                </div>
+                <div id="property-content" class="property-content">
+                    <div class="panel-placeholder">
+                        <i class="fas fa-mouse-pointer"></i>
+                        <p>選擇組件以編輯屬性</p>
+                    </div>
                 </div>
             </aside>
         </div>
     </div>
 
-    <script src="js/libs/sortable.js"></script>
+    <!-- 預覽模態框 -->
+    <div id="preview-modal" class="preview-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-eye"></i> 網頁預覽</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <iframe id="preview-iframe" class="preview-iframe"></iframe>
+        </div>
+    </div>
+
     <script src="js/utils/helpers.js"></script>
     <script src="js/components/dragDrop.js"></script>
     <script src="js/components/componentSystem.js"></script>
     <script src="js/components/propertyPanel.js"></script>
     <script src="js/components/responsivePreview.js"></script>
+    <script src="js/components/previewManager.js"></script>
+    <script src="js/components/exportManager.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
