@@ -40,6 +40,7 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             box-sizing: border-box;
+            caret-color: transparent; /* Hide the cursor to avoid confusion */
         }
         #suggestion-box {
             position: absolute;
@@ -2336,14 +2337,15 @@ tf 燕
         
         // 檢查是否為速成碼元 (a-z)
         if (key.length === 1 && key >= 'a' && key <= 'z') {
+            e.preventDefault(); // Prevent the key from being typed into the input field
             currentInput += key;
             if (currentInput.length > 2) {
-                currentInput = currentInput.slice(currentInput.length - 2);
+                currentInput = currentInput.slice(-2);
             }
             updateSuggestions();
         } else if (e.key === 'Backspace') {
-            if (suggestionBox.style.display === 'flex') {
-                e.preventDefault();
+            if (currentInput.length > 0) {
+                e.preventDefault(); // Prevent normal backspace behavior if in a code sequence
                 currentInput = currentInput.slice(0, -1);
                 if (currentInput.length === 0) {
                     hideSuggestions();
@@ -2352,35 +2354,27 @@ tf 燕
                 }
             }
         } else if (e.key === ' ' || e.key === 'Enter') {
-            // 清空候選字並結束輸入
             currentInput = '';
             hideSuggestions();
         } else if (e.key >= '1' && e.key <= '9') {
             const index = parseInt(e.key) - 1;
             const suggestions = suggestionBox.querySelectorAll('.suggestion-item');
             if (index < suggestions.length) {
+                e.preventDefault(); // Prevent number from being typed
                 const selectedText = suggestions[index].getAttribute('data-value');
-                // 替換輸入碼
-                const start = textInput.value.length - currentInput.length;
-                const end = textInput.value.length;
-                textInput.value = textInput.value.substring(0, start) + selectedText + textInput.value.substring(end);
-                
-                e.preventDefault();
+                insertTextAtCursor(textInput, selectedText);
                 currentInput = '';
                 hideSuggestions();
             }
         }
     });
-    
-    // 當輸入框內容改變時，如果沒有在輸入速成碼，則清空緩存
-    textInput.addEventListener('input', () => {
-        const lastTwoChars = textInput.value.slice(-2).toLowerCase();
-        if (!/^[a-z]{2}$/.test(lastTwoChars) && currentInput.length > 0) {
-            currentInput = '';
-            hideSuggestions();
-        }
-    });
 
+    // Handle paste events to clear any ongoing input sequence
+    textInput.addEventListener('paste', () => {
+        currentInput = '';
+        hideSuggestions();
+    });
+    
     // 根據輸入更新候選字列表
     function updateSuggestions() {
         if (currentInput.length === 0) {
@@ -2398,9 +2392,7 @@ tf 燕
                 item.innerHTML = `<span class="key">${index + 1}.</span> ${char}`;
                 item.addEventListener('click', () => {
                     const selectedText = item.getAttribute('data-value');
-                    const start = textInput.value.length - currentInput.length;
-                    const end = textInput.value.length;
-                    textInput.value = textInput.value.substring(0, start) + selectedText + textInput.value.substring(end);
+                    insertTextAtCursor(textInput, selectedText);
                     currentInput = '';
                     hideSuggestions();
                 });
@@ -2410,6 +2402,16 @@ tf 燕
         } else {
             hideSuggestions();
         }
+    }
+
+    function insertTextAtCursor(input, text) {
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        const value = input.value;
+        const before = value.substring(0, start - currentInput.length);
+        const after = value.substring(end);
+        input.value = before + text + after;
+        input.selectionStart = input.selectionEnd = before.length + text.length;
     }
     
     function showSuggestions() {
