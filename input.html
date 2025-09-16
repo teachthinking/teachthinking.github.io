@@ -1,0 +1,2426 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>速成輸入法網頁工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            margin-top: 50px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .input-area {
+            position: relative;
+        }
+        #text-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        #suggestion-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            padding: 10px;
+            display: none;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 3px;
+            background-color: #e9ecef;
+            transition: background-color 0.2s;
+        }
+        .suggestion-item:hover {
+            background-color: #ced4da;
+        }
+        .suggestion-item .key {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .custom-words-container {
+            margin-top: 30px;
+        }
+        .custom-words-container h2 {
+            margin-bottom: 15px;
+            color: #555;
+            font-size: 20px;
+        }
+        .add-word-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .add-word-form input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .add-word-form button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #custom-words-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .custom-word-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .custom-word-item:last-child {
+            border-bottom: none;
+        }
+        .custom-word-item .word-info {
+            font-size: 16px;
+            color: #333;
+        }
+        .custom-word-item .delete-btn {
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>速成輸入法網頁工具</h1>
+    <div class="input-area">
+        <input type="text" id="text-input" placeholder="開始輸入...">
+        <div id="suggestion-box"></div>
+    </div>
+    
+    <div class="custom-words-container">
+        <h2>自訂詞句管理</h2>
+        <div class="add-word-form">
+            <input type="text" id="new-code" placeholder="輸入碼 (e.g., yr)">
+            <input type="text" id="new-word" placeholder="新詞句 (e.g., 這)">
+            <button id="add-btn">新增</button>
+        </div>
+        <div id="custom-words-list">
+            </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const textInput = document.getElementById('text-input');
+    const suggestionBox = document.getElementById('suggestion-box');
+    const addBtn = document.getElementById('add-btn');
+    const newCodeInput = document.getElementById('new-code');
+    const newWordInput = document.getElementById('new-word');
+    const customWordsList = document.getElementById('custom-words-list');
+
+    [span_0](start_span)// 核心碼表數據[span_0](end_span)
+    const cinData = `
+hi 的
+ao 是
+mf 不
+hi 我
+m 一
+kb 有
+k 大
+kg 在
+o 人
+nn 了
+l 中
+mn 到
+ic 資
+mc 資
+mv 要
+mr 可
+vo 以
+yr 這
+or 個
+of 你
+oa 會
+vd 好
+if 為
+ym 上
+do 來
+yu 就
+hd 學
+yk 交
+pd 也
+bq 用
+ip 能
+vr 如
+yk 文
+ai 時
+ee 沒
+yu 說
+od 他
+hu 看
+qo 提
+sl 那
+ar 問
+hm 生
+yr 過
+my 下
+yb 請
+mk 天
+on 們
+hl 所
+ni 多
+ii 麼
+nc 小
+dp 想
+hi 得
+io 之
+yv 還
+mu 電
+uu 出
+mm 工
+ti 對
+jl 都
+di 機
+do 機
+hu 自
+he 後
+nd 子
+ml 而
+yj 訊
+yr 站
+gi 去
+p 心
+rc 只
+jo 家
+or 知
+wm 國
+ir 台
+hv 很
+or 信
+is 成
+yj 章
+or 何
+br 同
+yu 道
+gd 地
+ne 發
+ei 法
+of 無
+bf 然
+om 但
+rf 嗎
+fw 當
+yy 於
+dm 本
+mu 現
+oq 年
+tn 前
+jc 真
+ae 最
+hr 和
+yl 新
+wk 因
+wd 果
+jo 定
+yp 意
+pb 情
+wr 點
+ac 題
+tc 其
+jn 事
+ys 方
+eb 清
+hj 科
+de 樣
+ym 些
+ru 吧
+mm 三
+yp 此
+ot 位
+mg 理
+hn 行
+os 作
+vm 經
+ja 者
+oj 什
+yi 謝
+nr 名
+a 日
+mm 正
+tj 華
+tq 華
+yr 話
+at 開
+jc 實
+mb 再
+gs 城
+be 愛
+hc 與
+mm 二
+hs 動
+pp 比
+yr 高
+ml 面
+nk 又
+jj 車
+ks 力
+im 或
+hg 種
+oo 像
+ip 應
+v 女
+jk 教
+ch 分
+q 手
+qn 打
+su 已
+io 次
+mo 次
+sv 長
+ki 太
+ab 明
+su 己
+rr 路
+gu 起
+du 相
+yg 主
+at 關
+hf 鳳
+aa 間
+rp 呢
+hu 覺
+yo 該
+j 十
+ny 外
+hg 凰
+ke 友
+dh 才
+rp 民
+hf 系
+yg 進
+ok 使
+vd 她
+ta 著
+hr 各
+fh 少
+og 全
+mo 兩
+wr 回
+kr 加
+vi 將
+ip 感
+hh 第
+pm 性
+me 球
+im 式
+qu 把
+le 被
+jp 老
+ci 公
+yp 龍
+hg 程
+yb 論
+ne 及
+rn 別
+vr 給
+sp 聽
+e 水
+hg 重
+bt 體
+ok 做
+dk 校
+lg 裡
+fb 常
+dw 東
+hi 風
+op 您
+en 灣
+rt 啦
+bu 見
+nq 解
+hi 等
+yl 部
+mf 原
+b 月
+tk 美
+hu 先
+hr 管
+sr 區
+ca 錯
+ya 音
+mr 否
+rr 啊
+qi 找
+vv 網
+vd 樂
+yv 讓
+yb 通
+oh 入
+tb 期
+yc 選
+jk 較
+wc 四
+gh 場
+lw 由
+la 書
+jp 它
+pk 快
+ho 從
+to 歡
+lk 數
+qv 表
+hp 怎
+op 怎
+mg 至
+yt 立
+ob 內
+or 合
+bu 目
+yg 望
+yp 認
+vi 幾
+vo 幾
+ig 社
+hr 告
+mk 更
+le 版
+ie 度
+js 考
+gr 喜
+mc 頭
+tg 難
+fu 光
+wc 買
+on 今
+hh 身
+yj 許
+ch 弟
+tr 若
+ht 算
+yu 記
+op 代
+vu 統
+yn 處
+ju 完
+rn 號
+ru 號
+qv 接
+yr 言
+mk 政
+mu 玩
+hb 師
+jd 字
+tc 並
+ws 男
+yj 計
+yg 誰
+u 山
+nv 張
+ff 黨
+oi 每
+bm 且
+vr 結
+sk 改
+ly 非
+am 星
+yj 連
+rr 哈
+nq 建
+yk 放
+jm 直
+ji 轉
+ge 報
+er 活
+ye 設
+vk 變
+qa 指
+od 氣
+mt 研
+nw 陳
+ym 試
+mw 西
+mm 五
+kb 希
+se 取
+il 神
+op 化
+hh 物
+mg 王
+ri 戰
+yl 近
+pt 世
+be 受
+ti 義
+he 反
+me 反
+rj 單
+mp 死
+og 任
+rv 跟
+ok 便
+jm 空
+dd 林
+jm 士
+gg 臺
+cl 卻
+lp 北
+no 隊
+ms 功
+ph 必
+gj 聲
+jf 寫
+mj 平
+ah 影
+td 業
+c 金
+dw 檔
+ll 片
+ln 片
+yi 討
+nu 色
+jr 容
+lk 央
+vf 妳
+hr 向
+yb 市
+bn 則
+rc 員
+hc 興
+hn 利
+ni 強
+ha 白
+oc 價
+jv 安
+rr 呵
+hi 特
+wp 思
+rl 叫
+vp 總
+yj 辦
+od 保
+tp 花
+yi 議
+oi 傳
+mu 元
+ie 求
+oh 份
+oq 件
+qi 持
+tb 萬
+jd 未
+jn 究
+ek 決
+qe 投
+rl 哪
+rg 喔
+hk 笑
+bw 貓
+vm 組
+ki 獨
+ve 級
+go 走
+je 支
+ca 曾
+df 標
+eu 流
+ev 流
+h 竹
+ru 兄
+nr 阿
+jg 室
+yy 卡
+sf 馬
+tc 共
+ml 需
+ey 海
+r 口
+an 門
+he 般
+ve 線
+yr 語
+ol 命
+tu 觀
+iu 視
+bb 朋
+st 聯
+ih 參
+dr 格
+tc 黃
+ci 錢
+oh 修
+ho 失
+hu 兒
+og 住
+ho 八
+bw 腦
+de 板
+rn 吃
+rs 另
+qk 換
+al 即
+no 象
+fj 料
+ce 錄
+oq 拿
+ji 專
+yv 遠
+yl 速
+tg 基
+gb 幫
+mh 形
+mg 型
+gr 超
+ya 識
+rg 雖
+pg 怪
+no 飛
+vr 始
+rr 品
+yj 運
+jc 賽
+lc 費
+tn 夢
+jk 故
+mg 班
+dg 權
+me 破
+so 驗
+bv 眼
+eb 滿
+op 念
+yr 造
+bj 軍
+fb 精
+ns 務
+hw 留
+be 服
+yc 六
+ww 圖
+vk 收
+or 舍
+fq 半
+yc 讀
+mc 願
+dd 李
+ii 底
+im 底
+vi 約
+vm 約
+kg 雄
+yd 課
+hr 答
+oi 令
+ed 深
+mf 票
+yq 達
+ec 演
+aj 早
+gc 賣
+dq 棒
+nr 夠
+wf 黑
+nu 院
+oe 假
+tw 曲
+f 火
+ej 準
+ma 百
+yf 談
+bs 勝
+md 碟
+hn 術
+qg 推
+kd 存
+er 治
+yg 離
+ah 易
+hg 往
+eu 況
+au 晚
+mf 示
+yt 證
+he 段
+yi 導
+oh 傷
+yr 調
+wi 團
+ju 七
+ie 永
+bn 剛
+mr 哥
+tv 甚
+hp 德
+ke 殺
+pa 怕
+pu 包
+mn 列
+du 概
+af 照
+yk 夜
+qy 排
+jr 客
+vu 絕
+jo 軟
+yr 商
+dv 根
+kn 九
+ph 切
+od 條
+od 集
+hj 千
+tr 落
+yu 竟
+gv 越
+hi 待
+yp 忘
+lt 盡
+qo 據
+oe 雙
+oc 供
+hb 稱
+ig 座
+om 值
+eb 消
+ym 產
+vm 紅
+ru 跑
+rc 嘛
+rd 嘛
+wv 園
+ni 附
+mk 硬
+mi 雲
+yd 遊
+sv 展
+gi 執
+aj 聞
+ra 唱
+pb 育
+yb 育
+tl 斯
+td 某
+qe 技
+rk 唉
+hp 息
+tr 苦
+hc 質
+ew 油
+ik 救
+yk 效
+hc 須
+ol 介
+tu 首
+bs 助
+sa 職
+on 例
+gf 熱
+wj 畢
+hl 節
+jr 害
+jq 擊
+bu 亂
+ip 態
+rp 嗯
+jc 寶
+on 倒
+eg 注
+on 停
+jr 古
+jn 輸
+qu 規
+iw 福
+yu 親
+dm 查
+he 復
+yh 步
+hq 舉
+nf 魚
+pl 斷
+vl 斷
+vy 終
+jm 輕
+mv 環
+vf 練
+hl 印
+nb 隨
+ov 依
+ge 趣
+nv 限
+va 響
+fu 省
+sr 局
+vc 續
+sr 司
+ng 角
+nq 角
+ha 簡
+dm 極
+jj 幹
+hb 篇
+wg 羅
+on 佛
+ju 克
+nh 陽
+mm 武
+po 疑
+yk 送
+qt 拉
+sa 習
+ef 源
+nu 免
+gp 志
+hf 鳥
+fc 煩
+ro 足
+or 館
+os 仍
+oi 低
+om 低
+ic 廣
+g 土
+rh 呀
+dv 樓
+gv 壞
+oc 兵
+ac 顯
+yj 率
+sg 聖
+mf 碼
+wo 眾
+bd 爭
+lh 初
+yk 誤
+do 楚
+qc 責
+gu 境
+wn 野
+nc 預
+bc 具
+oa 智
+mg 壓
+of 係
+qb 青
+lc 貴
+lc 順
+nc 負
+ii 魔
+yb 適
+rg 哇
+en 測
+pe 慢
+pv 懷
+pg 懂
+lk 史
+mu 配
+rf 嗚
+rd 味
+yc 亦
+sw 醫
+yl 迎
+oq 舞
+vp 戀
+vw 細
+eg 灌
+wl 甲
+yb 帝
+pr 句
+si 屬
+mm 靈
+mo 靈
+yj 評
+sr 騎
+jm 宜
+bk 敗
+km 左
+yr 追
+kg 狂
+mk 敢
+nk 敢
+qa 春
+kr 狗
+nf 際
+yb 遇
+yk 族
+sq 群
+kb 痛
+kr 右
+ie 康
+og 佳
+dh 楊
+d 木
+kb 病
+yi 戲
+mc 項
+qo 抓
+hk 徵
+tr 善
+jr 官
+ye 護
+ji 博
+lb 補
+mr 石
+mk 爾
+fr 營
+mm 歷
+oe 隻
+qv 按
+vd 妹
+wg 里
+vb 編
+yh 歲
+qj 擇
+et 溫
+ji 守
+ht 血
+oc 領
+si 尋
+w 田
+tv 養
+yb 謂
+sr 居
+wc 異
+mb 雨
+my 雨
+ym 止
+ro 跳
+sr 君
+fw 爛
+oe 優
+gi 封
+hj 拜
+mp 惡
+rr 啥
+ev 浪
+do 核
+sl 聊
+np 急
+vk 狀
+ng 陸
+ek 激
+dk 模
+mk 攻
+pv 忙
+iv 良
+yn 劇
+hq 牛
+wg 壘
+ga 增
+vg 維
+qd 靜
+nj 陣
+qu 抱
+gs 勢
+rk 嚴
+yr 詞
+mm 亞
+qo 夫
+ho 簽
+lp 悲
+ju 密
+tb 幕
+qi 毒
+qj 毒
+ik 廠
+kk 爽
+vo 緣
+ir 店
+rk 吳
+tw 蘭
+bm 睡
+me 致
+mk 致
+em 江
+ja 宿
+hm 翻
+ha 香
+vi 蠻
+tr 警
+qm 控
+gb 趙
+ii 冷
+iv 威
+hk 微
+og 坐
+yr 週
+jf 宗
+ta 普
+nt 登
+wi 母
+vr 絡
+oj 午
+mp 恐
+ki 套
+au 巴
+yg 雜
+on 創
+tx 舊
+jj 輯
+gj 幸
+on 劍
+yn 亮
+yu 亮
+yc 述
+yd 述
+fg 堂
+ew 酒
+mp 麗
+lj 牌
+od 仔
+bl 腳
+jk 突
+qb 搞
+ck 父
+oe 俊
+ae 暴
+ns 防
+gr 吉
+it 禮
+qf 素
+qr 招
+tj 草
+br 周
+hs 房
+is 房
+yv 餐
+yp 慮
+pu 充
+yu 充
+ii 府
+lb 背
+tc 典
+om 仁
+ee 漫
+af 景
+vr 紹
+ya 諸
+mn 琴
+pp 憶
+qe 援
+iu 尤
+ok 缺
+ht 扁
+it 扁
+wf 罵
+vu 純
+pa 惜
+qe 授
+de 皮
+di 松
+hv 委
+eb 湖
+ys 誠
+ic 麻
+id 麻
+wm 置
+hy 靠
+vi 繼
+fn 判
+tt 益
+ee 波
+vm 姐
+au 既
+hi 射
+co 欲
+yn 刻
+gg 堆
+hj 釋
+or 含
+no 承
+yv 退
+tk 莫
+hn 劉
+as 昨
+ys 旁
+vu 紀
+gj 趕
+hv 製
+fr 尚
+ti 藝
+oo 肉
+hq 律
+cg 鐵
+qk 奏
+di 樹
+hu 毛
+wy 罪
+hq 筆
+bh 彩
+yg 註
+hb 歸
+nj 彈
+yn 虎
+yu 虎
+hn 衛
+sh 刀
+pa 皆
+cq 鍵
+or 售
+gi 塊
+no 險
+fd 榮
+qw 播
+yd 施
+cr 銘
+rg 囉
+eo 漢
+fc 賞
+ho 欣
+ht 升
+td 葉
+fi 螢
+jj 載
+rf 嘿
+mt 弄
+cg 鐘
+oi 付
+jr 寄
+hi 鬼
+ri 哦
+ft 燈
+rd 呆
+eq 洋
+rr 嘻
+kb 布
+mi 磁
+tf 薦
+do 檢
+ev 派
+db 構
+vf 媽
+tt 藍
+br 貼
+ma 豬
+hb 策
+vp 紙
+aa 暗
+ms 巧
+vs 努
+mw 雷
+kd 架
+yd 享
+jm 宣
+yj 逢
+gm 均
+qr 擔
+hk 啟
+ik 啟
+ex 濟
+wp 罷
+rd 呼
+ln 劃
+oq 偉
+hu 島
+to 歉
+yl 郭
+yl 訓
+jh 穿
+yq 詳
+eh 沙
+yu 督
+dy 梅
+hc 顧
+ic 顧
+yk 敵
+js 協
+jb 輪
+wr 略
+qp 慧
+vs 幻
+bo 臉
+ot 短
+if 鷹
+hn 衝
+jb 朝
+sp 忍
+ed 游
+er 河
+qp 批
+ep 混
+je 窗
+jk 窗
+jn 窗
+jq 窗
+vl 鄉
+ni 蛋
+hd 季
+tk 散
+bt 冊
+pd 棄
+yd 棄
+yf 熟
+vk 獎
+rg 唯
+ts 藏
+va 婚
+cu 鏡
+sf 緊
+kb 猜
+rv 喝
+ti 尊
+jn 乾
+bf 縣
+oa 伯
+ob 偏
+on 偷
+hf 秋
+sa 層
+wc 顆
+ov 食
+ef 淡
+ll 申
+bi 冠
+yv 衣
+om 僅
+lv 帳
+hc 贊
+bb 購
+ku 犯
+tk 敬
+ns 勇
+el 洲
+dl 束
+ln 鬥
+ho 徒
+gr 嘉
+nd 柔
+vc 績
+hm 笨
+qg 擁
+ef 漂
+kb 獅
+yi 詩
+wq 圍
+hp 乖
+no 孤
+vm 姓
+re 吸
+hi 私
+yj 避
+hu 範
+qn 抗
+tt 蓋
+iu 祝
+in 序
+au 曉
+jw 富
+yj 譯
+ss 巨
+hs 秀
+od 餘
+fj 輝
+qx 插
+jf 察
+ie 慶
+hc 積
+op 愈
+yb 端
+hn 移
+jr 宮
+qj 揮
+fe 爆
+eu 港
+mm 雪
+mc 碩
+oa 借
+hb 帥
+hi 丟
+mi 丟
+qr 括
+qy 掛
+ht 盤
+ob 偶
+dj 末
+ip 廳
+hd 朱
+hi 凡
+tf 驚
+oc 貨
+ef 滅
+mm 醒
+ym 虛
+mb 瑞
+qa 拍
+yc 遺
+lp 忠
+yp 誌
+ys 透
+mf 烈
+cv 銀
+mc 頂
+mg 雅
+yr 諾
+wc 圓
+if 熊
+qa 替
+od 休
+dh 材
+qo 挑
+oo 俠
+bg 雞
+wf 累
+mm 互
+fq 掌
+rp 唸
+fd 米
+oq 伴
+jb 輔
+nq 降
+yo 豪
+ht 籃
+eu 洗
+oq 健
+oe 飯
+pq 憐
+ki 瘋
+ji 宏
+wd 困
+gm 址
+cs 兮
+qd 操
+sr 臨
+sb 騙
+rn 咧
+td 藥
+ve 綠
+sp 尼
+tf 蔡
+mi 玉
+yj 辛
+lj 輩
+ok 敏
+er 減
+he 彼
+hn 街
+so 聚
+il 郎
+eu 泡
+pv 恨
+td 蘇
+va 縮
+dr 樞
+mc 碰
+qd 採
+wk 默
+ev 婆
+be 股
+yg 童
+hi 符
+qw 抽
+ke 獲
+jd 宇
+ie 廢
+yc 贏
+yn 贏
+yb 肯
+mo 砍
+cu 鋼
+so 歐
+sg 屆
+df 禁
+tr 蒼
+bu 脫
+el 漸
+ou 仙
+ek 淚
+ni 觸
+yd 途
+bh 財
+hu 箱
+mk 厭
+ha 籍
+ie 冰
+ei 濤
+yn 訂
+rk 哭
+hp 穩
+dl 析
+od 傑
+sg 堅
+db 橋
+pc 懶
+sc 賢
+vf 絲
+mr 露
+dd 森
+nu 危
+or 佔
+td 茶
+pc 慣
+ig 塵
+ob 佈
+cu 爸
+na 階
+me 夏
+ym 誼
+tn 瓶
+rg 哩
+ph 慘
+dt 械
+np 隱
+ut 豐
+yv 旅
+dl 椰
+yv 亡
+en 汽
+bc 貝
+vv 娘
+jy 寒
+ya 遭
+ro 吹
+aa 暑
+mh 珍
+mi 零
+mn 刊
+hl 郵
+di 村
+ns 乃
+nn 予
+dc 賴
+qu 搖
+vb 納
+fg 煙
+ob 倫
+su 尾
+kv 狼
+ed 浮
+bb 骨
+df 杯
+nb 隔
+ec 洪
+va 織
+ya 詢
+qv 振
+pp 忽
+jf 索
+jp 惠
+uj 峰
+ib 席
+rw 喵
+jb 胡
+hm 租
+go 款
+qe 擾
+om 企
+dn 刺
+ts 芳
+hv 鼠
+ql 折
+yc 頻
+au 冒
+ko 癡
+ni 陰
+qr 哲
+cj 針
+ok 伊
+je 寂
+rb 嘴
+or 倚
+mb 霸
+qh 揚
+en 沉
+eu 沉
+py 悔
+li 蟲
+td 菜
+rs 距
+le 複
+ge 鼓
+iq 摩
+tl 鄭
+tg 莊
+mn 副
+mc 頁
+fu 燒
+nm 弱
+ja 暫
+hn 剩
+mt 豆
+qd 探
+mi 耐
+im 祖
+yb 遍
+tx 蕭
+qg 握
+hp 愁
+hs 龜
+nu 龜
+yv 哀
+se 髮
+sk 髮
+nm 延
+nv 延
+ij 庫
+nm 隆
+at 盟
+oe 傻
+au 眉
+wr 固
+hh 秘
+fu 卷
+qr 搭
+ar 昭
+jn 寧
+yp 託
+yj 辯
+me 覆
+rh 吵
+sj 耳
+ab 閒
+qe 撥
+eu 沈
+at 昇
+bq 胖
+mn 丁
+vh 妙
+mi 殘
+yq 違
+hb 稍
+vd 媒
+me 憂
+cb 銷
+wp 恩
+yc 顏
+hr 船
+kf 奈
+ak 映
+tt 井
+qj 拼
+qt 拼
+sg 屋
+hp 乘
+yf 京
+ta 藉
+er 洞
+ll 川
+jp 憲
+qo 擬
+je 寢
+jg 塞
+or 倍
+hs 戶
+qp 擺
+yd 桌
+gm 域
+fs 勞
+bc 賺
+hg 皇
+yo 逃
+ef 鴻
+dc 橫
+mh 牙
+qd 拖
+yx 齊
+tv 農
+ev 滾
+nj 障
+qe 搬
+vs 奶
+hf 烏
+bf 瞭
+si 鬆
+jc 戴
+ya 譜
+mr 酷
+dc 棋
+rc 嚇
+qk 摸
+jc 額
+ho 瓜
+he 役
+np 怨
+ed 染
+ya 迫
+mj 醉
+cc 鎖
+mv 震
+id 床
+lb 鬧
+ob 佩
+hd 牠
+hd 徐
+so 尺
+mj 干
+eb 潮
+lu 帽
+it 盛
+nf 孫
+sp 屁
+ed 淨
+un 凱
+qg 撞
+yr 迴
+qc 損
+of 伙
+yq 牽
+mb 厲
+ip 惑
+tq 羊
+hy 冬
+do 桃
+ht 艦
+bp 眠
+om 伍
+ek 溪
+mi 飄
+qe 泰
+jd 宋
+wu 圈
+yu 競
+ao 閃
+vo 縱
+uf 崇
+eb 滑
+nu 乙
+or 俗
+ei 淺
+tj 蓮
+yf 紫
+eb 溝
+yo 旋
+qj 攝
+sp 聰
+he 毀
+ig 庭
+je 麥
+ji 麥
+qw 描
+vs 妨
+ts 勒
+oi 儀
+nr 陪
+ds 榜
+ar 闆
+tp 慕
+fg 耀
+yk 獻
+jw 審
+ni 蟹
+tu 巷
+yf 諒
+vh 姊
+yo 逐
+ra 踏
+uj 岸
+tv 葛
+so 臥
+er 洽
+jk 寞
+ql 邦
+te 藤
+fq 拳
+nm 阻
+lo 蠍
+jl 麵
+md 殊
+ip 憑
+qs 拒
+ed 池
+ml 邪
+hn 航
+sr 驅
+jv 裁
+tm 翔
+gc 填
+hk 奧
+ne 函
+ue 函
+cc 鎮
+ml 丌
+ji 寬
+dc 頗
+dr 槍
+yu 遙
+jn 穹
+ra 啪
+au 閱
+cj 鋒
+mh 砂
+tp 恭
+gr 塔
+kc 賀
+mi 魂
+bb 睛
+yi 逸
+yc 旗
+tm 薩
+ki 丸
+md 厚
+yf 齋
+th 芬
+tj 革
+ib 庸
+on 舒
+oo 飲
+ah 閉
+ms 勵
+pc 頓
+ol 仰
+ar 閣
+nt 孟
+aa 昌
+ys 訪
+va 緒
+lr 裕
+ph 勿
+il 州
+aj 闡
+qr 搶
+qb 掃
+fb 糊
+jw 宙
+fa 嘗
+tr 菩
+bh 賜
+gc 赤
+rr 喊
+et 盜
+tq 擎
+ts 勸
+kw 奮
+tp 慈
+ot 儘
+es 污
+ko 狐
+wn 罰
+ui 幽
+ig 准
+tc 兼
+fk 尖
+yh 彰
+kf 灰
+hw 番
+hn 衡
+nq 鮮
+qc 擴
+yu 毫
+ys 誇
+mu 砲
+qy 拆
+st 監
+dw 欄
+yq 遲
+ym 証
+oc 傾
+dh 鬱
+eg 汪
+vh 紛
+qp 托
+eb 漏
+ee 渡
+vr 姑
+hh 秒
+mr 吾
+jr 窩
+jb 輛
+yi 齡
+ro 跌
+er 浩
+bu 肥
+rk 獸
+nf 煞
+qj 抹
+me 酸
+hu 稅
+nx 陷
+cr 谷
+el 沖
+dg 杜
+bk 胸
+tm 甘
+bu 胞
+ym 誕
+yv 誕
+ut 豈
+bj 辭
+vw 牆
+ef 涼
+mj 碎
+aa 晶
+ol 邱
+yg 邏
+bu 脆
+rc 噴
+mk 玫
+vg 娃
+gr 培
+ru 咱
+ea 潛
+iq 祥
+hd 築
+nu 孔
+da 柏
+rc 叭
+yk 邀
+kw 猶
+jv 妻
+or 估
+tu 荒
+tv 荒
+ov 袋
+hm 徑
+gt 垃
+ok 傲
+ee 淑
+ge 圾
+am 旦
+op 億
+jg 截
+fb 幣
+sm 羽
+vb 婦
+ep 泥
+to 欺
+ni 弦
+hi 籌
+qr 捨
+sp 忌
+ll 串
+ol 伸
+rn 喇
+sp 恥
+of 繁
+ih 廖
+yg 逛
+ms 勁
+hk 臭
+na 魯
+vg 壯
+qb 捕
+jn 窮
+qe 拔
+qk 拔
+md 于
+mi 醜
+tn 莉
+fa 糟
+fs 炸
+ge 坡
+to 蒙
+bv 腿
+gm 坦
+vp 怒
+hm 甜
+mm 甜
+jq 韓
+ve 緩
+hp 悉
+qm 扯
+jn 割
+tk 艾
+br 胎
+pm 恆
+mi 玲
+hd 朵
+he 泉
+eh 湯
+kt 猛
+kf 駕
+vs 幼
+gj 坪
+mo 巫
+vn 彎
+br 膽
+ha 昏
+tg 鞋
+pr 怡
+rg 吐
+ir 唐
+op 悠
+hu 盾
+rg 躍
+oe 侵
+by 丹
+ct 鑑
+ej 澤
+tl 薪
+yl 逝
+yh 彥
+hr 后
+sr 召
+rr 呂
+mr 碧
+av 晨
+yj 辨
+dm 植
+kr 痴
+mi 瑰
+ci 釣
+jj 軒
+ts 勤
+md 珠
+ev 濃
+pr 悟
+ir 磨
+th 剪
+yw 逼
+yi 玄
+ae 暖
+hd 躲
+er 洛
+km 症
+qw 擋
+fk 敝
+mo 礙
+yn 亨
+yf 遜
+ji 蜜
+bh 盼
+vi 姆
+bm 賦
+dh 彬
+sg 壁
+vk 繳
+qo 捷
+ho 乏
+it 戒
+pp 憾
+eb 滴
+ed 桑
+ty 菲
+vc 嫌
+pn 愉
+hu 爬
+pw 惱
+bn 刪
+ro 嘆
+qi 抵
+qm 抵
+db 棚
+qb 摘
+ti 蔣
+hn 箭
+ni 夕
+cm 翁
+hm 牲
+rc 蹟
+ns 勉
+to 萊
+ef 潔
+oc 貪
+pr 恰
+a 曰
+ob 僑
+er 滄
+rr 咖
+rb 唷
+qr 扣
+bd 采
+kt 奔
+ee 泳
+rc 跡
+eg 涯
+ki 奪
+qh 抄
+kf 療
+wa 署
+qr 誓
+mt 盃
+si 騷
+sc 翼
+sa 屠
+rd 咪
+ms 霧
+eh 涉
+cg 鍾
+rh 踢
+yd 謀
+hs 犧
+of 焦
+ee 涵
+mo 礎
+vu 繞
+oc 俱
+mj 霹
+gm 壢
+rn 唬
+ru 唬
+hp 氏
+hk 徹
+yr 吝
+ae 曼
+gi 壽
+fh 粉
+ic 廉
+ff 炎
+ir 禍
+qu 耗
+fu 炮
+ry 啡
+bg 肚
+mc 貢
+hl 鼻
+qn 挖
+bu 貌
+qb 捐
+mi 融
+hs 筋
+mi 云
+nd 穌
+qo 撿
+ou 飽
+ci 鈴
+mm 靂
+rf 鳴
+qq 奉
+ff 燃
+ob 飾
+va 繪
+he 黎
+qu 捲
+pf 恢
+bf 瞧
+tv 茫
+lw 幅
+yw 迪
+dl 柳
+mn 瑜
+nh 矛
+rb 吊
+ok 侯
+mf 瑪
+qh 撐
+qq 撐
+ti 薄
+yk 敦
+qx 擠
+wg 墨
+mc 琪
+ie 凌
+on 側
+di 楓
+ry 嗨
+dh 梯
+ed 梁
+ng 廷
+ob 儒
+rk 咬
+ui 嵐
+su 覽
+ni 兔
+pb 怖
+hb 稿
+yo 齒
+kk 獄
+cl 爺
+yb 邁
+ap 悶
+hr 喬
+iv 姿
+mv 姿
+ro 蹤
+jc 賓
+oo 傢
+ni 弘
+yc 韻
+uc 嶺
+rn 咦
+lj 褲
+ge 殼
+jd 孝
+on 仇
+hr 譽
+vp 妮
+pg 懼
+oo 促
+sk 駛
+ky 疼
+uu 兇
+fm 粗
+mv 耍
+ff 糕
+ol 仲
+mv 裂
+rn 吟
+np 陀
+ba 賭
+bi 爵
+jr 哉
+ys 虧
+cr 鍋
+sn 刷
+ka 旭
+ab 晴
+ld 蝶
+ar 闊
+ep 洩
+mc 頑
+hk 牧
+qk 契
+jj 轟
+tg 羞
+qr 拾
+cb 錦
+yu 逆
+ng 墮
+ko 夾
+de 枝
+mi 瓦
+hi 舟
+pu 悅
+tp 惹
+nu 疏
+nv 疏
+cu 銳
+gm 翹
+rk 哎
+vf 綜
+vu 綱
+hm 扇
+im 扇
+sg 駐
+st 屏
+gv 堪
+nb 彌
+wc 貫
+wp 愚
+qr 抬
+rv 喂
+yb 靖
+kv 狠
+ot 餅
+io 凝
+fl 鄰
+qf 擦
+ei 滋
+gl 坤
+lg 蛙
+vf 災
+th 莎
+ye 毅
+yj 卒
+ev 汝
+hm 征
+ba 贈
+yj 斗
+qs 拋
+qd 秦
+mi 辱
+eg 塗
+qe 披
+iu 允
+oc 偵
+cp 慾
+wn 夥
+ib 朗
+hw 笛
+gs 劫
+hd 魅
+co 欽
+sp 慰
+tr 荷
+qg 挺
+ik 矣
+yj 迅
+ij 禪
+yu 遷
+ip 鹿
+hj 秤
+gh 彭
+hb 肩
+ib 肩
+yc 讚
+mb 丙
+hf 鵝
+kv 痕
+ek 液
+ev 漲
+yv 巡
+fs 烤
+bi 賤
+jk 丈
+gu 趨
+er 沿
+et 濫
+qa 措
+hi 么
+qg 扭
+qo 捉
+mu 碗
+ft 爐
+bt 髒
+ye 叔
+ih 祕
+bv 腰
+ek 漠
+jm 翅
+od 余
+bh 膠
+bv 妥
+yu 謠
+om 缸
+tv 芒
+ne 陵
+mk 雯
+jn 軌
+le 蝦
+di 寸
+rs 呦
+ep 灑
+yc 貞
+lj 蜂
+cc 鑽
+in 廁
+jf 鶴
+of 鶴
+qj 摔
+ot 盒
+li 虫
+oh 氛
+pb 悄
+md 霖
+pi 愧
+oj 斜
+sp 屍
+hu 循
+ob 倆
+og 堡
+ag 旺
+rp 噁
+ei 叉
+tf 燕
+    `;
+
+    // 解析碼表數據並建立字典
+    const dictionary = {};
+    cinData.trim().split('\n').forEach(line => {
+        const [code, char] = line.trim().split(' ');
+        if (code && char) {
+            if (!dictionary[code]) {
+                dictionary[code] = [];
+            }
+            if (!dictionary[code].includes(char)) {
+                dictionary[code].push(char);
+            }
+        }
+    });
+
+    // 從 localStorage 載入自訂詞彙
+    const loadCustomWords = () => {
+        const customWords = JSON.parse(localStorage.getItem('customQuickWords')) || {};
+        for (const code in customWords) {
+            if (customWords.hasOwnProperty(code)) {
+                if (!dictionary[code]) {
+                    dictionary[code] = [];
+                }
+                customWords[code].forEach(word => {
+                    if (!dictionary[code].includes(word)) {
+                        dictionary[code].unshift(word); // 自訂詞彙排在前面
+                    }
+                });
+            }
+        }
+    };
+    loadCustomWords();
+
+    // 顯示自訂詞句列表
+    const renderCustomWords = () => {
+        const customWords = JSON.parse(localStorage.getItem('customQuickWords')) || {};
+        customWordsList.innerHTML = '';
+        if (Object.keys(customWords).length === 0) {
+            customWordsList.innerHTML = '<p style="text-align: center; color: #888;">目前沒有自訂詞句。</p>';
+        } else {
+            for (const code in customWords) {
+                customWords[code].forEach(word => {
+                    const item = document.createElement('div');
+                    item.className = 'custom-word-item';
+                    item.innerHTML = `<span class="word-info">${word} (${code})</span><button class="delete-btn" data-code="${code}" data-word="${word}">刪除</button>`;
+                    customWordsList.appendChild(item);
+                });
+            }
+        }
+    };
+    renderCustomWords();
+
+    // 新增自訂詞句
+    addBtn.addEventListener('click', () => {
+        const code = newCodeInput.value.trim().toLowerCase();
+        const word = newWordInput.value.trim();
+        if (code && word) {
+            let customWords = JSON.parse(localStorage.getItem('customQuickWords')) || {};
+            if (!customWords[code]) {
+                customWords[code] = [];
+            }
+            if (!customWords[code].includes(word)) {
+                customWords[code].push(word);
+                localStorage.setItem('customQuickWords', JSON.stringify(customWords));
+                
+                // 更新字典
+                if (!dictionary[code]) {
+                    dictionary[code] = [];
+                }
+                dictionary[code].unshift(word);
+
+                newCodeInput.value = '';
+                newWordInput.value = '';
+                renderCustomWords();
+            } else {
+                alert('這個詞已經存在！');
+            }
+        } else {
+            alert('請同時輸入輸入碼和詞句。');
+        }
+    });
+
+    // 刪除自訂詞句
+    customWordsList.addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-btn')) {
+            const codeToDelete = e.target.getAttribute('data-code');
+            const wordToDelete = e.target.getAttribute('data-word');
+            let customWords = JSON.parse(localStorage.getItem('customQuickWords')) || {};
+            
+            if (customWords[codeToDelete]) {
+                customWords[codeToDelete] = customWords[codeToDelete].filter(word => word !== wordToDelete);
+                if (customWords[codeToDelete].length === 0) {
+                    delete customWords[codeToDelete];
+                }
+                localStorage.setItem('customQuickWords', JSON.stringify(customWords));
+                
+                // 更新字典
+                if (dictionary[codeToDelete]) {
+                    dictionary[codeToDelete] = dictionary[codeToDelete].filter(word => word !== wordToDelete);
+                }
+
+                renderCustomWords();
+            }
+        }
+    });
+
+    let currentInput = '';
+    
+    // 監聽鍵盤事件
+    textInput.addEventListener('keydown', (e) => {
+        const key = e.key.toLowerCase();
+        
+        // 檢查是否為速成碼元 (a-z)
+        if (key.length === 1 && key >= 'a' && key <= 'z') {
+            currentInput += key;
+            if (currentInput.length > 2) {
+                currentInput = currentInput.slice(currentInput.length - 2);
+            }
+            updateSuggestions();
+        } else if (e.key === 'Backspace') {
+            if (suggestionBox.style.display === 'flex') {
+                e.preventDefault();
+                currentInput = currentInput.slice(0, -1);
+                if (currentInput.length === 0) {
+                    hideSuggestions();
+                } else {
+                    updateSuggestions();
+                }
+            }
+        } else if (e.key === ' ' || e.key === 'Enter') {
+            // 清空候選字並結束輸入
+            currentInput = '';
+            hideSuggestions();
+        } else if (e.key >= '1' && e.key <= '9') {
+            const index = parseInt(e.key) - 1;
+            const suggestions = suggestionBox.querySelectorAll('.suggestion-item');
+            if (index < suggestions.length) {
+                const selectedText = suggestions[index].getAttribute('data-value');
+                // 替換輸入碼
+                const start = textInput.value.length - currentInput.length;
+                const end = textInput.value.length;
+                textInput.value = textInput.value.substring(0, start) + selectedText + textInput.value.substring(end);
+                
+                e.preventDefault();
+                currentInput = '';
+                hideSuggestions();
+            }
+        }
+    });
+    
+    // 當輸入框內容改變時，如果沒有在輸入速成碼，則清空緩存
+    textInput.addEventListener('input', () => {
+        const lastTwoChars = textInput.value.slice(-2).toLowerCase();
+        if (!/^[a-z]{2}$/.test(lastTwoChars) && currentInput.length > 0) {
+            currentInput = '';
+            hideSuggestions();
+        }
+    });
+
+    // 根據輸入更新候選字列表
+    function updateSuggestions() {
+        if (currentInput.length === 0) {
+            hideSuggestions();
+            return;
+        }
+
+        const candidates = dictionary[currentInput] || [];
+        if (candidates.length > 0) {
+            suggestionBox.innerHTML = '';
+            candidates.slice(0, 9).forEach((char, index) => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.setAttribute('data-value', char);
+                item.innerHTML = `<span class="key">${index + 1}.</span> ${char}`;
+                item.addEventListener('click', () => {
+                    const selectedText = item.getAttribute('data-value');
+                    const start = textInput.value.length - currentInput.length;
+                    const end = textInput.value.length;
+                    textInput.value = textInput.value.substring(0, start) + selectedText + textInput.value.substring(end);
+                    currentInput = '';
+                    hideSuggestions();
+                });
+                suggestionBox.appendChild(item);
+            });
+            showSuggestions();
+        } else {
+            hideSuggestions();
+        }
+    }
+    
+    function showSuggestions() {
+        suggestionBox.style.display = 'flex';
+    }
+    
+    function hideSuggestions() {
+        suggestionBox.style.display = 'none';
+    }
+});
+</script>
+
+</body>
+</html>
