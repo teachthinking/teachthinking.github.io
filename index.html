@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>隱藏網址 iframe 瀏覽器</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      padding: 10px;
+      background: #f0f0f0;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 6px;
+      font-size: 16px;
+    }
+    button {
+      padding: 6px 12px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button onclick="goBack()">⬅️</button>
+    <button onclick="goForward()">➡️</button>
+    <button onclick="refreshPage()">🔄</button>
+    <input id="urlInput" type="text" placeholder="輸入網址，例如 https://example.com">
+    <button onclick="loadIframe()">前往</button>
+  </header>
+  <iframe id="viewer"></iframe>
+
+  <script>
+    const iframe = document.getElementById("viewer");
+    const input = document.getElementById("urlInput");
+
+    let historyStack = [];   // 紀錄訪問過的網址
+    let currentIndex = -1;   // 目前的位置
+
+    function loadIframe() {
+      let url = input.value.trim();
+
+      // 沒有 http 開頭就自動補上
+      if (url && !/^https?:\/\//i.test(url)) {
+        url = "https://" + url;
+      }
+
+      if (url) {
+        iframe.src = url;
+
+        // 如果不是在最新紀錄，就移除後面歷史
+        if (currentIndex < historyStack.length - 1) {
+          historyStack = historyStack.slice(0, currentIndex + 1);
+        }
+
+        historyStack.push(url);
+        currentIndex = historyStack.length - 1;
+
+        // 隱藏輸入框的網址
+        input.value = "***";
+      }
+    }
+
+    function goBack() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        iframe.src = historyStack[currentIndex];
+      }
+    }
+
+    function goForward() {
+      if (currentIndex < historyStack.length - 1) {
+        currentIndex++;
+        iframe.src = historyStack[currentIndex];
+      }
+    }
+
+    function refreshPage() {
+      if (currentIndex >= 0) {
+        iframe.src = historyStack[currentIndex];
+      }
+    }
+
+    // 離開頁面時清除暫存
+    window.addEventListener("beforeunload", () => {
+      historyStack = [];
+      currentIndex = -1;
+      input.value = "";
+      iframe.src = "about:blank";
+    });
+  </script>
+</body>
+</html>
